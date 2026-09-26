@@ -171,6 +171,9 @@ You are a delegated subagent: your permission scope was fixed when you were star
 - **仅允许相邻模型消息**——`sendMessage()` 要求确切在线 sender；每个 sender 都可以指定直接可继续 child，只有具备驻留可继续 Activation 的 sender 可以指定自己的直接 parent。浏览器提示使用独立的人类 Queue 或 Steer 控制路径。
 - **child 到 parent 的投递要求直接 parent 保持在线**——服务没有持久 parent mailbox；parent 缺失时会拒绝消息，而非接受无法唤醒的工作。
 - **取消收敛期间存在唤醒缺口**——中断信号发出后、driver 进入 idle 前被接受的后续消息会保持排队，直到另一条唤醒发送到达。
+- **取消只等待 child 自己的工作**——被中断的 child 在其 Agent 空闲时变为 terminal：它已启动的每个工具调用都已落定，同一 step 中其余的调用被跳过。harness 进程之外的效果，例如工具留在后台运行的进程或已经发出的请求，既不会被停止，也不会被等待。
+- **中断不跨越重启**——浏览器提示词连同请求 id 记录在 child 的会话中，所以重试的请求即使在重启之后也不会被应用两次；中断则不留任何记录。宿主停止时仍在取消中的 child 不会自行恢复：重启之后，在新的输入到达之前什么都不会运行，届时浏览器提示词会被接受并唤醒它。优雅关停之后，parent 会在下次启动时得知 child 已被停止；崩溃之后没有任何记录，parent 永远不会得知这次停止。
+- **没有 child 等待点**——只有运行时根可以进行人工交互：child 的提问会被拒绝，拒绝信息让它把未决的问题或决定写进最终结果。因此，把人工回答路由到提问等待点的机制，在出厂组合上无法到达。
 - **待处理的注入上下文会保留 Activation**——settlement 会保守地把每个 Inbox occurrence 都视为未完成。Agent 进入 idle 后停放的上下文会让 child 及其在线祖先继续驻留，直到唤醒投递将其 claim、queue 变更将其移除，或 manager teardown 将其丢弃。
 - **驻留仅限进程内**——Activation inbox 与所有权图不会在两个 harness 进程之间协调；对单个持久化存储的并发访问需要持久化邮箱与跨进程租约协议。
 - **不回放已接受但未记录的消息**——崩溃可能丢失从未写入子会话日志、已被接受的提示词；丢失的消息不会自动回放。
