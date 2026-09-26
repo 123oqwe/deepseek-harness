@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/guard/baseline-preflight/README.md
-README.md: 36ded7b59eb7ae867138049b75c2726dfea066c4
-README.zh.md: b3b030f5259c58fe95eed5f7a1ab1a17f4bfa58f
+README.md: 9d466e846dddca3c34946e3f6d353078cf8c819b
+README.zh.md: c282bf3a3974a7f7ac681cae4798636c2f23f256
