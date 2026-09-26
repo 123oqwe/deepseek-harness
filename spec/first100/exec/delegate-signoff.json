@@ -852,6 +852,14 @@
       "delegateSession": "first100-delegate-1a",
       "signedAtUtc": "2026-09-26T13:24:27.356Z",
       "reason": "- **P4-07 签字:PASS。**\n  - 4.4b:第 15 班全量 36232722555 @ 6bbc302797 里,P4-07 的 12 个 live 条目共 87 条冻结标题全过。审批路径的用例 A-387(10 条)、A-489(3 条)与 dispatch-recheck.spec.ts(5 条)在同一轮也全过。\n  - 4.4a、d:\n    - ToolRuntime 的分派入口(tools/src/index.ts:2327-2333)在进入工具体之前再调一次 refuseNewAction,两条路径都经过这一点，覆盖 334 的 site 1–3;\n    - site 4 由 tool-bash(:235)、tool-pwsh(:241)、tool-fs 的 sandbox(:106)在放权批准之后各自再查一次(refusalAfterApproval)。\n  - 4.4c:334 已在第 15r 班结项。锁表 P4-07 那行(334)的解锁条件是「条件 1、2 满足，格子重新观测，重做 4.4,PASS」,现在满足。其他提到 P4-07 的开着的条目都不锁它:265 在 09-24 的附注里写明「不锁 P4-07」;196 属于以后的一片，P4-07 在 09-24 验收时它就开着。\n  - 盲审:P4-07 在 09-24 做过一次;B-644 是在那之后的修复，走了先红、修复、两个变异。按 §16 不另做盲审。\n  - 不涵盖：审批路径的 A-387、A-489 与 dispatch-recheck 没有冻结，每次全量都跑。照 P4-11 处理 A-498 的先例，在 acc[0] 的 coverage 里写明。"
+    },
+    {
+      "epic": "P1-09",
+      "rowDigestSha256": "cd9f4d7c12c7668cbf741dc682bdf1b87527694fb5f673ce8e26a0c29a00ddf7",
+      "conclusion": "PASS",
+      "delegateSession": "first100-delegate-1a",
+      "signedAtUtc": "2026-09-26T17:49:45.512Z",
+      "reason": "- **读数**:远端 ec7f75f242 的全量 36245358107。P1-09 四个 live 条目共 55 条冻结标题全过:[34] C 13/13、[68] F 9/9、[329] U 32/32、[343] U.1 1/1。\n- **四格**:C、U、F 绿，P 为 N/A。第 16 班没有改 P1-09 的代码。\n- **4.4 摘要**(§21 第 6 条，不超过 10 行;均在 ec7f75f242 上读):\n  1. 服务：插件经 ctx.tools(@deepseek-ai/dsh-tools)注册工具;每次注册都在 claimCapability 处判所有权(packages/core/tools/src/index.ts:1485),不准就抛 ToolOwnershipError(:1494)。\n  2. 出厂挂载:packages/bundle/base/cordis.patch.yml:788-789(id: tools)。\n  3. 读接口不交 token:ownershipOf(:1696-1699)与 ownershipHistory(:1709-1711)都经 recordOf(:779-782);全仓 src 里已没有 revokeOwned。\n  4. declareOwner(:1616-1631)只准 ownership.ownerDeclarers 里的条目;出厂 bundle 与 apps 都没配这一项，所以出厂上跨身份的声明一律被拒。\n  5. 第五问：出厂 profile 默认不装第三方插件，跨插件撤销与冒名的路径在出厂上无人触发。机制已接上，由用第三方输入的冻结用例证明(S4);签字里写明。\n- **盲审**:P1-09 修复 v2 盲审过(09-24 08:02:24Z:1 档 1 条，已加固),「X、回归修复、加固增量」也都审过。§21 第 5 条要的出厂路径用例是 tests/first100/fixtures/P1-09.composition.spec.ts([329]、[343])。\n- **Known Limitation**:⑧,同一进程里 Loader 条目内的插件借用或伪造别的条目的上下文，归 Trust Kernel / Fiber 隔离。\n- **BLOCKED-308 结项说明**:artifacts/delegate/blocked-308-closure-draft.md,逐条对关闭条件与附注。\n- **结论:PASS**。随第 16 班的记录班落，由 lane B 做:\n  1. 308 结项说明;\n  2. 锁表 P1-09 那一行标 LIFTED,删掉 accept-blocked: P1-09;\n  3. --record-signoff PASS,理由逐字取本节;\n  4. --accept P1-09。\n- 推送门：那一班的全量，accepted-cases-check 会把 P1-09 带上。"
     }
   ]
 }
