@@ -183,7 +183,8 @@
       "path": "architecture.layers.json",
       "kind": "source",
       "stages": [
-        "U"
+        "U",
+        "U.2"
       ],
       "reason": "The layer-order contract file the U stage reads; it lives at the repository root (tests/first100/architecture.layers.json no longer exists at the re-anchored tree). Re-pointed 2026-09-15."
     },
@@ -204,7 +205,8 @@
       "path": "scripts/architecture/layer-order.ts",
       "kind": "source",
       "stages": [
-        "C"
+        "C",
+        "U.2"
       ],
       "reason": "The canonical layer sequence and edge-classification rules must[0] is about. The registry declared the scanner (a later stage) and not the contract module the scanner applies."
     },
@@ -239,6 +241,14 @@
       "stages": [
         "U",
         "U.1"
+      ]
+    },
+    {
+      "epic": "P0-04",
+      "path": "tests/first100/fixtures/P0-04.real-repo-budget.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
       ]
     },
     {

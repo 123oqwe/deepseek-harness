@@ -18751,6 +18751,48 @@
         "failureSummary": "Read by full title from each round's own narrow report: red in M3, run 35970124070; green in M6, run 35970178962 (identity/attached re-logged on a resume; the SDK case launches once and does not resume). Green on the candidate in the batch 8' full run 36088846692 (vitest-e2e-sdk-keyless-smoke.json)."
       },
       "note": "P2-01 acceptance[0], BLOCKED-291 unlock condition (a) and (d): on the SDK server surface, driven through that surface's own creation entry, the first action manifest names the host-user principal and identity/attached is logged exactly once. The case lives in apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts and has been green since the fix, but no live entry named it. Frozen under the e2e config and observed by the e2e step's own report (vitest-e2e-sdk-keyless-smoke.json); -t selects this one case."
+    },
+    {
+      "epic": "P0-04",
+      "stage": "U",
+      "supplements": {
+        "epic": "P0-04",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P0-04.real-repo-budget.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P0-04 acceptance[2] on the real repository: the whole layer check under its default budget control: the run checked the whole real workspace",
+        "P0-04 acceptance[2] on the real repository: the whole layer check under its default budget finishes within its 10-second budget"
+      ],
+      "files": [
+        "tests/first100/fixtures/P0-04.real-repo-budget.spec.ts",
+        "scripts/architecture/check-layer-deps.mjs",
+        "scripts/architecture/layer-order.ts",
+        "package.json",
+        "pnpm-workspace.yaml",
+        "architecture.layers.json",
+        "tests/first100/layer-cycle-exemptions.json"
+      ],
+      "frozenAtUtc": "2026-09-26T01:43:16Z",
+      "dryRunProof": {
+        "treeSha": "2ece3cd20e4e31ceb9adcb7d8fe5068b0d2d5094",
+        "testsDiscovered": 2,
+        "note": "The batch 9r full run 36205389837 at c732e7c07331d3e298402b354a258c3a2aa10019 (tree 2ece3cd20e4e31ceb9adcb7d8fe5068b0d2d5094): tests/first100/fixtures/P0-04.real-repo-budget.spec.ts ran 2 cases, both frozen titles once each, both passed. Every path in files and argv is byte-identical there and at the dispatch 27a813ffa0 whose rounds the sensitivity proof cites."
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-slow (`033ddfa7c6a443abd67e0e49ceb6feb3a3ff6201`, off the dispatch 27a813ffa0, never merged): scripts/architecture/check-layer-deps.mjs waits 10.5 s synchronously (Atomics.wait) before it reads its elapsed time, so the run exceeds its 10-second default budget.",
+        "failureSummary": "Read from each round's own narrow report. Dispatch 27a813ffa0, run 36091406478: 2 of 2 passed. M-slow, run 36091421221: exactly the budget case red, on `expected '$ tsx scripts/architecture/check-laye…' not to contain 'check-layer-deps: time-budget:'`, the CLI having written its own time-budget line; the control green. Both match artifacts/laneA/a-411-p0-04-real-repo-budget-expectations.md (sha256 1e71e77dc2b037a560e106e4c24c2bf36da8427c1ba46f81d62d3cb6c67fa991), written before dispatch."
+      },
+      "note": "P0-04 acceptance[2] on the real repository, BLOCKED-303 closing condition [2]: `pnpm run architecture:layers` from the repository root with no --repo-root and no --budget-ms, so the real workspace under the 10 000 ms default. The control reads the CLI's summary line (more than 300 workspace packages, more than 1000 edges); the budget case requires no `time-budget:` line and a printed elapsed time of at most 10.00 s; the exit code is left to acceptance[0] and [1]. Measured elapsed: the same check under the same default budget, in the registry gate set step of the batch 8' full run 36088846692 at 4e932e474b, logged at 2026-09-25T03:31:25Z: \"0 violation(s) … of 342 workspace package(s), 2186 dependency edge(s) … in 2.10s.\" The case's own rounds record no elapsed time: the JSON reporter does not print the CLI's output and the report truncates the asserted string. In the batch 9r full run 36205389837 at c732e7c07331d3e298402b354a258c3a2aa10019, the registry gate set step logged at 2026-09-26T00:58:06Z: \"check-layer-deps: 0 violation(s) and 134 reported finding(s) across 333 classified and 9 vendored package(s) of 342 workspace package(s), 2244 dependency edge(s), 6 layers + composition roots and test-support, in 1.61s.\""
     }
   ]
 }
