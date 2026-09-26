@@ -66,15 +66,16 @@ if (phase === '1' || phase === '2') {
     // Wait until the Run is DURABLE before crashing, so the SIGKILL leaves a real
     // orphan in the store rather than one that never outlived this process (the
     // A-547 v1 red: the kill raced the tracked write, so phase 2 restored nothing
-    // and minted fresh). Poll the durable runs.json for this Run, then SIGKILL
-    // with no cleanup: the lease stays held and un-renewed, a real crash.
+    // and minted fresh). The write is THIS process's own async writeFile/rename,
+    // so the wait must yield to the event loop — an Atomics.wait spin would block
+    // it and the write would never run (A-547 v2). Poll runs.json across `await`
+    // gaps, then SIGKILL with no cleanup: the lease stays held and un-renewed.
     const runId = agent.runId
     if (runId === undefined) throw new Error('p4-05 reclaim phase 1: create opened no Run')
     const runsPath = dshHomePath('runs', 'runs.json')
     const persisted = (): boolean => existsSync(runsPath) && readFileSync(runsPath, 'utf8').includes(runId)
-    const spinner = new Int32Array(new SharedArrayBuffer(4))
     const deadline = Date.now() + 10_000
-    while (Date.now() < deadline && !persisted()) Atomics.wait(spinner, 0, 0, 25)
+    while (Date.now() < deadline && !persisted()) await new Promise<void>(resolve => setTimeout(resolve, 25))
     if (!persisted()) throw new Error(`p4-05 reclaim phase 1: Run ${runId} did not persist to ${runsPath}`)
     process.stdout.write(`P4-05-PHASE1 ${JSON.stringify({ runId, epoch: agent.lifecycle?.epoch ?? null })}\n`)
     process.kill(process.pid, 'SIGKILL')
