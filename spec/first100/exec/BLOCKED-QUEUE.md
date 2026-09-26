@@ -9788,3 +9788,28 @@ P1-10 is not ACCEPTED, so nothing is withdrawn. This entry blocks P1-10 acceptan
 4. **Then** P3-05's build continues. This entry is its first deliverable.
 
 **Owner.** Lane B (fix, ahead of the queue after batch 12); lane A (A-476 part 2 and A-483 on the fix).
+
+### BLOCKED-347 — on a pi-ai route the circuit breaker never opens: provider failures arrive as error chunks, and the breaker counts the first chunk as a success
+
+**Status:** OPEN (2026-09-26). Owner lane B (fix); lane A (red first, done: A-498). This entry predates B-605; the P4-11 blind review found it on 2026-09-26. It blocks P4-11's sign-off. P4-11 is not ACCEPTED.
+
+**The clause.** P4-11 acceptance[2]: 「provider 故障时 circuit 打开且可恢复。」 must[1] (provider circuit breaker).
+
+**What was measured.**
+- `tests/first100/fixtures/P4-11.breaker-chunk-blind.spec.ts` ran at `d47541c3d9` (parent `aeaaeef1b7`, test only), in run 36223805295.
+- The pi-ai backend fails every request, served by a local fake. After more than the configured number of consecutive failures, the next call still reaches the backend, so the breaker never opens.
+- The control, in which the breaker's own `execute` throws the same number of times, opens as expected.
+
+**Cause (read from the code; consistent with the reading).**
+- The breaker wraps only the first `iterator.next()` of the stream (`packages/llm/llm/src/index.ts:1053-1069`) and counts only a throw (`packages/reliability/retry-cockatiel/src/index.ts:125-130`).
+- pi-ai never throws mid-stream. It turns a provider error into a usage chunk followed by an error `finish` chunk (`packages/llm/llm-pi-ai/src/stream.ts:87-123`, `:131-132`, `:216-226`).
+- The first pull therefore resolves, and cockatiel records a success.
+
+**What this does NOT claim.** Nothing about the DeepSeek adapter, which throws on HTTP errors. Nothing about recovery.
+
+**Closing condition.**
+1. Red first: run 36223805295, the pi-ai case.
+2. The fix, in place: a provider failure that pi-ai reports in-band counts toward the breaker like a thrown one, with the same shared classifier deciding whether it counts. Lane B chooses where.
+3. A-498 passes at the fix. The unfixed tree stands as the red side, per §16.
+
+**Owner.** Lane B (B-647); lane A (A-498 on the fix).
