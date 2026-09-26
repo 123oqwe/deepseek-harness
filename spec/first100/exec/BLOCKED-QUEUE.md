@@ -9496,6 +9496,37 @@ The condition therefore rested on a premise I did not check. It is replaced by:
 - Web does not run on the carrier. It lacks 115 packages, and client packages hold 91 undeclared third-party imports. The README says so, and B-608 tracks it as a follow-up.
 - Nothing was measured on a released wheel. Everything was measured on carriers that CI staged with the release builder's own script and profile.
 
+### BLOCKED-339 — P4-11's two retry decisions disagree: the circuit breaker's classifier and llm-retry's code table give opposite verdicts on eight failure kinds
+
+**Status:** OPEN (2026-09-25). Owner lane B (fix), lane A (red first, done). Ruled by the delegate (first100-delegate-1a) on lane A's A-419, whose predictions were written before the case and matched the reading case by case. P4-11 is not ACCEPTED, so nothing is withdrawn; this blocks its acceptance.
+
+**The clause.** P4-11 must[0]: 「统一错误 taxonomy 与 retryability；所有层消费同一 RunRetryBudget。」 One taxonomy and one retryability answer, for every layer.
+
+**What was measured.**
+- `tests/first100/fixtures/P4-11.classifier-matrix.spec.ts` at `aac53d46ce` (parent `4e932e474b`, test only), run 36197059064, with build. It holds 27 cases; each asks whether `classifyFailure` (the circuit breaker's classifier) and llm-retry's default `retryableCodes` give the same verdict for one failure kind. Predictions `artifacts/laneA/a-419-p4-11-classifier-expectations-v2.md` (sha256 d04ad585…, v1 6adc6c42…) were written before the case.
+- 19 of 27 pass. Exactly the 8 predicted fail, all in one direction: the breaker's classifier says retryable and llm-retry says permanent.
+  - HTTP 408 (`HTTP_408`);
+  - HTTP 429 carrying an insufficient-balance message (`QUOTA`);
+  - `ABORTED`, `UNSUPPORTED_CONTENT`, `REQUEST_EXTENSION`, `MISSING_CREDENTIAL`, `UNSUPPORTED_REASONING_EFFORT` and `UNKNOWN`, each with no HTTP status.
+- **A second difference, read from the code, not run:** the two do not look at the same event. The breaker guards only an error thrown when the first chunk is fetched; llm-retry reads the aggregated finish error.
+
+**What this does NOT claim.**
+- Not that either table is wrong for every kind. The per-kind verdicts are the fix's to decide, with reasons.
+- Nothing about the budget half of must[0], which [342] U.2 covers.
+- Not that a shipped run has already mis-retried one of these eight kinds. None was driven end to end for this entry.
+
+**Closing condition.**
+1. One classifier for retryability, consumed by the circuit breaker and by llm-retry alike. No second code table decides retryability.
+2. Every failure kind in the matrix gets one verdict, and the fix's note gives the reason for each of the eight kinds above. The delegate's reading, for the fix to confirm or argue against with reasons:
+   - 408 is transient, so retryable;
+   - `QUOTA`, `ABORTED`, `UNSUPPORTED_CONTENT`, `REQUEST_EXTENSION`, `MISSING_CREDENTIAL` and `UNSUPPORTED_REASONING_EFFORT` are caller-side or configuration conditions, so not retryable;
+   - `UNKNOWN` is decided with a stated reason.
+3. A-419's matrix passes 27 of 27 at the fix. A mutation that reintroduces a divergent verdict for one kind turns exactly that case red.
+4. The two layers classify the same failure fact (the first-chunk error and the finish error), or the note says why they differ and shows that the difference cannot yield opposite verdicts.
+5. Then P4-11's sign-off path continues, alongside BLOCKED-281 (b) and the policy-deny class of acceptance[0].
+
+**Owner.** lane B.
+
 ### BLOCKED-340 — an action a webhook delivery triggers is attributed to a synthesized anonymous actor, not to the integration the HMAC key stands for
 
 **Status:** OPEN (2026-09-25). Owner lane B (fix); lane A (red first, done). Ruled by the delegate (first100-delegate-1a) on lane A's A-421. This is the question BLOCKED-291 registered and left open ("who does a webhook-triggered action trace to"), now measured.
@@ -9521,3 +9552,88 @@ The condition therefore rested on a premise I did not check. It is replaced by:
 3. The coverage note for P2-01 acceptance[0] cites the case.
 
 **Owner.** lane B, after the work that lets an epic sign in the current batch.
+
+### BLOCKED-341 — after a crash at the switch, recovery rolls back a unit named after the plugin, not the unit the upgrade switched; when the names differ, the new data that never passed its health check stays live
+
+**Status:** OPEN (2026-09-26). Owner lane B (fix); lane A (red first, done: A-446). Ruled by the delegate (first100-delegate-1a) on A-446. Its predictions were written before the case and matched case by case: `artifacts/laneA/a-446-p1-10-crash-data-expectations.md`, sha256 1a3441a6…; v2 27246cb8…, line numbers only. P1-10 is not ACCEPTED (BLOCKED-302 withdrew its signature), so nothing is withdrawn. This entry blocks P1-10 acceptance[0].
+
+**The clause.** P1-10 acceptance[0]: 「在每个迁移步骤注入 crash，重启后要么旧版完整可用，要么新版完整可用，不出现混合状态。」
+
+**What was measured.**
+- The case file is `apps/cli/tests/plugin-migration-crash.spec.ts` with its child driver, committed at `4d36829ddb` (parent `c732e7c073`, test only). Run 36209855330, with build, has eight cases.
+- Each case runs in its own DSH_HOME on the product's own medium: `withUpgradeEnvironment`, storage-json, the upgrade lease and the upgrade record.
+  - A child process runs `runUpgrade` and SIGKILLs itself when a chosen phase completes.
+  - The parent then recovers with `recoverInterruptedUpgrades`, as `apps/cli/src/plugin.ts` does on the next command.
+  - Finally the parent tries to open the unit at version 1 and at version 2.
+- 7 of the 8 cases pass, as predicted.
+- The one red case uses plugin `notes-plugin` and unit `notes`, the names the product's own fixture uses (`apps/cli/tests/plugin-migration-bridge.spec.ts:26`, `:51`). The child is killed after the switch and before the health check.
+  - The child died by SIGKILL, and recovery reported `recovered` for `notes-plugin`.
+  - Yet unit `notes` opens only at version 2, holding the migrated rows. Opening it at version 1 fails: `unit 'notes': stored version 2 != expected 1`.
+- The control has the same crash point, but the plugin and the unit share a name. It passes: the old version comes back whole.
+
+**Cause (read from the code; consistent with the reading).**
+- `recoverUpgrade` (`packages/plugin/plugin-migrations/src/transaction.ts:272-285`) calls `facet.rollbackTo({ unit: record.plugin, handle: record.previousHandle })`. The upgrade record (`:43-66`) stores no unit name.
+- The unit an upgrade switches is the descriptor that the plugin's migration module exports (`apps/cli/src/plugin-migration.ts:824-829`). The plugin chooses its name. The launcher checks the descriptor's version against the declarations but not its name, so nothing requires the name to match the package name.
+- storage-json's `rollbackTo` (`packages/storage/storage-json/src/index.ts:144-152`) builds the live path from `previous.unit`. Given the plugin name, it moves the old data to `notes-plugin.json` and leaves `notes.json` in place, still holding the unchecked new data. The record is then cleared, so nothing retries.
+- `discard` locates the data by handle alone and is unaffected.
+
+**What this does NOT claim.**
+- Nothing about the code half of acceptance[0], that is, old code running on new data on the CLI path. That is A-447, whose run is in flight.
+- Only storage-json was driven. storage-sqlite's `rollbackTo` (`packages/storage/storage-sqlite/src/migration.ts:150`) receives the same `unit` argument and was not run.
+- Per-record units were not measured: the upgrade skips them (`storage-json/src/index.ts:88-95`).
+- Copies left behind by a crash at quarantine or validate are outside the record, and recovery does not remove them. They do not affect the live unit and are not asserted here.
+
+**Closing condition.**
+1. **Red first.** Run 36209855330 at `4d36829ddb`, the switch-crash case, is the reading. The fix's rounds cite it.
+2. **The smallest fix in place.** Recovery rolls back, and discards from, the unit the upgrade actually switched, whatever the plugin is called. Lane B chooses how and says why. The fix's note says what happens to a record written before the fix, which names no unit.
+3. **Readings on the fix.**
+   - At the fix, all 8 of A-446's cases pass, the control included.
+   - A mutation that puts the plugin name back turns exactly the switch-crash case red.
+   - If lane B's change touches the storage-sqlite facet, it gets its own case.
+4. **Then** P1-10's sign-off path continues, alongside A-447 (the code half) and BLOCKED-279.
+
+**Owner.** Lane B (fix); lane A (A-446 on the fix).
+
+### BLOCKED-342 — a `dsh plugin` upgrade killed after pnpm installed the new code, and then rerun, leaves the new code over the old data: what the code rollback needs exists only in the killed process's memory
+
+**Status:** OPEN (2026-09-26). Owner lane B (fix); lane A (red first, done: A-447). Ruled by the delegate (first100-delegate-1a) on A-447. Its predictions were written before the case and matched case by case: `artifacts/laneA/a-447-p1-10-crash-cli-expectations.md`, sha256 43df5d94…; v2 a4b476cf…, line numbers only. It is a separate defect from BLOCKED-341:
+- BLOCKED-341 is recovery rolling back the wrong data unit.
+- This entry is the code never being put back, whatever the unit is called.
+
+P1-10 is not ACCEPTED, so nothing is withdrawn. This entry blocks P1-10 acceptance[0].
+
+**The clause.** P1-10 acceptance[0]: 「在每个迁移步骤注入 crash，重启后要么旧版完整可用，要么新版完整可用，不出现混合状态。」
+
+**What was measured.**
+- The case file is `apps/cli/tests/plugin-migration-cli-crash.spec.ts`, committed at `6aa27a48fe` (parent `c732e7c073`, test only). Run 36210162247, with build, has six cases.
+- Each case runs the shipped `dsh plugin add` to upgrade a plugin from 1.0.0 to 2.0.0 and SIGKILLs the command at a chosen point. The "restart" is the same command run again. The product was given no hook:
+  - three kill points are held by the test's own plugin migration code, at import, `migrate` and `validate`;
+  - two are found by the parent reading the product's upgrade record, and are racy.
+- The assertion accepts either whole version: code and data at 1, or code and data at 2.
+- 3 of the 6 cases pass, as predicted. The three red cases are the kills at import, in `migrate` and in `validate`. Each rerun exits 0 and leaves code 2.0.0 over data at version 1: the unit does not open at version 2 (`stored version 1 != expected 2`).
+  - After the `migrate` and `validate` kills, the rerun's stderr says `recovered an interrupted upgrade of notes-plugin before installing`. The data was put back, but the code was not.
+- The two racy cases passed. The run did not record whether their kill windows were hit.
+
+**Cause (read from the code; consistent with the reading).**
+- `runUnderLease` (`apps/cli/src/plugin.ts:322-423`) reads the pre-upgrade `package.json` and `pnpm-lock.yaml` into memory (`:357`, `:359`). A failed migration uses them to put the old code back. Nothing persists them.
+- After a kill that follows pnpm's install, the profile's `package.json` already names 2.0.0. The rerun's `before` manifest is therefore the new one, so `changedVersions` (`apps/cli/src/plugin-migration.ts:492-498`) finds no change. Nothing migrates and nothing puts the code back.
+- The recovery at the top of `runUnderLease` (`:331-352`) undoes data only. The upgrade record it reads carries no code rollback target.
+
+**What this does NOT claim.**
+- Nothing about which unit data recovery rolls back; that is BLOCKED-341. At these three kill points no switch had happened, so recovery only discarded the snapshot. That step locates data by handle alone, so BLOCKED-341 does not enter.
+- Nothing about kills that land after the health check: the racy cases passed, and whether they hit their windows is unknown.
+- Only the `dsh plugin add` path was driven. Other commands that run `runUnderLease` were not.
+
+**Closing condition.**
+1. **Red first.** Run 36210162247 at `6aa27a48fe`, its three red cases, is the reading. The fix's rounds cite it.
+2. **The smallest fix in place.** Whatever the code rollback needs survives the process, and a rerun after any of these kills ends with code and data at one version:
+   - either the old version, whole;
+   - or the new version, whole, if the upgrade is completed rather than undone. The fix's note says which, and why.
+   Lane B chooses how and says why.
+3. **Readings on the fix.**
+   - At the fix, all 6 of A-447's cases pass.
+   - The case file records, per case, which phase the kill landed in, so a green racy case says whether it hit its window.
+   - A mutation that drops the persisted rollback state turns the three cases red again.
+4. **Then** P1-10's sign-off path continues, alongside BLOCKED-341 and BLOCKED-279.
+
+**Owner.** Lane B (fix); lane A (A-447 on the fix, with the kill phase recorded).
