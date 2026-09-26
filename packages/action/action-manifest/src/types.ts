@@ -139,12 +139,16 @@ export type ActionSideEffectClass = 'read' | 'write' | 'network' | 'process' | '
 
 /**
  * The result of classifying an action's side effect (acceptance[2]).
- * `classified: false` means the classifier could not determine a real
- * class from the input it was given; in that case `sideEffectClass` is
- * forced to `'destructive'` (the highest-risk class) and
- * `requiresApproval` is forced `true` — a caller can never observe
- * `classified: false` paired with a lower-risk class or
- * `requiresApproval: false`.
+ * `classified: false` means no class could be determined for the action; its
+ * `sideEffectClass` is then `'destructive'` (the highest-risk class), so a
+ * caller never observes `classified: false` paired with a lower-risk class.
+ *
+ * `requiresApproval` is what the risk gate decides under the preset in force
+ * when the gate supplied the classification: an unclassified action needs
+ * approval under a preset whose threshold is at or below the unknown default
+ * (the shipped `workspace-write`), and not under one whose threshold lies above
+ * it (`danger-full-access`). Without a risk gate, `classifySideEffect`'s
+ * fail-closed default requires approval for an unclassified action.
  */
 export interface SideEffectClassification {
   readonly sideEffectClass: ActionSideEffectClass
@@ -230,14 +234,15 @@ export interface ActionManifest {
   readonly argumentsHash: ArgumentsHash
   readonly sideEffectClass: ActionSideEffectClass
   /**
-   * Whether {@link ActionManifest.sideEffectClass} was DECLARED by the
-   * capability, or reached by the unclassifiable default (acceptance[2]).
+   * Whether {@link ActionManifest.sideEffectClass} was decided — by a rule of
+   * the risk gate's policy or by a declared class — or reached by the
+   * unclassifiable default (acceptance[2]).
    *
-   * Recorded rather than derived, because it cannot be derived: a declared
-   * `destructive` and a defaulted one produce an identical class and an
-   * identical `requiresApproval`, so a reader holding only those two cannot
-   * tell an action whose risk was stated from one whose risk nobody knew.
-   * Those are different facts about how much the harness understood.
+   * Recorded rather than derived, because it cannot be derived: a decided
+   * `destructive` and a defaulted one produce an identical class and can
+   * produce an identical `requiresApproval`, so a reader holding only those two
+   * cannot tell an action whose risk was stated from one whose risk nobody
+   * knew. Those are different facts about how much the harness understood.
    */
   readonly classified: boolean
   readonly requiresApproval: boolean
@@ -253,11 +258,12 @@ export interface ActionManifest {
  * {@link ActionManifest} from. `args` is the action's raw, not-yet-hashed
  * arguments value; `createActionManifest` derives
  * {@link ActionManifest.argumentsHash} from it via `computeArgumentsHash`.
- * `declaredSideEffectClass` is the underlying capability's own declared
- * class, when the caller has one (for example, from a
- * `@deepseek-ai/dsh-plugin-manifest` capability declaration) — absent when
- * no declaration is available, which is exactly the input
- * `classifySideEffect` treats as unclassifiable (acceptance[2]).
+ * `classification` is the risk gate's verdict for the action, recorded as
+ * given. Without one, `declaredSideEffectClass` — the underlying capability's
+ * own declared class, when the caller has one (for example, from a
+ * `@deepseek-ai/dsh-plugin-manifest` capability declaration) — decides through
+ * `classifySideEffect`, whose absent input is the unclassifiable default
+ * (acceptance[2]).
  */
 export interface CreateActionManifestRequest {
   readonly actionId: ActionId
@@ -267,6 +273,13 @@ export interface CreateActionManifestRequest {
   readonly origin: ActionOrigin
   readonly target: ActionTarget
   readonly args: JsonValue
+  /**
+   * The risk gate's classification of the action: the class
+   * `@deepseek-ai/dsh-risk-taxonomy`'s table gives its risk class, whether a
+   * rule decided it, and whether the preset in force requires approval.
+   * Absent when no risk gate is mounted.
+   */
+  readonly classification?: SideEffectClassification
   readonly declaredSideEffectClass?: ActionSideEffectClass
   readonly idempotencyKey: IdempotencyKey
   readonly preconditions: readonly Precondition[]

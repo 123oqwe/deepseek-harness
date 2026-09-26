@@ -14,8 +14,9 @@
  * The two vocabularies share the spellings `read` and `destructive` with
  * different meanings, so a mapping between them is never an identity: it must
  * be total and monotone, or a plugin could pick a mechanism tag to obtain a
- * lower risk band and defeat acceptance[1]. That mapping is not declared here
- * — it belongs with `ActionSideEffectClass`, whose file P2-03 owns.
+ * lower risk band and defeat acceptance[1]. The mapping from a risk class to
+ * the manifest's class is declared in `./side-effect-class.ts`, and the risk
+ * gate and the action manifest both read it (P2-03 acceptance[2]).
  *
  * @module @deepseek-ai/dsh-risk-taxonomy/types
  */
@@ -36,6 +37,16 @@ export type RiskClass =
   | 'financial'
   | 'security-sensitive'
   | 'safety-critical'
+
+/**
+ * The side-effect classes an action manifest records, spelled as
+ * `@deepseek-ai/dsh-action-manifest`'s `ActionSideEffectClass` spells them.
+ *
+ * Declared here with the same literals rather than imported, as
+ * `ActionSideEffectClass` itself mirrors `@deepseek-ai/dsh-plugin-manifest`,
+ * so the mapping in `./side-effect-class.ts` adds no package dependency.
+ */
+export type ManifestSideEffectClass = 'read' | 'write' | 'network' | 'process' | 'destructive'
 
 /**
  * Why a classification reached the class it did (must[2]'s "依据").

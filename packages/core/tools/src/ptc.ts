@@ -17,11 +17,12 @@ import type { Context } from '@deepseek-ai/cordis'
 import {
   appendManifestAndDecide,
   approvalBindingFor,
-  classifyActionRisk,
   confirmExternalEffect,
   FAIL_CLOSED_FACTS,
   FAIL_CLOSED_WORLD,
   gateActionRisk,
+  judgeActionRisk,
+  manifestClassificationOf,
   readExecutionWorldFact,
   readPolicyContextFacts,
   refuseNewAction,
@@ -33,7 +34,7 @@ import {
   reserveExternalEffect,
   verifyRecordedApproval,
 } from './external-effect.ts'
-import type { ExternalEffectRecord } from './external-effect.ts'
+import type { ActionRiskVerdict, ExternalEffectRecord } from './external-effect.ts'
 import { defineTool, parameterSchemaSpecToJsonSchema } from './schema.ts'
 import { TOOL_RUNTIME_SCHEDULER } from './index.ts'
 import type { PtcDispatchLog, ToolDefinition, ToolExecutionResult, ToolRuntime, ToolRunContext } from './index.ts'
@@ -207,6 +208,7 @@ interface ManifestedSubDispatch {
  * @param loggedArguments - the detached sibling copy of the dispatched arguments.
  * @param facts - the context facts.
  * @param world - where the sub-dispatch would run.
+ * @param judged - the sub-dispatch's risk verdict, which its manifest records; `undefined` when no policy service is mounted.
  * @returns the reservation inputs and the decision.
  */
 function appendCodeModeManifest(
@@ -217,6 +219,7 @@ function appendCodeModeManifest(
   loggedArguments: unknown,
   facts: PolicyContextFacts,
   world: ExecutionWorldFact,
+  judged: ActionRiskVerdict | undefined,
 ): ManifestedSubDispatch {
   const agent = exec.agent
   if (agent === undefined) return { reservation: undefined, decision: undefined }
@@ -228,6 +231,7 @@ function appendCodeModeManifest(
     dispatch: 'code-mode sub-dispatch',
     pathName: 'the code-mode path',
     receipt: `the tool/ptc-dispatch event for sub-call ${subCallId}`,
+    ...judged === undefined ? {} : { classification: manifestClassificationOf(judged) },
   }, facts, world)
 }
 
@@ -637,16 +641,17 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               // because this is where the call actually begins — a queued entry
               // abandoned by run settlement never executes, and a manifest for
               // it would record an action that never happened.
-              // Classified BEFORE the manifest, so the policy question this
+              // Judged BEFORE the manifest, so the manifest records the class
+              // and the preset's approval decision, the policy question this
               // sub-dispatch asks carries the class as a fact rather than a
               // default (BLOCKED-201), and the risk gate below decides about
-              // the SAME verdict instead of computing a second one.
-              const classified = exec.agent === undefined
+              // the SAME verdict instead of taking a second one.
+              const judged = exec.agent === undefined
                 ? undefined
-                : classifyActionRisk(options.ledgerContext(), name, registry.get(name, exec.agent)?.riskDomainTags ?? [])
+                : judgeActionRisk(options.ledgerContext(), exec.agent, name, registry.get(name, exec.agent)?.riskDomainTags ?? [])
               const facts = exec.agent === undefined
                 ? FAIL_CLOSED_FACTS
-                : await readPolicyContextFacts(options.ledgerContext(), exec.agent, classified)
+                : await readPolicyContextFacts(options.ledgerContext(), exec.agent, judged?.classification)
               // The other composition-read input of the same question (P3-01),
               // read on THIS path too: a world read only by the native path is
               // must[2]'s bypass in the shape §12.35-2 already closed once for
@@ -654,7 +659,9 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               const world = exec.agent === undefined
                 ? FAIL_CLOSED_WORLD
                 : await readExecutionWorldFact(options.ledgerContext(), exec.agent)
-              const manifested = appendCodeModeManifest(options.ledgerContext(), exec, subCallId, name, normalized.logged, facts, world)
+              const manifested = appendCodeModeManifest(
+                options.ledgerContext(), exec, subCallId, name, normalized.logged, facts, world, judged,
+              )
               reservation = manifested.reservation
               // The reservation is taken before the sub-call runs, exactly as
               // the native path takes one (P4-12 must[4]). Until §12.35-2 this
@@ -739,7 +746,7 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               const riskRefusal = exec.agent === undefined || binding === undefined
                 ? undefined
                 : await gateActionRisk(
-                  options.ledgerContext(), exec.agent, name, registry.get(name, exec.agent)?.riskDomainTags ?? [], classified,
+                  options.ledgerContext(), exec.agent, name, registry.get(name, exec.agent)?.riskDomainTags ?? [], judged,
                   binding,
                 )
               if (riskRefusal !== undefined) {

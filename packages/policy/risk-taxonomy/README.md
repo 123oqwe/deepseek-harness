@@ -57,6 +57,8 @@ A deployment's `riskRules` map tags to classes, so it needs to know which tags e
 
 The vocabularies share the spellings `read` and `destructive` with different meanings, and in `action-manifest` `destructive` is additionally the fail-closed default returned when classification fails entirely. Any mapping between them must therefore be total and monotone, or a plugin could choose a mechanism tag to obtain a lower risk band.
 
+`src/side-effect-class.ts` declares the one mapping in the risk-to-mechanism direction: `SIDE_EFFECT_CLASS_BY_RISK` gives the class an action manifest records for each risk class, and the risk gate and the manifest both read it (P2-03 acceptance[2]). `read` stays `read`; `local-reversible` and `internal-write` become `write`; `external-communication` becomes `network`; `destructive`, `financial`, `security-sensitive` and `safety-critical` become `destructive`. The table is total and monotone, and no risk class yields `process`, which names a mechanism a risk class does not express. `tests/side-effect-class.spec.ts` covers each class and both properties.
+
 <a id="model-experience"></a>
 ## Model Experience
 
@@ -68,8 +70,8 @@ Nothing here enters a request, so provider cache reuse is unaffected. What a mod
 
 ## Known Limitations and Deferred Work
 
-- No runtime invariant companion is published: this package holds no state and observes nothing — one frozen table and one pure function over caller-supplied values — so a checker would compare a value against itself rather than reconcile two independent observations.
-- **The mechanism-to-risk mapping is not declared.** Nothing here maps `ActionSideEffectClass` onto a `RiskClass`, so an action carrying only a mechanism tag classifies under the unknown default. The mapping belongs with `ActionSideEffectClass`, in a file Epic P2-03 owns, and lands when that epic's acceptance clears.
+- No runtime invariant companion is published: this package holds no state and observes nothing — frozen tables and pure functions over caller-supplied values — so a checker would compare a value against itself rather than reconcile two independent observations.
+- **The mechanism-to-risk mapping is not declared.** Nothing here maps `ActionSideEffectClass` onto a `RiskClass`, so an action carrying only a mechanism tag classifies under the unknown default. Only the risk-to-manifest direction is declared, in `src/side-effect-class.ts`.
 - **`hardDenied` is reported, not enforced.** `classify` states that a class is refused outright; no runtime in this package refuses anything, because the enforcement point is a Consumer's. A caller that reads `riskClass` and ignores `hardDenied` is not stopped by anything here.
 - **`confidence` is 1 or 0, not a measurement.** It distinguishes "a rule decided this" from "nothing matched". Any finer grading would need a source of evidence this package does not have.
 - **No deployment configures `riskRules` yet.** Every shipped tool now declares domain tags, but no profile maps a tag to a class, so every real action still classifies by the unknown default. The tags are in place and the mapping is the missing half.
