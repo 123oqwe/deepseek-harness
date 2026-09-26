@@ -41,10 +41,20 @@ const ctx = await bootProductionProfile({
 })
 try {
   await createFixtureRootAgent(ctx, { provider: 'memory-context-mock', model: 'memory-context-mock', cwd: process.cwd(), identity: (ctx.get(HOST_USER_IDENTITY_KEY) as HostUserIdentityFactory | undefined)?.(RunId(`run-${randomUUID()}`)) })
+  // Every field P6-03 must[0] asks of a proposal is stated and the content is
+  // marked normal, so the proposal policy admits both seeds without review. A
+  // seed held for review would stay out of the recall for a reason no case
+  // here is about.
+  const stated = {
+    purpose: 'recall in this workspace',
+    validUntil: new Date(Date.now() + 86_400_000).toISOString(),
+    sensitivity: 'normal',
+  } as const
   await ctx.memory.propose({
     origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: createAnonymousDevPrincipal(PrincipalId('p-fixture'), TenantId('local')),
     scope: { tenantId: TenantId('local'), workspace: await workspaceScope() },
     content: { note: 'the deploy passphrase is oxidized-kingfisher' },
+    ...stated,
   })
   // A record the SAME TENANT wrote from a different checkout. It matches the
   // turn's query as well as the one above does, so if it stays out of the
@@ -56,6 +66,7 @@ try {
       workspace: { canonicalPath: '/projects/another-checkout', identity: 'dev-9:ino-9999:1600000000000' },
     },
     content: { note: 'the deploy passphrase is tarnished-marmoset' },
+    ...stated,
   })
   const [agent] = ctx.get('agents')?.roots() ?? []
   if (agent === undefined) throw new Error('memory-context driver found no configured agent')
