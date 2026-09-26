@@ -18884,6 +18884,90 @@
         "failureSummary": "Read by full case title from each round's own narrow report. Dispatch `59742f4ed8`, run 36198190932: 3 of 3 passed. M-allow `7dea3d4b29`, run 36198208027: exactly the case \"with the deployment rule, the kernel audits the call as denied…\" red, every other case green. M-redispatch `fb9a37ad9e`, run 36198226344: exactly the case \"the denied call is not dispatched again…\" red, every other case green. All readings match artifacts/laneA/a-423-policy-deny-expectations.md (sha256 406f27ba4548378c4b511ff365fe06425953388f971661e8b85c79366309119c) and its v2 (sha256 89236d31d4f982e77ae9a326c817a4ec762debde7254131cc9aeef187f73f9aa), which changes the control overlay and leaves every prediction, written before dispatch."
       },
       "note": "P4-11 acceptance[0], its policy-deny kind, on the shipped mount: a tool call the deployment's policy refuses is not dispatched again and charges the Run's retry budget nothing. The SHIPPED headless profile through `bootProductionProfile`, with the Trust Kernel pinned as `apps/cli/src/profile-boot.ts` pins it, a keyless scripted model and one call of a probe tool tagged `a423-probe`. The two overlays copy the base deployment rules and differ in one added rule: `control.patch.yml` maps the tag to `read`, `deny.patch.yml` to `safety-critical`, which the shipped `kernel-hard-deny` class list refuses (packages/policy/risk-taxonomy/src/classify.ts:36). No retry layer on the shipped product receives a policy denial (the LLM layers' failure facts never carry `denied`), so the refusal is observed at the dispatch path: one audited decision for the call, no second dispatch, no charge, no retry event. Under M-allow the kernel audits a permit and the probe still does not run (probeRuns 0): reading the code, not isolated by a mutation, the tool dispatch's own risk gate also returns `hard-deny` for a hard-denied class (packages/core/tools/src/external-effect.ts:566-568). The audited-deny case is the one that reads the kernel's decision."
+    },
+    {
+      "epic": "P2-05",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-05",
+        "stage": "U"
+      },
+      "supplementSeq": 5,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P2-05.originators.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-05 acceptance[0]: every originator the shipped headless profile drives passes one enforcement point the root agent's own read appends one manifest and is decided once before it runs",
+        "P2-05 acceptance[0]: every originator the shipped headless profile drives passes one enforcement point a child the shipped subagent tool delegates to has its read manifested and decided once before it runs",
+        "P2-05 acceptance[0]: every originator the shipped headless profile drives passes one enforcement point a child a workflow script's agent() call starts has its read manifested and decided once before it runs"
+      ],
+      "files": [
+        "tests/first100/fixtures/P2-05.originators.composition.spec.ts",
+        "tests/first100/fixtures/loader/p2-05-originators/driver.ts",
+        "tests/first100/fixtures/loader/p2-05-originators/shared.ts",
+        "tests/first100/fixtures/loader/p2-05-originators/base.patch.yml",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/policy/policy-enforcement/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-26T02:55:58Z",
+      "dryRunProof": {
+        "treeSha": "a2a298a9dc48061880cee794bcc851901e42ca96",
+        "testsDiscovered": 3,
+        "note": "The batch 10 full run 36210334346 at 28a56599ac1e980a51722b86cbae6b8eff9016d5 (tree a2a298a9dc48061880cee794bcc851901e42ca96): tests/first100/fixtures/P2-05.originators.composition.spec.ts ran 3 cases; the 3 frozen titles each once, all passed."
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-bypass (`34e7432f78`, off the dispatch 547a9537aa, never merged): packages/core/agent-loop/src/tool-calls.ts skips `decideManifestedAction` for a session whose header origin is `subagent`, so a delegated child's action is not decided by the enforcement point.",
+        "failureSummary": "Read from each round's own narrow report. Dispatch 547a9537aa, run 36203800515: 3 of 3 passed. M-bypass, run 36203814953: exactly the subagent and workflow cases red, the root agent's case green. Both match artifacts/laneA/a-433-p2-05-originators-expectations.md (sha256 352e3cfc8512fe978ed8affe687d822e208d3c5a6497496e92a802a02121e450) and its -v2 (sha256 2a5048389ae95543e3ba2ea0e8aecc1565df5d547872025b0e7e5699d57a88c1), written before dispatch. Every file listed is byte-identical at 547a9537aa and 28a56599ac."
+      },
+      "note": "P2-05 acceptance[0] (BLOCKED-313 condition 2, first half): on the SHIPPED headless profile, with the Trust Kernel pinned and an audit sink, each originator the product drives — the root agent's own tool call, a child the shipped subagent tool delegates to, and a child a workflow script's agent() call starts — appends one manifest for its read and is decided once by the kernel-audited enforcement point before the read runs. Originators the product does not ship (sdk-rpc and plugin-rpc as ActionOriginator values; subagent and workflow as originator values, since their children dispatch through the native path) are named in the coverage note rather than driven. The direct ToolRuntime.execute seam is BLOCKED-294's subject (A-434) and is not this entry's."
+    },
+    {
+      "epic": "P2-05",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-05",
+        "stage": "U"
+      },
+      "supplementSeq": 6,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-11.policy-deny.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing control: without the deployment rule the probe runs once, and the kernel audits one permit for its call",
+        "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing with the deployment rule, the kernel audits the call as denied by the shipped kernel-hard-deny policy, and the probe does not run",
+        "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing the denied call is not dispatched again and charges the run retry budget nothing"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-11.policy-deny.composition.spec.ts",
+        "tests/first100/fixtures/loader/p4-11-policy-deny/driver.ts",
+        "tests/first100/fixtures/loader/p4-11-policy-deny/control.patch.yml",
+        "tests/first100/fixtures/loader/p4-11-policy-deny/deny.patch.yml",
+        "packages/policy/policy-enforcement/src/index.ts",
+        "packages/core/agent-loop/src/tool-calls.ts"
+      ],
+      "frozenAtUtc": "2026-09-26T02:55:58Z",
+      "dryRunProof": {
+        "treeSha": "a2a298a9dc48061880cee794bcc851901e42ca96",
+        "testsDiscovered": 3,
+        "note": "The batch 10 full run 36210334346 at 28a56599ac1e980a51722b86cbae6b8eff9016d5 (tree a2a298a9dc48061880cee794bcc851901e42ca96): tests/first100/fixtures/P4-11.policy-deny.composition.spec.ts ran 3 cases; the 3 frozen titles each once, all passed."
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations off the dispatch 59742f4ed8, never merged. M-allow (`7dea3d4b29`): packages/policy/policy-enforcement/src/index.ts:188 enforces a permit whatever the decision was. M-redispatch (`fb9a37ad9e`): packages/core/agent-loop/src/tool-calls.ts, in the policy-denied branch, appends the manifest a second time (a second policy decision and audit) and charges the Run once through runRetryUsage.",
+        "failureSummary": "Read from each round's own narrow report. Dispatch 59742f4ed8, run 36198190932: 3 of 3 passed. M-allow, run 36198208027: exactly the audit case red. M-redispatch, run 36198226344: exactly the not-dispatched-again case red. Each control green. Every listed file is byte-identical at 59742f4ed8, c732e7c073 and 28a56599ac, and both mutated files are byte-identical at the mutations' parent line 4e932e474b and at 28a56599ac."
+      },
+      "note": "P2-05 acceptance[1] (「任何一个 hard deny 即最终 deny。」) on the shipped composition, taking the case P4-11 U.7 also freezes: on the shipped headless mount with the Trust Kernel pinned, a deployment rule that classes the probe safety-critical makes the shipped `kernel-hard-deny` policy deny it; the kernel audits the call as denied by that policy, and the denied call is not dispatched again and charges nothing, beside a control that permits. Not covered here: a plugin constraint that tries to widen a deny is refused only at the decision layer, by [246] C (\"a plugin may narrow a decision and never widen one\"); this case drives no plugin constraint."
     }
   ]
 }

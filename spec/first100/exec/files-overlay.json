@@ -2119,7 +2119,9 @@
         "F",
         "U.1",
         "U",
-        "U.4"
+        "U.4",
+        "U.5",
+        "U.6"
       ],
       "reason": "The enforcement point itself, split from both the definition and the provider: the DECISION comes from `ctx.policy` and the BINDING is the Trust Kernel's, and the code that sequences those two belongs with neither. The registry's stages name the kernel and the four consumer files but not this one, because the plan predates the split; without it, either the kernel would have to import the policy vocabulary (breaking P0-02's domain-agnostic type surface) or every dispatch path would sequence engine, constraints, audit and kernel for itself."
     },
@@ -2201,6 +2203,54 @@
     },
     {
       "epic": "P2-05",
+      "path": "tests/first100/fixtures/loader/p2-05-originators/base.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.5"
+      ]
+    },
+    {
+      "epic": "P2-05",
+      "path": "tests/first100/fixtures/loader/p2-05-originators/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.5"
+      ]
+    },
+    {
+      "epic": "P2-05",
+      "path": "tests/first100/fixtures/loader/p2-05-originators/shared.ts",
+      "kind": "test",
+      "stages": [
+        "U.5"
+      ]
+    },
+    {
+      "epic": "P2-05",
+      "path": "tests/first100/fixtures/loader/p4-11-policy-deny/control.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.6"
+      ]
+    },
+    {
+      "epic": "P2-05",
+      "path": "tests/first100/fixtures/loader/p4-11-policy-deny/deny.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.6"
+      ]
+    },
+    {
+      "epic": "P2-05",
+      "path": "tests/first100/fixtures/loader/p4-11-policy-deny/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.6"
+      ]
+    },
+    {
+      "epic": "P2-05",
       "path": "tests/first100/fixtures/P2-05.composition.spec.ts",
       "kind": "test",
       "stages": [
@@ -2209,10 +2259,26 @@
     },
     {
       "epic": "P2-05",
+      "path": "tests/first100/fixtures/P2-05.originators.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.5"
+      ]
+    },
+    {
+      "epic": "P2-05",
       "path": "tests/first100/fixtures/P2-05.unmount-driver.ts",
       "kind": "test",
       "stages": [
         "U.4"
+      ]
+    },
+    {
+      "epic": "P2-05",
+      "path": "tests/first100/fixtures/P4-11.policy-deny.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.6"
       ]
     },
     {

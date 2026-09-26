@@ -5019,9 +5019,24 @@
           "stage": "C",
           "title": "permutes a SILENT-only set to the same permit, so the invariance is not just \"everything denies\"",
           "supplementSeq": 1
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 6,
+          "title": "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing control: without the deployment rule the probe runs once, and the kernel audits one permit for its call"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 6,
+          "title": "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing with the deployment rule, the kernel audits the call as denied by the shipped kernel-hard-deny policy, and the probe does not run"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 6,
+          "title": "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing the denied call is not dispatched again and charges the run retry budget nothing"
         }
       ],
-      "note": "acceptance[1]: 'any one hard deny is the final deny.' The first three cases state monotonicity directly; the last three are validation[1]'s 1000-permutation evidence, cited here because order-independence is the property that makes \"any one deny\" well defined — a first-match rule would make the answer depend on which plugin loaded first, which is exactly what `dsh-permission-rules` does and what this clause forbids. The permutations use eight constraints (40320 orderings) drawn by a seeded mulberry32 so a failing order reproduces; `Math.random` would make an order-dependent rule indistinguishable from flake. The silent-only case is the control that stops the invariance being satisfied by a rule that always denies. NOTE: `acceptance-coverage.schema.json` indexes acceptance clauses only (`additionalProperties: false`), so validation-clause evidence has no index row of its own and is cited from the acceptance clause it supports, with the mapping stated in `evidence-P2-05.md`."
+      "note": "acceptance[1]: 'any one hard deny is the final deny.' The first three cases state monotonicity directly; the last three are validation[1]'s 1000-permutation evidence, cited here because order-independence is the property that makes \"any one deny\" well defined — a first-match rule would make the answer depend on which plugin loaded first, which is exactly what `dsh-permission-rules` does and what this clause forbids. The permutations use eight constraints (40320 orderings) drawn by a seeded mulberry32 so a failing order reproduces; `Math.random` would make an order-dependent rule indistinguishable from flake. The silent-only case is the control that stops the invariance being satisfied by a rule that always denies. NOTE: `acceptance-coverage.schema.json` indexes acceptance clauses only (`additionalProperties: false`), so validation-clause evidence has no index row of its own and is cited from the acceptance clause it supports, with the mapping stated in `evidence-P2-05.md`.\n\n[2026-09-26 lane A, A-456 draft] On the shipped composition: P2-05 U.6 takes the case P4-11 U.7 also freezes (coverage cannot cite across epics). With the Trust Kernel pinned on the shipped headless mount, a deployment rule that classes the probe safety-critical makes the shipped kernel-hard-deny policy deny it; the kernel audits the call as denied and the denied call is not dispatched again, beside a control that permits. Not covered: a plugin constraint that tries to widen a deny is refused only at the decision layer, by the C cases above."
     },
     {
       "epic": "P2-05",
