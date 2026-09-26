@@ -12,7 +12,6 @@ class RetrySnapshotAdapter extends LlmAdapter {
   policy = resolveRetryPolicy({
     mode: 'normal',
     maxRetries: 1,
-    retryableCodes: ['RATE_LIMIT'],
     backoff: { initialDelayMs: 1, maxDelayMs: 1, jitterRatio: 0 },
   }, 'retry-snapshot-backend.retryPolicy')
 

@@ -13,36 +13,31 @@ describe('provider retry policy', () => {
     expect(policy).toEqual({
       mode: 'normal',
       maxRetries: 5,
-      retryableCodes: ['EMPTY_RESPONSE', 'RATE_LIMIT', 'SERVER', 'TIMEOUT', 'TRANSPORT'],
       initialDelayMs: 500,
       maxDelayMs: 10_000,
       jitterRatio: 0.1,
     })
     expect(Object.isFrozen(policy)).toBe(true)
-    if (policy.mode !== 'normal') throw new Error('expected normal policy')
-    expect(Object.isFrozen(policy.retryableCodes)).toBe(true)
   })
 
   it('resolves and detaches a configured normal policy', () => {
-    const retryableCodes = ['BUSY']
+    const backoff = {
+      initialDelayMs: 25,
+      maxDelayMs: 100,
+      jitterRatio: 0,
+    }
     const config: RetryPolicyConfig = {
       mode: 'normal',
       maxRetries: 4,
-      retryableCodes,
-      backoff: {
-        initialDelayMs: 25,
-        maxDelayMs: 100,
-        jitterRatio: 0,
-      },
+      backoff,
     }
 
     const policy = resolveRetryPolicy(config, 'provider.retryPolicy')
-    retryableCodes.push('LATE')
+    backoff.initialDelayMs = 50
 
     expect(policy).toEqual({
       mode: 'normal',
       maxRetries: 4,
-      retryableCodes: ['BUSY'],
       initialDelayMs: 25,
       maxDelayMs: 100,
       jitterRatio: 0,
@@ -63,7 +58,6 @@ describe('provider retry policy', () => {
     const layered = {
       mode: 'always',
       maxRetries: 5,
-      retryableCodes: ['SERVER'],
     } as unknown as RetryPolicyConfig
 
     expect(resolveRetryPolicy(layered, 'provider.retryPolicy')).toEqual({
@@ -84,10 +78,6 @@ describe('provider retry policy', () => {
     [{ mode: 'always', backoff: { maxDelayMs: MAX_TIMER_DELAY_MS + 1 } }, /maxDelayMs/],
     [{ mode: 'normal', backoff: { initialDelayMs: 20, maxDelayMs: 10 } }, /less than or equal/],
     [{ mode: 'always', backoff: { jitterRatio: 1.1 } }, /jitterRatio/],
-    [{ mode: 'normal', retryableCodes: [] }, /must not be empty/],
-    [{ mode: 'normal', retryableCodes: ['SERVER', 'SERVER'] }, /duplicates/],
-    [{ mode: 'normal', retryableCodes: [''] }, /non-empty strings/],
-    [{ mode: 'normal', retryableCodes: [429] }, /non-empty strings/],
     [{ mode: 'normal', maxRetires: 1 }, /unknown key "maxRetires"/],
     [{ mode: 'always', backoff: { initialDelay: 1 } }, /unknown key "initialDelay"/],
     [{ mode: 'sometimes' }, /mode must be "normal" or "always"/],
@@ -95,5 +85,15 @@ describe('provider retry policy', () => {
     expect(() => {
       resolveRetryPolicy(config as unknown as RetryPolicyConfig, 'provider.retryPolicy')
     }).toThrow(message)
+  })
+
+  // BLOCKED-339: which failures are retried is the shared classifier's
+  // decision, so a configuration still carrying the removed code list is
+  // refused with an error that says what replaced it.
+  it.each(['normal', 'always'] as const)('refuses retryableCodes in %s mode and names the shared classifier', (mode) => {
+    const config = { mode, retryableCodes: ['SERVER'] } as unknown as RetryPolicyConfig
+    const named = 'provider.retryPolicy.retryableCodes is not accepted: '
+      + 'which failures are retried is decided by the shared retry classifier'
+    expect(() => resolveRetryPolicy(config, 'provider.retryPolicy')).toThrow(named)
   })
 })

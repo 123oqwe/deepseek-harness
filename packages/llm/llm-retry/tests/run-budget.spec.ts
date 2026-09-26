@@ -30,7 +30,6 @@ import * as retry from '../src/index.ts'
 const POLICY: RetryPolicyConfig = {
   mode: 'normal',
   maxRetries: 5,
-  retryableCodes: ['SERVER'],
   backoff: { initialDelayMs: 1, maxDelayMs: 1, jitterRatio: 0 },
 }
 

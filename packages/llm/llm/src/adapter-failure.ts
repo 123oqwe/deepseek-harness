@@ -6,7 +6,13 @@
 
 import type { FailureFacts } from '@deepseek-ai/dsh-retry/classify'
 
-import { HarnessError } from './error.ts'
+import {
+  CONTEXT_WINDOW_EXCEEDED_CODE,
+  EMPTY_RESPONSE_CODE,
+  HarnessError,
+  INVALID_CREDENTIAL_CODE,
+  QUOTA_EXCEEDED_CODE,
+} from './error.ts'
 import type { LlmFailure } from './types.ts'
 
 /**
@@ -15,11 +21,46 @@ import type { LlmFailure } from './types.ts'
  * Mapped to `malformed` rather than left to the status because the two say
  * different things to an operator: a `400` is "this endpoint rejected it" and
  * `invalid-input` is "the arguments are wrong", which is the one an operator
- * can act on. `AUTH` is deliberately absent — a credential failure is already
- * permanent by its `401`/`403`, and calling it malformed would send someone to
- * fix a request that is correct.
+ * can act on. A context overflow belongs here because the conversation must
+ * shrink before a resend can succeed.
  */
-const MALFORMED_CODES: ReadonlySet<string> = new Set(['INVALID_REQUEST', 'INVALID_ARGS'])
+const MALFORMED_CODES: ReadonlySet<string> = new Set([
+  'INVALID_REQUEST',
+  'INVALID_ARGS',
+  'UNSUPPORTED_CONTENT',
+  'UNSUPPORTED_REASONING_EFFORT',
+  'REQUEST_EXTENSION',
+  CONTEXT_WINDOW_EXCEEDED_CODE,
+])
+
+/**
+ * Codes that name a condition only the caller can change: a rejected, absent
+ * or unusable credential, an exhausted balance, or the caller's own
+ * cancellation. Not `malformed`, because the request itself may be correct and
+ * calling it malformed would send someone to fix it.
+ */
+const CALLER_SIDE_CODES: ReadonlySet<string> = new Set([
+  'AUTH',
+  'MISSING_CREDENTIAL',
+  INVALID_CREDENTIAL_CODE,
+  QUOTA_EXCEEDED_CODE,
+  'ABORTED',
+])
+
+/**
+ * Codes that name a transient condition when the failure carries no status.
+ *
+ * An adapter may report a failure without a status, and then its code is the
+ * only evidence of what happened: a statusless failure is retryable only when
+ * its code says the condition passes.
+ */
+const TRANSIENT_CODES: ReadonlySet<string> = new Set([
+  EMPTY_RESPONSE_CODE,
+  'RATE_LIMIT',
+  'SERVER',
+  'TIMEOUT',
+  'TRANSPORT',
+])
 
 /**
  * Read an adapter failure into the facts the retry classifier decides on
@@ -29,14 +70,21 @@ const MALFORMED_CODES: ReadonlySet<string> = new Set(['INVALID_REQUEST', 'INVALI
  * absent because generating a completion commits no external effect, and
  * asserting `false` would claim a guarantee this layer cannot make; `denied`
  * is absent because a policy refusal is raised by the permission gate before
- * an adapter is reached, so it never arrives as an adapter failure.
+ * an adapter is reached, so it never arrives as an adapter failure. A failure
+ * with neither a status nor a code named here is `unclassified`.
  * @param failure - the normalized adapter failure.
  * @returns the facts, with fields absent when the failure did not carry them.
  */
 export function llmFailureFacts(failure: LlmFailure): FailureFacts {
+  const { code, status } = failure
+  const malformed = MALFORMED_CODES.has(code)
+  const callerSide = CALLER_SIDE_CODES.has(code)
+  const unclassified = status === undefined && !malformed && !callerSide && !TRANSIENT_CODES.has(code)
   return Object.freeze({
-    ...failure.status === undefined ? {} : { status: failure.status },
-    ...MALFORMED_CODES.has(failure.code) ? { malformed: true } : {},
+    ...status === undefined ? {} : { status },
+    ...malformed ? { malformed } : {},
+    ...callerSide ? { callerSide } : {},
+    ...unclassified ? { unclassified } : {},
   })
 }
 

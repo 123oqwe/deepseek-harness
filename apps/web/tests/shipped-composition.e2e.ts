@@ -92,13 +92,6 @@ it('assembles the shipped Web transport, catalog, guidance, and defaults', async
       "maxDelayMs": 10000,
       "maxRetries": 5,
       "mode": "normal",
-      "retryableCodes": [
-        "EMPTY_RESPONSE",
-        "RATE_LIMIT",
-        "SERVER",
-        "TIMEOUT",
-        "TRANSPORT",
-      ],
     }
   `)
   await ctx.settings.update('llm-deepseek', {
@@ -125,13 +118,6 @@ it('assembles the shipped Web transport, catalog, guidance, and defaults', async
       "maxDelayMs": 10000,
       "maxRetries": 5,
       "mode": "normal",
-      "retryableCodes": [
-        "EMPTY_RESPONSE",
-        "RATE_LIMIT",
-        "SERVER",
-        "TIMEOUT",
-        "TRANSPORT",
-      ],
     }
   `)
   expect(ctx.llm.providerRetryPolicy('anthropic')).toMatchInlineSnapshot(`

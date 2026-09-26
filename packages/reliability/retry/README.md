@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-retry` ships the decisions Epic P4-11 unifies: whether a failure may be retried at all, and whether an attempt spends from the run's budget. `src/classify.ts` carries the taxonomy and the hedge rule; `src/budget.ts` carries the run-wide accounting; `tests/retry.spec.ts` covers them in 13 cases. `src/index.ts` re-exports both, plus two things this package gained at the Usage stage: `chargedRun`, which answers WHICH run a retry is charged to, and `RunRetryUsagePlugin`, the one place a run's spending is counted. The accounting is self-provided — the documented pattern for a family whose implementation is a map and an arithmetic rule — and what varies by deployment is the allowance, which is its `Config`.
+`dsh-retry` ships the decisions Epic P4-11 unifies: whether a failure may be retried at all, and whether an attempt spends from the run's budget. `src/classify.ts` carries the taxonomy and the hedge rule; `src/budget.ts` carries the run-wide accounting; `tests/retry.spec.ts` covers them in 15 cases. `src/index.ts` re-exports both, plus two things this package gained at the Usage stage: `chargedRun`, which answers WHICH run a retry is charged to, and `RunRetryUsagePlugin`, the one place a run's spending is counted. The accounting is self-provided — the documented pattern for a family whose implementation is a map and an arithmetic rule — and what varies by deployment is the allowance, which is its `Config`.
 
 The registry's problem statement is that several layers each decided retryability for themselves and their limits multiplied. The fix is that there is **one** of each decision — not that this package does more.
 

@@ -10,9 +10,10 @@ import type { Context, Events } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { z as zod } from 'zod'
 import type { Agent, RequestErrorAction } from '@deepseek-ai/dsh-agent'
+import { llmFailureFacts } from '@deepseek-ai/dsh-llm'
 import type { LlmFailure, ResolvedRetryPolicy } from '@deepseek-ai/dsh-llm'
 import type {} from '@deepseek-ai/dsh-session-projection'
-import { chargedRun } from '@deepseek-ai/dsh-retry'
+import { chargedRun, classifyFailure } from '@deepseek-ai/dsh-retry'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { RetryId } from './brand.ts'
@@ -66,13 +67,26 @@ function localDelay(config: ResolvedRetryPolicy, retry: number, random: () => nu
   return Math.min(exponential * jitter, config.maxDelayMs)
 }
 
+/**
+ * Whether llm-retry may retry one failed model request, in either mode
+ * (Epic P4-11 must[0]).
+ *
+ * The circuit breaker in `dsh-llm` decides a first-chunk failure with the same
+ * `classifyFailure(llmFailureFacts(...))` over the same normalized failure the
+ * finish chunk carries, so the two layers give one verdict for one failure.
+ * @param failure - the failed step's normalized failure.
+ * @returns true when the shared classifier calls the failure retryable.
+ */
+export function isRetryableLlmFailure(failure: LlmFailure): boolean {
+  return classifyFailure(llmFailureFacts(failure)).retryable
+}
+
 function retryPolicyKey(policy: ResolvedRetryPolicy): string {
   return policy.mode === 'always'
     ? JSON.stringify([policy.mode, policy.initialDelayMs, policy.maxDelayMs, policy.jitterRatio])
     : JSON.stringify([
       policy.mode,
       policy.maxRetries,
-      [...policy.retryableCodes].sort(),
       policy.initialDelayMs,
       policy.maxDelayMs,
       policy.jitterRatio,
@@ -199,6 +213,8 @@ export function apply(ctx: Context, config: Config = {}, internals: RetryInterna
     next: () => Promise<RequestErrorAction>,
   ): Promise<RequestErrorAction> {
     if (policy === undefined) return next()
+    // Both modes: always mode lifts the attempt limit, never the classifier's verdict.
+    if (!isRetryableLlmFailure(failure)) return next()
     if (policy.mode === 'always') {
       if (signal.aborted || lifetime.signal.aborted) return
       const fusedSignal = AbortSignal.any([signal, lifetime.signal])
@@ -215,8 +231,6 @@ export function apply(ctx: Context, config: Config = {}, internals: RetryInterna
       if (downstream.type === 'decision' && downstream.decision?.kind === 'retry') {
         return downstream.decision
       }
-    } else if (!policy.retryableCodes.includes(failure.code)) {
-      return next()
     }
 
     const policyKey = retryPolicyKey(policy)

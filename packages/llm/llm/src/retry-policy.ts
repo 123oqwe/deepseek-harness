@@ -3,25 +3,19 @@
  *
  * Adapters expose one resolved policy per registered provider route; the
  * optional dsh-llm-retry plugin executes it on the agent's failed-step extension point.
+ * A policy says how often and how long to retry, never which failures: that
+ * is the shared retry classifier's decision.
  *
  * @module @deepseek-ai/dsh-llm/retry-policy
  */
 
 import z from '@deepseek-ai/schemastery'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
-import { EMPTY_RESPONSE_CODE } from './error.ts'
 
 const DEFAULT_MAX_RETRIES = 5
 const DEFAULT_INITIAL_DELAY_MS = 500
 const DEFAULT_MAX_DELAY_MS = 10_000
 const DEFAULT_JITTER_RATIO = 0.1
-const DEFAULT_RETRYABLE_CODES = Object.freeze([
-  EMPTY_RESPONSE_CODE,
-  'RATE_LIMIT',
-  'SERVER',
-  'TIMEOUT',
-  'TRANSPORT',
-])
 
 /** Bounded exponential backoff with symmetric jitter around each local delay. */
 export interface BackoffConfig {
@@ -35,19 +29,17 @@ export interface BackoffConfig {
 
 /** Current bounded transient retry behavior for one provider route. */
 export interface NormalRetryPolicyConfig {
-  /** Retry only configured transient failure codes. */
+  /** Retry retryable failures a bounded number of times. */
   mode: 'normal'
   /** Maximum eligible retries after the first request (default 5). */
   maxRetries?: number
-  /** Stable failure codes eligible for this policy. */
-  retryableCodes?: string[]
   /** Local exponential-backoff and jitter configuration. */
   backoff?: BackoffConfig
 }
 
-/** Unbounded retry behavior for every model-request failure on one provider route. */
+/** Unbounded retry behavior for retryable model-request failures on one provider route. */
 export interface AlwaysRetryPolicyConfig {
-  /** Retry every model-request failure until success, cancellation, or disposal. */
+  /** Retry retryable failures until success, cancellation, or disposal. */
   mode: 'always'
   /** Local exponential-backoff and jitter configuration. */
   backoff?: BackoffConfig
@@ -67,7 +59,6 @@ export interface ResolvedRetryBackoff {
 export interface ResolvedNormalRetryPolicy extends ResolvedRetryBackoff {
   readonly mode: 'normal'
   readonly maxRetries: number
-  readonly retryableCodes: readonly string[]
 }
 
 /** Fully resolved unbounded retry policy. */
@@ -87,7 +78,6 @@ const backoffSchema: z<BackoffConfig> = z.object({
 const normalPolicySchema: z<NormalRetryPolicyConfig> = z.object({
   mode: z.const('normal').required(),
   maxRetries: z.number().step(1).min(0).max(Number.MAX_SAFE_INTEGER).default(DEFAULT_MAX_RETRIES),
-  retryableCodes: z.array(z.string()).default([...DEFAULT_RETRYABLE_CODES]),
   backoff: backoffSchema,
 })
 
@@ -103,12 +93,12 @@ export const RetryPolicySchema: z<RetryPolicyConfig> = z.union([
 ])
 
 const NORMAL_POLICY_KEYS: ReadonlySet<string> = new Set([
-  'mode', 'maxRetries', 'retryableCodes', 'backoff',
+  'mode', 'maxRetries', 'backoff',
 ])
 // Layered configuration can retain normal-only fields after switching modes;
 // always mode ignores those inactive values while still rejecting unknown keys.
 const ALWAYS_POLICY_KEYS: ReadonlySet<string> = new Set([
-  'mode', 'maxRetries', 'retryableCodes', 'backoff',
+  'mode', 'maxRetries', 'backoff',
 ])
 const BACKOFF_KEYS: ReadonlySet<string> = new Set(['initialDelayMs', 'maxDelayMs', 'jitterRatio'])
 
@@ -154,32 +144,28 @@ export function resolveRetryPolicy(
     return Object.freeze({
       mode: 'normal',
       maxRetries: DEFAULT_MAX_RETRIES,
-      retryableCodes: DEFAULT_RETRYABLE_CODES,
       ...resolveBackoff(undefined, `${path}.backoff`),
     })
+  }
+  // Named apart from the unknown-key error so a configuration written for the
+  // removed per-provider code list says what replaced it, in either mode.
+  if ('retryableCodes' in config) {
+    throw new Error(
+      `${path}.retryableCodes is not accepted: which failures are retried is decided by the shared retry `
+      + 'classifier (@deepseek-ai/dsh-retry classifyFailure), not by a per-provider code list',
+    )
   }
 
   switch (config.mode) {
     case 'normal': {
       validateKeys(config, NORMAL_POLICY_KEYS, path)
       const maxRetries = config.maxRetries ?? DEFAULT_MAX_RETRIES
-      const retryableCodes = config.retryableCodes ?? [...DEFAULT_RETRYABLE_CODES]
       if (!Number.isSafeInteger(maxRetries) || maxRetries < 0) {
         throw new Error(`${path}.maxRetries must be a non-negative safe integer`)
-      }
-      if (retryableCodes.length === 0) {
-        throw new Error(`${path}.retryableCodes must not be empty`)
-      }
-      if (retryableCodes.some(code => typeof code !== 'string' || code.length === 0)) {
-        throw new Error(`${path}.retryableCodes must contain only non-empty strings`)
-      }
-      if (new Set(retryableCodes).size !== retryableCodes.length) {
-        throw new Error(`${path}.retryableCodes must not contain duplicates`)
       }
       return Object.freeze({
         mode: 'normal',
         maxRetries,
-        retryableCodes: Object.freeze([...retryableCodes]),
         ...resolveBackoff(config.backoff, `${path}.backoff`),
       })
     }

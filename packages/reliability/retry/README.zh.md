@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-`dsh-retry` 交付 Epic P4-11 所统一的决策:一次失败是否根本允许重试,以及一次尝试是否花费 run 的预算。`src/classify.ts` 承载分类法与 hedge 规则;`src/budget.ts` 承载 run 全局的记账;`tests/retry.spec.ts` 以 13 条用例覆盖二者。`src/index.ts` 重新导出它们,外加 Usage 阶段新增的两样:`chargedRun` 回答一次重试**记在哪个 run 上**,`RunRetryUsagePlugin` 是一个 run 的花费被计数的唯一处所。这份记账是**自供**的——一个实现只是映射加一条算术规则的 family 的既定模式——按部署变化的是**额度**,它是该插件的 `Config`。
+`dsh-retry` 交付 Epic P4-11 所统一的决策:一次失败是否根本允许重试,以及一次尝试是否花费 run 的预算。`src/classify.ts` 承载分类法与 hedge 规则;`src/budget.ts` 承载 run 全局的记账;`tests/retry.spec.ts` 以 15 条用例覆盖二者。`src/index.ts` 重新导出它们,外加 Usage 阶段新增的两样:`chargedRun` 回答一次重试**记在哪个 run 上**,`RunRetryUsagePlugin` 是一个 run 的花费被计数的唯一处所。这份记账是**自供**的——一个实现只是映射加一条算术规则的 family 的既定模式——按部署变化的是**额度**,它是该插件的 `Config`。
 
 registry 的问题陈述是:多个层各自决定可重试性,它们的上限于是相乘。修法是每个决策**只有一个**——而不是本包做得更多。
 

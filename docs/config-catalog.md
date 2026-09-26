@@ -1613,7 +1613,7 @@ Requires: `agents` · `sessionProjections`
 export type Config = Readonly<Record<string, never>>
 ```
 
-Source: [`packages/llm/llm-retry/src/index.ts:28`](../packages/llm/llm-retry/src/index.ts)
+Source: [`packages/llm/llm-retry/src/index.ts:29`](../packages/llm/llm-retry/src/index.ts)
 
 <a id="deepseek-aidsh-lsp-stdio"></a>
 

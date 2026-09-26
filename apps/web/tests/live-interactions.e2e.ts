@@ -308,7 +308,7 @@ describe('web e2e: live-turn interactions (cancel / error / retry)', () => {
     const failure: ReplayEntry = { kind: 'throw', chunks: [], message: 'upstream 503', code: 'SERVER' }
     await launch(
       () => [failure, failure, failure],
-      { mode: 'normal', maxRetries: 2, retryableCodes: ['SERVER'], backoff: { initialDelayMs: 25, maxDelayMs: 50, jitterRatio: 0 } },
+      { mode: 'normal', maxRetries: 2, backoff: { initialDelayMs: 25, maxDelayMs: 50, jitterRatio: 0 } },
     )
     onTestFailed(() => saveFailureShot(page, 'web-e2e-retry-exhausted'))
     const { settled } = await sendPrompt(60_000)

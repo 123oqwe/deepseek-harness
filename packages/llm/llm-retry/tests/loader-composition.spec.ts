@@ -24,7 +24,6 @@ class TransientOnceAdapter extends LlmAdapter {
   private readonly retryPolicy = resolveRetryPolicy({
     mode: 'normal',
     maxRetries: 1,
-    retryableCodes: ['RATE_LIMIT', 'SERVER'],
     backoff: { initialDelayMs: 1, maxDelayMs: 1, jitterRatio: 0 },
   }, 'loader test provider retryPolicy')
 
