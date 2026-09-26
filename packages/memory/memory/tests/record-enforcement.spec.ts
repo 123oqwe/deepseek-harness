@@ -29,6 +29,7 @@ import MemoryRuntime, {
 } from '@deepseek-ai/dsh-memory'
 import { createUserPrincipal, PrincipalId, TenantId, type Principal } from '@deepseek-ai/dsh-principal'
 import { brandString } from '@deepseek-ai/dsh-brand'
+import { provideProposalPolicy } from './fixtures/proposal-policy.ts'
 
 const principal: Principal = createUserPrincipal(PrincipalId('user-1'), TenantId('tenant-a'))
 const scope = { tenantId: TenantId('tenant-a') }
@@ -39,9 +40,14 @@ const accessContext: MemoryAccessContext = {
   contextBudget: { maxRecords: 10 },
 }
 
-/** Mount the seam over one provider. Both providers run every case: the rule is the seam's, not a backend's. */
+/**
+ * Mount the seam over one provider, with the proposal policy mounted as it is
+ * wherever memory ships. Both providers run every case: the rule is the
+ * seam's, not a backend's.
+ */
 async function mount(provider: MemoryProvider): Promise<MemoryRuntime> {
   const ctx = new Context()
+  provideProposalPolicy(ctx)
   await ctx.plugin(MemoryRuntime)
   ctx.memory.registerProvider(provider)
   return ctx.memory
@@ -157,6 +163,8 @@ for (const [label, createProvider] of providers) {
         scope,
         content: { note: 'stale-token' },
         validUntil: '2000-01-01T00:00:00.000Z',
+        purpose: 'recall',
+        sensitivity: 'normal',
       })
 
       await expect(memory.query({ accessContext, query: 'stale-token' }))
@@ -171,6 +179,8 @@ for (const [label, createProvider] of providers) {
         scope,
         content: { note: 'fresh-token' },
         validUntil: '2099-01-01T00:00:00.000Z',
+        purpose: 'recall',
+        sensitivity: 'normal',
       })
 
       const found = await memory.query({ accessContext, query: 'fresh-token' })
@@ -180,34 +190,28 @@ for (const [label, createProvider] of providers) {
 }
 
 /**
- * P6-02 must[2] has a subject and no consumption point in this build.
+ * P6-02 must[2] applied at the write, by P6-03's proposal policy.
  *
- * `admitToIndex` decides correctly — the Contract stage pins that, including
- * its refusal of an unstated sensitivity — and nothing asks it. This build
- * constructs no embedding and no index; `query()` scans records the caller is
- * already entitled to read, which is not the derived artifact the clause
- * names, and `get()`/`export()` hand the same record over regardless.
- *
- * The case below records that absence as an observation rather than a
- * comment, so it is the thing that goes red the day someone wires the
- * decision into the search. That is not a regression to fix by deleting this
- * case: it is the ruling (BLOCKED-198) asking to be re-read, because applying
- * the rule there withholds every record whose writer stated no sensitivity —
- * and no shipped writer states one, `dsh-memory-context` included.
+ * This build still constructs no index, and `admitToIndex` still has no
+ * caller. The rule BLOCKED-198 left without a consumption point applies when
+ * the proposal is written instead: content whose writer stated no sensitivity
+ * waits for review, so it is stored `pending`, `get()` by id still hands it to
+ * its owner, and the default search does not return it until a person decides.
  */
 for (const [label, createProvider] of providers) {
   describe(`P6-02 must[2] through the seam: the ${label} provider has no index to admit to`, () => {
-    it(`${label}: the default search still returns content whose sensitivity nobody stated`, async () => {
+    it(`${label}: content whose sensitivity nobody stated waits for review, and the default search does not return it`, async () => {
       const memory = await mount(createProvider())
-      await memory.propose({
+      const { id } = await memory.propose({
         origin: { kind: 'user-asserted', assertedBy: 'operator' },
         principal,
         scope,
         content: { note: 'unassessed-token' },
       })
 
+      await expect(memory.get({ accessContext, id })).resolves.toMatchObject({ content: { note: 'unassessed-token' } })
       const found = await memory.query({ accessContext, query: 'unassessed-token' })
-      expect(found.records).toHaveLength(1)
+      expect(found.records).toHaveLength(0)
     })
   })
 }
