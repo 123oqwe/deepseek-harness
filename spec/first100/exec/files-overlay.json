@@ -4320,8 +4320,8 @@
       "path": "packages/reliability/retry-cockatiel/tests/breaker.spec.ts",
       "kind": "test",
       "stages": [
-        "P",
-        "P.1"
+        "P.1",
+        "P"
       ]
     },
     {

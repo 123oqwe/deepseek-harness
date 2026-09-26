@@ -11057,7 +11057,9 @@
         "mutationDescription": "Four mutations, each applied to packages/reliability/retry-cockatiel/src/index.ts, run against this argv, and restored byte-identical (git diff --stat clean after each). (M46) an open destination runs the operation instead of refusing: `if (error instanceof BrokenCircuitError) return await operation()`. (M47) the destination key drops baseUrl and model, keying per provider. (M48) every failure counts against the endpoint: the classifier's verdict is ignored and each error becomes a CountedFailure. (M49) the caller receives the breaker-internal CountedFailure instead of its own error.",
         "failureSummary": "M46 reddens 3 of 31 (the refusal case, the per-destination case, and the unload/remount case, which observes a fresh breaker starting closed). M47 reddens exactly 1 -- the per-destination case, which opens one model and then calls another at the same base URL. M48 reddens exactly 1 -- the permanent-failure case, which drives a policy denial past the threshold and expects the destination still closed. M49 reddens 5, including the below-threshold control, because every path that awaits the caller's own LlmError sees the wrapper instead. Two controls sit beside the refusals: 'still executes below the threshold' and 'returns the caller its own error', so a breaker that refused everything or wrapped everything could not satisfy the suite."
       },
-      "note": "P4-11 Provider stage: the adopted runtime behind this epic's own decision interface.\n\nFROZEN AFTER C/U/F WERE GREENED, and the ordering is deliberate rather than a repair. The P cell is NOT_RUN and has never been observed by any run, so this is not a freeze recorded after seeing its own result -- what B4b forbids is pre-committing a stage that has already been observed. The entry exists because BLOCKED-175 measured that the provider package landed in a file no live freeze cites: `realitySet` is files[] union stage files union live freeze citations, so `verify-make-vs-use` could not see the cockatiel adoption and reported it as a decision that disagreed with the tree. Freezing P is the missing step, not a workaround for the gate.\n\nWHAT THE STAGE OWNS: which destinations are separate (provider + baseUrl + model, so a decommissioned model does not open a healthy endpoint) and which failures count against an endpoint's health (the classifier's verdict, so a policy denial moves nothing). cockatiel owns consecutive counting, the open period and half-open probing -- the make-vs-use record's whole point, and the reason `circuit.ts`'s hand-written counting was withdrawn.\n\nThe adapter-failure and retry-policy cases are in this argv because they are the translation the breaker's classifier runs on: `breaker.spec.ts` classifies with the real `llmFailureFacts(normalizeLlmFailure(error))` rather than a hand-built FailureFacts, so a change to either would move the breaker's behaviour without touching its own file."
+      "note": "P4-11 Provider stage: the adopted runtime behind this epic's own decision interface.\n\nFROZEN AFTER C/U/F WERE GREENED, and the ordering is deliberate rather than a repair. The P cell is NOT_RUN and has never been observed by any run, so this is not a freeze recorded after seeing its own result -- what B4b forbids is pre-committing a stage that has already been observed. The entry exists because BLOCKED-175 measured that the provider package landed in a file no live freeze cites: `realitySet` is files[] union stage files union live freeze citations, so `verify-make-vs-use` could not see the cockatiel adoption and reported it as a decision that disagreed with the tree. Freezing P is the missing step, not a workaround for the gate.\n\nWHAT THE STAGE OWNS: which destinations are separate (provider + baseUrl + model, so a decommissioned model does not open a healthy endpoint) and which failures count against an endpoint's health (the classifier's verdict, so a policy denial moves nothing). cockatiel owns consecutive counting, the open period and half-open probing -- the make-vs-use record's whole point, and the reason `circuit.ts`'s hand-written counting was withdrawn.\n\nThe adapter-failure and retry-policy cases are in this argv because they are the translation the breaker's classifier runs on: `breaker.spec.ts` classifies with the real `llmFailureFacts(normalizeLlmFailure(error))` rather than a hand-built FailureFacts, so a change to either would move the breaker's behaviour without touching its own file.",
+      "supersededBy": "2026-09-26T04:37:04Z",
+      "supersessionReason": "B-605 (BLOCKED-339) took retryableCodes out of the provider retry policy, so the invalid-policy table lost its four retryableCodes rows and \"provider retry policy rejects invalid policy 12\"–\"15\" no longer exist. Replaced by lane A's A-478 v2 under the delegate's minimal-change ruling (gate3 log 2026-09-26T03:59:02Z and 04:01:51Z): those four dropped, 9–11 kept under their positional titles, the two \"refuses retryableCodes\" cases added; the entry's note says what 9–11 now assert."
     },
     {
       "epic": "P4-09",
@@ -19098,6 +19100,71 @@
         "failureSummary": "Read from each round's own narrow report. Dispatch 619e51ce16c9c5eaeee4fb40710db498f11d6be2, run 36211335314: 2 of 2 passed. M-cm-bypass v2, run 36211710778: exactly one case red, «P2-05 acceptance[0]: an action a code-mode program originates passes the one enforcement point the program's read appends one code-mode manifest and the same audited enforcement point decides it once before it runs», the control green. Predictions artifacts/laneA/a-455-p2-05-code-mode-expectations.md (sha256 ded02f37e1264656e4086d0cd5187b16d9295054e064c72adc48c77b241fa053) and artifacts/laneA/a-455-p2-05-code-mode-expectations-v2.md (sha256 05d6b929bcf53d76a9c93992336fd778f56f5943a792442229e7fc53a3ed1447), written before dispatch. The case's files are byte-identical at 2473d6c4df and at the dispatch; ptc.ts, the one file the mutation changes, is byte-identical at the dispatch and at 28a56599ac. Both checks are repeated against the landing candidate."
       },
       "note": "P2-05 acceptance[0] (「同一 ActionManifest 无论从工具、workflow、SDK、插件、子 Agent 发起都经过同一 PEP。」), the code-mode half, on the shipped headless profile in code mode with the Trust Kernel pinned and an audit sink: an action a `run_code` program originates appends its own manifest and is decided once by the same audited enforcement point as the model's own call, before it runs. The control is the `run_code` call itself, which the native path manifests and decides. The direct `ToolRuntime.execute` seam is BLOCKED-294's subject and is not covered here."
+    },
+    {
+      "epic": "P4-11",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/reliability/retry-cockatiel",
+        "packages/llm/llm/tests/adapter-failure.spec.ts",
+        "packages/llm/llm/tests/retry-policy.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "adapter failure normalization contains hostile non-Error coercion",
+        "adapter failure normalization normalizes empty primitive throws and data descriptors without values",
+        "adapter failure normalization contains hostile Error property reflection",
+        "adapter failure normalization rejects malformed or accessor-backed failure snapshots",
+        "adapter failure normalization falls back when an Error message accessor throws",
+        "provider retry policy resolves immutable normal defaults",
+        "provider retry policy resolves and detaches a configured normal policy",
+        "provider retry policy resolves always mode with default backoff",
+        "provider retry policy ignores normal-only fields retained after switching to always mode",
+        "provider retry policy rejects invalid policy 0",
+        "provider retry policy rejects invalid policy 1",
+        "provider retry policy rejects invalid policy 2",
+        "provider retry policy rejects invalid policy 3",
+        "provider retry policy rejects invalid policy 4",
+        "provider retry policy rejects invalid policy 5",
+        "provider retry policy rejects invalid policy 6",
+        "provider retry policy rejects invalid policy 7",
+        "provider retry policy rejects invalid policy 8",
+        "provider retry policy rejects invalid policy 9",
+        "provider retry policy rejects invalid policy 10",
+        "provider retry policy rejects invalid policy 11",
+        "P4-11 circuit breaker provider refuses an attempt at the threshold without reaching the operation",
+        "P4-11 circuit breaker provider still executes below the threshold",
+        "P4-11 circuit breaker provider opens one destination without opening another under the same provider",
+        "P4-11 circuit breaker provider does not count a failure the classifier calls permanent",
+        "P4-11 circuit breaker provider unloads and rolls back: the service goes with its fiber, and a remount starts closed",
+        "P4-11 circuit breaker provider returns the caller its own error, not a breaker-internal one",
+        "provider retry policy refuses retryableCodes in normal mode and names the shared classifier",
+        "provider retry policy refuses retryableCodes in always mode and names the shared classifier"
+      ],
+      "files": [
+        "packages/reliability/retry-cockatiel/src/index.ts",
+        "packages/reliability/retry-cockatiel/tests/breaker.spec.ts",
+        "packages/llm/llm/src/adapter-failure.ts",
+        "packages/llm/llm/src/retry-policy.ts",
+        "packages/reliability/retry/src/provider.ts"
+      ],
+      "frozenAtUtc": "2026-09-26T04:37:04Z",
+      "supersedes": "2026-09-10T23:55:00.000Z",
+      "dryRunProof": {
+        "treeSha": "c2b47b99cbcf27ef4c8eb4f7dc723451d33599ef",
+        "testsDiscovered": 29,
+        "note": "From the fix-prime narrow round 36215084536 at 6632dfcfae7d17a0ae3c0718925c329eb4ced73e (tree c2b47b99cbcf27ef4c8eb4f7dc723451d33599ef), admitted under the delegate's A-478 ruling: (1) it ran every test path in this argv (packages/reliability/retry-cockatiel, packages/llm/llm/tests/adapter-failure.spec.ts, packages/llm/llm/tests/retry-policy.spec.ts); (2) every listed file and argv path is byte-identical at 6632dfcfae and at the candidate 27f4aab28e793c7a258761f6919a5e744670b511; (3) the 29 frozen titles are each found once in that report, all passed. The round also ran 18 cases outside this entry (the llmFailureFacts cases and the breaker reopen case, which P.1 freezes)."
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations, each applied to packages/reliability/retry-cockatiel/src/index.ts, run against this argv, and restored byte-identical (git diff --stat clean after each). (M46) an open destination runs the operation instead of refusing: `if (error instanceof BrokenCircuitError) return await operation()`. (M47) the destination key drops baseUrl and model, keying per provider. (M48) every failure counts against the endpoint: the classifier's verdict is ignored and each error becomes a CountedFailure. (M49) the caller receives the breaker-internal CountedFailure instead of its own error. Added for the two retryableCodes refusals: M-605-3 (`222183a9d98b3fcb531d7ffd2ef63329e188b6b1`, off the fix 3906a7fb4a, never merged) removes packages/llm/llm/src/retry-policy.ts's load-time refusal of retryableCodes.",
+        "failureSummary": "M46 reddens 3 of 31 (the refusal case, the per-destination case, and the unload/remount case, which observes a fresh breaker starting closed). M47 reddens exactly 1 -- the per-destination case, which opens one model and then calls another at the same base URL. M48 reddens exactly 1 -- the permanent-failure case, which drives a policy denial past the threshold and expects the destination still closed. M49 reddens 5, including the below-threshold control, because every path that awaits the caller's own LlmError sees the wrapper instead. Two controls sit beside the refusals: 'still executes below the threshold' and 'returns the caller its own error', so a breaker that refused everything or wrapped everything could not satisfy the suite. Those four readings transfer: M46–M49 change only packages/reliability/retry-cockatiel/src/index.ts, byte-identical at [243]'s recorded dry-run tree and at 27f4aab28e793c7a258761f6919a5e744670b511. M-605-3, lane B's round 36214254461, restricted to this argv: exactly the two refusal cases red; the file it changes is byte-identical at its parent and at 27f4aab28e793c7a258761f6919a5e744670b511."
+      },
+      "note": "Supersedes [243] for a candidate carrying B-605 (BLOCKED-339), with the delegate's minimal change (A-478 ruling). At the fix the invalid-policy table lost its four retryableCodes rows (9–12 of 16), so \"rejects invalid policy 12\"–\"15\" no longer exist and are dropped. The titles \"rejects invalid policy 9\"–\"11\" are positional (it.each over the table) and now name the rows that were 13–15: an unknown key maxRetires, an unknown key initialDelay, and an unknown mode; each still asserts a refusal. Added: the two \"refuses retryableCodes\" cases. The llmFailureFacts cases in adapter-failure.spec.ts are not taken in. P4-11 Provider stage: the adopted runtime behind this epic's own decision interface.\n\nFROZEN AFTER C/U/F WERE GREENED, and the ordering is deliberate rather than a repair. The P cell is NOT_RUN and has never been observed by any run, so this is not a freeze recorded after seeing its own result -- what B4b forbids is pre-committing a stage that has already been observed. The entry exists because BLOCKED-175 measured that the provider package landed in a file no live freeze cites: `realitySet` is files[] union stage files union live freeze citations, so `verify-make-vs-use` could not see the cockatiel adoption and reported it as a decision that disagreed with the tree. Freezing P is the missing step, not a workaround for the gate.\n\nWHAT THE STAGE OWNS: which destinations are separate (provider + baseUrl + model, so a decommissioned model does not open a healthy endpoint) and which failures count against an endpoint's health (the classifier's verdict, so a policy denial moves nothing). cockatiel owns consecutive counting, the open period and half-open probing -- the make-vs-use record's whole point, and the reason `circuit.ts`'s hand-written counting was withdrawn.\n\nThe adapter-failure and retry-policy cases are in this argv because they are the translation the breaker's classifier runs on: `breaker.spec.ts` classifies with the real `llmFailureFacts(normalizeLlmFailure(error))` rather than a hand-built FailureFacts, so a change to either would move the breaker's behaviour without touching its own file."
     }
   ]
 }

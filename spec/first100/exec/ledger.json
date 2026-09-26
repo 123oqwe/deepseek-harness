@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-26T04:31:17.994Z",
-  "inputDigest": "940feae0a9bbb59547340ecee339dbe219d386397db91a64a6b9f19e9041831a",
+  "lastUpdatedUtc": "2026-09-26T04:37:04.734Z",
+  "inputDigest": "ab73a6252c05974be332ad8a2934ca0c0983c05463c5d6241230ed770202d103",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -8045,45 +8045,13 @@
           "capturedAtUtc": "2026-09-24T23:23:59.454Z"
         },
         "P": {
-          "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
-          "expectCasesMatched": [
-            "adapter failure normalization contains hostile non-Error coercion",
-            "adapter failure normalization normalizes empty primitive throws and data descriptors without values",
-            "adapter failure normalization contains hostile Error property reflection",
-            "adapter failure normalization rejects malformed or accessor-backed failure snapshots",
-            "adapter failure normalization falls back when an Error message accessor throws",
-            "provider retry policy resolves immutable normal defaults",
-            "provider retry policy resolves and detaches a configured normal policy",
-            "provider retry policy resolves always mode with default backoff",
-            "provider retry policy ignores normal-only fields retained after switching to always mode",
-            "provider retry policy rejects invalid policy 0",
-            "provider retry policy rejects invalid policy 1",
-            "provider retry policy rejects invalid policy 2",
-            "provider retry policy rejects invalid policy 3",
-            "provider retry policy rejects invalid policy 4",
-            "provider retry policy rejects invalid policy 5",
-            "provider retry policy rejects invalid policy 6",
-            "provider retry policy rejects invalid policy 7",
-            "provider retry policy rejects invalid policy 8",
-            "provider retry policy rejects invalid policy 9",
-            "provider retry policy rejects invalid policy 10",
-            "provider retry policy rejects invalid policy 11",
-            "provider retry policy rejects invalid policy 12",
-            "provider retry policy rejects invalid policy 13",
-            "provider retry policy rejects invalid policy 14",
-            "provider retry policy rejects invalid policy 15",
-            "P4-11 circuit breaker provider refuses an attempt at the threshold without reaching the operation",
-            "P4-11 circuit breaker provider still executes below the threshold",
-            "P4-11 circuit breaker provider opens one destination without opening another under the same provider",
-            "P4-11 circuit breaker provider does not count a failure the classifier calls permanent",
-            "P4-11 circuit breaker provider unloads and rolls back: the service goes with its fiber, and a remount starts closed",
-            "P4-11 circuit breaker provider returns the caller its own error, not a breaker-internal one"
-          ],
-          "capturedAtUtc": "2026-09-24T23:23:59.759Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
+            "absentCommitments": 1
+          },
+          "revokedReason": "[243] was superseded for B-605 (BLOCKED-339) in batch 12; the cell's observation 5b41cb7173 does not contain the replacement entry. Re-recorded in batch 13 from batch 12's full run (delegate ruling, 2026-09-26)."
         },
         "U": {
           "status": "GREEN",
@@ -8219,7 +8187,7 @@
       "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "BLOCKED_ON_ACCEPTANCE",
+      "status": "NOT_RUN",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-13T03:12:28.747Z",
         "cells": {
