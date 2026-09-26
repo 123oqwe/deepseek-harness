@@ -329,8 +329,10 @@ export class SubagentContinuationManager {
 
   /**
    * Interrupt one live continuable child's current turn. Admission is
-   * synchronous and the cancellation effect is asynchronous. An absent or
-   * already-closing target is an accepted no-op after authority checks.
+   * synchronous and the cancellation effect is asynchronous. An absent target
+   * is an accepted no-op; an already-closing one is not signalled again after
+   * the authority checks, though a human parent's interrupt of it is recorded
+   * on the durable bus as for any resident child.
    * @param targetSessionId - the durable child session id to interrupt.
    * @param authority - the human parent address or exact live ancestor Agent.
    */

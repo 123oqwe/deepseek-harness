@@ -36,6 +36,7 @@ import type { SubagentDescriptorData } from './descriptor.ts'
 import { SubagentError } from './error.ts'
 import { SubagentInbox } from './inbox.ts'
 import type { SubagentDelivery } from './inbox.ts'
+import { commitInterrupt } from './interrupt-record.ts'
 import type { ActivationObserver, ActivationTerminal } from './lifecycle.ts'
 import { commitSettlement, drainSettlements } from './settlement-outbox.ts'
 
@@ -321,6 +322,8 @@ export class ContinuableActivationRegistry {
 
   /**
    * Interrupt one live continuable child's current turn under the supplied authority.
+   * A human parent's interrupt is committed to the durable bus before the cancel
+   * signal.
    * @param targetSessionId - the durable child session id to interrupt.
    * @param authority - the human parent address or exact live ancestor Agent.
    */
@@ -354,6 +357,7 @@ export class ContinuableActivationRegistry {
           'UNAUTHORIZED',
         )
       }
+      this.recordInterrupt(activation)
     } else if (!activation.ancestry.has(authority.agent)) {
       throw new SubagentError(
         `subagent "${targetSessionId}" is not a live descendant of agent "${authority.agent.id}"`,
@@ -367,6 +371,23 @@ export class ContinuableActivationRegistry {
       authority.kind === 'user' ? { kind: 'user' } : { kind: 'parent' },
       { keepInbox: true },
     )
+  }
+
+  /**
+   * Commit a human parent's interrupt of this residency to the durable bus
+   * (P5-10 must[2], BLOCKED-343).
+   *
+   * Runs after the parent address is verified and before the cancel signal,
+   * so an interrupt never takes effect without its record: a commit that
+   * throws fails the interrupt with nothing cancelled. A residency with no
+   * lease epoch (no Run Service mounted, or its lease refused) has no key and
+   * records nothing, as its settlement does.
+   * @param activation - the resident child whose parent interrupted it.
+   */
+  private recordInterrupt(activation: Activation): void {
+    const epoch = activation.handle.agent.lifecycle?.epoch
+    if (this.bus === undefined || epoch === undefined) return
+    commitInterrupt(this.bus, { childId: activation.childId, parentSessionId: activation.parentSession, epoch })
   }
 
   /**

@@ -31,6 +31,7 @@
 
 import { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-attachment'
+import type {} from '@deepseek-ai/dsh-message-bus'
 import { scopeTarget } from '@deepseek-ai/dsh-scope'
 import type { Scoped } from '@deepseek-ai/dsh-scope'
 import { assertObjectJsonSchema } from '@deepseek-ai/dsh-tools'
@@ -42,6 +43,7 @@ import { Remote, RemoteError, TypertRemoteService } from '@deepseek-ai/dsh-typer
 import { openControlLedger } from './control-ledger.ts'
 import type { ControlMessage } from './control-convergence.ts'
 import { ChildControlRouter } from './control-router.ts'
+import { interruptRecorded } from './interrupt-record.ts'
 import {
   catalogView, rejectCatalogRead, rejectPrompt, validateControlRequest,
 } from './control.ts'
@@ -346,7 +348,9 @@ export class SubagentRuntime extends TypertRemoteService {
    * Interrupt one live continuable child's current turn under a human parent
    * address or an exact live ancestor Agent. Fire-and-return: the cancel
    * signal is issued before this returns, but the target may keep running
-   * until it observes the signal. Unclaimed pending inbox work, the Activation,
+   * until it observes the signal. A human parent's interrupt is committed to the
+   * durable bus, keyed by the child's lease epoch, before the signal is issued.
+   * Unclaimed pending inbox work, the Activation,
    * and published descendants are preserved; claimed work is not requeued.
    * Once the interrupted driver is idle, a waking send resumes the parked FIFO
    * queue. An absent target — including a one-shot or unknown id —
@@ -355,7 +359,8 @@ export class SubagentRuntime extends TypertRemoteService {
    * @param targetSessionId - the durable child session id to interrupt.
    * @param authority - the human parent address or exact live ancestor Agent.
    * @throws {SubagentError} `UNAUTHORIZED` when the authority does not own the
-   *   live target.
+   *   live target. A failed commit of a human parent's interrupt is thrown
+   *   before any signal is issued.
    */
   interrupt(targetSessionId: SessionId, authority: SubagentInterruptAuthority): void {
     this.continuations?.interrupt(targetSessionId, authority)
@@ -574,10 +579,12 @@ export class SubagentRuntime extends TypertRemoteService {
 
   /**
    * Remote face of {@link interrupt} under one durable parent address. No
-   * catalog, history, persistence, or parent Agent lookup runs: the core
-   * primitive alone authorizes the address against the live Activation, which
-   * is what keeps a live child interruptible while its parent Agent is offline.
-   * Absent, idle, and already-completed targets are accepted no-ops there.
+   * catalog, history, or parent Agent lookup runs: the core primitive alone
+   * authorizes the address against the live Activation, which is what keeps a
+   * live child interruptible while its parent Agent is offline, and commits the
+   * interrupt to the durable bus before the cancel signal, so a host restarted
+   * after it still refuses the child's prompts. Absent and already-completed
+   * targets are accepted no-ops there and record nothing.
    * @param childSessionId - durable child session id to interrupt.
    * @param parentSessionId - durable direct parent whose authority is claimed.
    * @param mode - required continuable-address discriminator.
@@ -594,11 +601,14 @@ export class SubagentRuntime extends TypertRemoteService {
   ): SubagentInterruptReceipt {
     validateControlRequest('subagent.interrupt', { childSessionId, parentSessionId, mode })
     try {
+      // Built before the primitive records the interrupt: a router replays a
+      // recorded interrupt only when it is built, and this call's own
+      // interrupt goes through the barrier below instead (must[3]).
+      const control = this.controlFor(childSessionId)
       this.interrupt(childSessionId, { kind: 'user', parentSessionId })
-      // The interrupt is what makes the NEXT prompt refusable. Recorded after
+      // The interrupt is what makes the NEXT prompt refusable. Observed after
       // the primitive accepts it, so a refused interrupt leaves the child
       // promptable.
-      const control = this.controlFor(childSessionId)
       control.observeCancelled()
       // A prompt already admitted but not yet in the inbox is refused too.
       this.cancellationFor(childSessionId).abort()
@@ -733,6 +743,16 @@ export class SubagentRuntime extends TypertRemoteService {
         openControlLedger(() => this.ctx.get('sessions')?.get(childSessionId), promptEpoch),
         this.ctx.get('agents')?.get(childSessionId),
       )
+      // An interrupt recorded before this router exists was recorded by an
+      // earlier process, because `interruptByParent` builds its router first.
+      // It is replayed as the two facts the live interrupt produced: the cancel
+      // was admitted, and the residency it stopped has stopped, having ended
+      // with that process. `terminal` absorbs both, so a replay changes nothing
+      // further (must[2]).
+      if (interruptRecorded(this.ctx.messageBus, childSessionId)) {
+        router.observeCancelled()
+        router.participantStopped('child')
+      }
       this.routers.set(childSessionId, router)
     }
     return router
