@@ -2267,7 +2267,7 @@ export class ToolRuntime extends Service {
     // the arming rule already expresses.
     const revoked = input.capabilityToken !== undefined
       && (this.ctx.get('capabilityTokens')?.isRevoked(input.capabilityToken) ?? false)
-    const reason = capabilityDenialReason(input.name, input.capabilityToken, Date.now(), revoked)
+    const reason = capabilityDenialReason(input.name, input.capabilityToken, 0, revoked)
     return reason === undefined
       ? undefined
       // A `parent` marks a sub-dispatch of a `run_code` program (`./ptc.ts`), the only caller that sets it.
