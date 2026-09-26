@@ -240,7 +240,7 @@ function captureFields(repoRoot) {
   return {
     formatVersion: FORMAT_VERSION,
     gitSha,
-    toolchain: readDeclaredToolchain(repoRoot),
+    toolchain: capturingToolchain(repoRoot),
     workspacePackages: readWorkspacePackages(manifests),
     packageManifests: readPackageManifests(repoRoot, manifests),
     defaultBundleRowIds: ids,
@@ -313,6 +313,11 @@ function diffCapture(stored, fresh) {
   // field would report every one as drift. The format is the one difference.
   if (stored.formatVersion !== fresh.formatVersion) return drift
   addSimple('HEAD', 'gitSha')
+  for (const tool of ['node', 'pnpm']) {
+    if (stored.toolchain[tool] !== fresh.toolchain[tool]) {
+      drift.push({ path: `toolchain.${tool}`, field: `toolchain.${tool}`, expected: stored.toolchain[tool], actual: fresh.toolchain[tool] })
+    }
+  }
   const packages = membershipChange(stored.workspacePackages, fresh.workspacePackages)
   if (packages.removed.length > 0 || packages.added.length > 0) {
     drift.push({ path: WORKSPACE_MANIFEST_PATH, field: 'workspacePackages', expected: packages.removed, actual: packages.added })
