@@ -18,6 +18,7 @@ import { Context, Service } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { TenantId } from '@deepseek-ai/dsh-principal'
+import { FENCED_WORLD_PROVIDER, isFencedWorldProvider } from './fenced-provider.ts'
 import { selectWorldProvider } from './lifecycle.ts'
 import type { WorldBindingRefusal } from './lifecycle.ts'
 import { isLocalWorldProvider, LOCAL_WORLD_PROVIDER } from './local-provider.ts'
@@ -97,6 +98,17 @@ function mismatchText(refusal: Exclude<WorldBindingRefusal, { kind: 'unavailable
     : `its spec digest does not match: the world provider "${refusal.provider}" returned a handle whose digest is not that of the spec it was asked to create`
   return `The action "${toolName}" was refused: no world is bound for this session, because ${failed}.`
 }
+
+/**
+ * The ids this package's own providers register under, each with the test for
+ * an object its factory built (P3-01 acceptance[2], BLOCKED-316). A handle
+ * naming one of these ids is trusted as that provider's, so no other provider
+ * may register under it.
+ */
+const RESERVED_PROVIDER_IDS: ReadonlyMap<WorldProviderId, (provider: WorldProvider) => boolean> = new Map([
+  [LOCAL_WORLD_PROVIDER, isLocalWorldProvider],
+  [FENCED_WORLD_PROVIDER, isFencedWorldProvider],
+])
 
 /**
  * The confinement a deployment ASKS for, before any provider is consulted.
@@ -464,12 +476,14 @@ export default class ExecutionWorldService extends Service<Config> {
    * @param provider - the provider to offer to selection.
    * @param placement - the providers this one yields to; absent, it yields to none.
    * @returns the disposer, which settles once the provider is removed.
-   * @throws when a provider this package's `createLocalWorldProvider` did not
-   *   build registers under the reserved id `local` (P3-01 acceptance[2]).
+   * @throws when a provider this package's `createLocalWorldProvider` or
+   *   `createFencedWorldProvider` did not build registers under the reserved id
+   *   `local` or `fenced` (P3-01 acceptance[2]).
    */
   register(provider: WorldProvider, placement?: WorldProviderPlacement): () => Promise<void> {
-    if (provider.id === LOCAL_WORLD_PROVIDER && !isLocalWorldProvider(provider)) {
-      throw new Error(`the world provider id "${LOCAL_WORLD_PROVIDER}" is reserved for the local provider this package builds, so a provider built elsewhere cannot register under it`)
+    const builtHere = RESERVED_PROVIDER_IDS.get(provider.id)
+    if (builtHere !== undefined && !builtHere(provider)) {
+      throw new Error(`the world provider id "${provider.id}" is reserved for the ${provider.id} provider this package builds, so a provider built elsewhere cannot register under it`)
     }
     return this.ctx.effect(() => {
       this.providers.push(provider)

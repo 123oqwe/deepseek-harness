@@ -10,7 +10,7 @@ BLOCKED-316，归 P3-01 acceptance[1] 与 acceptance[2]。world 注册表把新�
 
 ## 决定
 
-- **保留 `local`。** 除非是 `createLocalWorldProvider` 造出的 provider，`register` 拒绝 id 为 `local` 的 provider，经一个模块私有的集合按对象身份识别，错误写明这个 id。local provider 的拷贝或仿品与其他 provider 一样被拒。
+- **保留 `local` 与 `fenced`。** 除非是 `createLocalWorldProvider` 或 `createFencedWorldProvider` 造出的 provider，`register` 拒绝 id 为 `local` 或 `fenced` 的 provider，经各自模块私有的集合按对象身份识别，错误写明这个 id。这两个 provider 的拷贝或仿品与其他 provider 一样被拒。
 - **handle 按选择结果核对。** 只有 handle 写着选择所选中的 provider，并带着注册表按它所要的 spec 算出的摘要时，`bindingFor` 才绑定。任一项不符就什么也不绑，`refusalFor(agent)` 写明是哪一项不符。
 - **该会话的调用由工具 guard 拒绝。** 注册表在工具运行时上登记一个 guard，每条派发路径在工具体之前都要经过它。该会话最近一次绑定没通过核对时，guard 拒绝这次调用，写明工具与没通过的那一项。用 guard，是因为它只收不放：没有哪个 `tools/pre-execute` 监听者能把它的拒绝变成放行。
 - **没有 provider 承载得了的 world 记成声明过的降级。** 选择被拒时，调用不被拒：它在 `absent` 策略事实下运行，部署规则可以拒绝它，`readExecutionWorldFact` 按会话记一次 `action/world-unbound`，带上选择的拒绝。没通过核对的情况也这样记。
@@ -20,11 +20,12 @@ BLOCKED-316，归 P3-01 acceptance[1] 与 acceptance[2]。world 注册表把新�
 - **拒绝所要 world 没有 provider 承载得了的调用。** 在 `danger-full-access` 下声明了上限、而 subprocess 运行时守不住任何上限的机器上，选择会被拒；在派发处拒绝，会顶替 shell 工具的 `WorldCeilingsRefusedError`，后者写明模式与上限（P3-10，`tests/first100/fixtures/P3-10.world-ceiling.spec.ts`）。它还会拒绝不起进程的工具。
 - **从 `bindingFor` 抛错。** 原生派发路径在追加调用之前读 world，在那里抛错会让这一轮以调度失败结束，而不是产出工具结果。
 - **给 `ExecutionWorldFact` 加一个由强制执行点拒绝的新变体。** 这会改动策略词汇，而且策略拒绝携带的封闭 reason code 说不出是哪一项没通过。
-- **把 `fenced` 也保留。** 契约点名的是 `local`；包的 README 把 `fenced` 记为已知限制。
+- **经注册出厂 provider 的那一行插件来保留，而不经工厂。** 本包导出 `src/` 下的每个模块，插件行能持有的任何标记，别的插件都拿得到；工厂返回的对象，才是别的插件伪造不了的。走工厂这条路，留下 `createFencedWorldProvider` 的 `enforceableLimits` 输入，包的 README 把它记为已知限制，与 P1-09 的 Known Limitation ⑧ 同一类。
 
 ## 后果
 
 - 选中的 provider 返回的 handle 写着别的 provider，或摘要不是该 spec 的摘要时，会话不绑定 world，它的每次调用都在工具体运行之前被拒。工具结果写明没通过的那一项，会话记下 `action/world-unbound`。
 - 要求没有 provider 承载得了的 world 的部署，工具照旧运行，会话现在会记下它为什么没有 world。因为别的原因没有 world 的会话，比如没有注册表、没有文件效应边界，或 provider 在 create 时拒绝（如 `danger-full-access`），不新记任何东西。
+- 用 `local` 或 `fenced` 注册一个不是本包造出的 provider 会抛错，错误写明这个 id。
 - guard 在风险闸之后运行，所以一个人可能被请求批准一次随后被 guard 拒绝的调用。
-- 验证：A-432 与 A-531（`tests/first100/fixtures/P3-01.world-identity.composition.spec.ts`），`packages/execution/execution-world/tests/registry.spec.ts` 与 `world-fact.spec.ts`。
+- 验证：A-432、A-531 与 A-541（`tests/first100/fixtures/P3-01.world-identity.composition.spec.ts`），`packages/execution/execution-world/tests/registry.spec.ts` 与 `world-fact.spec.ts`。

@@ -29,13 +29,31 @@
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { TenantId } from '@deepseek-ai/dsh-principal/types'
 import { WORLD_SPEC_DIMENSIONS } from './types.ts'
-import type { WorldProviderId, WorldSpec, WorldSpecDimension } from './types.ts'
+import type { WorldProvider, WorldProviderId, WorldSpec, WorldSpecDimension } from './types.ts'
 import { localUnsatisfiableDimensions } from './local-provider.ts'
 import { createSandboxWorldProvider } from './sandbox-world.ts'
 import type { SandboxWorldOptions, SandboxWorldProvider } from './sandbox-world.ts'
 
 /** This provider's id, stable because a handle names the provider that minted it. */
 export const FENCED_WORLD_PROVIDER = brandString<WorldProviderId>('fenced')
+
+/**
+ * Every provider {@link createFencedWorldProvider} built, keyed by object
+ * identity for the reason a world handle is: a copy or a look-alike carrying
+ * the same `id` is not a member.
+ */
+const BUILT = new WeakSet<WorldProvider>()
+
+/**
+ * Whether `provider` is one {@link createFencedWorldProvider} built. The world
+ * registry admits only these under {@link FENCED_WORLD_PROVIDER}, as it admits
+ * only the local provider's under `local` (P3-01 acceptance[2], BLOCKED-316).
+ * @param provider - the provider being registered.
+ * @returns true only for the object this module returned.
+ */
+export function isFencedWorldProvider(provider: WorldProvider): boolean {
+  return BUILT.has(provider)
+}
 
 /**
  * A resource dimension the subprocess runtime can hold a spawn to. Spelled
@@ -91,11 +109,13 @@ export type FencedWorldProvider = SandboxWorldProvider
  * @returns the provider, with its adapter surface.
  */
 export function createFencedWorldProvider(options: FencedWorldProviderOptions): FencedWorldProvider {
-  return createSandboxWorldProvider({
+  const provider = createSandboxWorldProvider({
     id: FENCED_WORLD_PROVIDER,
     label: 'fenced world provider',
     evidenceKind: 'fenced-sandbox',
     supportedPolicyFeatures: { dimensions: ['filesystem'] },
     unsatisfiable: spec => fencedUnsatisfiableDimensions(spec, options.tenant, options.enforceableLimits()),
   }, options)
+  BUILT.add(provider)
+  return provider
 }

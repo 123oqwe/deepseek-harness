@@ -1032,7 +1032,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         description: 'Register one provider, in the deployment\'s own preference order, adjusted only by the provider\'s own placement (see selectionOrder).\n\nA registration is an effect, so unmounting the registering plugin removes the provider rather than leaving a registry that outlives it.\n\nThe disposer is `@deepseek-ai/cordis`\' own `Disposable<Promise<void>>`, returned unchanged, and the declared return type says so rather than narrowing it to `() => void`. Narrowing would be a lie the linter catches (`no-misused-promises`) and would also cost a caller the ability to await teardown; `AgentRegistry.register` keeps the narrow type and suppresses the rule because returning the disposer unchanged preserves its identity for its own callers, and nothing here depends on that.',
         parameters: [{ name: 'provider', description: 'the provider to offer to selection.' }, { name: 'placement', description: 'the providers this one yields to; absent, it yields to none.' }],
         returns: 'the disposer, which settles once the provider is removed.',
-        throws: ['when a provider this package\'s `createLocalWorldProvider` did not build registers under the reserved id `local` (P3-01 acceptance[2]).'],
+        throws: ['when a provider this package\'s `createLocalWorldProvider` or `createFencedWorldProvider` did not build registers under the reserved id `local` or `fenced` (P3-01 acceptance[2]).'],
       },
       {
         signature: 'requestedCeilings(): WorldCeilings',

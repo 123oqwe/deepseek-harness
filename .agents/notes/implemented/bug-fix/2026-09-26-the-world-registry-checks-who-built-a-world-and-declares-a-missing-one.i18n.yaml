@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-26-the-world-registry-checks-who-built-a-world-and-declares-a-missing-one.md
-2026-09-26-the-world-registry-checks-who-built-a-world-and-declares-a-missing-one.md: 5dc6f27693dae85226a81e2e728c7115e49d9ef7
-2026-09-26-the-world-registry-checks-who-built-a-world-and-declares-a-missing-one.zh.md: ec148e70826fd62d39cf943c0e2ebe8368a36be5
+2026-09-26-the-world-registry-checks-who-built-a-world-and-declares-a-missing-one.md: 142903324f60346e53bc9e8fa22982b7c676f7f8
+2026-09-26-the-world-registry-checks-who-built-a-world-and-declares-a-missing-one.zh.md: 9caefb070beee3a24fc1facfc1628eb0ba1952f8
