@@ -27,7 +27,7 @@ import {
 } from '@deepseek-ai/dsh-storage-domain'
 import * as WorkspaceTrustLocal from '@deepseek-ai/dsh-workspace-trust-local'
 import ApprovalService, { type ApprovalOutcome, type ApprovalRequest } from '@deepseek-ai/dsh-user-approval'
-import { createUserPrincipal, PrincipalId, TenantId } from '@deepseek-ai/dsh-principal'
+import { createServicePrincipal, createUserPrincipal, PrincipalId, TenantId, type Principal } from '@deepseek-ai/dsh-principal'
 import SessionStore, { Session, SessionId, SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import AgentRegistry, { agentEvents, type Agent } from '@deepseek-ai/dsh-agent'
@@ -52,14 +52,18 @@ async function makeRoot(): Promise<string> {
  * question's three preconditions: something to resolve trust for, a turn the
  * audit pair can be enclosed in, and a principal whose authority a grant can
  * be recorded against.
+ * @param cwd - the session's working directory.
+ * @param principal - the attached principal; the host user unless a case says otherwise.
+ * @returns the agent and its session.
  */
-function hostSession(cwd: string): { agent: Agent; session: Session } {
+function hostSession(
+  cwd: string,
+  principal: Principal = createUserPrincipal(PrincipalId('host-1'), TenantId('t-1')),
+): { agent: Agent; session: Session } {
   const id = SessionId('trust-ask')
   const session = Session.create(id, [], { version: SESSION_FORMAT_VERSION, id, createdAt: 0, cwd, isSeeded: false })
   session.append('turn/start', { turn: 1 })
-  session.append('identity/attached', {
-    identity: { principal: createUserPrincipal(PrincipalId('host-1'), TenantId('t-1')) },
-  } as never)
+  session.append('identity/attached', { identity: { principal } } as never)
   const agent = {
     ctx: new Context(),
     id,
@@ -199,6 +203,27 @@ describe('P1-07 must[2]: the host user is asked before an untrusted workspace is
 
     expect(asks).toStrictEqual([`${project}: trusted-read`])
     expect(await ctx.workspaceTrust.stateFor(project)).toBe('trusted-read')
+    await ctx.fiber.dispose()
+  })
+
+  it('does not put the question on behalf of a principal that is not the host user', async () => {
+    // A webhook session acts as its integration's service principal. Only a
+    // host user can grant, so nobody is asked for it and the workspace stays
+    // untrusted (B-606).
+    const project = await makeRoot()
+    await writeFile(join(project, 'AGENTS.md'), '# project instructions\n', 'utf8')
+    const asks: string[] = []
+    const ctx = await stack(undefined)
+    ctx.on('approval/request', (request: ApprovalRequest) => {
+      asks.push(request.subject ?? request.toolName)
+      return Promise.resolve<ApprovalOutcome>('allowed-once')
+    })
+    const { agent } = hostSession(project, createServicePrincipal(PrincipalId('webhook:github:a421'), TenantId('t-1')))
+
+    await preStep(ctx, agent)
+
+    expect(asks).toStrictEqual([])
+    expect(await ctx.workspaceTrust.stateFor(project)).toBe('untrusted')
     await ctx.fiber.dispose()
   })
 
