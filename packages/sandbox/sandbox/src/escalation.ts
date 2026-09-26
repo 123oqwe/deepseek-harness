@@ -126,6 +126,16 @@ export interface EscalationApproval<A = object, C = string> {
   toolName: string
   /** The tool-execution abort signal the approval request rides, when present. */
   signal?: AbortSignal
+  /**
+   * Asked once the human approves: why the agent may no longer act, or
+   * `undefined` when it may. An emergency stop or a lost lease can arrive while
+   * the human decides, and the wider sandbox must not run then (BLOCKED-334
+   * site 4). The tool layer answers it from `@deepseek-ai/dsh-tools`'s
+   * `refusalToAct`.
+   * @param agent - the calling agent the approval was routed through.
+   * @returns the refusal text, or `undefined`.
+   */
+  refusalAfterApproval(agent: A): string | undefined
 }
 
 /** One escalation request, as {@link approveEscalation} judges it. */
@@ -180,7 +190,11 @@ export async function approveEscalation<A, C>(request: EscalationRequest, approv
   switch (outcome) {
     // The schema enum already pinned `mode` to the closed target vocabulary;
     // the check above proved it is strictly wider.
-    case 'allowed-once': return mode as SandboxMode
+    case 'allowed-once': {
+      const refusal = approval.refusalAfterApproval(approval.agent)
+      if (refusal !== undefined) throw new Error(refusal)
+      return mode as SandboxMode
+    }
     case 'rejected': throw new Error(`the user rejected escalating this ${subject} to "${mode}"`)
     case 'cancelled': throw new Error(`approval for escalating to "${mode}" was cancelled`)
     case 'unavailable': throw new Error(`sandbox escalation to "${mode}" requires approval, but no approval channel is available`)

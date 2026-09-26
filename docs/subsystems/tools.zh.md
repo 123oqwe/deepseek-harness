@@ -171,7 +171,7 @@ interface ToolRestriction {
 
 `ctx.tools.execute()` 接受由调用方拥有且包含必需 readonly `signal` 的 `ToolExecutionInput`，将其解析后的 JSON 参数一次性物化为流水线拥有的 `ToolExecution`，然后让调用依次经过 `tools/pre-execute`（可重排的 allow/deny/ask waterfall）→ 已注册的单调 guard → `tools/execute`（环绕分派包装层）→ `tools/post-execute`（检查/替换结果）→ 可选且由定义拥有的 `finalizeContent` → `tools/result`（不可变的权威结果）。只有 `tools/execute` 视图可以替换必需的 signal。最终产出为 `ToolExecutionResult`。
 
-钉了 Trust Kernel 时，经 `execute()` 的调用先把 ActionManifest 追加到发起调用的 agent 的会话里，由策略执行点作出决定，之后才检查 capability token：决定不是 permit 就拒绝，不带 agent 的调用会被决定、然后被拒绝。没有内核时它不追加 manifest。不论有没有内核，紧急停止生效时、或 run 已被另一个宿主接管时，代表 agent 的调用都会被拒绝。钉了内核时，调用在检查令牌之后还要过同一个风险门。agent loop 与 code mode 不经过这一步：它们在各自的路径上记录与决定，经内部调度器进入流水线。
+钉了 Trust Kernel 时，经 `execute()` 的调用先把 ActionManifest 追加到发起调用的 agent 的会话里，由策略执行点作出决定，之后才检查 capability token：决定不是 permit 就拒绝，不带 agent 的调用会被决定、然后被拒绝。没有内核时它不追加 manifest。不论有没有内核，紧急停止生效时、或 run 已被另一个宿主接管时，代表 agent 的调用都会被拒绝。钉了内核时，调用在检查令牌之后还要过同一个风险门。agent loop 与 code mode 不经过这一步：它们在各自的路径上记录与决定，经内部调度器进入流水线。每个调用，不论走哪条路径，都会在派发工具体之前、在 pre-execute waterfall 与任何询问之后，再被问一次它的 agent 是否仍可行动，因为在操作员作出决定期间可能出现紧急停止或租约丢失；被拒绝的调用，其结果会说明原因。
 
 ```ts type-equiv
 /** Opaque call identity that permits correlation without exposing mutable execution state. */

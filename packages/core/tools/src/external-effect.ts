@@ -1096,23 +1096,47 @@ export function refuseNewAction(agent: Agent, nowMs: number): DispatchRefusal | 
 }
 
 /**
+ * The text a dispatch refusal is reported with. The three texts differ because
+ * the next move differs — a stop ends when an operator resumes, a fenced run is
+ * already being done elsewhere, and a lease-refused one never started.
+ * @param refusal - why this host may not act.
+ * @param toolName - the action refused, named so a multi-call turn is readable.
+ * @returns the text.
+ */
+function dispatchRefusalText(refusal: DispatchRefusal, toolName: string): string {
+  return refusal === 'stopped'
+    ? `The action "${toolName}" was not performed: an emergency stop is in force, so this run may take no new action until it is resumed.`
+    : refusal === 'fenced'
+      ? `The action "${toolName}" was not performed: this host no longer holds its work item — another host took it over, and is doing this work.`
+      : `The action "${toolName}" was not performed: this host never held its work item, so it may not act on it.`
+}
+
+/**
+ * Why an agent may no longer act on a call it was cleared for, asked again
+ * after a wait such as an operator's approval (BLOCKED-334): an emergency stop
+ * or a lost lease can arrive while the operator decides.
+ * @param agent - the agent about to act.
+ * @param toolName - the action, named in the text.
+ * @param nowMs - the caller's clock reading, for judging lease expiry.
+ * @returns the text {@link refusedDispatchResult} would report, or `undefined` when the agent may act.
+ */
+export function refusalToAct(agent: Agent, toolName: string, nowMs: number): string | undefined {
+  const refusal = refuseNewAction(agent, nowMs)
+  return refusal === undefined ? undefined : dispatchRefusalText(refusal, toolName)
+}
+
+/**
  * Render a dispatch refusal as a settled tool result (P2-12 must[2]).
  *
  * A settled result and not a thrown error, like the four refusals above: the
  * model asked for something this host may not do, and it must read that in the
- * turn rather than see a crash. The three texts differ because the next move
- * differs — a stop ends when an operator resumes, a fenced run is already being
- * done elsewhere, and a lease-refused one never started.
+ * turn rather than see a crash.
  * @param refusal - why this host may not act.
  * @param toolName - the action refused, named so a multi-call turn is readable.
  * @returns the tool result to record in place of an execution.
  */
 export function refusedDispatchResult(refusal: DispatchRefusal, toolName: string): ToolExecutionResult {
-  const text = refusal === 'stopped'
-    ? `The action "${toolName}" was not performed: an emergency stop is in force, so this run may take no new action until it is resumed.`
-    : refusal === 'fenced'
-      ? `The action "${toolName}" was not performed: this host no longer holds its work item — another host took it over, and is doing this work.`
-      : `The action "${toolName}" was not performed: this host never held its work item, so it may not act on it.`
+  const text = dispatchRefusalText(refusal, toolName)
   return {
     content: [{ type: 'text', text: `Error: ${text}` }],
     isError: true,
