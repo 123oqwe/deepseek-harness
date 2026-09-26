@@ -7,8 +7,11 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import type { ModelSelection } from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-agent-default-model'
 import type {} from '@deepseek-ai/dsh-agent-presets'
+import { resolveTenantId } from '@deepseek-ai/dsh-host-user-id'
 import { boundContextSummary, createUserMessage, errorChain, type LlmCallConfig } from '@deepseek-ai/dsh-llm'
 import type {} from '@deepseek-ai/dsh-permission-presets'
+import { createChain, createServicePrincipal } from '@deepseek-ai/dsh-principal'
+import { PrincipalId, RunId, type IdentityContext } from '@deepseek-ai/dsh-principal/types'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-session-title'
 import type {} from '@deepseek-ai/dsh-workspace'
@@ -104,6 +107,27 @@ function installInitialModelSelection(agentCtx: Context, selection: ModelSelecti
 }
 
 /**
+ * The identity a webhook-created Agent acts under: the integration whose
+ * secret verified the delivery, as a service principal rooting a one-hop chain
+ * (first100 registry P2-01 acceptance[0]).
+ *
+ * The principal id is `webhook:<kind>:<source>`. `dispatch` takes only
+ * authenticated deliveries, and an adapter authenticates each one with the
+ * secret configured for its `source`, so the pair names that integration;
+ * `kind` keeps equal source names of two providers apart. Payload fields such
+ * as the provider account that triggered the event are not used: the
+ * signature authenticates the integration, not that account. The tenant is
+ * the one the host user is minted in ({@link resolveTenantId}). Each created
+ * Agent gets a new run id.
+ * @param delivery - the verified delivery the Session is created for.
+ * @returns the identity to pass as `AgentOptions.identity`.
+ */
+function integrationIdentity(delivery: VerifiedWebhookDelivery): IdentityContext {
+  const principal = createServicePrincipal(PrincipalId(`webhook:${delivery.kind}:${delivery.source}`), resolveTenantId())
+  return { principal, runId: RunId(`run-${randomUUID()}`), chain: createChain(principal, Date.now()) }
+}
+
+/**
  * Create, attach, title, configure, and prompt one ordinary root Session.
  * Successful prompt admission ends webhook ownership of the operation; the
  * Agent remains lifecycle-owned by `ctx` and follows normal Session behavior.
@@ -134,7 +158,7 @@ export async function createWebhookSession(
     sessionId,
     signal,
     meta: { cwd: workspace.path, agentPreset: preset.id },
-    agentOptions: resolved.agentOptions,
+    agentOptions: { ...resolved.agentOptions, identity: integrationIdentity(delivery) },
     setup: async (agentCtx) => {
       await ctx.agentPresets.mount(agentCtx, preset.id)
       installInitialModelSelection(agentCtx, resolved.modelSelection)

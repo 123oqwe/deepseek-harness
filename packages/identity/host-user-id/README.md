@@ -47,6 +47,8 @@ const id = getOrCreateHostUserId() // stable for the process lifetime
 
 The value is stable for the process. Even when the home cannot be written, it still works for the current run, so a boot on a read-only home is not blocked — it simply acts as a host user whose id is new each launch.
 
+`resolveTenantId()` returns the tenant a harness home mints its principals in: an explicit option, else `$DSH_TENANT`, else `local`. `hostUserIdentity` mints the host user there, and webhook ingress mints each integration's service principal there (`@deepseek-ai/dsh-webhook`), so a host user who resumes a webhook-created session names the tenant that session recorded.
+
 -----
 
 <a id="understand-the-implementation"></a>
@@ -127,10 +129,6 @@ None. The value is absent from the model-visible prefix, so it cannot invalidate
 <summary>Working context for maintainers — click to expand</summary>
 
 This Dev Note is working context for maintainers: open questions that are not decided. Shipped behavior and accepted rationale live in the sections above.
-
-#### Open: which identity webhook ingress attaches
-
-A shipped boot attaches this id to every root session a local host user starts. The headless launcher and the Web app's session controller pass it in `AgentOptions` directly; ACP and the SDK server call the launcher's `HOST_USER_IDENTITY_KEY` factory (`@deepseek-ai/dsh-agent-loop`) for each session they compose, because both are stdio servers the local user spawned. Webhook ingress attaches nothing, because its request comes from a remote sender rather than from the machine's user. Whether that path gets an identity of its own, and from where, is not settled here.
 
 #### Open: an unwritable home should probably say so
 

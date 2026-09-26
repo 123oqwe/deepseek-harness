@@ -47,6 +47,8 @@ const id = getOrCreateHostUserId() // stable for the process lifetime
 
 该值在进程内稳定。即便 home 不可写，它对本次运行仍然可用，因此只读 home 上的启动不会被挡住——它只是作为一个每次启动都换 id 的宿主用户在跑。
 
+`resolveTenantId()` 返回 harness home 签发 principal 所用的租户：显式选项，否则 `$DSH_TENANT`，否则 `local`。`hostUserIdentity` 在这里签发宿主用户，webhook ingress 也在这里为每个集成签发 service principal（`@deepseek-ai/dsh-webhook`），因此宿主用户恢复一个由 webhook 创建的会话时，给出的租户与该会话记录的一致。
+
 -----
 
 <a id="understand-the-implementation"></a>
@@ -127,10 +129,6 @@ const id = getOrCreateHostUserId() // stable for the process lifetime
 <summary>面向维护者的工作上下文——点击展开</summary>
 
 本开发备注是面向维护者的工作上下文：尚未决定的开放问题。已出货行为与被接受的理由在上方各节。
-
-#### 开放：webhook ingress 附着哪个身份
-
-出货启动为本机宿主用户开启的每个根会话附着这个 id。headless launcher 与 Web 应用的会话控制器直接在 `AgentOptions` 里传入它；ACP 与 SDK server 为自己组合的每个会话调用 launcher 提供的 `HOST_USER_IDENTITY_KEY` 工厂（`@deepseek-ai/dsh-agent-loop`），因为二者都是本机用户拉起的 stdio 服务器。webhook ingress 不附着任何身份，因为它的请求来自远端发送方，而不是本机的用户。那条路径是否要有自己的身份、来自何处，不在这里裁定。
 
 #### 开放：home 不可写大概应当出声
 

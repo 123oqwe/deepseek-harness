@@ -323,9 +323,10 @@ async function run(
       // session, and nothing this run does traces to a person (BLOCKED-200).
       // This launcher and the Web app's session controller attach it
       // directly; ACP and the SDK server attach the same user through the
-      // launcher's `HOST_USER_IDENTITY_KEY` factory. Only webhook ingress
-      // attaches nothing, for a reason true of it alone: its request comes
-      // from a remote sender, not from the machine's host user.
+      // launcher's `HOST_USER_IDENTITY_KEY` factory. Webhook ingress attaches
+      // the service principal of its integration instead, for a reason true
+      // of it alone: its request comes from a remote sender, not from the
+      // machine's host user.
       agentOptions: {
         provider: selection.provider,
         model: selection.model,

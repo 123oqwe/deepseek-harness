@@ -46,6 +46,12 @@
     },
     {
       "path": "../../runtime-diagnostics/invariants"
+    },
+    {
+      "path": "../../identity/host-user-id"
+    },
+    {
+      "path": "../../identity/principal"
     }
   ]
 }

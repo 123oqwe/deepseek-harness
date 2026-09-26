@@ -499,9 +499,9 @@ export class ApiSessionAgentController {
    * synthesize when none is attached (BLOCKED-200). This controller is the Web
    * app's root creation site and is driven by the LOCAL host user through the
    * `dsh` launcher. ACP and the SDK server attach the same user through the
-   * launcher's `HOST_USER_IDENTITY_KEY` factory; only webhook ingress attaches
-   * nothing, because its request comes from a remote sender, not from that
-   * person.
+   * launcher's `HOST_USER_IDENTITY_KEY` factory; webhook ingress attaches the
+   * service principal of its integration instead, because its request comes
+   * from a remote sender, not from that person.
    *
    * A new `runId` per call is deliberate — this is one run, not one session —
    * and a resume re-supplying the same principal appends no new

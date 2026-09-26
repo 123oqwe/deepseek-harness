@@ -38,6 +38,8 @@ kind: "package-reference"
 
 运行时会在变更状态前验证 preset，解析或创建规范 Workspace，以该 Workspace 路径作为 `SessionHeader.cwd` 创建 Agent，在发布前挂载 agent preset，并在应用权限、标题与提示词前附加会话。附加失败会对尚未发布的动作执行 dispose（资源释放）。之后若在提示词前失败，则以尽力而为方式脱离 Workspace 并对 Agent 执行 dispose。
 
+Agent 以验证该投递的密钥所代表的集成的 service principal 身份行事。其 id 为 `webhook:<kind>:<source>`，属于该 harness home 签发 principal 所用的租户（`$DSH_TENANT`，否则为 `local`，与宿主用户相同），并作为一跳委托链的根；每个创建出的 Agent 都有新的 run id。因此 Session 只记录一次 kind 为 `service` 的 `identity/attached`，每个 action manifest 都以该 principal 为 actor。触发事件的提供方账号等载荷字段不参与，因为签名认证的是集成，而不是那个账号。
+
 成功的 `Agent.followup()` 是 webhook 操作的提交点。消息使用 `source.kind: "webhook"`，并携带提供方、来源、交付与规则来源信息。运行时不等待 idle、不执行特殊 flush、不检查回复，也不发布完成状态；之后完全由普通 Agent 与会话行为接管。
 
 <a id="composition"></a>

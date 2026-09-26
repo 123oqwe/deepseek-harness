@@ -1,9 +1,9 @@
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { getOrCreateAnonymousUserId } from '@deepseek-ai/dsh-anonymous-user-id'
-import { HOST_USER_ID_FILE_NAME, getOrCreateHostUserId, hostUserIdentity } from '../src/index.ts'
+import { HOST_USER_ID_FILE_NAME, getOrCreateHostUserId, hostUserIdentity, resolveTenantId } from '../src/index.ts'
 import { RunId } from '@deepseek-ai/dsh-principal'
 import { currentPrincipal } from '@deepseek-ai/dsh-principal'
 
@@ -19,6 +19,7 @@ afterEach(() => {
   for (const dir of dirs.splice(0)) {
     rmSync(dir, { recursive: true, force: true })
   }
+  vi.unstubAllEnvs()
 })
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -143,5 +144,14 @@ describe('hostUserIdentity tenant (BLOCKED-228)', () => {
   it('treats a blank environment value as absent rather than as a tenant named empty', () => {
     const identity = hostUserIdentity(runId, { env: { DSH_HOME: tempHome(), DSH_TENANT: '   ' } })
     expect(currentPrincipal(identity.chain).tenantId).toBe('local')
+  })
+
+  it('reads the process environment when called with no options, as webhook ingress calls it', () => {
+    // Webhook ingress mints each integration's service principal in this
+    // tenant, so a host user resuming that session names the same one.
+    vi.stubEnv('DSH_TENANT', 'acme')
+    expect(resolveTenantId()).toBe('acme')
+    vi.stubEnv('DSH_TENANT', '')
+    expect(resolveTenantId()).toBe('local')
   })
 })
