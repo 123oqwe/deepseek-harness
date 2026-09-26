@@ -20,8 +20,8 @@
  * launcher's readiness signal. A refused start exits nonzero on its own before
  * any staged module is evaluated.
  *
- * Red today on every case but the control: no launch reads the lock, and no
- * shipped bundle declares the unlocked-profile policy.
+ * Red today on every case but the two controls: no launch reads the lock, and
+ * no shipped bundle declares the unlocked-profile policy.
  * @module tests/first100/fixtures/P1-03.profile-lock-boot.composition
  */
 
@@ -68,6 +68,9 @@ const INSTALLED: StagedPlugin = { name: 'b669-installed-plugin', evaluated: 'B66
 /** A plugin put into the profile directory after the lock was written. */
 const UNLISTED: StagedPlugin = { name: 'b669-unlisted-plugin', evaluated: 'B669-UNLISTED-EVALUATED', mounted: 'B669-UNLISTED-MOUNTED' }
 
+/** A plain library installed into the profile directory: the lock records it, and it is not a bundle. */
+const PLAIN_DEPENDENCY = 'b669-plain-library'
+
 /**
  * The `package.json` a staged plugin is installed with.
  * @param plugin - the staged plugin.
@@ -75,6 +78,15 @@ const UNLISTED: StagedPlugin = { name: 'b669-unlisted-plugin', evaluated: 'B669-
  */
 function manifestOf(plugin: StagedPlugin): Record<string, unknown> {
   return { name: plugin.name, version: VERSION, type: 'module', main: './index.mjs', dsh: { bundle: { patch: './cordis.patch.yml' } } }
+}
+
+/**
+ * The `package.json` a plain library is installed with: it declares no `dsh.bundle`.
+ * @param name - the library's package name.
+ * @returns the manifest.
+ */
+function plainManifestOf(name: string): Record<string, unknown> {
+  return { name, version: VERSION, type: 'module', main: './index.mjs' }
 }
 
 /**
@@ -101,12 +113,12 @@ function stagePlugin(profileDir: string, plugin: StagedPlugin, endsRun: boolean)
 }
 
 /**
- * Write the `pnpm-lock.yaml` an install leaves in the profile, recording one integrity for every plugin.
+ * Write the `pnpm-lock.yaml` an install leaves in the profile, recording one integrity for every package.
  * @param profileDir - the profile directory.
- * @param plugins - the installed plugins.
+ * @param packages - the installed packages, plugins and plain libraries alike.
  * @param integrity - the integrity recorded for each.
  */
-function writePnpmLock(profileDir: string, plugins: readonly StagedPlugin[], integrity: string): void {
+function writePnpmLock(profileDir: string, packages: readonly { readonly name: string }[], integrity: string): void {
   writeFileSync(join(profileDir, 'pnpm-lock.yaml'), [
     "lockfileVersion: '9.0'",
     '',
@@ -114,16 +126,16 @@ function writePnpmLock(profileDir: string, plugins: readonly StagedPlugin[], int
     '',
     '  .:',
     '    dependencies:',
-    ...plugins.map(({ name }) => `      ${name}:\n        specifier: ${VERSION}\n        version: ${VERSION}`),
+    ...packages.map(({ name }) => `      ${name}:\n        specifier: ${VERSION}\n        version: ${VERSION}`),
     '',
     'packages:',
     '',
-    ...plugins.map(({ name }) => `  ${name}@${VERSION}:\n    resolution: {integrity: ${integrity}}`),
+    ...packages.map(({ name }) => `  ${name}@${VERSION}:\n    resolution: {integrity: ${integrity}}`),
     '',
     // pnpm's reader returns no packages at all when `snapshots:` is absent.
     'snapshots:',
     '',
-    ...plugins.map(({ name }) => `  ${name}@${VERSION}: {}`),
+    ...packages.map(({ name }) => `  ${name}@${VERSION}: {}`),
     '',
   ].join('\n'))
 }
@@ -132,36 +144,51 @@ function writePnpmLock(profileDir: string, plugins: readonly StagedPlugin[], int
  * Build the profile `dsh plugin add` leaves for the given plugins: a manifest
  * listing them as dependencies and composing them after the shipped bundles,
  * an empty user layer, the plugins themselves, and the install's
- * `pnpm-lock.yaml`. The first plugin ends the run.
+ * `pnpm-lock.yaml`. The first plugin ends the run. A plain library is a
+ * dependency and is installed, but declares no bundle, so it is not composed.
  * @param profileDir - the profile directory.
  * @param plugins - the installed plugins.
+ * @param plainDependencies - the installed plain libraries, by package name.
  */
-function stageProfile(profileDir: string, plugins: readonly StagedPlugin[]): void {
+function stageProfile(profileDir: string, plugins: readonly StagedPlugin[], plainDependencies: readonly string[] = []): void {
   mkdirSync(profileDir, { recursive: true })
+  const installed = [...plugins.map(plugin => plugin.name), ...plainDependencies]
   writeFileSync(join(profileDir, 'package.json'), `${JSON.stringify({
     name: `dsh-profile-${PROFILE}`,
     private: true,
-    dependencies: Object.fromEntries(plugins.map(plugin => [plugin.name, VERSION] as const)),
+    dependencies: Object.fromEntries(installed.map(name => [name, VERSION] as const)),
     dsh: { profile: { bundles: [...DEFAULT_PROFILE_BUNDLES, ...plugins.map(plugin => plugin.name)], patchReload: 'startup' } },
   }, undefined, 2)}\n`)
   writeFileSync(join(profileDir, 'cordis.patch.yml'), '[]\n')
   plugins.forEach((plugin, index) => { stagePlugin(profileDir, plugin, index === 0) })
-  writePnpmLock(profileDir, plugins, INTEGRITY)
+  for (const name of plainDependencies) {
+    const dir = join(profileDir, 'node_modules', name)
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(join(dir, 'package.json'), `${JSON.stringify(plainManifestOf(name))}\n`)
+    writeFileSync(join(dir, 'index.mjs'), 'export {}\n')
+  }
+  writePnpmLock(profileDir, installed.map(name => ({ name })), INTEGRITY)
 }
 
 /**
  * Lock the given plugins as `dsh plugin` commits a lock: a candidate built
  * from the install as observed, validated against the empty lock a profile
- * starts with, and written atomically.
+ * starts with, and written atomically. `dsh plugin` observes every dependency
+ * of the profile, so a plain library is locked beside the plugins.
  * @param profileDir - the profile directory.
  * @param plugins - the plugins to lock, observed as staged.
+ * @param plainDependencies - the plain libraries to lock, by package name.
  */
-async function lockProfile(profileDir: string, plugins: readonly StagedPlugin[]): Promise<void> {
+async function lockProfile(profileDir: string, plugins: readonly StagedPlugin[], plainDependencies: readonly string[] = []): Promise<void> {
   const empty: PluginLockFile = { lockfileVersion: 1, entries: [], loadOrder: [] }
-  const candidate = buildCandidateLock(plugins.map(plugin => ({
-    name: plugin.name,
+  const installed = [
+    ...plugins.map(plugin => ({ name: plugin.name, manifest: manifestOf(plugin) })),
+    ...plainDependencies.map(name => ({ name, manifest: plainManifestOf(name) })),
+  ]
+  const candidate = buildCandidateLock(installed.map(({ name, manifest }) => ({
+    name,
     version: VERSION,
-    manifest: manifestOf(plugin),
+    manifest,
     dependencies: [],
     grantedCapabilities: [],
     integrity: INTEGRITY,
@@ -280,6 +307,17 @@ describe('P1-03 on a real `dsh --profile` launch: a plugin lock that does not ma
     const run = await launch(async (profileDir) => {
       stageProfile(profileDir, [INSTALLED])
       await lockProfile(profileDir, [INSTALLED])
+    })
+    expect(outcomeOf(run, [INSTALLED]), detail(run)).toEqual(startedWith([INSTALLED]))
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS)
+
+  it('control: a profile whose lock also records a plain dependency it installed, which is not a bundle, starts and runs its plugin', async () => {
+    // The lock `dsh plugin` writes covers every dependency of the profile, a
+    // plain library included, so the start must weigh that library as
+    // installed rather than refuse it as missing (B-669b).
+    const run = await launch(async (profileDir) => {
+      stageProfile(profileDir, [INSTALLED], [PLAIN_DEPENDENCY])
+      await lockProfile(profileDir, [INSTALLED], [PLAIN_DEPENDENCY])
     })
     expect(outcomeOf(run, [INSTALLED]), detail(run)).toEqual(startedWith([INSTALLED]))
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
