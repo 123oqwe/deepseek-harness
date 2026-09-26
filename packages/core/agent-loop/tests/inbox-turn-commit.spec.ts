@@ -86,4 +86,26 @@ describe('P4-06 must[2] (agent inbox): a claimed message is consumed when its tu
     session.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
     expect(() => { inbox.append('next-step', settlement('child-a', 3)) }).toThrow(DuplicateArrivalError)
   })
+
+  it('a settlement claimed by a live turn, redelivered before that turn ends, is never given to a later turn', async () => {
+    const { session, inbox } = await mountInbox('agent')
+    session.append('turn/start', { turn: 1 })
+    inbox.append('next-step', settlement('child-a', 3))
+    expect(inbox.claim('next-step', 1)).toHaveLength(1)
+    // The same arrival key redelivered (a fresh message id) while turn 1 has NOT
+    // ended: refused at arrival today, admitted and dropped at the next claim
+    // after B-619. The case asserts only the result — the redelivery reaches no
+    // turn — so it stays green as that mechanism moves.
+    const redelivery = settlement('child-a', 3)
+    const redeliveredId = redelivery.id
+    try {
+      inbox.append('next-step', redelivery)
+    } catch (error) {
+      if (!(error instanceof DuplicateArrivalError)) throw error
+    }
+    session.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
+    session.append('turn/start', { turn: 2 })
+    expect(inbox.claim('next-step', 2).map(message => message.id)).not.toContain(redeliveredId)
+    expect(inbox.nextStep.map(pending => pending.id)).not.toContain(redeliveredId)
+  })
 })
