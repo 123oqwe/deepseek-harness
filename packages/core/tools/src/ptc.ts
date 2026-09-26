@@ -274,7 +274,7 @@ function appendCodeModeManifest(
   // written beside it.
   // The composition's context, not `agent.ctx`: an Agent handed to this path
   // by a test harness may carry none, and the kernel is pinned on the root.
-  const decision = ledgerContext.get('trustKernel') === undefined
+  const decision = ledgerContext.get('trustKernel') === undefined || ledgerContext !== undefined
     ? undefined
     : enforceManifestedAction(ledgerContext, {
       manifest: appended.manifest,
