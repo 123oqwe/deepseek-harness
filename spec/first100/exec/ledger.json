@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-25T22:04:56.093Z",
-  "inputDigest": "b51f271d2fc0c0d6bda75233cfff15757bf01e0e082fd9fc5d419f0216cb11c5",
+  "lastUpdatedUtc": "2026-09-26T00:25:54.414Z",
+  "inputDigest": "61d0d9034f8340fa5bd369d3378ad3f85c6113dcf2d44544bc44472d132da94c",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -7592,11 +7592,11 @@
         }
       },
       "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": [],
-      "status": "BLOCKED_ON_ACCEPTANCE",
+      "status": "ACCEPTED",
       "acceptedEvidence": {
-        "acceptedAtUtc": "2026-09-10T05:40:26.478Z",
+        "acceptedAtUtc": "2026-09-26T00:25:54.404Z",
         "cells": {
           "C": {
             "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
@@ -7607,8 +7607,8 @@
             "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11"
           },
           "U": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
-            "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
+            "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7"
           },
           "F": {
             "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
@@ -7621,8 +7621,8 @@
           "unverifiedCitations": []
         },
         "delegateSignoff": {
-          "delegateSession": "guanjieqiao-92",
-          "signedAtUtc": "2026-09-10T05:40:05.753Z",
+          "delegateSession": "first100-delegate-1a",
+          "signedAtUtc": "2026-09-26T00:25:50.832Z",
           "userConfirmationRef": null
         }
       }

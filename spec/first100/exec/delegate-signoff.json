@@ -779,6 +779,14 @@
       "delegateSession": "first100-delegate-1a",
       "signedAtUtc": "2026-09-24T21:27:49.554Z",
       "reason": "P4-07 was last signed PASS on 2026-09-24T15:17:56Z (first100-delegate-1a). BLOCKED-334: lane A's red-first run 36060615899 (A-387, case a4f29c2d76) shows on the shipped headless profile, on the native and the code-mode paths, that a Run fenced or stopped while an operator is being asked still runs the approved tool, so acceptance[0] (a stale worker that resumes can neither commit results nor execute new side effects) does not hold. Withdrawn by a forward write under acceptance standard v1, on the delegate's instruction (B-593)."
+    },
+    {
+      "epic": "P4-08",
+      "rowDigestSha256": "75c145f9163a0034f47dd538fbceedf461deaed18a9505ca660a911cce40dd4b",
+      "conclusion": "PASS",
+      "delegateSession": "first100-delegate-1a",
+      "signedAtUtc": "2026-09-26T00:25:50.832Z",
+      "reason": "- **依据的树**:第 9 班候选 `39ce6d1c7c`。P4-08 的文件(packages/workflow、collaboration/workflow-journal、base 的 cordis.patch.yml)从 4e932e474b 到它一个没改,`git diff --stat` 为空。\n- **4.4a,生产调用者**:我在 39ce6d1c7c 上逐行核了。\n  - 记录:journal 的 8 处生产调用都在 workflow-worker-thread 里,host.ts:254、:270、:803(记录与写盘),:825、:832(压缩与留证);\n  - 读回:resume.ts:168、:170、:174,读 journal、按 script digest 规划、不能续跑就另存。\n- **4.4b,观测**:P4-08 全部 GREEN 格与补充的冻结标题共 112 条,在推送门全量 36088846692(4e932e474b)里 112 条都 passed。续跑 U.4 [352]、被拒 journal 保留 U.8 [360]、嵌套压缩 U.12 [377] 都在其中。\n- **4.4c,未结**:openFindings 为空;BLOCKED-320、328 已在第 9 班以 CLOSED 落(a540f62a89,结项说明是 lane A 的 A-412)。\n- **4.4d,到达**:\n  - 模型经 `workflow` 工具的 `resume` 参数到达 `ctx.workflowEngine.resume`(packages/workflow/tool-workflow/src/index.ts:381),它由 WorkerThreadWorkflowEngine 实现(workflow-worker-thread/src/index.ts:161);\n  - base 挂着 workflow-worker-thread 与 tool-workflow(packages/bundle/base/cordis.patch.yml:641-647);acp-app、headless、sdk-app、web-app 四个出厂 bundle 都叠在 dsh-base 上。\n- **结论:PASS**。lane B 以 `--record-signoff PASS` 与 `--accept P4-08` 随第 9′ 班的记录落。P4-08 不在用户确认档,不需要 `--user-confirmation-ref`。\n- **签字不涵盖**:\n  1. **acceptance[2] 只签决定那一半**(BLOCKED-172):压缩去掉已完成且验证过的步骤的 inputs、保留全部 receipt,冻结用例用构造的 ArtifactRef 观测到这一点;出厂产品上 recorder 为每一步写 `inputs: []`(recorder.ts:117),压缩没有 input 可去;使用那一半等 BLOCKED-172 随 P6-09 的 Artifact Store 结项。\n  2. **前台 run 在出厂上无人触发**(S4,批准单 approved/P4-08.md 12:15:15Z 第 4 条):模型从不拿到前台 run 的 id。U.4 的 id 由测试从盘上的 journal 读出,是第三方输入。detached run 的 id 在模型看得到的文本里(tool-workflow :286-287),那是出厂上的触发时刻,只读过码,没有用例观测。\n  3. **修复之前已压缩的 journal 没有 nesting**:续跑时仍当根 run 起,修复 Note :46 记为限制。\n  4. **journal 目录写死**为 `dshHomePath('journals')`,违反 AGENTS.md:117,已开 B-597 原地修;条款不要求它可配。\n  5. **sdk-minimal 不叠 dsh-base**,不挂 workflow 引擎,不在主语内。"
     }
   ]
 }
