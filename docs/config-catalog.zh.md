@@ -1622,8 +1622,8 @@ export type Config = Readonly<Record<string, never>>
 ```ts config-catalog
 /** Which message types reach stderr. */
 export interface Config {
-  /** Message types written to stderr; the others stay in the in-memory buffer only. */
-  types: LoggerType[]
+  /** Message types written to stderr, `error` and `warn` when omitted; the others stay in the in-memory buffer only. */
+  types?: LoggerType[]
 }
 ```
 
