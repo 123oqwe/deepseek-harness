@@ -16,7 +16,7 @@ BLOCKED-339；P4-11 must[0] 要求所有层共用一套错误分类、给出同�
   - `callerSide`（`client-error`）：`AUTH`、`MISSING_CREDENTIAL`、`INVALID_CREDENTIAL`、`QUOTA` 与 `ABORTED`。凭据、余额和自己的取消只有调用方能改变，所以余额耗尽即使以 429 到达也被拒绝。
   - `unclassified`（新理由 `unclassified`）：不带状态码、码既不属于上面两类、也不是五个暂时性码之一的失败。没有任何东西表明它会过去，重试可能重复一个确定性的故障，把它计入断路器又可能让一个健康的目的地断开。`UNKNOWN` 在这里判定。
   - 带状态码、又没有上述事实的失败按状态码判：408、429 与 5xx 可重试，其余 4xx 为 `client-error`。408 现在会被重试，因为它表示服务器不再等待。
-- **一次失败，一份输入。** 断路器把首块抛出的错误读作 `llmFailureFacts(normalizeLlmFailure(error))`，而 `normalizeLlmFailure(error)` 正是 finish 块带给 llm-retry 的那份失败，所以两层从同一个值算出同一个判决。首块之后的失败，或者适配器在 finish 块里报告的失败，只会到达 llm-retry，因为断路器只在首块判断端点是否健康。
+- **一次失败，一份输入。** 断路器把流应答之前抛出的错误读作 `llmFailureFacts(normalizeLlmFailure(error))`，而 `normalizeLlmFailure(error)` 正是 finish 块带给 llm-retry 的那份失败，所以两层从同一个值算出同一个判决；适配器在流应答之前用 finish 块报告的失败，按该块所带的失败分类，也就是 llm-retry 读到的那个值（[带内失败](2026-09-26-in-band-provider-failures-move-the-circuit-breaker.zh.md)）。流应答之后的失败只会到达 llm-retry，因为断路器只在流首次应答处判断端点是否健康。
 
 ## 不带状态码的码
 

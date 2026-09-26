@@ -40,7 +40,7 @@ The shipped provider is [`retry-cockatiel`](../../packages/reliability/retry-coc
 
 ## What a model sees
 
-Nothing directly. This subsystem registers no tool, contributes no prompt text and emits no session event. What a model observes is whether its request was made at all: `@deepseek-ai/dsh-llm` consults the breaker where the FIRST chunk is pulled, because that is where an endpoint's health shows — a stream that produced a chunk answered — and a refusal surfaces as that service's own failure. A composition mounting neither the budget nor the breaker behaves exactly as it did before they existed; both consumers resolve their service with `ctx.get`, so absence is a capability that is missing rather than a permission that was denied.
+Nothing directly. This subsystem registers no tool, contributes no prompt text and emits no session event. What a model observes is whether its request was made at all: `@deepseek-ai/dsh-llm` consults the breaker while pulling a stream's leading chunks, up to the first one other than `usage`, because that is where an endpoint's health shows — a stream that produced such a chunk answered, and a failure reported there in a finish chunk is judged like a thrown one — and a refusal surfaces as that service's own failure. A composition mounting neither the budget nor the breaker behaves exactly as it did before they existed; both consumers resolve their service with `ctx.get`, so absence is a capability that is missing rather than a permission that was denied.
 
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 

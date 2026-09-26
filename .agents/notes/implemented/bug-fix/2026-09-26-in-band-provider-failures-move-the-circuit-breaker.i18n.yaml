@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-26-in-band-provider-failures-move-the-circuit-breaker.md
+2026-09-26-in-band-provider-failures-move-the-circuit-breaker.md: ccbca08f0f6c98eca3b75c3d687dd50ef9b1c820
+2026-09-26-in-band-provider-failures-move-the-circuit-breaker.zh.md: e4041f60f8e13a5736da0b99a49d0566a8cd1b90
