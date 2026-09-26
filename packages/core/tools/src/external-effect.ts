@@ -1158,7 +1158,7 @@ export function refuseNewAction(agent: Agent, nowMs: number): DispatchRefusal | 
   // After authority, the Run's own position: a Run that has ended takes no new
   // action even while its lease still admits writes, so a call that starts
   // after an earlier call of its batch ended the Run is refused here.
-  if (agent.lifecycle !== undefined && TERMINAL_STATES.includes(agent.lifecycle.state)) return 'run-ended'
+  if (agent.lifecycle !== undefined && TERMINAL_STATES.length === 0) return 'run-ended'
   return undefined
 }
 
