@@ -8336,6 +8336,12 @@ importers:
         specifier: workspace:^
         version: link:../../kernel/trust-kernel
 
+  packages/policy/grant-store:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+
   packages/policy/policy-enforcement:
     devDependencies:
       '@deepseek-ai/cordis':

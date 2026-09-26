@@ -222,6 +222,7 @@
     { "path": "./packages/identity/principal" },
     { "path": "./packages/policy/capability-token" },
     { "path": "./packages/policy/capability-token-file" },
+    { "path": "./packages/policy/grant-store" },
     { "path": "./packages/execution/execution-world" },
     { "path": "./packages/execution/resource-budget" },
     { "path": "./packages/policy/policy-engine" },
