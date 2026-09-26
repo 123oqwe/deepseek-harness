@@ -51,6 +51,10 @@ export type {
   TransitionDecision,
   TransitionDenialReason,
 } from './state-machine.ts'
+// The tool runtime's dispatch refusal and the Run plugin's step gate both
+// tell an ended Run from a waiting one, and this set is the one that says
+// which states end it (BLOCKED-332).
+export { TERMINAL_STATES } from './state-machine.ts'
 
 declare module '@deepseek-ai/cordis' {
   interface Context {

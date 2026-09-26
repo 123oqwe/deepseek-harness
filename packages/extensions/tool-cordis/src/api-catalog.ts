@@ -1836,7 +1836,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       {
         signature: 'advance( agent: Agent, to: AgentLifecycleState, reason: string, ): TransitionDenialReason | \'fenced\' | \'lease-refused\' | \'no-run\' | \'stopped\' | undefined',
         description: 'Advance one agent\'s lifecycle under the Run\'s lease (P4-05 must[1], P4-07 must[1]).\n\nThe production caller `advanceAgentLifecycleFenced` did not have. The token and the current lease both come from the lease this plugin took, so a caller cannot present authority it was not granted, and an agent whose Run was reclaimed by another host is refused here rather than allowed to write on a stale epoch.',
-        parameters: [{ name: 'agent', description: 'the agent whose lifecycle is proposed to move.' }, { name: 'to', description: 'the state proposed.' }, { name: 'reason', description: 'why, recorded on the transition (must[1] requires it non-empty).' }],
+        parameters: [{ name: 'agent', description: 'the agent whose lifecycle is proposed to move.' }, { name: 'to', description: 'the state proposed.' }, { name: 'reason', description: 'why, recorded on the transition (must[1] requires it non-empty); the reason for an admitted terminal transition is kept, so a step refused because the Run has ended reports it (BLOCKED-332).' }],
         returns: 'the refusal, or `undefined` when the agent advanced. `lease-refused` names an agent this plugin declined to open a Run for, which is a different fact from `no-run`: a live store said no, rather than nothing tracking ownership at all. `stopped` names an emergency stop in force (P2-12 must[2]), which is about the whole harness rather than about this agent\'s standing, and is therefore reported ahead of both.',
       },
     ],
@@ -5891,7 +5891,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'PreStepDecision',
-    declaration: 'export type PreStepDecision = {\n    kind: \'reject\';\n} | {\n    kind: \'enter\';\n    messages: UserMessage[];\n    startsRequestSeries?: true;\n};',
+    declaration: 'export type PreStepDecision = {\n    kind: \'reject\';\n    runEnded?: {\n        readonly state: AgentLifecycleState;\n        readonly reason?: string;\n    };\n} | {\n    kind: \'enter\';\n    messages: UserMessage[];\n    startsRequestSeries?: true;\n};',
   },
   {
     name: 'PreToolDecision',
@@ -7467,7 +7467,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'TurnEndReasonMap',
-    declaration: 'export interface TurnEndReasonMap {\n    completed: {\n        kind: \'completed\';\n    };\n    aborted: {\n        kind: \'aborted\';\n        reason: TurnEndCancelCause;\n    };\n    blocked: {\n        kind: \'blocked\';\n    };\n    error: {\n        kind: \'error\';\n        error: LlmFailure;\n    };\n    \'max-tokens\': {\n        kind: \'max-tokens\';\n    };\n    interrupted: {\n        kind: \'interrupted\';\n    };\n}',
+    declaration: 'export interface TurnEndReasonMap {\n    completed: {\n        kind: \'completed\';\n    };\n    aborted: {\n        kind: \'aborted\';\n        reason: TurnEndCancelCause;\n    };\n    blocked: {\n        kind: \'blocked\';\n        runEnded?: {\n            readonly state: string;\n            readonly reason?: string;\n        };\n    };\n    error: {\n        kind: \'error\';\n        error: LlmFailure;\n    };\n    \'max-tokens\': {\n        kind: \'max-tokens\';\n    };\n    interrupted: {\n        kind: \'interrupted\';\n    };\n}',
   },
   {
     name: 'TypertCodec',

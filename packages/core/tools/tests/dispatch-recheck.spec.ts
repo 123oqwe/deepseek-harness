@@ -116,4 +116,13 @@ describe('refusalToAct', () => {
     )
     expect(refusalToAct(free, 'write', 0)).toBeUndefined()
   })
+
+  it('refuses an agent whose Run has ended, in words apart from a stop, a takeover and a refused lease (BLOCKED-332)', () => {
+    const ended = { lifecycle: { runId: 'run', state: 'failed', epoch: 1 } } as unknown as Agent
+    const running = { lifecycle: { runId: 'run', state: 'running', epoch: 1 } } as unknown as Agent
+    expect(refusalToAct(ended, 'probe', 0)).toBe(
+      'The action "probe" was not performed: this run has already ended, so it may take no new action.',
+    )
+    expect(refusalToAct(running, 'probe', 0)).toBeUndefined()
+  })
 })

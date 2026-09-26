@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-26-a-run-that-has-ended-starts-no-further-call-and-says-why.md
+2026-09-26-a-run-that-has-ended-starts-no-further-call-and-says-why.md: e18865299afcbb2703a65d0d82ba49ca5b65e491
+2026-09-26-a-run-that-has-ended-starts-no-further-call-and-says-why.zh.md: 6ca0cd348029122d1f725f70150036fe8dc511a0

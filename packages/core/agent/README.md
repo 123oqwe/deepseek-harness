@@ -82,7 +82,7 @@ The package is built on one separation: the public `Agent` surface and registry 
 
 ### Step admission
 
-`PreStepDecision` is either `{ kind: 'reject' }` or `{ kind: 'enter', messages, startsRequestSeries? }`. The enter branch contains the complete identified, frozen message batch. Acceptance does not commit it: after assembly and `step/start`, `agent/request` and `prepareCall()` resolve the route before the loop commits the system prompt and user batch. Cancellation during either async phase commits neither. `startsRequestSeries: true` declares a distinct model-message series; a wrapping listener preserves that declaration and the batch unless it intentionally replaces either one. Claiming removes offered messages from the inbox, while messages inserted after the claim remain pending for a later boundary.
+`PreStepDecision` is either `{ kind: 'reject', runEnded? }` or `{ kind: 'enter', messages, startsRequestSeries? }`. A reject names `runEnded` when the step is refused because the agent's Run has ended, with the terminal state and, when known, the reason given for it; the loop records it on the turn's `blocked` end. The enter branch contains the complete identified, frozen message batch. Acceptance does not commit it: after assembly and `step/start`, `agent/request` and `prepareCall()` resolve the route before the loop commits the system prompt and user batch. Cancellation during either async phase commits neither. `startsRequestSeries: true` declares a distinct model-message series; a wrapping listener preserves that declaration and the batch unless it intentionally replaces either one. Claiming removes offered messages from the inbox, while messages inserted after the claim remain pending for a later boundary.
 
 ### Durable inbox
 

@@ -22,7 +22,7 @@
 
 import { createHash } from 'node:crypto'
 import type { Context } from '@deepseek-ai/cordis'
-import { advanceLeasedAgent, stopGateFor, type Agent, type AgentLifecycleState } from '@deepseek-ai/dsh-agent'
+import { advanceLeasedAgent, stopGateFor, TERMINAL_STATES, type Agent, type AgentLifecycleState } from '@deepseek-ai/dsh-agent'
 import {
   appendManifestThenGate,
   computeArgumentsHash,
@@ -53,7 +53,7 @@ import { sideEffectClassOf } from '@deepseek-ai/dsh-risk-taxonomy'
 import type { RiskClass, RiskGroundKind } from '@deepseek-ai/dsh-risk-taxonomy'
 import { verifyApprovalBinding } from '@deepseek-ai/dsh-user-approval'
 import type { ApprovalBinding, ApprovalBindingInputs, ApprovalDisplay, ApprovalVerification } from '@deepseek-ai/dsh-user-approval/types'
-import type { JsonValue } from '@deepseek-ai/dsh-util-values'
+import { assertNever, type JsonValue } from '@deepseek-ai/dsh-util-values'
 import { attachedIdentity, SessionSeq } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-user-approval'
 import type { WorldId, WorldProviderId, WorldSpecDigest } from '@deepseek-ai/dsh-execution-world/types'
@@ -1114,6 +1114,8 @@ export type DispatchRefusal =
   | 'fenced'
   /** This host never held the work item: a live store refused its lease. */
   | 'lease-refused'
+  /** The agent's Run has reached a terminal lifecycle state (P4-05 acceptance[0], BLOCKED-332). */
+  | 'run-ended'
 
 /**
  * Ask whether this host may still act, WITHOUT moving anything (P2-12 must[2],
@@ -1122,14 +1124,15 @@ export type DispatchRefusal =
  * **One decision, reached from both dispatch paths.** The native loop and the
  * PTC sub-dispatcher call this, so an emergency stop refuses the same way in
  * both and no second table can drift from the first. Every answer here is read
- * from a decision that already exists: `stopGateFor` is P2-12's, and
- * `RunLease.mayWrite` is the lease package's `checkFencing` — this function
- * adds no rule of its own, it only asks them before an action instead of after.
+ * from a decision that already exists: `stopGateFor` is P2-12's,
+ * `RunLease.mayWrite` is the lease package's `checkFencing`, and
+ * `TERMINAL_STATES` is P4-05's — this function adds no rule of its own, it
+ * only asks them before an action instead of after.
  *
- * **Asked per dispatch, never once per batch.** A stop raised while a batch of
- * calls is in flight must refuse the calls that have not started, and a value
- * read before the batch began is a value about the past. `mayWrite` reads the
- * store through for the same reason.
+ * **Asked per dispatch, never once per batch.** A stop raised, or a Run ended
+ * by an earlier call, while a batch of calls is in flight must refuse the calls
+ * that have not started, and a value read before the batch began is a value
+ * about the past. `mayWrite` reads the store through for the same reason.
  *
  * **Nothing is advanced to ask it.** `advanceLeasedAgent` also reports these
  * refusals, but it reports them as a side effect of proposing a lifecycle
@@ -1152,23 +1155,36 @@ export function refuseNewAction(agent: Agent, nowMs: number): DispatchRefusal | 
   if (stopGateFor(agent) === 'stopped') return 'stopped'
   if (agent.leaseRefused === true) return 'lease-refused'
   if (agent.runLease !== undefined && !agent.runLease.mayWrite(nowMs)) return 'fenced'
+  // After authority, the Run's own position: a Run that has ended takes no new
+  // action even while its lease still admits writes, so a call that starts
+  // after an earlier call of its batch ended the Run is refused here.
+  if (agent.lifecycle !== undefined && TERMINAL_STATES.includes(agent.lifecycle.state)) return 'run-ended'
   return undefined
 }
 
 /**
- * The text a dispatch refusal is reported with. The three texts differ because
- * the next move differs — a stop ends when an operator resumes, a fenced run is
- * already being done elsewhere, and a lease-refused one never started.
+ * The text a dispatch refusal is reported with. The texts differ because the
+ * next move differs — a stop ends when an operator resumes, a fenced run is
+ * already being done elsewhere, a lease-refused one never started, and an
+ * ended one has no next action.
  * @param refusal - why this host may not act.
  * @param toolName - the action refused, named so a multi-call turn is readable.
  * @returns the text.
  */
 function dispatchRefusalText(refusal: DispatchRefusal, toolName: string): string {
-  return refusal === 'stopped'
-    ? `The action "${toolName}" was not performed: an emergency stop is in force, so this run may take no new action until it is resumed.`
-    : refusal === 'fenced'
-      ? `The action "${toolName}" was not performed: this host no longer holds its work item — another host took it over, and is doing this work.`
-      : `The action "${toolName}" was not performed: this host never held its work item, so it may not act on it.`
+  switch (refusal) {
+    case 'stopped':
+      return `The action "${toolName}" was not performed: an emergency stop is in force, so this run may take no new action until it is resumed.`
+    case 'fenced':
+      return `The action "${toolName}" was not performed: this host no longer holds its work item — another host took it over, and is doing this work.`
+    case 'lease-refused':
+      return `The action "${toolName}" was not performed: this host never held its work item, so it may not act on it.`
+    case 'run-ended':
+      return `The action "${toolName}" was not performed: this run has already ended, so it may take no new action.`
+    /* v8 ignore next -- closed-union exhaustiveness guard */
+    default:
+      return assertNever(refusal, 'DispatchRefusal')
+  }
 }
 
 /**
