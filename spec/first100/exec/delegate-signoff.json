@@ -877,6 +877,14 @@
       "signedAtUtc": "2026-09-26T19:51:33.097Z",
       "reason": "- **为什么要重签**:5992b538e4 里 A-516 的取代带了 revoke-cell,P0-07 由 ACCEPTED 暂回 NOT_RUN(巡逻 #52,我的次序错误，见 19:1xZ 一节)。B-626 又改了 verify-evidence 的行为，也就是 P0-07 的主语，所以在当前树上重做 4.4。\n- **读数**:推送门全量 36261404562 @ 5992b538e4,P0-07 的 live 条目全过:[121] C 29/29、[331] U.1 2/2、[335] F.3 2/2、[365] P.1 10/10、[367] F.4 1/1、[380] P.3 8/8、[396] U.2 9/9、[415] P.2 3/3(新的取代条目，是第一次被观测)。\n- **4.4 摘要**(§21 第 6 条;都在 5992b538e4 上读，引用一律带花括号，避开 zsh 的 :s 修饰符):\n  1. 规则：仓库 AGENTS.md:130「Evidence-gate reporting: cite the package's real path and accepted status」,即收窄 ⑥ 的第一半。\n  2. 载入：出厂 base 挂了 dsh-agent-instructions(packages/bundle/base/cordis.patch.yml:450-451),它默认读 AGENTS.md(agent-instructions/src/config.ts:12),把规则带进 agent 的上下文。\n  3. 入口：package.json:192 的 evidence:verify 调 scripts/release/verify-evidence.mjs。结果行写出包的真实路径，只有验过的包才写 accepted=true,否则写 accepted=false 并说明原因(:57-59);must[2] 按真实数据重新推导 requiredGates(:134、:161-164)。\n  4. 第五问：出厂的 agent 每次启动都会载入这条规则，输入不为空;agent 的回答是否真的引用了，按收窄 ⑥ 不作要求，也不检查。\n- **结论:PASS**。17r 由 lane B 落:\n  1. 从 36261404562 重记 P0-07 的 P.2 格;\n  2. --record-signoff PASS,理由逐字取本节;\n  3. --accept P0-07 --user-confirmation-ref decisions-approved.md#C22(P0-07 属于要用户确认的那一档;用户在 C22 确认过，范围没有变)。\n  推送时 accepted-set-guard 应当看到 P0-07 回到 ACCEPTED。",
       "userConfirmationRef": "decisions-approved.md#C22"
+    },
+    {
+      "epic": "P2-03",
+      "rowDigestSha256": "7b5d800707bb765715f0638c2477fedd184e259fe4976b00cbbb311b0a7bbf6a",
+      "conclusion": "PASS",
+      "delegateSession": "first100-delegate-1a",
+      "signedAtUtc": "2026-09-26T22:36:50.085Z",
+      "reason": "- **P2-03 读数**:推送门全量 36268793542 @ 9501e34f51,P2-03 十一个 live 条目全过(C 18、F 4、U.1–U.9 共 26 条)。四格 C、U、F 绿,P 为 N/A。锁行(accept-blocked: P2-03)仍在;315 已在 17r 结项，可以解锁。lane A 的签字包写「没有开着的验收锁」,不对，已照这里更正。\n- **4.4 摘要**(§21 第 6 条;在 9501e34f51 上亲自读):\n  1. native:tool-calls.ts:254 由 judgeActionRisk 取一次裁决;:712 的 manifest 分类出自同一份裁决(manifestClassificationOf);:323 的 gateActionRisk 用它把关。\n  2. code-mode:ptc.ts:748 的 gateActionRisk 用的是同一份 judged 裁决与 binding。\n  3. 裁决:external-effect.ts:437-441 的 verdictOf 算出 requiresApproval = 不是硬拒，且当前 preset 要求审批;:456-460 定了 manifest 的 sideEffectClass、classified、requiresApproval;:845-849 的门先判硬拒，再判是否需要审批。\n  4. 出厂挂载:base 的 permission 行带 riskRules(cordis.patch.yml:346 起)。\n  5. 第五问：出厂工具声明的标签都有映射(盲审数过，共 28 处),所以出厂工具在出厂上不会产生 classified:false,无分类的调用只来自第三方工具或 MCP。机制已接上，由第三方输入的 composition 用例证明(S4),签字写明「出厂上无人触发」。\n- **盲审**:B-620 没有 1 档。T2-1、T2-2 的文档修正是 B-671,进第 19 班;其余只登记。\n- **Known Limitation**:\n  - ⑨ 与盲审 T2-2:凡没挂 permissionPresets 的组合都没有风险门(出厂里是 sdk-minimal,以及关掉 permission 行的 profile),记 requiresApproval:true,但没有人问;\n  - danger-full-access 是有文档的例外，未分类的调用记 false,不问就跑。\n- **结论:PASS**。18r 由 lane B 落:\n  1. 从 36268793542 记 U.7、U.8、U.9 三格;\n  2. 锁行标 LIFTED,删掉 accept-blocked: P2-03;\n  3. --record-signoff PASS,理由逐字取本节;\n  4. --accept P2-03。"
     }
   ]
 }
