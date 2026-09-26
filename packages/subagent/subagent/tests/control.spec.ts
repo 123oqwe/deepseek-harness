@@ -257,17 +257,23 @@ describe('subagent prompt Remote', () => {
   it('delivers the content under the caller-minted identity and canonical browser zone', async () => {
     const { subagents } = await bench({ [PARENT]: { status: 'idle' } })
     const delivery = promptDelivery(subagents).mockResolvedValue('m-1' as MessageId)
+    const caller = new AbortController()
 
-    await expect(subagents.prompt(promptRequest('Asia/Shanghai'), signal))
+    await expect(subagents.prompt(promptRequest('Asia/Shanghai'), caller.signal))
       .resolves.toEqual({ messageId: 'm-1' })
     expect(delivery).toHaveBeenCalledWith(
       { status: 'idle' },
       CHILD,
       [{ type: 'text', text: 'continue' }],
       { kind: 'user', rpcId: REQUEST_ID, clientTimeZone: 'Asia/Shanghai' },
-      signal,
+      expect.any(AbortSignal),
       'queue',
     )
+    // The delivery gets its own signal, which the caller's abort still reaches.
+    const delivered = delivery.mock.calls[0]?.[4]
+    expect(delivered?.aborted).toBe(false)
+    caller.abort()
+    expect(delivered?.aborted).toBe(true)
   })
 
   it('passes steer delivery through the same admission operation', async () => {
