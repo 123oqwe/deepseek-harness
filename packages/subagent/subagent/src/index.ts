@@ -214,14 +214,13 @@ export class SubagentRuntime extends TypertRemoteService {
    * The durable bus, declared as a dependency rather than read with
    * `ctx.get` (§12.40).
    *
-   * The reason is TEARDOWN ORDER, not availability. A settlement is committed
-   * to the bus before anyone tries to deliver it, and the settlements that most
-   * need that are produced while the process is going away — measured, with
-   * `ctx.get` the bus service was already disposed by then, so exactly those
-   * commits reached nothing. Cordis disposes a dependent before what it
-   * depends on, so declaring the dependency is what puts the manager's drain
-   * ahead of the bus's teardown. Hand-ordering the two would be a second
-   * statement of the same fact, free to drift from this one.
+   * A settlement is committed to the bus before anyone tries to deliver it,
+   * and the settlements that most need that are produced while the process is
+   * going away — measured, with `ctx.get` the bus service was already disposed
+   * by then, so exactly those commits reached nothing. The dependency delivers
+   * the service the continuation registry holds. It does not order teardown:
+   * a fiber unload starts all of its disposers at once, so the registry
+   * commits when the unload is announced (BLOCKED-333).
    */
   static inject = ['messageBus']
 

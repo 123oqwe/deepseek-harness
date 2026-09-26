@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-26-a-child-stopped-by-a-shutdown-is-reported-to-its-parent.md
+2026-09-26-a-child-stopped-by-a-shutdown-is-reported-to-its-parent.md: 00123de73498fc355f11509593b9a87da1a70620
+2026-09-26-a-child-stopped-by-a-shutdown-is-reported-to-its-parent.zh.md: b464ac147fb334877be25216b957412f774c6f19
