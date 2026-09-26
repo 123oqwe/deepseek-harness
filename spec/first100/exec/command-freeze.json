@@ -19493,6 +19493,157 @@
         "failureSummary": "4 of 6 reddened, the two controls green: both 'a prompt after the restart does not wake the interrupted child' cases — AssertionError: expected { outcome: 'delivered' } to deeply equal { outcome: 'refused' } (spec:248 graceful, :268 crash) — and both 'the interrupt, with an epoch, is readable in the durable bus after the restart' cases — AssertionError: expected null to deeply equal { ... } at expectBusInterrupt (spec:226:54). The mutation discriminates: only the four fix-dependent cases fail."
       },
       "note": "P5-10 U-stage supplement 2, on the shipped headless profile: must[2] and acceptance[0] after a restart. A child interrupted before a graceful restart or a crash is not woken by a later prompt, and the interrupt, with its epoch, is readable in the durable bus (BLOCKED-343; red first A-463, 80ebf0d426, re-pinned to the durable bus by A-470, f310e43ade on the candidate; fix B-631, 08dd4ed361). Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T17:44:02Z) from lane A's A-533 draft (artifacts/laneA/a-533-freeze-drafts.md, sha256 2dbd6f5a…). expectCases are the full names in the full run 36254411017 at d25574ecbc, where each passed once; the entry is frozen after that run, so its cell is observed by the next full run. Stage U, as the delegate ruled, after P5-10 U.1 and P4-01 U.3 and U.4. B-631's own fix mutation M-631-1 (run 36247150154 at 4e0a788479) reddened the titles before A-470 re-pinned them (\"readable in the child's log\"), which no longer exist at d25574ecbc; M-470 is the sensitivity proof for these titles. files add the restart driver, its profile overlay and mock model, and the loader-smoke fixtures and entry the driver uses. The observing tree is pinned at refs/dsh/freeze/P5-10.U.2/2026-09-26T17-57-41.000Z -> d25574ecbc9bc4c2ea67e6988e2000981aadd069, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P2-03",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-03",
+        "stage": "U"
+      },
+      "supplementSeq": 7,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P2-03.manifest-class.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "BLOCKED-315 condition 1 on the native path: the manifest classifies a probe as the risk gate does a probe the gate classifies read is recorded classified, as read, and not requiring approval",
+        "BLOCKED-315 condition 1 on the native path: the manifest classifies a probe as the risk gate does control: a probe the gate cannot classify is recorded unclassified and requiring approval",
+        "BLOCKED-315 condition 1 on the code-mode path: approval for an unclassifiable probe, and the manifest as the risk gate classifies control: a program calling the probe declaring filesystem-read reaches no approval request, and the probe runs",
+        "BLOCKED-315 condition 1 on the code-mode path: approval for an unclassifiable probe, and the manifest as the risk gate classifies a program calling the probe declaring no risk domain tags reaches an approval request, and the probe is refused without running",
+        "BLOCKED-315 condition 1 on the code-mode path: approval for an unclassifiable probe, and the manifest as the risk gate classifies the code-mode manifest of a probe the gate classifies read is recorded classified, as read, and not requiring approval",
+        "BLOCKED-315 condition 1 on the code-mode path: approval for an unclassifiable probe, and the manifest as the risk gate classifies control: the code-mode manifest of a probe the gate cannot classify is recorded unclassified and requiring approval"
+      ],
+      "files": [
+        "tests/first100/fixtures/P2-03.manifest-class.composition.spec.ts",
+        "tests/first100/fixtures/loader/p2-03-manifest-class/driver.ts",
+        "tests/first100/fixtures/loader/p2-03-manifest-class/shared.ts",
+        "tests/first100/fixtures/loader/p2-05-originators/base.patch.yml",
+        "packages/core/agent-loop/tests/mock-adapter.ts",
+        "packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts",
+        "packages/test-support/loader-smoke/tests/fixtures/production-profile.ts",
+        "packages/test-support/loader-smoke/src/index.ts",
+        "packages/test-support/loader-smoke/src/agent-turn.ts",
+        "packages/action/action-manifest/src/canonicalize.ts",
+        "packages/core/tools/src/external-effect.ts",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/core/tools/src/ptc.ts",
+        "packages/policy/risk-taxonomy/src/manifest-side-effect.ts",
+        "packages/policy/risk-taxonomy/src/classify.ts",
+        "packages/interaction/permission-presets/src/index.ts",
+        "packages/bundle/base/cordis.patch.yml"
+      ],
+      "frozenAtUtc": "2026-09-26T20:01:36.000Z",
+      "dryRunProof": {
+        "treeSha": "68190279e8adcd25bd74d1ca05e9f1946057334f",
+        "testsDiscovered": 6
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two rounds, never merged. M-620-1 (`3189033277`), run 36240165162: packages/action/action-manifest/src/canonicalize.ts builds the manifest classification from the declared side-effect class alone, ignoring the risk gate's classification (`request.classification ??` dropped). M-lowrisk (`197e70a6f5`), run 36208873141: packages/policy/risk-taxonomy/src/classify.ts makes the unknown default the lowest class; its base predates B-620's manifest fix.",
+        "failureSummary": "Read from each round's own narrow report. M-620-1, run 36240165162: exactly 2 of 6 red, the two cases on what the manifest records, «…on the native path: … a probe the gate classifies read is recorded classified, as read, and not requiring approval» and «…on the code-mode path: … the code-mode manifest of a probe the gate classifies read is recorded classified, as read, and not requiring approval», each an AssertionError (expected [['native-tool-call', …(3)]] / [['code-mode-embedded', …(3)]] to deeply equal the classified row) with the classified probe recorded destructive, classified:false, requiresApproval:true. M-lowrisk, run 36208873141: 3 of 6 red; the one this mutation causes is «…on the code-mode path: … a program calling the probe declaring no risk domain tags reaches an approval request, and the probe is refused without running» (expected [] to deeply equal ['rejected']: no approval asked, riskClass read), and the other two are the manifest cases above, red on that pre-B-620 base."
+      },
+      "note": "P2-03 U-stage supplement 7: BLOCKED-315 condition 1 on the shipped headless profile. The action manifest classifies a probe as the risk gate does, on the native path and the code-mode path, and on the code-mode path an unclassifiable probe reaches an approval request and is refused without running while a probe declaring filesystem-read runs (red first A-443, 17a982e2d1; fix B-620, 3f021bc944, 3e5cec62a1, 250f73347a). Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T19:14:13Z: stage U, as approval-census and gate-approval) from lane A's A-535 v2 draft (artifacts/laneA/a-535-p2-03-blocked315-closure.md, sha256 92d1ec22…). expectCases are the full names in the full run 36264470501 at 7de79a1658, where tests/first100/fixtures/P2-03.manifest-class.composition.spec.ts ran 6 cases and each frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the harness the driver uses (the mock model and the loader-smoke fixtures and entry), and the sources the verdict passes through, from the gate's classification to the manifest's canonical form. The observing tree is pinned at refs/dsh/freeze/P2-03.U.7/2026-09-26T20-01-36.000Z -> 7de79a1658bc4baff424522f433a02221fa462fb, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P2-03",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-03",
+        "stage": "U"
+      },
+      "supplementSeq": 8,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P2-03.nested-unclassified.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-03 acceptance[2] × BLOCKED-294: an unclassifiable call nested through ToolRuntime.execute reaches an approval request control: the model's own call to the unclassifiable writer reaches an approval request and, rejected, does not run",
+        "P2-03 acceptance[2] × BLOCKED-294: an unclassifiable call nested through ToolRuntime.execute reaches an approval request a plugin tool's nested call to the unclassifiable writer reaches an approval request before it runs and, rejected, does not run"
+      ],
+      "files": [
+        "tests/first100/fixtures/P2-03.nested-unclassified.composition.spec.ts",
+        "tests/first100/fixtures/loader/p2-03-nested-unclassified/driver.ts",
+        "tests/first100/fixtures/loader/p2-03-nested-unclassified/shared.ts",
+        "tests/first100/fixtures/loader/p2-05-originators/base.patch.yml",
+        "packages/core/agent-loop/tests/mock-adapter.ts",
+        "packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts",
+        "packages/test-support/loader-smoke/tests/fixtures/production-profile.ts",
+        "packages/test-support/loader-smoke/src/index.ts",
+        "packages/test-support/loader-smoke/src/agent-turn.ts",
+        "packages/core/tools/src/index.ts",
+        "packages/core/tools/src/external-effect.ts",
+        "packages/interaction/user-approval/src/index.ts",
+        "packages/policy/risk-taxonomy/src/classify.ts",
+        "packages/interaction/permission-presets/src/index.ts",
+        "packages/bundle/base/cordis.patch.yml"
+      ],
+      "frozenAtUtc": "2026-09-26T20:01:36.000Z",
+      "dryRunProof": {
+        "treeSha": "68190279e8adcd25bd74d1ca05e9f1946057334f",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-633-order′ (`e60218dd95`, never merged), run 36217516453: packages/core/tools/src/index.ts runs the direct seam's risk gate after the dispatch, on the snapshot, and discards its answer.",
+        "failureSummary": "Read from the round's own narrow report. M-633-order′, run 36217516453: 1 of 2 red, «P2-03 acceptance[2] × BLOCKED-294: an unclassifiable call nested through ToolRuntime.execute reaches an approval request a plugin tool's nested call to the unclassifiable writer reaches an approval request before it runs and, rejected, does not run» — AssertionError: expected { asked: true, ran: 1 } to deeply equal { asked: true, ran: +0 } (the nested writer ran, «writer ran», although the operator rejected it). The control passed."
+      },
+      "note": "P2-03 U-stage supplement 8: acceptance[2] × BLOCKED-294 on the shipped headless profile. A plugin tool's nested call to an unclassifiable writer through ToolRuntime.execute reaches an approval request before it runs and, rejected, does not run, as the model's own call does (red first A-471; fix B-633 v2, 27f4aab28e). Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T19:14:13Z: stage U, as approval-census and gate-approval) from lane A's A-535 v2 draft (artifacts/laneA/a-535-p2-03-blocked315-closure.md, sha256 92d1ec22…). expectCases are the full names in the full run 36264470501 at 7de79a1658, where tests/first100/fixtures/P2-03.nested-unclassified.composition.spec.ts ran 2 cases and each frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the harness the driver uses and the direct seam that gates the nested call. The observing tree is pinned at refs/dsh/freeze/P2-03.U.8/2026-09-26T20-01-36.000Z -> 7de79a1658bc4baff424522f433a02221fa462fb, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P2-03",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-03",
+        "stage": "U"
+      },
+      "supplementSeq": 9,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P2-03.nested-inherited-token.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-03 acceptance[0] × BLOCKED-294: a plugin tool nests a write through ToolRuntime.execute under its inherited capability token control: the model's own write has its manifest appended before the file is written",
+        "P2-03 acceptance[0] × BLOCKED-294: a plugin tool nests a write through ToolRuntime.execute under its inherited capability token the probe's body ran once and held the capability token it was admitted with",
+        "P2-03 acceptance[0] × BLOCKED-294: a plugin tool nests a write through ToolRuntime.execute under its inherited capability token the nested write is refused, or its manifest is appended before the file is written"
+      ],
+      "files": [
+        "tests/first100/fixtures/P2-03.nested-inherited-token.composition.spec.ts",
+        "tests/first100/fixtures/loader/p2-03-nested-token/driver.ts",
+        "tests/first100/fixtures/loader/p2-03-nested-token/shared.ts",
+        "tests/first100/fixtures/loader/p2-05-originators/base.patch.yml",
+        "packages/core/agent-loop/tests/mock-adapter.ts",
+        "packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts",
+        "packages/test-support/loader-smoke/tests/fixtures/production-profile.ts",
+        "packages/test-support/loader-smoke/src/index.ts",
+        "packages/test-support/loader-smoke/src/agent-turn.ts",
+        "packages/core/tools/src/index.ts",
+        "packages/core/tools/src/external-effect.ts",
+        "packages/bundle/base/cordis.patch.yml"
+      ],
+      "frozenAtUtc": "2026-09-26T20:01:36.000Z",
+      "dryRunProof": {
+        "treeSha": "68190279e8adcd25bd74d1ca05e9f1946057334f",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "No dedicated mutation round (rule #37: red on the tree before the fix, green after). The red-first run 36212808158 at 7f3c967a75 is the unfixed side.",
+        "failureSummary": "Read from the red-first narrow report. Run 36212808158: 1 of 3 red, «P2-03 acceptance[0] × BLOCKED-294: a plugin tool nests a write through ToolRuntime.execute under its inherited capability token the nested write is refused, or its manifest is appended before the file is written» — AssertionError: expected [ 'refused', …(1) ] to include 'written with no manifest' (the nested write created its file with manifestBefore false). The fixed side is the full run 36264470501, 3 of 3 passed."
+      },
+      "note": "P2-03 U-stage supplement 9: acceptance[0] × BLOCKED-294 on the shipped headless profile. A plugin tool that nests a write through ToolRuntime.execute under its inherited capability token has the nested write refused or its manifest appended before the file is written, as the model's own write does (red first A-462/A-474). Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T19:14:13Z: stage U, as approval-census and gate-approval) from lane A's A-535 v2 draft (artifacts/laneA/a-535-p2-03-blocked315-closure.md, sha256 92d1ec22…). expectCases are the full names in the full run 36264470501 at 7de79a1658, where tests/first100/fixtures/P2-03.nested-inherited-token.composition.spec.ts ran 3 cases and each frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the harness the driver uses and the direct seam that appends the nested call's manifest. The observing tree is pinned at refs/dsh/freeze/P2-03.U.9/2026-09-26T20-01-36.000Z -> 7de79a1658bc4baff424522f433a02221fa462fb, whose tree is dryRunProof.treeSha."
     }
   ]
 }

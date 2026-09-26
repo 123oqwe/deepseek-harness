@@ -1958,7 +1958,10 @@
       "kind": "manifest",
       "stages": [
         "U.5",
-        "U.6"
+        "U.6",
+        "U.7",
+        "U.8",
+        "U.9"
       ]
     },
     {
@@ -1967,6 +1970,16 @@
       "kind": "test",
       "stages": [
         "U.5"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "packages/core/agent-loop/tests/mock-adapter.ts",
+      "kind": "test",
+      "stages": [
+        "U.7",
+        "U.8",
+        "U.9"
       ]
     },
     {
@@ -1995,7 +2008,10 @@
       "path": "packages/core/tools/src/external-effect.ts",
       "kind": "source",
       "stages": [
-        "U.6"
+        "U.6",
+        "U.7",
+        "U.8",
+        "U.9"
       ],
       "reason": "The risk gate on the tool dispatch path: `gateActionRisk` refuses a hard-deny class, asks the approval service when the preset in force requires approval, and otherwise lets the call run, recording `action/risk-gated` for each. P2-03 U.6 observes it on the shipped headless profile: a probe declaring `filesystem-read` runs without an approval request, and a probe declaring no tags reaches one and is refused when the operator rejects it."
     },
@@ -2023,7 +2039,9 @@
       "kind": "source",
       "stages": [
         "U.5",
-        "U.6"
+        "U.6",
+        "U.7",
+        "U.8"
       ],
       "reason": "The policy service the risk gate consults: `classifyAction` gives an action's class and `requiresApproval` decides it against the preset in force, and the module's Config default is the shipped preset table. P2-03 U.5 computes its census with those two calls over every tool headless mounts under every shipped preset, and U.6 runs at the default preset."
     },
@@ -2032,7 +2050,8 @@
       "path": "packages/interaction/user-approval/src/index.ts",
       "kind": "source",
       "stages": [
-        "U.6"
+        "U.6",
+        "U.8"
       ],
       "reason": "The approval service the risk gate asks when a preset requires approval; a missing answerer fails closed. P2-03 U.6's undeclared probe reaches its request, and the operator's rejection is what refuses the call before it runs."
     },
@@ -2042,9 +2061,62 @@
       "kind": "source",
       "stages": [
         "U.5",
-        "U.6"
+        "U.6",
+        "U.7",
+        "U.8"
       ],
       "reason": "The pure classifier behind `classifyAction`: an action gets the highest class the policy rules give any tag it declares, and an action with no matching tag gets the unknown default, the highest policy-adjustable class. P2-03 U.5's census and U.6's two probes sit on either side of that rule."
+    },
+    {
+      "epic": "P2-03",
+      "path": "packages/policy/risk-taxonomy/src/manifest-side-effect.ts",
+      "kind": "source",
+      "stages": [
+        "U.7"
+      ],
+      "reason": "The mapping the manifest takes from the risk gate: `sideEffectClassOf` gives the side-effect class a manifest records for the class the gate assigned (B-620). P2-03 U.7's manifest cases read that record for a probe the gate classifies and for one it cannot."
+    },
+    {
+      "epic": "P2-03",
+      "path": "packages/test-support/loader-smoke/src/agent-turn.ts",
+      "kind": "source",
+      "stages": [
+        "U.7",
+        "U.8",
+        "U.9"
+      ],
+      "reason": "Test support, not product code: `runFixtureTurn` runs the turn U.7, U.8 and U.9's drivers drive on the shipped headless profile, and the cases read what the drivers report from it."
+    },
+    {
+      "epic": "P2-03",
+      "path": "packages/test-support/loader-smoke/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.7",
+        "U.8",
+        "U.9"
+      ],
+      "reason": "Test support, not product code: `runLoaderSmoke` boots the shipped headless profile around U.7, U.8 and U.9's drivers and returns the reports the cases read."
+    },
+    {
+      "epic": "P2-03",
+      "path": "packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts",
+      "kind": "test",
+      "stages": [
+        "U.7",
+        "U.8",
+        "U.9"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "packages/test-support/loader-smoke/tests/fixtures/production-profile.ts",
+      "kind": "test",
+      "stages": [
+        "U.7",
+        "U.8",
+        "U.9"
+      ]
     },
     {
       "epic": "P2-03",
@@ -2080,11 +2152,62 @@
     },
     {
       "epic": "P2-03",
+      "path": "tests/first100/fixtures/loader/p2-03-manifest-class/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.7"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "tests/first100/fixtures/loader/p2-03-manifest-class/shared.ts",
+      "kind": "test",
+      "stages": [
+        "U.7"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "tests/first100/fixtures/loader/p2-03-nested-token/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.9"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "tests/first100/fixtures/loader/p2-03-nested-token/shared.ts",
+      "kind": "test",
+      "stages": [
+        "U.9"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "tests/first100/fixtures/loader/p2-03-nested-unclassified/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.8"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "tests/first100/fixtures/loader/p2-03-nested-unclassified/shared.ts",
+      "kind": "test",
+      "stages": [
+        "U.8"
+      ]
+    },
+    {
+      "epic": "P2-03",
       "path": "tests/first100/fixtures/loader/p2-05-originators/base.patch.yml",
       "kind": "test",
       "stages": [
         "U.5",
-        "U.6"
+        "U.6",
+        "U.7",
+        "U.8",
+        "U.9"
       ]
     },
     {
@@ -2101,6 +2224,30 @@
       "kind": "test",
       "stages": [
         "U.6"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "tests/first100/fixtures/P2-03.manifest-class.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.7"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "tests/first100/fixtures/P2-03.nested-inherited-token.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.9"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "tests/first100/fixtures/P2-03.nested-unclassified.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.8"
       ]
     },
     {
