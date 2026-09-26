@@ -41,22 +41,10 @@ export function commitInterrupt(
     readonly epoch: number
   },
 ): boolean {
-  const { childId, parentSessionId, epoch } = interrupt
+  const { childId, epoch } = interrupt
   if (bus.inboxRow(INTERRUPT_SOURCE, childId, epoch)?.state === 'consumed') return false
-  bus.commitIntake({
-    message: {
-      id: childId,
-      epoch,
-      source: INTERRUPT_SOURCE,
-      type: 'subagent/interrupt',
-      time: new Date().toISOString(),
-      subject: parentSessionId,
-      // The control message the interrupt is, in `control-convergence`'s vocabulary.
-      data: { kind: 'cancel' },
-    },
-    claimedByTurn: 0,
-    outbox: [],
-  })
+  // M-470 mutation (never merged): the interrupt is NOT committed to the durable
+  // bus, so nothing survives the restart — A-470's two "readable" cases must red.
   return true
 }
 
