@@ -7871,7 +7871,7 @@ The scan was exhaustive and found no seventh face. That is the scan's claim, rec
 
 ### BLOCKED-291 — two shipped surfaces create agents with no identity, so every action they take is attributed to a principal nobody is
 
-**Status:** OPEN (2026-09-19). Owner lane B. Ruled by the delegate (`first100-delegate-1c`) on lane A's A-166 measurement, re-measured by lane B at `39628eb2e6`. P2-01's sign-off is WITHDRAWN in the same change (the fifth withdrawal), and the row carries a new ACCEPTANCE LOCKS entry.
+**Status:** CLOSED 2026-09-26 (closure note at the end of this entry); opened 2026-09-19. Owner lane B. Ruled by the delegate (`first100-delegate-1c`) on lane A's A-166 measurement, re-measured by lane B at `39628eb2e6`. P2-01's sign-off is WITHDRAWN in the same change (the fifth withdrawal), and the row carries a new ACCEPTANCE LOCKS entry.
 
 **The clause says 「任何」 and the coverage note declares no exception.** P2-01 `acceptance[0]` is 「任何 action 都能追溯 root user/tenant 与完整委托链」. Its `acceptance-coverage.json` note decomposes that into a stable root anchor plus durable session-log traceability of every authority-relevant change, and names no surface it does not cover; `ACP`, `SDK` and `webhook` appear nowhere in the three P2-01 notes.
 
@@ -7890,6 +7890,29 @@ The scan was exhaustive and found no seventh face. That is the scan's claim, rec
 **Unlock conditions.** (a) One case on each of the two surfaces, driven through that surface's own creation entry rather than a fixture that hands an identity to `createFixtureRootAgent`, showing the first action manifest naming a host-user principal and `identity/attached` logged exactly once, with a resume adding no second record. (b) All five places that give the arrival rationale state a reason that is true of the paths they describe: `api/session-controller/src/agent.ts:501-502`, `bundle/headless/src/index.ts:325-327`, `core/agent-loop/src/index.ts:329-331`, `identity/host-user-id/src/index.ts:163` and `identity/host-user-id/README.md:133`. (c) The coverage note states the webhook exception and its reason. (d) The cases are frozen and observed green in a real CI run. (e) The delegate re-runs 4.4a–d and re-signs.
 
 **What this does NOT claim.** Not that the identity library is wrong: its four cells stay GREEN and nothing here questions the chain, the tenant policy or the anonymous-dev principal. Not that ACP or the SDK must attach *this* user — if an embedding program is a different subject from the host user, that is a design question for the delegate before any code is written, not a decision for the implementing lane. Not that webhook must attach anything today.
+
+**Closure note (2026-09-26, delegate first100-delegate-1a).** Each unlock condition, read at `26eeeb0b28` (batch 15r).
+- **(a) One case on each surface, through its own creation entry.**
+  - [401] P2-01 U.8, `apps/cli/tests/profiles/acp/tests/acp.e2e.ts`, "a launched acp session acts as the host user, attached once". It drives ACP over real stdio. The first action manifest names the host user, and `identity/attached` is logged once. The case calls again after `session/resume`, and the resume adds no second record.
+  - [402] P2-01 U.9, `apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts`, "a launched sdk session acts as the host user, attached once". It drives the Python SDK over the shipped `dsh` profile. The first manifest's actor is the attached principal, and `identity/attached` is logged exactly once.
+  - The SDK face has no path that continues a session (BLOCKED-298, open, separate). The "a resume adds no second record" half is therefore observed on ACP only.
+- **(b) The five places that give the arrival rationale now state a reason true of their paths.** Line numbers have moved since 2026-09-19.
+  - `api/session-controller/src/agent.ts` (about :493-510), `bundle/headless/src/index.ts` (about :303-329) and `core/agent-loop/src/index.ts` (about :305-332) say the same thing:
+    - headless and the Web session controller attach the host user directly;
+    - ACP and the SDK server attach the same user, per request, through the launcher's `HOST_USER_IDENTITY_KEY` factory;
+    - webhook ingress attaches its integration's service principal, because its request comes from a remote sender.
+    - A resume re-supplies the same principal, and `resolveSessionIdentity` logs only a real difference.
+  - `identity/host-user-id/src/index.ts` and its README describe the id and where it lives, without claiming a route.
+- **(c) The webhook exception and its reason.** The acceptance[0] coverage note now states the webhook case. Since B-606, a webhook-created session acts as its integration's ServicePrincipal, and U.10 [413] (`webhook-actor.e2e.ts`) observes it. The 2026-09-25 addendum, which said the webhook still recorded an anonymous actor, carries a dated correction; its original text is kept (batch 15r, `524cc3ae06`).
+- **(d) Frozen and green in a real CI run.**
+  - [401] and [402] passed in batch 15's full run 36232722555 at `6bbc302797`, 1/1 each. All 14 live P2-01 entries passed there: 115 frozen titles.
+  - U.10 [413] passed in batch 15r's push-gate full run 36241736461 at `ad73f77b0e`: 2/2 cases.
+- **(e) The delegate's 4.4a–d and PASS** are in the gate3 log at 2026-09-26T13:15:53Z.
+
+**Not covered.**
+- SDK resume, which is BLOCKED-298.
+- A CLI or headless run with no host-user identity. `app-boot` always provides one (`HOST_USER_IDENTITY_KEY`, `app-boot/src/index.ts:822`), so the shipped product has no such path.
+- Two webhook integrations that share one HMAC key: a delivery signed for A can then be recorded as B. This is configuration, recorded as a note by the P2-01 blind review (N1).
 
 ### BLOCKED-288 — P0-02 is ACCEPTED and its mechanism works, but its own declared limitation was never given a closing form
 
