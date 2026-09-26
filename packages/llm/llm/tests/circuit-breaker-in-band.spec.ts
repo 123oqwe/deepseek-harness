@@ -103,13 +103,16 @@ describe('BLOCKED-347: a failure reported in the stream moves the breaker like a
     await ctx.fiber.dispose()
   })
 
-  it('passes on a stream that ends after its usage chunk', async () => {
+  it('leaves a stream that ends after its usage chunk to the stream invariant, which refuses it', async () => {
+    // Such a stream neither answered nor failed: the breaker counts nothing
+    // against the endpoint, and the protocol's own check reports the missing
+    // finish chunk.
     const adapter = new ScriptedAdapter([USAGE])
     const ctx = await harness(adapter)
 
-    expect(await drain(ctx)).toEqual([USAGE])
-    expect(await drain(ctx)).toEqual([USAGE])
-    expect(await drain(ctx)).toEqual([USAGE])
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await expect(drain(ctx)).rejects.toThrow('LLM stream ended without a terminal finish chunk')
+    }
     expect(adapter.calls).toBe(3)
     await ctx.fiber.dispose()
   })
