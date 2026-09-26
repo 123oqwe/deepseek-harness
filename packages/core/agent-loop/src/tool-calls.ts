@@ -257,7 +257,7 @@ async function runGroup(
       // The other composition-read input of the same question (P3-01): which
       // world this session's actions run in, `absent` when none is mounted.
       world: await readExecutionWorldFact(ctx, agent),
-      ...judged === undefined ? {} : { verdict: judged },
+      verdict: judged,
     }
     const appended = appendToolCall(ctx, agent, turn, step, call.block, inputs, call.exec.capabilityToken)
     callSeqs[index] = appended.seq
@@ -529,7 +529,7 @@ async function policyInputsForCall(ctx: Context, agent: Agent, block: ToolCallBl
   return {
     facts: await readPolicyContextFacts(ctx, agent, judged?.classification),
     world: await readExecutionWorldFact(ctx, agent),
-    ...judged === undefined ? {} : { verdict: judged },
+    verdict: judged,
   }
 }
 
@@ -615,7 +615,8 @@ function approvalDisplayFor(
 
 
 /**
- * The two composition-read inputs of one policy question, carried together.
+ * The two composition-read inputs of one policy question, carried together
+ * with the action's risk verdict.
  *
  * Paired rather than passed separately because they are read at the same
  * boundary, by the two readers in `@deepseek-ai/dsh-tools/external-effect`, and
@@ -628,8 +629,8 @@ interface PolicyInputs {
   readonly facts: PolicyContextFacts
   /** Where the action would run (P3-01), `absent` when no world registry is mounted. */
   readonly world: ExecutionWorldFact
-  /** The action's risk verdict, which its manifest records (P2-03 acceptance[2]); absent when no policy service is mounted. */
-  readonly verdict?: ActionRiskVerdict
+  /** The action's risk verdict, which its manifest records (P2-03 acceptance[2]); `undefined` when no policy service is mounted. */
+  readonly verdict: ActionRiskVerdict | undefined
 }
 
 /**
