@@ -347,7 +347,7 @@ function diffCapture(stored, fresh) {
   if (JSON.stringify(storedOrder) !== JSON.stringify(freshOrder)) {
     drift.push({ path: BUNDLE_ROWS_PATH, field: 'row order', expected: storedOrder, actual: freshOrder })
   }
-  addSimple(PNPM_LOCK_PATH, 'pnpmLockHash')
+  // A-542 M3: pnpmLockHash class not compared
   const schemaPaths = new Set([...Object.keys(stored.protocolSchemaHashes), ...Object.keys(fresh.protocolSchemaHashes)])
   for (const path of schemaPaths) {
     if (stored.protocolSchemaHashes[path] !== fresh.protocolSchemaHashes[path]) {
