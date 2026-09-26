@@ -1847,7 +1847,7 @@ export interface MemoryRuntimeConfig {
 }
 ```
 
-来源： [`packages/memory/memory/src/index.ts:93`](../packages/memory/memory/src/index.ts)
+来源： [`packages/memory/memory/src/index.ts:100`](../packages/memory/memory/src/index.ts)
 
 <a id="deepseek-aidsh-memory-context"></a>
 
@@ -1876,6 +1876,24 @@ export interface Config {
 ```
 
 来源： [`packages/context/memory-context/src/index.ts:41`](../packages/context/memory-context/src/index.ts)
+
+<a id="deepseek-aidsh-memory-policy"></a>
+
+## `@deepseek-ai/dsh-memory-policy`
+
+```ts config-catalog
+/** Deployment-varying proposal-policy settings. */
+export interface Config {
+  /**
+   * A `derived` claim whose writer confidence is below this goes to review
+   * rather than active memory. Varies by deployment: a shared store wants a
+   * higher bar than a personal one.
+   */
+  readonly reviewBelowConfidence: number
+}
+```
+
+来源： [`packages/memory/memory-policy/src/index.ts:31`](../packages/memory/memory-policy/src/index.ts)
 
 <a id="deepseek-aidsh-message-feedback"></a>
 

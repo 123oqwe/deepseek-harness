@@ -207,6 +207,33 @@ async forget(request: MemoryForgetRequest): Promise<void>
  * @returns every visible record, capped to the caller's budget.
  */
 async export(request: MemoryExportRequest): Promise<MemoryExportResult>
+
+/**
+ * The proposals held for review that `request.accessContext` may see, capped
+ * to its budget. A reporting channel like `export`, not a retrieval one.
+ * @param request - the complete access context.
+ * @returns the pending proposals visible to the access context.
+ */
+async listPending(request: MemoryListPendingRequest): Promise<MemoryListPendingResult>
+
+/**
+ * Admit a held proposal to active memory. Only a user principal decides a
+ * proposal held for review (`must[2]`): an agent or service principal is
+ * refused with `MEMORY_REVIEW_FORBIDDEN` before the provider is reached, so
+ * the proposal stays pending. The provider then rejects an id that is not a
+ * `pending` record `request.scope` may see.
+ * @param request - the target id, the deciding principal, and its scope.
+ * @returns Nothing.
+ */
+async approve(request: MemoryReviewRequest): Promise<void>
+
+/**
+ * Refuse a held proposal, which then never becomes active. Same
+ * user-principal rule and provider rejections as {@link MemoryRuntime.approve}.
+ * @param request - the target id, the deciding principal, and its scope.
+ * @returns Nothing.
+ */
+async reject(request: MemoryReviewRequest): Promise<void>
 ```
 
 Source: [`packages/memory/memory/src/index.ts`](../../packages/memory/memory/src/index.ts)

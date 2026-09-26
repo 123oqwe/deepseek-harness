@@ -825,7 +825,7 @@ Source: [`packages/llm/llm-retry/src/types.ts:11`](../packages/llm/llm-retry/src
 'memory/access': MemoryAccessEvent
 ```
 
-Source: [`packages/memory/memory/src/types.ts:331`](../packages/memory/memory/src/types.ts)
+Source: [`packages/memory/memory/src/types.ts:375`](../packages/memory/memory/src/types.ts)
 
 <a id="memoryworkspace-rebuilt--log-only"></a>
 
@@ -852,7 +852,7 @@ Source: [`packages/memory/memory/src/types.ts:331`](../packages/memory/memory/sr
 'memory/workspace-rebuilt': MemoryWorkspaceRebuiltEvent
 ```
 
-Source: [`packages/memory/memory/src/types.ts:349`](../packages/memory/memory/src/types.ts)
+Source: [`packages/memory/memory/src/types.ts:393`](../packages/memory/memory/src/types.ts)
 
 ### `model/*`
 

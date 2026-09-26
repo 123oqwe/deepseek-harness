@@ -1564,6 +1564,24 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         parameters: [{ name: 'request', description: 'the complete access context.' }],
         returns: 'every visible record, capped to the caller\'s budget.',
       },
+      {
+        signature: 'async listPending(request: MemoryListPendingRequest): Promise<MemoryListPendingResult>',
+        description: 'The proposals held for review that `request.accessContext` may see, capped to its budget. A reporting channel like `export`, not a retrieval one.',
+        parameters: [{ name: 'request', description: 'the complete access context.' }],
+        returns: 'the pending proposals visible to the access context.',
+      },
+      {
+        signature: 'async approve(request: MemoryReviewRequest): Promise<void>',
+        description: 'Admit a held proposal to active memory. Only a user principal decides a proposal held for review (`must[2]`): an agent or service principal is refused with `MEMORY_REVIEW_FORBIDDEN` before the provider is reached, so the proposal stays pending. The provider then rejects an id that is not a `pending` record `request.scope` may see.',
+        parameters: [{ name: 'request', description: 'the target id, the deciding principal, and its scope.' }],
+        returns: 'Nothing.',
+      },
+      {
+        signature: 'async reject(request: MemoryReviewRequest): Promise<void>',
+        description: 'Refuse a held proposal, which then never becomes active. Same user-principal rule and provider rejections as MemoryRuntime.approve.',
+        parameters: [{ name: 'request', description: 'the target id, the deciding principal, and its scope.' }],
+        returns: 'Nothing.',
+      },
     ],
   },
   {
@@ -5536,12 +5554,20 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type MemoryKind = Branded<\'MemoryKind\'>;',
   },
   {
+    name: 'MemoryListPendingRequest',
+    declaration: 'export interface MemoryListPendingRequest {\n    readonly accessContext: MemoryAccessContext;\n}',
+  },
+  {
+    name: 'MemoryListPendingResult',
+    declaration: 'export interface MemoryListPendingResult {\n    readonly records: readonly MemoryRecordView[];\n    readonly truncated: boolean;\n}',
+  },
+  {
     name: 'MemoryProposeRequest',
     declaration: 'export interface MemoryProposeRequest extends MemoryProposeRequestBase {\n    readonly origin: MemoryClaimOrigin;\n}',
   },
   {
     name: 'MemoryProposeRequestBase',
-    declaration: 'export interface MemoryProposeRequestBase {\n    readonly principal: Principal;\n    readonly scope: MemoryScope;\n    readonly content: unknown;\n    readonly validUntil?: string;\n    readonly kind?: MemoryKind;\n    readonly subject?: MemorySubject;\n    readonly purpose?: string;\n    readonly sensitivity?: MemorySensitivity;\n}',
+    declaration: 'export interface MemoryProposeRequestBase {\n    readonly principal: Principal;\n    readonly scope: MemoryScope;\n    readonly content: unknown;\n    readonly validUntil?: string | null;\n    readonly kind?: MemoryKind;\n    readonly subject?: MemorySubject;\n    readonly purpose?: string;\n    readonly sensitivity?: MemorySensitivity;\n}',
   },
   {
     name: 'MemoryProposeResult',
@@ -5553,7 +5579,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'MemoryProvider',
-    declaration: 'export interface MemoryProvider {\n    readonly id: string;\n    available(): boolean;\n    propose(request: MemoryProposeRequest): Promise<MemoryProposeResult>;\n    query(request: MemoryQueryRequest): Promise<MemoryQueryResult>;\n    get(request: MemoryGetRequest): Promise<MemoryRecordView | undefined>;\n    revise(request: MemoryReviseRequest): Promise<void>;\n    forget(request: MemoryForgetRequest): Promise<void>;\n    export(request: MemoryExportRequest): Promise<MemoryExportResult>;\n    countRebuiltAt(request: MemoryRebuiltCountRequest): Promise<number>;\n}',
+    declaration: 'export interface MemoryProvider {\n    readonly id: string;\n    available(): boolean;\n    propose(request: MemoryProposeRequest, status?: MemoryStatus): Promise<MemoryProposeResult>;\n    query(request: MemoryQueryRequest): Promise<MemoryQueryResult>;\n    get(request: MemoryGetRequest): Promise<MemoryRecordView | undefined>;\n    revise(request: MemoryReviseRequest): Promise<void>;\n    forget(request: MemoryForgetRequest): Promise<void>;\n    export(request: MemoryExportRequest): Promise<MemoryExportResult>;\n    listPending(request: MemoryListPendingRequest): Promise<MemoryListPendingResult>;\n    approve(request: MemoryReviewRequest): Promise<void>;\n    reject(request: MemoryReviewRequest): Promise<void>;\n    countRebuiltAt(request: MemoryRebuiltCountRequest): Promise<number>;\n}',
   },
   {
     name: 'MemoryQueryRequest',
@@ -5576,6 +5602,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface MemoryRecordView {\n    readonly id: MemoryRecordId;\n    readonly principal: Principal;\n    readonly content: unknown;\n    readonly updatedAt: string;\n}',
   },
   {
+    name: 'MemoryReviewRequest',
+    declaration: 'export interface MemoryReviewRequest {\n    readonly principal: Principal;\n    readonly scope: MemoryScope;\n    readonly id: MemoryRecordId;\n}',
+  },
+  {
     name: 'MemoryReviseRequest',
     declaration: 'export interface MemoryReviseRequest {\n    readonly principal: Principal;\n    readonly scope: MemoryScope;\n    readonly id: MemoryRecordId;\n    readonly content: unknown;\n}',
   },
@@ -5586,6 +5616,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'MemorySensitivity',
     declaration: 'export type MemorySensitivity = \'normal\' | \'sensitive\';',
+  },
+  {
+    name: 'MemoryStatus',
+    declaration: 'export type MemoryStatus = \'active\' | \'superseded\' | \'disputed\' | \'revoked\' | \'pending\' | \'rejected\';',
   },
   {
     name: 'MemorySubject',

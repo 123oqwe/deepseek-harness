@@ -305,6 +305,7 @@ flowchart TD
   end
   subgraph group_memory["packages/memory"]
     pkg_memory["memory"]
+    pkg_memory_policy["memory-policy"]
   end
   subgraph group_migration["packages/migration"]
     pkg_feature_gates["feature-gates"]
@@ -608,6 +609,7 @@ flowchart TD
   pkg_execution_world --> pkg_brand
   pkg_execution_world --> pkg_principal
   pkg_execution_world --> pkg_sandbox
+  pkg_memory_policy --> pkg_memory
   pkg_plugin_compat --> pkg_brand
   pkg_plugin_compat --> pkg_schema_registry
   pkg_retry --> pkg_action_ledger
@@ -1668,6 +1670,7 @@ flowchart TD
 | [`spill-local`](../packages/spill/spill-local) | `spill` | [`spill`](../packages/spill/spill) |
 | [`session-log-export`](../packages/session-query/session-log-export) | `session-query` | [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence) |
 | [`execution-world`](../packages/execution/execution-world) | `execution` | [`brand`](../packages/util/brand), [`principal`](../packages/identity/principal), [`sandbox`](../packages/sandbox/sandbox) |
+| [`memory-policy`](../packages/memory/memory-policy) | `memory` | [`memory`](../packages/memory/memory) |
 | [`plugin-compat`](../packages/plugin/plugin-compat) | `plugin` | [`brand`](../packages/util/brand), [`schema-registry`](../packages/schema/schema-registry) |
 | [`retry`](../packages/reliability/retry) | `reliability` | [`action-ledger`](../packages/action/action-ledger), [`principal`](../packages/identity/principal) |
 | [`sandbox-local`](../packages/sandbox/sandbox-local) | `sandbox` | [`llm`](../packages/llm/llm), [`sandbox`](../packages/sandbox/sandbox), [`session`](../packages/core/session) |
