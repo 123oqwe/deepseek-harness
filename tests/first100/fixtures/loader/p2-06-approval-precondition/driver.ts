@@ -138,7 +138,7 @@ try {
     },
   }))
 
-  const asked: { actionId: string | null; arguments: string | null }[] = []
+  const asked: { actionId: string | null; arguments: string | null; displayFields: readonly string[] | null }[] = []
   // The file each probe call acts on, by the action id its approval is bound
   // to: the native binding carries the arguments as the raw string the model
   // emitted, so the operator does not read the file from the request.
@@ -151,7 +151,11 @@ try {
     if (request.toolName === RUN_CODE_NAME) return Promise.resolve('allowed-once' as const)
     if (request.toolName !== PROBE_TOOL) return Promise.resolve('rejected' as const)
     const actionId = request.binding?.actionId
-    asked.push({ actionId: actionId ?? null, arguments: request.display?.arguments ?? null })
+    asked.push({
+      actionId: actionId ?? null,
+      arguments: request.display?.arguments ?? null,
+      displayFields: request.display === undefined ? null : Object.keys(request.display).sort(),
+    })
     const kind = actionId === undefined ? undefined : kindOf.get(actionId)
     // Only the first ask about an action is allowed. A later ask about the
     // same action, which a re-verification may make, is rejected, so what the

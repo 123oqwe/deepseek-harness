@@ -54,8 +54,12 @@ export interface PreconditionReport {
   readonly mode: PreconditionMode
   /** Every time the probe's body ran: the call id it ran under and the file it declared. */
   readonly runs: readonly { readonly callId: string; readonly file: string }[]
-  /** Every probe approval request as the operator saw it: its action id and the displayed arguments. */
-  readonly asked: readonly { readonly actionId: string | null; readonly arguments: string | null }[]
+  /**
+   * Every probe approval request as the operator saw it: its action id, the
+   * displayed arguments, and the names of the display's fields, sorted; the
+   * last two are null when the request carries no display.
+   */
+  readonly asked: readonly { readonly actionId: string | null; readonly arguments: string | null; readonly displayFields: readonly string[] | null }[]
   /** Every `approval/bound` event. */
   readonly bound: readonly { readonly id: string; readonly action: string; readonly actionId: string | null }[]
   /** Every `approval/decided` outcome, by approval id. */

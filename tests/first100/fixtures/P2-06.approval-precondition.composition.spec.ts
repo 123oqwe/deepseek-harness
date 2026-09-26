@@ -15,7 +15,9 @@
  *
  * Red today on the three changed-file cases: both dispatch paths bind an
  * approval with no precondition, so the re-verification before execution does
- * not see the file. The other three are green today and after the fix.
+ * not see the file. Red today as well on the code-mode display case (B-670):
+ * a sub-call's approval request carries no display. The rest are green today
+ * and after the fix.
  * @module tests/first100/fixtures/P2-06.approval-precondition.composition
  */
 
@@ -34,6 +36,9 @@ import {
   probeFile,
   SECRET,
 } from './loader/p2-06-approval-precondition/shared.ts'
+
+/** The six fields must[0] requires a decider to see, as `ApprovalDisplay` declares them, sorted. */
+const DISPLAY_FIELDS = ['arguments', 'expectedDiff', 'expiresAtMs', 'manifestDigest', 'resource', 'riskClass']
 
 const driver = fileURLToPath(new URL('./loader/p2-06-approval-precondition/driver.ts', import.meta.url))
 const overlay = fileURLToPath(new URL('./loader/p2-05-originators/base.patch.yml', import.meta.url))
@@ -153,5 +158,23 @@ describe('P2-06 on the shipped headless profile: an approval bound to the file i
     const report = reports.get('code-mode')
     expect(askedAbout(report, 'code-mode', 'changed'), JSON.stringify(report)).toBe(true)
     expect(runsOn(report, 'code-mode', 'changed'), JSON.stringify(report)).toEqual([])
+  })
+
+  it('control (native): a call\'s approval request shows the six display fields must[0] names', () => {
+    const report = reports.get('native')
+    const fields = report?.asked.map(entry => entry.displayFields) ?? []
+    expect(fields.length, JSON.stringify(report)).toBeGreaterThan(0)
+    for (const names of fields) expect(names, JSON.stringify(report)).toEqual(DISPLAY_FIELDS)
+  })
+
+  it('must[0] and acceptance[1] (code-mode): a sub-call\'s approval request shows the same six display fields, its arguments redacted and without the secret value', () => {
+    const report = reports.get('code-mode')
+    const asked = report?.asked ?? []
+    expect(asked.length, JSON.stringify(report)).toBeGreaterThan(0)
+    for (const entry of asked) {
+      expect(entry.displayFields, JSON.stringify(report)).toEqual(DISPLAY_FIELDS)
+      expect(entry.arguments ?? '', JSON.stringify(report)).not.toContain(SECRET)
+      expect(entry.arguments ?? '', JSON.stringify(report)).toContain('<redacted>')
+    }
   })
 })
