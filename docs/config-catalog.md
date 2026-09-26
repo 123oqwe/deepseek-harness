@@ -4210,6 +4210,7 @@ Imported as libraries by other packages; a `cordis.yml` cannot load them.
 - `@deepseek-ai/dsh-experimental-webworker-packer` ([`packages/experimental/webworker-packer/src/index.ts`](../packages/experimental/webworker-packer/src/index.ts))
 - `@deepseek-ai/dsh-experimental-webworker-runtime` ([`packages/experimental/webworker-runtime/src/index.ts`](../packages/experimental/webworker-runtime/src/index.ts))
 - `@deepseek-ai/dsh-feature-gates` ([`packages/migration/feature-gates/src/index.ts`](../packages/migration/feature-gates/src/index.ts))
+- `@deepseek-ai/dsh-grant-store` ([`packages/policy/grant-store/src/index.ts`](../packages/policy/grant-store/src/index.ts))
 - `@deepseek-ai/dsh-home-paths` ([`packages/util/home-paths/src/index.ts`](../packages/util/home-paths/src/index.ts))
 - `@deepseek-ai/dsh-hook-protocol` ([`packages/hooks/hook-protocol/src/index.ts`](../packages/hooks/hook-protocol/src/index.ts))
 - `@deepseek-ai/dsh-host-user-id` ([`packages/identity/host-user-id/src/index.ts`](../packages/identity/host-user-id/src/index.ts))

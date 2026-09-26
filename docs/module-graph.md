@@ -321,6 +321,7 @@ flowchart TD
   subgraph group_policy["packages/policy"]
     pkg_capability_token["capability-token"]
     pkg_capability_token_file["capability-token-file"]
+    pkg_grant_store["grant-store"]
     pkg_policy_enforcement["policy-enforcement"]
     pkg_policy_engine["policy-engine"]
     pkg_policy_engine_cedar["policy-engine-cedar"]
@@ -1584,6 +1585,7 @@ flowchart TD
 | [`host-directory-picker-native`](../packages/host/directory-picker-native) | `host` | — |
 | [`host-open-in-app`](../packages/host/open-in-app) | `host` | — |
 | [`host-webserver`](../packages/host/webserver) | `host` | — |
+| [`grant-store`](../packages/policy/grant-store) | `policy` | — |
 | [`policy-language`](../packages/policy/policy-language) | `policy` | — |
 | [`risk-taxonomy`](../packages/policy/risk-taxonomy) | `policy` | — |
 | [`invariants`](../packages/runtime-diagnostics/invariants) | `runtime-diagnostics` | — |
