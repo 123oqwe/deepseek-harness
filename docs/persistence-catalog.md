@@ -327,7 +327,7 @@ Source: [`packages/interaction/user-approval/src/types.ts:48`](../packages/inter
 }
 ```
 
-Source: [`packages/interaction/user-approval/src/types.ts:97`](../packages/interaction/user-approval/src/types.ts)
+Source: [`packages/interaction/user-approval/src/types.ts:99`](../packages/interaction/user-approval/src/types.ts)
 
 <a id="approvaldecided--log-only"></a>
 
@@ -337,7 +337,9 @@ Source: [`packages/interaction/user-approval/src/types.ts:97`](../packages/inter
 /**
  * The outcome of a prior `approval/asked` (same `id`) — log-only audit.
  * Exactly one per ask, appended when the outcome is known: a decision, a
- * cancellation, or the fail-closed `'unavailable'`.
+ * cancellation, or the fail-closed `'unavailable'`. An ask whose host died
+ * before an answer is decided `'cancelled'` by the agent loop's crash
+ * repair when the session resumes, inside the interrupted turn.
  */
 'approval/decided': {
   id: ApprovalRequestId
@@ -345,7 +347,7 @@ Source: [`packages/interaction/user-approval/src/types.ts:97`](../packages/inter
 }
 ```
 
-Source: [`packages/interaction/user-approval/src/types.ts:60`](../packages/interaction/user-approval/src/types.ts)
+Source: [`packages/interaction/user-approval/src/types.ts:62`](../packages/interaction/user-approval/src/types.ts)
 
 <a id="approvalpolicy--log-only"></a>
 

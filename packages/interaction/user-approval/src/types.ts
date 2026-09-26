@@ -55,7 +55,9 @@ declare module '@deepseek-ai/dsh-session/types' {
     /**
      * The outcome of a prior `approval/asked` (same `id`) — log-only audit.
      * Exactly one per ask, appended when the outcome is known: a decision, a
-     * cancellation, or the fail-closed `'unavailable'`.
+     * cancellation, or the fail-closed `'unavailable'`. An ask whose host died
+     * before an answer is decided `'cancelled'` by the agent loop's crash
+     * repair when the session resumes, inside the interrupted turn.
      */
     'approval/decided': {
       id: ApprovalRequestId

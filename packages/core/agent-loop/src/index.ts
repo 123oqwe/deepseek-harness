@@ -35,6 +35,7 @@ import type { ProjectionDefinition } from '@deepseek-ai/dsh-session-projection'
 import { SessionPersistenceNotFoundError } from '@deepseek-ai/dsh-session-persistence'
 import type { SessionHandle, SessionPersistence } from '@deepseek-ai/dsh-session-persistence'
 import { ReactLoopAgent } from './agent.ts'
+import { closeUnansweredApprovals } from './approval-repair.ts'
 import { DEFAULT_MAX_PARALLEL_TOOL_CALLS } from './constants.ts'
 
 /** Fiber states that cannot own or serve a new lifecycle. */
@@ -959,12 +960,13 @@ export class AgentLoop extends Service implements AgentFactory {
           )
           // Semantic crash repair is the agent layer's job: persistence hands
           // back the physically valid log; an interrupted final turn receives
-          // synthetic closers (missing tool errors, step/end, turn/end) that
-          // are appended through the same handle as an ordinary batch.
+          // synthetic closers (missing tool errors, a `cancelled` decision for
+          // each approval it left unanswered, step/end, turn/end) that are
+          // appended through the same handle as an ordinary batch.
           const coldRead = await handle.read(0, undefined, { signal: fused })
           fused.throwIfAborted()
           const persisted = coldRead.events
-          const closers = interruptedTurnClosers(persisted)
+          const closers = closeUnansweredApprovals(persisted, interruptedTurnClosers(persisted))
           if (closers.length > 0) await handle.append(closers)
           preparation = SessionPreparation.create(this.runtime.ctx.sessions.prepare(id, {
             seed: [...persisted, ...closers],
