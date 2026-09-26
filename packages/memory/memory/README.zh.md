@@ -60,12 +60,14 @@ const { id } = await ctx.memory.propose({ origin, principal, scope, content })
 const { records, truncated } = await ctx.memory.query({ accessContext, query: 'text' })
 const record = await ctx.memory.get({ accessContext, id })
 
-// Revise or forget an id a prior propose() actually returned:
+// Revise an id a prior propose() actually returned; forget removes the content
+// and leaves a tombstone (P6-03 third slice):
 await ctx.memory.revise({ principal, scope, id, content })
 await ctx.memory.forget({ principal, scope, id })
 
-// Bulk-read everything visible to an access context:
-const { records } = await ctx.memory.export({ accessContext })
+// Bulk-read everything visible to an access context; export records carry
+// provenance/status/relations, and `tombstones` lists forgotten records:
+const { records, tombstones } = await ctx.memory.export({ accessContext })
 
 // Review a proposal the policy held (P6-03 second slice): a person lists the
 // pending proposals, then approves (-> active) or rejects (-> never active).
@@ -73,9 +75,18 @@ const { records } = await ctx.memory.export({ accessContext })
 const pending = await ctx.memory.listPending({ accessContext })
 await ctx.memory.approve({ principal, scope, id })
 await ctx.memory.reject({ principal, scope, id })
+
+// Record a conflict without overwriting, and merge within or across scopes
+// (P6-03 third slice, must[3]). A cross-scope merge needs an authorization
+// naming both scopes, else MEMORY_MERGE_NOT_AUTHORIZED:
+await ctx.memory.supersede({ principal, scope, id, supersedes })
+await ctx.memory.merge({ principal, from, into, authorization })
+
+// Right-to-erasure: forget every record about a subject in a tenant:
+await ctx.memory.erase({ principal, tenantId, subject })
 ```
 
-策略送去 review 的提案——敏感的、敏感度未申明的、弱推断的，或省略了预期用途或 TTL 的（`must[0]`）——以 `pending` 存储、被挡在默认搜索之外，直到 user principal 批准它；`reject` 则让它永久出局。[Memory 子系统](../../../docs/subsystems/memory.zh.md)参考页是完整的词汇表，也是读取限定与「无旁路」的理由所在。
+策略送去 review 的提案——敏感的、敏感度未申明的、弱推断的，或省略了预期用途或 TTL 的（`must[0]`）——以 `pending` 存储、被挡在默认搜索之外，直到 user principal 批准它；`reject` 则让它永久出局。`supersede` 与 `merge` 标记较旧或被并入的记录，使只有幸存者被搜索、而两条都留存（冲突绝不覆盖）；`forget` 与 `erase` 移除内容、留下一条默认搜索永不返回但 `export` 会列出的墓碑。[Memory 子系统](../../../docs/subsystems/memory.zh.md)参考页是完整的词汇表，也是读取限定与「无旁路」的理由所在。
 
 ### provider 选择
 
@@ -148,7 +159,7 @@ await ctx.memory.reject({ principal, scope, id })
 
 - **两个内存 provider 在进程退出时丢失一切** — `createLocalReferenceMemoryProvider()`/`createFakeMemoryProvider()` 是真实且经过一致性验证的，但它们的存在是为了证明 provider 可替换，而不是为了保留记录。需要记录在进程之外存活时，使用 `createDurableFileMemoryProvider()`。
 - **持久 provider 每个目录只保留一份 JSON 文档** — `createDurableFileMemoryProvider({ directory })` 在每次写入时整体重写 `memory.json`，在每个实例内串行成一条链，并以「先写临时文件再 rename」的方式提交，因此它适合单机规模的记录量，而不适合大规模或高并发的存储；跨进程的多写入方存储不在范围内。
-- **格式变更拒绝旧存储，而不是迁移它** — 持久文档带版本号，本次构建只写入并只接受版本 3。由更早构建写出的存储会在第一次读取时失败，并按名报出它读到的版本。这在预发布立场下是刻意的：版本 3 新增了 `createdAt`、`validFrom`、`validUntil`、`status` 与 `relations`，而一个为旧记录补齐这些字段的读取方，会把本次构建的时钟与假设当作写入者陈述过的事实呈现出来。memory 是可选启用的，因此受影响的只有手工启用过它的人。
+- **格式变更拒绝旧存储，而不是迁移它** — 持久文档带版本号，本次构建只写入并只接受版本 3。由更早构建写出的存储会在第一次读取时失败，并按名报出它读到的版本。这在预发布立场下是刻意的：版本 3 新增了 `createdAt`、`validFrom`、`validUntil`、`status` 与 `relations`，而一个为旧记录补齐这些字段的读取方，会把本次构建的时钟与假设当作写入者陈述过的事实呈现出来。第三片的 `tombstones` 没有升版本：它是一个新的顶层列表、而非逐记录字段，故一份早于它的版本 3 文档是完整的——它没遗忘任何东西——读回时没有墓碑，而非一个臆造的值。memory 是可选启用的，因此受影响的只有手工启用过它的人。
 - **seam 自身不产生任何事件** — `memory/access` 现在有了真实的产生者，但它属于 Consumer 而非本包：`@deepseek-ai/dsh-memory-context` 为它执行的每次读取记录一条事件。`ctx.memory` 的其他调用方除非自己追加该事件，否则不会记录任何内容，因此日志只对经由会写入该事件的 Consumer 所做的读取是完整的。
 - **`must[3]` 的强制执行位于 seam，而不在 provider 内** — `MemoryRuntime.query()`/`get()`/`export()` 在触及任何 provider 之前，就以 `MEMORY_ACCESS_CONTEXT_REQUIRED` 拒绝不完整的 `MemoryAccessContext`，因此 provider 不可能被交给一次无 scope 的读取；而在 seam 之外注册的 provider 不会继承该检查。
 - **没有面向模型的工具** — 模型不能调用 memory；它只能读到 `@deepseek-ai/dsh-memory-context` 为它召回的内容。让模型自行查询或提出写入的、形如 `dsh-tool-memory` 的包不在本 epic 范围内。

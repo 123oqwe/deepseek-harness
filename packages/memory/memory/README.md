@@ -60,12 +60,14 @@ const { id } = await ctx.memory.propose({ origin, principal, scope, content })
 const { records, truncated } = await ctx.memory.query({ accessContext, query: 'text' })
 const record = await ctx.memory.get({ accessContext, id })
 
-// Revise or forget an id a prior propose() actually returned:
+// Revise an id a prior propose() actually returned; forget removes the content
+// and leaves a tombstone (P6-03 third slice):
 await ctx.memory.revise({ principal, scope, id, content })
 await ctx.memory.forget({ principal, scope, id })
 
-// Bulk-read everything visible to an access context:
-const { records } = await ctx.memory.export({ accessContext })
+// Bulk-read everything visible to an access context; export records carry
+// provenance/status/relations, and `tombstones` lists forgotten records:
+const { records, tombstones } = await ctx.memory.export({ accessContext })
 
 // Review a proposal the policy held (P6-03 second slice): a person lists the
 // pending proposals, then approves (-> active) or rejects (-> never active).
@@ -73,9 +75,18 @@ const { records } = await ctx.memory.export({ accessContext })
 const pending = await ctx.memory.listPending({ accessContext })
 await ctx.memory.approve({ principal, scope, id })
 await ctx.memory.reject({ principal, scope, id })
+
+// Record a conflict without overwriting, and merge within or across scopes
+// (P6-03 third slice, must[3]). A cross-scope merge needs an authorization
+// naming both scopes, else MEMORY_MERGE_NOT_AUTHORIZED:
+await ctx.memory.supersede({ principal, scope, id, supersedes })
+await ctx.memory.merge({ principal, from, into, authorization })
+
+// Right-to-erasure: forget every record about a subject in a tenant:
+await ctx.memory.erase({ principal, tenantId, subject })
 ```
 
-A proposal the policy sends to review — a sensitive one, one whose sensitivity is unstated, a weakly-inferred one, or one that omits its intended use or TTL (`must[0]`) — is stored `pending` and withheld from the default search until a user principal approves it; `reject` keeps it out for good. The [Memory subsystem](../../../docs/subsystems/memory.md) reference is the exhaustive vocabulary and the read-scoping and no-bypass rationale.
+A proposal the policy sends to review — a sensitive one, one whose sensitivity is unstated, a weakly-inferred one, or one that omits its intended use or TTL (`must[0]`) — is stored `pending` and withheld from the default search until a user principal approves it; `reject` keeps it out for good. `supersede` and `merge` mark the older or merged record so only the survivor is searched while both persist (a conflict never overwrites); `forget` and `erase` remove the content and leave a tombstone the default search never returns but `export` lists. The [Memory subsystem](../../../docs/subsystems/memory.md) reference is the exhaustive vocabulary and the read-scoping and no-bypass rationale.
 
 ### Provider selection
 
@@ -148,7 +159,7 @@ These limits define when the service is incomplete on its own.
 
 - **The two in-memory providers lose everything at process exit** — `createLocalReferenceMemoryProvider()`/`createFakeMemoryProvider()` are real and conformance-tested, but exist to prove provider replaceability, not to retain records. Use `createDurableFileMemoryProvider()` when records must survive the process.
 - **The durable provider keeps one JSON document per directory** — `createDurableFileMemoryProvider({ directory })` rewrites `memory.json` in full on every mutation, serialized on one per-instance chain and committed write-temp-then-rename, so it suits a single host's record counts rather than large or highly concurrent stores; a multi-writer store across processes is out of scope.
-- **A format change refuses an older store rather than migrating it** — the durable document carries a version, and this build writes and accepts only version 3. A store written by an earlier build fails the first read with the version it found, by name. That is deliberate under the pre-release stance: version 3 added `createdAt`, `validFrom`, `validUntil`, `status` and `relations`, and a reader that filled those in for an older record would present this build's clock and assumptions as facts the writer stated. Memory is opt-in, so the affected population is whoever enabled it by hand.
+- **A format change refuses an older store rather than migrating it** — the durable document carries a version, and this build writes and accepts only version 3. A store written by an earlier build fails the first read with the version it found, by name. That is deliberate under the pre-release stance: version 3 added `createdAt`, `validFrom`, `validUntil`, `status` and `relations`, and a reader that filled those in for an older record would present this build's clock and assumptions as facts the writer stated. The third slice's `tombstones` did not bump the version: it is a new top-level list, not a per-record field, so a version-3 document that predates it is complete — it forgot nothing — and reads back with no tombstones rather than a fabricated value. Memory is opt-in, so the affected population is whoever enabled it by hand.
 - **The seam itself emits nothing** — `memory/access` now has a real emitter, but it belongs to the consumer, not to this package: `@deepseek-ai/dsh-memory-context` records one event per read it performs. Another caller of `ctx.memory` records nothing unless it appends the event itself, so the log is complete only for reads made through a consumer that writes one.
 - **`must[3]` enforcement lives at the seam, not in providers** — `MemoryRuntime.query()`/`get()`/`export()` reject an incomplete `MemoryAccessContext` with `MEMORY_ACCESS_CONTEXT_REQUIRED` before any provider is reached, so a provider cannot be handed an unscoped read; a provider registered outside the seam would not inherit that check.
 - **No model-facing tool** — the model cannot call memory; it only reads what `@deepseek-ai/dsh-memory-context` recalled for it. A `dsh-tool-memory`-shaped package that lets the model query or propose on its own is out of this epic's scope.

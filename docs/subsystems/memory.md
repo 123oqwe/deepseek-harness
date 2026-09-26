@@ -107,7 +107,13 @@ A proposal the policy holds for review is stored `pending`: `propose` accepts it
 
 A person acts on a held proposal with `ctx.memory.approve({ principal, scope, id })` — it becomes `active` and the default search returns it — or `ctx.memory.reject({ principal, scope, id })`, after which it never becomes active. Only a user principal decides: an agent or service principal is refused `MEMORY_REVIEW_FORBIDDEN` at the seam, before any provider is reached, so the proposal stays pending. An id the scope may not see, or that names no `pending` record, is refused too — `MEMORY_RECORD_NOT_FOUND` for an unknown or out-of-scope id, `MEMORY_NOT_PENDING` for one already decided. Approving and rejecting are how a held proposal ever leaves `pending`; without a review path a proposal the policy holds would wait forever, so the shipped operator entry is the `dsh memory` CLI, run as the host user.
 
-`forget` with a tombstone, `export` carrying provenance and conflict status, and merge/supersede propagation to the index are the third slice.
+## Lifecycle: forget, supersede, merge, erase (P6-03 third slice)
+
+`ctx.memory.supersede({ principal, scope, id, supersedes })` records that the newer record supersedes the older: the newer gains a `supersedes` relation, the older is marked `superseded`, and both persist — the default search returns only the newer while `export` keeps both, because a conflict never overwrites (`must[1]`). `ctx.memory.merge({ principal, from, into, authorization? })` does the same for a merge, marking `from` and relating `into` to it. A merge within one scope needs no authorization; a merge across scopes needs an `authorization` naming both scopes, and without it is refused with `MEMORY_MERGE_NOT_AUTHORIZED` before either record changes (`acceptance[2]`).
+
+`forget` now removes the record's content and leaves a tombstone — `{ id, forgottenAt, forgottenBy }` carrying none of the content — so the store, the default search, a second reader over the same store, and the recall projection all stop returning it, while `export` lists the tombstone (`acceptance[1]`). `ctx.memory.erase({ principal, tenantId, subject })` is right-to-erasure: it forgets every record about the subject in the tenant, in any session or workspace, and leaves each a tombstone; another subject, or another tenant, is untouched. `export` records carry `provenance`, `status` and `relations` so a bulk read shows each record's source and conflict status (`acceptance[2]`); `query`/`get` keep the bare view.
+
+The recall projection is `@deepseek-ai/dsh-memory-context`'s: it recalls records into a step as a `snapshot`-form message, and a later snapshot from that producer supersedes the earlier, so once a recalled record is forgotten a later step supersedes the stale recall rather than carrying the forgotten content into the model's next request.
 
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
