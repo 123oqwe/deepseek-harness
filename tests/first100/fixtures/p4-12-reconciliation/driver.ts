@@ -14,6 +14,10 @@
  * - `approve-compensated`: the host user approves `/resolve-effect K compensated`.
  * - `refuse`:            the host user refuses `/resolve-effect K confirmed`.
  * - `non-host`:          a caller that is NOT the host user tries to resolve.
+ * - `child-scope`:       a CHILD agent's key (a `delegateChildIdentity` scope,
+ *   not the host user's) is driven to `ambiguous`; the host then lists and
+ *   resolves it (B-515 v2, BLOCKED-311). Today `/resolve-effect` queries only
+ *   the caller's own scope, so the host neither lists nor resolves it.
  *
  * Today `/resolve-effect` is not registered, so `commands.execute` returns
  * `undefined` and the entry stays `ambiguous`: the approve cases fail their
@@ -25,6 +29,7 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import { hostUserIdentity } from '@deepseek-ai/dsh-host-user-id'
 import { RunId } from '@deepseek-ai/dsh-principal/types'
 import { SessionId } from '@deepseek-ai/dsh-session'
+import { delegateChildIdentity } from '@deepseek-ai/dsh-subagent'
 import { setApprovalPolicy, type ApprovalOutcome } from '@deepseek-ai/dsh-user-approval'
 import type {} from '@deepseek-ai/dsh-action-ledger'
 import type {} from '@deepseek-ai/dsh-agent-loop'
@@ -69,31 +74,58 @@ try {
   const answer: ApprovalOutcome = mode === 'refuse' ? 'rejected' : 'allowed-once'
   const disposeAnswerer = ctx.on('approval/request', () => Promise.resolve(answer))
 
-  // Drive the key to `ambiguous` through the shipped ledger: reserved, sent,
-  // then an outcome that retrying cannot settle.
-  ledger.reserve({ scope, key, argumentsHash, epoch: 'unfenced' })
-  ledger.markSent(scope, key, 'unfenced')
-  ledger.markAmbiguous(scope, key, 'unfenced')
-  const before = ledger.entry(scope, key)
+  if (mode === 'child-scope') {
+    // Condition 1 (B-515 v2, BLOCKED-311): the ambiguous entry belongs to a
+    // CHILD agent's scope, not the host user's. The host must still list and
+    // resolve it; today `/resolve-effect` queries only the caller's own scope,
+    // so the host reaches neither.
+    const childIdentity = delegateChildIdentity(agent, SessionId('p4-12-child'))
+    if (childIdentity === undefined) throw new Error('p4-12: could not delegate a child identity from the host agent')
+    const childScope = childIdentity.principal.id
+    ledger.reserve({ scope: childScope, key, argumentsHash, epoch: 'unfenced' })
+    ledger.markSent(childScope, key, 'unfenced')
+    ledger.markAmbiguous(childScope, key, 'unfenced')
+    const controller = new AbortController()
+    // The host lists the entries waiting, then resolves the child's key.
+    const listExec = await commands.execute(agent, '/resolve-effect', [], controller.signal)
+    const resolveExec = await commands.execute(agent, `/resolve-effect ${key} confirmed`, [], controller.signal)
+    const childAfter = ledger.entry(childScope, key)
+    disposeAnswerer()
+    const childResolution = childAfter === undefined ? null : (childAfter as { resolution?: unknown }).resolution ?? null
+    process.stdout.write(`P4-12-OBSERVED ${JSON.stringify({
+      mode,
+      childScope,
+      hostList: listExec?.result.text ?? null,
+      resolveText: resolveExec?.result.text ?? null,
+      childAfter: childAfter === undefined ? null : { state: childAfter.state, resolution: childResolution },
+    })}\n`)
+  } else {
+    // Drive the key to `ambiguous` through the shipped ledger: reserved, sent,
+    // then an outcome that retrying cannot settle.
+    ledger.reserve({ scope, key, argumentsHash, epoch: 'unfenced' })
+    ledger.markSent(scope, key, 'unfenced')
+    ledger.markAmbiguous(scope, key, 'unfenced')
+    const before = ledger.entry(scope, key)
 
-  // Ask the host user to resolve it through the command plane.
-  const outcome = mode === 'approve-compensated' ? 'compensated' : 'confirmed'
-  const controller = new AbortController()
-  const execution = await commands.execute(agent, `/resolve-effect ${key} ${outcome}`, [], controller.signal)
+    // Ask the host user to resolve it through the command plane.
+    const outcome = mode === 'approve-compensated' ? 'compensated' : 'confirmed'
+    const controller = new AbortController()
+    const execution = await commands.execute(agent, `/resolve-effect ${key} ${outcome}`, [], controller.signal)
 
-  const after = ledger.entry(scope, key)
-  const reReserve = ledger.reserve({ scope, key, argumentsHash, epoch: 'unfenced' })
-  disposeAnswerer()
+    const after = ledger.entry(scope, key)
+    const reReserve = ledger.reserve({ scope, key, argumentsHash, epoch: 'unfenced' })
+    disposeAnswerer()
 
-  const resolution = after === undefined ? null : (after as { resolution?: unknown }).resolution ?? null
-  process.stdout.write(`P4-12-OBSERVED ${JSON.stringify({
-    mode,
-    requested: outcome,
-    dispatched: execution !== undefined,
-    before: before?.state ?? null,
-    after: after === undefined ? null : { state: after.state, resolution },
-    reReserve: { action: reReserve.action, reason: 'reason' in reReserve ? reReserve.reason : null },
-  })}\n`)
+    const resolution = after === undefined ? null : (after as { resolution?: unknown }).resolution ?? null
+    process.stdout.write(`P4-12-OBSERVED ${JSON.stringify({
+      mode,
+      requested: outcome,
+      dispatched: execution !== undefined,
+      before: before?.state ?? null,
+      after: after === undefined ? null : { state: after.state, resolution },
+      reReserve: { action: reReserve.action, reason: 'reason' in reReserve ? reReserve.reason : null },
+    })}\n`)
+  }
 } finally {
   await ctx.fiber.dispose()
 }
