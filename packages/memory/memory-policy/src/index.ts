@@ -2,7 +2,11 @@
  * P6-03 proposal policy (`@deepseek-ai/dsh-memory-policy`): the provider that
  * decides whether a candidate memory write is auto-accepted, sent to human
  * review, or rejected, and the pure decision it applies. `@deepseek-ai/dsh-memory`
- * consults the mounted `memoryProposalPolicy` service from its `propose` path.
+ * consults the mounted `memoryProposalPolicy` service from its `propose` path, so
+ * a deployment that omits this plugin makes `propose` fail closed — every write
+ * is held for review (`pending`) rather than admitted to active memory — and
+ * mounting it is what lets a normal write reach active memory for a `dsh` a user
+ * starts.
  *
  * The service is declared here, in the package entry, rather than re-exported
  * from another module, so the config-catalog generator finds the default
