@@ -43,6 +43,15 @@ export type UpgradePhase = typeof UPGRADE_PHASES[number]
 export interface UpgradeRecord {
   /** The plugin upgraded. */
   readonly plugin: string
+  /**
+   * The unit the upgrade switches, as its descriptor names it.
+   *
+   * The plugin's migration module chooses the descriptor and its name, so a
+   * unit need not be named after its plugin, and recovery undoes this unit.
+   * Absent only on a record written before records named their unit
+   * (BLOCKED-341); see {@link recoverUpgrade}.
+   */
+  readonly unit?: string
   /** The version it started at. */
   readonly from: string
   /** The version the manifest declares current. */
@@ -171,6 +180,7 @@ export async function runUpgrade(request: UpgradeRequest): Promise<UpgradeOutcom
 
   const record: UpgradeRecord = {
     plugin: request.plugin,
+    unit: request.unit.name,
     from: request.installed,
     to: request.manifest.current,
     pathDigest: computeMigrationPathDigest(request.plugin, plan.steps),
@@ -265,6 +275,12 @@ export async function runUpgrade(request: UpgradeRequest): Promise<UpgradeOutcom
  * achievement means the upgrade did not finish. If the switch had happened the
  * replaced state goes back; either way the snapshot is released and the record
  * is cleared, so the next upgrade does not start on the last one's leftovers.
+ *
+ * Both are done to the unit the record names, whatever the plugin is called
+ * (BLOCKED-341). A record written before records named their unit carries
+ * none, and its plugin name stands in: that record recovers as every record did
+ * before, which restores the right unit only when the unit is named after its
+ * plugin.
  * @param facet - the backend's migration facet.
  * @param record - the record the interrupted upgrade left.
  * @returns whether anything was undone.
@@ -274,11 +290,12 @@ export async function recoverUpgrade(
   record: UpgradeRecord,
 ): Promise<boolean> {
   if (record.upgradedTo !== undefined) return false
+  const unit = record.unit ?? record.plugin
   if (record.previousHandle !== undefined) {
-    await facet.rollbackTo({ unit: record.plugin, handle: record.previousHandle })
+    await facet.rollbackTo({ unit, handle: record.previousHandle })
   }
   if (record.snapshotHandle !== undefined) {
-    await facet.discard({ unit: record.plugin, handle: record.snapshotHandle })
+    await facet.discard({ unit, handle: record.snapshotHandle })
   }
   return true
 }
