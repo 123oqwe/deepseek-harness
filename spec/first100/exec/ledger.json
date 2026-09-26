@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-26T02:48:54.896Z",
-  "inputDigest": "64a9fd4f3d8c5f84c61bd1261abff21d793cae309c3cc9b3cd85d718c8167847",
+  "lastUpdatedUtc": "2026-09-26T04:28:32.256Z",
+  "inputDigest": "054adbf0a1f3ec09d46afaab77ac51c70fe024cffea9b30953a8b146890c38f5",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -3966,6 +3966,32 @@
             "P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143) records whether the side-effect class was DECLARED, which the class alone cannot say (acceptance[2])"
           ],
           "capturedAtUtc": "2026-09-26T01:32:57.707Z"
+        },
+        "U.5": {
+          "status": "GREEN",
+          "candidateSha": "db7f3a63ad29a056aa40351b479f9487fba9460d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36213775071",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36213775071/first100-vitest-report-db7f3a63ad29a056aa40351b479f9487fba9460d/vitest-report.json",
+          "observationSha256": "062d5540107a65559bbc4614ef4429c4809e192f6a7ed4175a164606c413c57d",
+          "expectCasesMatched": [
+            "P2-03 acceptance[2]: what the risk gate decides today on the shipped templates, per tool and preset headless boots with the shipped preset table, runs its root agent under workspace-write, and shows more than ten tools",
+            "P2-03 acceptance[2]: what the risk gate decides today on the shipped templates, per tool and preset on headless, no tool the risk gate classifies by a policy rule is asked about or refused under any shipped preset",
+            "P2-03 acceptance[2]: what the risk gate decides today on the shipped templates, per tool and preset on headless under the shipped default preset, every action the risk gate cannot classify is asked about",
+            "P2-03 acceptance[2]: what the risk gate decides today on the shipped templates, per tool and preset sdk-minimal mounts no permission presets, so the risk gate decides nothing for any of its tools"
+          ],
+          "capturedAtUtc": "2026-09-26T04:28:31.435Z"
+        },
+        "U.6": {
+          "status": "GREEN",
+          "candidateSha": "db7f3a63ad29a056aa40351b479f9487fba9460d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36213775071",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36213775071/first100-vitest-report-db7f3a63ad29a056aa40351b479f9487fba9460d/vitest-report.json",
+          "observationSha256": "062d5540107a65559bbc4614ef4429c4809e192f6a7ed4175a164606c413c57d",
+          "expectCasesMatched": [
+            "P2-03 acceptance[2] through the risk gate on the shipped headless profile at its default preset control: a probe declaring filesystem-read is allowed by the preset without an approval request, and runs",
+            "P2-03 acceptance[2] through the risk gate on the shipped headless profile at its default preset a probe declaring no risk domain tags reaches an approval request, and is refused without running when the operator rejects it"
+          ],
+          "capturedAtUtc": "2026-09-26T04:28:32.241Z"
         }
       },
       "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
@@ -4508,6 +4534,19 @@
             "P2-05 acceptance[2] (narrowed by C18): the policy service unmounted through the Loader on the shipped sdk-minimal composition acceptance[2]: after the unmount the same tool call fails closed, refused as policy-unavailable, and its body never runs"
           ],
           "capturedAtUtc": "2026-09-24T23:26:01.090Z"
+        },
+        "U.5": {
+          "status": "GREEN",
+          "candidateSha": "db7f3a63ad29a056aa40351b479f9487fba9460d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36213775071",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36213775071/first100-vitest-report-db7f3a63ad29a056aa40351b479f9487fba9460d/vitest-report.json",
+          "observationSha256": "062d5540107a65559bbc4614ef4429c4809e192f6a7ed4175a164606c413c57d",
+          "expectCasesMatched": [
+            "P2-05 acceptance[0]: every originator the shipped headless profile drives passes one enforcement point the root agent's own read appends one manifest and is decided once before it runs",
+            "P2-05 acceptance[0]: every originator the shipped headless profile drives passes one enforcement point a child the shipped subagent tool delegates to has its read manifested and decided once before it runs",
+            "P2-05 acceptance[0]: every originator the shipped headless profile drives passes one enforcement point a child a workflow script's agent() call starts has its read manifested and decided once before it runs"
+          ],
+          "capturedAtUtc": "2026-09-26T04:28:29.831Z"
         }
       },
       "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
