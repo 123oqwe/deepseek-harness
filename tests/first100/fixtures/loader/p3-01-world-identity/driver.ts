@@ -15,6 +15,10 @@
  *   with a digest it did not compute;
  * - `network-none`: `./network-none.patch.yml`, a request no shipped provider
  *   can hold.
+ * - `forbid-absent`: `./forbid-absent.patch.yml`, the same no-provider request
+ *   plus a policy forbidding an `absent` world, so the call must be refused.
+ * - `register-local`: no mode overlay; after boot the driver itself registers a
+ *   provider under the reserved id `local` and reports whether `register` threw.
  * The scripted model calls the shipped `read` tool on the file once.
  *
  * It prints one `P3-01-IDENTITY <json>` line: the world bindings the session
@@ -26,6 +30,9 @@ import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { HOST_USER_IDENTITY_KEY, type HostUserIdentityFactory } from '@deepseek-ai/dsh-agent-loop'
 import { resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import type { WorldProvider, WorldProviderId } from '@deepseek-ai/dsh-execution-world'
+import type {} from '@deepseek-ai/dsh-execution-world/plugin'
 import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
 import { endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
 import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
@@ -39,6 +46,8 @@ const MODE_OVERLAYS = {
   honest: './honest.patch.yml',
   forging: './forging.patch.yml',
   'network-none': './network-none.patch.yml',
+  'forbid-absent': './forbid-absent.patch.yml',
+  'register-local': undefined,
 } as const
 
 /** One boot mode. */
@@ -50,6 +59,8 @@ interface Report {
   readonly worldBound: readonly { readonly provider: string; readonly spec: string }[]
   readonly worldEventTypes: readonly string[]
   readonly toolResults: readonly string[]
+  /** register-local mode only: whether registering a provider under the reserved id `local` threw, and its message. */
+  readonly registerLocal?: { readonly threw: boolean; readonly error: string }
 }
 
 /**
@@ -95,10 +106,32 @@ try {
       `run-${randomUUID()}` as Parameters<HostUserIdentityFactory>[0],
     ),
   })
+  // register-local: a plugin registers a world provider under the reserved id
+  // `local` (the shipped provider's id). Condition 3 requires register() to
+  // refuse it, naming the identity; today it reserves nothing and does not throw.
+  let registerLocal: { threw: boolean; error: string } | undefined
+  if (mode === 'register-local') {
+    const reserved: WorldProvider = {
+      id: brandString<WorldProviderId>('local'),
+      unsatisfiableDimensions: () => [],
+      create: () => Promise.reject(new Error('p3-01 register-local probe: create is not implemented')),
+      terminate: () => Promise.reject(new Error('p3-01 register-local probe: terminate is not implemented')),
+      snapshot: () => Promise.reject(new Error('p3-01 register-local probe: snapshot is not implemented')),
+      restore: () => Promise.reject(new Error('p3-01 register-local probe: restore is not implemented')),
+      attest: () => Promise.reject(new Error('p3-01 register-local probe: attest is not implemented')),
+    }
+    try {
+      ctx.get('executionWorlds')?.register(reserved)
+      registerLocal = { threw: false, error: '' }
+    } catch (error) {
+      registerLocal = { threw: true, error: error instanceof Error ? error.message : String(error) }
+    }
+  }
   await runFixtureTurn(ctx, { task: 'P3-01: read the file once.' })
   const events = ctx.sessions.list().flatMap(session => session.snapshotEvents())
   const report: Report = {
     mode,
+    ...registerLocal === undefined ? {} : { registerLocal },
     worldBound: events.flatMap(event => event.type === 'action/world-bound' ? [{ provider: event.data.provider, spec: event.data.spec }] : []),
     worldEventTypes: events.flatMap(event => event.type.startsWith('action/world-') ? [event.type] : []),
     toolResults: events.flatMap(event => event.type !== 'tool/result' ? [] : [
