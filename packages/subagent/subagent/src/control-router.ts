@@ -120,9 +120,13 @@ export class ChildControlRouter {
    * subagent primitive — it authorizes a durable parent address against a live
    * Activation, which this router has no part in — and then tells the router
    * what happened. Recorded AFTER the primitive accepts, so a refused interrupt
-   * leaves the child promptable rather than stranded in `cancelling`.
+   * leaves the child promptable rather than stranded in `cancelling`. A child
+   * already `terminal` stays terminal: a second cancel after convergence has
+   * nothing to stop, and reopening the barrier would admit what `terminal`
+   * refuses.
    */
   observeCancelled(): void {
+    if (this.phase === 'terminal') return
     this.phase = 'cancelling'
   }
 
