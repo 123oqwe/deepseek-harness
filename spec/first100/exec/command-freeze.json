@@ -19165,6 +19165,47 @@
         "failureSummary": "M46 reddens 3 of 31 (the refusal case, the per-destination case, and the unload/remount case, which observes a fresh breaker starting closed). M47 reddens exactly 1 -- the per-destination case, which opens one model and then calls another at the same base URL. M48 reddens exactly 1 -- the permanent-failure case, which drives a policy denial past the threshold and expects the destination still closed. M49 reddens 5, including the below-threshold control, because every path that awaits the caller's own LlmError sees the wrapper instead. Two controls sit beside the refusals: 'still executes below the threshold' and 'returns the caller its own error', so a breaker that refused everything or wrapped everything could not satisfy the suite. Those four readings transfer: M46–M49 change only packages/reliability/retry-cockatiel/src/index.ts, byte-identical at [243]'s recorded dry-run tree and at 27f4aab28e793c7a258761f6919a5e744670b511. M-605-3, lane B's round 36214254461, restricted to this argv: exactly the two refusal cases red; the file it changes is byte-identical at its parent and at 27f4aab28e793c7a258761f6919a5e744670b511."
       },
       "note": "Supersedes [243] for a candidate carrying B-605 (BLOCKED-339), with the delegate's minimal change (A-478 ruling). At the fix the invalid-policy table lost its four retryableCodes rows (9–12 of 16), so \"rejects invalid policy 12\"–\"15\" no longer exist and are dropped. The titles \"rejects invalid policy 9\"–\"11\" are positional (it.each over the table) and now name the rows that were 13–15: an unknown key maxRetires, an unknown key initialDelay, and an unknown mode; each still asserts a refusal. Added: the two \"refuses retryableCodes\" cases. The llmFailureFacts cases in adapter-failure.spec.ts are not taken in. P4-11 Provider stage: the adopted runtime behind this epic's own decision interface.\n\nFROZEN AFTER C/U/F WERE GREENED, and the ordering is deliberate rather than a repair. The P cell is NOT_RUN and has never been observed by any run, so this is not a freeze recorded after seeing its own result -- what B4b forbids is pre-committing a stage that has already been observed. The entry exists because BLOCKED-175 measured that the provider package landed in a file no live freeze cites: `realitySet` is files[] union stage files union live freeze citations, so `verify-make-vs-use` could not see the cockatiel adoption and reported it as a decision that disagreed with the tree. Freezing P is the missing step, not a workaround for the gate.\n\nWHAT THE STAGE OWNS: which destinations are separate (provider + baseUrl + model, so a decommissioned model does not open a healthy endpoint) and which failures count against an endpoint's health (the classifier's verdict, so a policy denial moves nothing). cockatiel owns consecutive counting, the open period and half-open probing -- the make-vs-use record's whole point, and the reason `circuit.ts`'s hand-written counting was withdrawn.\n\nThe adapter-failure and retry-policy cases are in this argv because they are the translation the breaker's classifier runs on: `breaker.spec.ts` classifies with the real `llmFailureFacts(normalizeLlmFailure(error))` rather than a hand-built FailureFacts, so a change to either would move the breaker's behaviour without touching its own file."
+    },
+    {
+      "epic": "P2-05",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-05",
+        "stage": "U"
+      },
+      "supplementSeq": 8,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P2-05.direct-seam.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "BLOCKED-294: the public ToolRuntime.execute seam passes the one enforcement point control: the model's own read appends one manifest and is decided once, so this probe reads both",
+        "BLOCKED-294: the public ToolRuntime.execute seam passes the one enforcement point a plugin calling the seam directly on behalf of an agent appends one manifest to that agent's session and is decided once",
+        "BLOCKED-294: the public ToolRuntime.execute seam passes the one enforcement point a plugin calling the seam directly with no agent, as the tutorial teaches, is decided once"
+      ],
+      "files": [
+        "tests/first100/fixtures/P2-05.direct-seam.composition.spec.ts",
+        "tests/first100/fixtures/loader/p2-05-direct-seam/driver.ts",
+        "tests/first100/fixtures/loader/p2-05-direct-seam/shared.ts",
+        "packages/core/tools/src/index.ts",
+        "packages/core/tools/src/external-effect.ts"
+      ],
+      "frozenAtUtc": "2026-09-26T06:45:33Z",
+      "dryRunProof": {
+        "treeSha": "0f203ee6ae77d5376e15da78e343d92d9e514a2b",
+        "testsDiscovered": 3,
+        "note": "From batch 12's full run 36218760384 at aeaaeef1b72e386a6f7385fa1d9cbd5588347182 (tree 0f203ee6ae77d5376e15da78e343d92d9e514a2b): tests/first100/fixtures/P2-05.direct-seam.composition.spec.ts ran 3 cases, the 3 frozen titles each once, all passed. That run's suite exited 1 on cases in other files (the two verify-manifest-constructed cases B-645 fixes, eight direct-call unit cases B-649 re-stages, and the minimal-preset web snapshot); the delegate ruled on 2026-09-26 that 326(b) governs recorded cells, not a freeze's dry run. Every listed file is byte-identical between that candidate and the batch 13 candidate, checked at landing."
+      },
+      "sensitivityProof": {
+        "mutationDescription": "A red->green freeze across B-615 (BLOCKED-294), not a mutation: before the fix the public ToolRuntime.execute seam appended no manifest and consulted no enforcement point; B-615 (`c324c423ed`) makes it append the manifest and pass the same enforcement point.",
+        "failureSummary": "Read from each round's own narrow report. PRE 36215702728 at cba91953fadf2e9b5ce4b7f3647549fd4a2af784 (the fix's parent): the two non-control cases red, «BLOCKED-294: the public ToolRuntime.execute seam passes the one enforcement point a plugin calling the seam directly on behalf of an agent appends one manifest to that agent's session and is decided once» and «BLOCKED-294: the public ToolRuntime.execute seam passes the one enforcement point a plugin calling the seam directly with no agent, as the tutorial teaches, is decided once», the control «BLOCKED-294: the public ToolRuntime.execute seam passes the one enforcement point control: the model's own read appends one manifest and is decided once, so this probe reads both» green. Fix 36215713819 at c324c423edf6291b5258225aaa9e308274733e27: all 3 passed. The case files are byte-identical at PRE and fix (the fix is src-only), so the difference is the fix, not the case."
+      },
+      "note": "P2-05 acceptance[0] (「同一 ActionManifest 无论从工具、workflow、SDK、插件、子 Agent 发起都经过同一 PEP。」), the plugin/direct-seam initiator: a plugin calling the public `ToolRuntime.execute` seam directly, on behalf of an agent, appends one manifest and is decided once by the same enforcement point as the model's own call; with no agent, it is decided once and refused. This is the `plugin-rpc` originator acc[0] lists; before B-615 the seam skipped both (BLOCKED-294, A-434 red first). Closes A-451/A-485 §3's \"plugin direct seam\" gap."
     }
   ]
 }

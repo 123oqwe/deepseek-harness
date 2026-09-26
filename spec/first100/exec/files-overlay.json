@@ -2209,7 +2209,8 @@
       "kind": "source",
       "stages": [
         "U.1",
-        "U"
+        "U",
+        "U.8"
       ],
       "reason": "`refusedPolicyResult`, beside the risk and ledger refusals it is shaped after: a policy refusal is a settled tool result rather than a thrown error, and putting it anywhere else would give the three refusal kinds two different shapes for the model to read."
     },
@@ -2332,6 +2333,22 @@
     },
     {
       "epic": "P2-05",
+      "path": "tests/first100/fixtures/loader/p2-05-direct-seam/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.8"
+      ]
+    },
+    {
+      "epic": "P2-05",
+      "path": "tests/first100/fixtures/loader/p2-05-direct-seam/shared.ts",
+      "kind": "test",
+      "stages": [
+        "U.8"
+      ]
+    },
+    {
+      "epic": "P2-05",
       "path": "tests/first100/fixtures/loader/p2-05-originators/base.patch.yml",
       "kind": "test",
       "stages": [
@@ -2393,6 +2410,14 @@
       "kind": "test",
       "stages": [
         "U.4"
+      ]
+    },
+    {
+      "epic": "P2-05",
+      "path": "tests/first100/fixtures/P2-05.direct-seam.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.8"
       ]
     },
     {
