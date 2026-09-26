@@ -41,7 +41,7 @@ manifest 是承重的那个想法。**manifest 本身就是策略问题** ——
 
 - **manifest 的 `requiresApproval` 只被记录,没有被强制。** 没有任何生产代码读这个标志去拦截什么。
 - **目前每一次原生工具调用都无法分类**,所以那个 fail-closed 默认值是常态而不是边缘情况。
-- **ledger 只预留,不结算。** agent loop 里的生产调用方取走了预留;对应的结算没有接线,因此 `ambiguous` 无法区分"不可知"与"仅仅是失败了"。
+- **只有宿主用户能消解 ambiguous 的副作用。** agent loop 里的生产调用方取走了预留；`ambiguous` 的记录只能经宿主用户的 `/resolve-effect` 离开这个状态，而 ledger 仍然无法区分"不可知"与"仅仅是失败了"。
 - **没有任何传输层携带幂等键。** `idempotencyHeader` 点名了真实 provider 会收到的那个 header;今天没有任何东西发送它。
 
 -----
