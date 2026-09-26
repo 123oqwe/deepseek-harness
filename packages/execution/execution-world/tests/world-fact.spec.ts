@@ -36,10 +36,10 @@ function ids(): WorldId {
 
 /**
  * A composition with real sessions, and optionally a world registry.
- * @param options - whether to mount the registry and register the local provider.
+ * @param options - whether to mount the registry and register the local provider, and the row's network request.
  * @returns the context and one agent over a real session.
  */
-async function mounted(options: { registry?: boolean; provider?: boolean } = {}): Promise<{ ctx: Context; agent: Agent }> {
+async function mounted(options: { registry?: boolean; provider?: boolean; network?: 'none' } = {}): Promise<{ ctx: Context; agent: Agent }> {
   const ctx = new Context()
   await ctx.plugin(SessionStore)
   await ctx.plugin(SessionProjectionRegistry)
@@ -47,7 +47,7 @@ async function mounted(options: { registry?: boolean; provider?: boolean } = {})
   if (options.registry === true) {
     await ctx.plugin(ExecutionWorldService, {
       tenant: 'local-host',
-      request: { network: 'unrestricted', spawn: true, ipc: 'unrestricted', secrets: 'inherited' },
+      request: { network: options.network ?? 'unrestricted', spawn: true, ipc: 'unrestricted', secrets: 'inherited' },
     })
     if (options.provider === true) {
       ctx.get('executionWorlds')?.register(createLocalWorldProvider({
@@ -59,12 +59,17 @@ async function mounted(options: { registry?: boolean; provider?: boolean } = {})
   return { ctx, agent: { id: session.id, session } as unknown as Agent }
 }
 
-/** Every `action/world-bound` event in one session's log. */
-function boundEvents(agent: Agent): unknown[] {
+/**
+ * Every event of one world type in one session's log.
+ * @param agent - the agent whose session is read.
+ * @param type - the event type.
+ * @returns the events' data, in log order.
+ */
+function worldEvents(agent: Agent, type: 'action/world-bound' | 'action/world-unbound'): unknown[] {
   const events: unknown[] = []
   for (let index = 0; index < agent.session.seq; index += 1) {
     const event = agent.session.eventAt(index as never)
-    if (event?.type === 'action/world-bound') events.push(event.data)
+    if (event?.type === type) events.push(event.data)
   }
   return events
 }
@@ -83,7 +88,7 @@ describe('P3-01 acceptance[1]: an unanswerable world reads as absent, which is t
   it('records NO world-bound event when it reads absent, so the log never claims a world that does not exist', async () => {
     const { ctx, agent } = await mounted({ registry: true })
     await readExecutionWorldFact(ctx, agent)
-    expect(boundEvents(agent)).toEqual([])
+    expect(worldEvents(agent, 'action/world-bound')).toEqual([])
   })
 })
 
@@ -104,14 +109,31 @@ describe('P3-01 acceptance[0]: the bound world reaches the policy question and t
     await readExecutionWorldFact(ctx, agent)
     await readExecutionWorldFact(ctx, agent)
     await readExecutionWorldFact(ctx, agent)
-    expect(boundEvents(agent)).toHaveLength(1)
+    expect(worldEvents(agent, 'action/world-bound')).toHaveLength(1)
   })
 
   it('records the world, the provider and the confinement digest, which is what makes a swap auditable', async () => {
     const { ctx, agent } = await mounted({ registry: true, provider: true })
     const fact = await readExecutionWorldFact(ctx, agent)
-    expect(boundEvents(agent)).toEqual([
+    expect(worldEvents(agent, 'action/world-bound')).toEqual([
       { world: (fact as { world: string }).world, provider: LOCAL_WORLD_PROVIDER, spec: (fact as { spec: string }).spec },
     ])
+  })
+})
+
+describe('P3-01 acceptance[1] (BLOCKED-316): running without the requested world is declared, once', () => {
+  it('records why the session has no world when no provider can hold what the deployment asked for', async () => {
+    const { ctx, agent } = await mounted({ registry: true, provider: true, network: 'none' })
+    expect(await readExecutionWorldFact(ctx, agent)).toEqual({ kind: 'absent' })
+    await readExecutionWorldFact(ctx, agent)
+    expect(worldEvents(agent, 'action/world-unbound')).toEqual([
+      { kind: 'unavailable', selection: { outcome: 'refused', reason: 'unsatisfiable', unsatisfiable: { [LOCAL_WORLD_PROVIDER]: ['network'] } } },
+    ])
+  })
+
+  it('records nothing of the kind for a session whose world is bound', async () => {
+    const { ctx, agent } = await mounted({ registry: true, provider: true })
+    await readExecutionWorldFact(ctx, agent)
+    expect(worldEvents(agent, 'action/world-unbound')).toEqual([])
   })
 })

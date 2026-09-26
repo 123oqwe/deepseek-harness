@@ -41,6 +41,8 @@ A world does not run commands. It is the confinement a command runs inside, and 
 
 `WorldHandle` is branded with a module-private `unique symbol`, so no object literal a model emitted and no value cast from JSON can inhabit the type (acceptance[2]). The handle carries no authority of its own: what it proves is that the world was minted by the provider that issued it, and every operation takes the handle so a forged object reaches nothing. This is the shape the Trust Kernel uses for its own handles, for the same reason.
 
+The registry does not take a handle's word for who minted it (BLOCKED-316). `bindingFor` checks that the created handle names the provider selection chose and carries the digest the registry computes for the spec it asked for; a handle failing either binds nothing, `refusalFor(agent)` names the failed check, and the registry's tool guard refuses every call of that session. `register` reserves the id `local` for a provider `createLocalWorldProvider` built, by object identity, so a plugin's own provider, or a copy of the real one, is refused with an error naming the id.
+
 Attestation is handed to the kernel rather than verified here. `WorldAttestation` is evidence; the kernel already publishes `sandboxAttestationVerifier`, and a second verifier in this package would be a second root of trust.
 
 <a id="selection-fails-closed"></a>
@@ -70,16 +72,16 @@ Two refusals are worth naming because they look like over-caution and are not. A
 
 The two vocabularies differ by one name and `filesystemForSandboxMode` translates explicitly: `dsh-sandbox`'s widest mode is `danger-full-access`, a `WorldSpec`'s is `full-access`, and an unknown mode is refused at the boundary rather than carried into a spec no dimension rule recognises.
 
-`bindingFor` answers `undefined` — which a dispatch path reads as the fail-closed `absent` policy fact — when no provider is registered, when every provider refuses the request, when no file-effect boundary is mounted, and when the chosen provider rejects the create. `requestedCeilings()` answers which ceilings the deployment's request states whether or not a world was bound, so a caller can tell a deployment that asked for none from one whose ceiling no world here can hold.
+`bindingFor` answers `undefined` — which a dispatch path reads as the fail-closed `absent` policy fact — when no provider is registered, when every provider refuses the request, when no file-effect boundary is mounted, when the chosen provider rejects the create, and when the created handle fails the check above. In the first two cases and the last, `refusalFor(agent)` says why, and `@deepseek-ai/dsh-tools`' reader records it once per session as `action/world-unbound`, so a session running without the world its deployment asked for says so in its log. `requestedCeilings()` answers which ceilings the deployment's request states whether or not a world was bound, so a caller can tell a deployment that asked for none from one whose ceiling no world here can hold.
 
 <a id="model-experience"></a>
 ## Model Experience
 
-None: this package registers no tool and contributes no prompt text, and a world is not described to the model. Where an action ran is recorded for the audit by `@deepseek-ai/dsh-tools`' `action/world-bound` session event (`ignorable: true`), which this registry supplies the values for and does not declare.
+This package registers no tool and contributes no prompt text, and a world is not described to the model. The one text a model can receive from it is the tool guard's refusal of a call whose session's world handle failed the registry's check, which names the tool, the failed check (provider identity or spec digest) and the provider ids involved. Where an action ran is recorded for the audit by `@deepseek-ai/dsh-tools`' `action/world-bound` session event (`ignorable: true`), and why a session has no world by its `action/world-unbound` event; this registry supplies the values for both and declares neither.
 
 #### KV Cache effect
 
-Nothing here enters a model request. A refused world reaches a model only as its enforcement point's refusal, which carries a closed reason code and never a spec, a path or a provider name.
+Nothing here enters the system prompt or the tool list. A world refused by policy reaches a model only as the enforcement point's refusal, which carries a closed reason code; a call refused by the tool guard reaches it as that call's tool result, which names provider ids and never a spec or a path.
 
 <a id="known-limitations-and-deferred-work"></a>
 ## Known Limitations and Deferred Work
@@ -91,6 +93,8 @@ Nothing here enters a model request. A refused world reaches a model only as its
 - **A policy can read the world's identity, not its dimensions.** `ExecutionWorldFact` now carries `bound` with the world id, the provider id and the confinement digest (BLOCKED-178's producer half), so a rule can refuse an unknown world or compare confinement by digest — but it cannot ask "is the network confined", because the nine dimensions do not cross into the policy request. Adding them is a policy-vocabulary decision, not this package's.
 - **`restore` compares confinement by digest equality, which also refuses a NARROWER target.** The rule implemented is "same confinement or refuse", not "may narrow"; a snapshot taken under `read-only` is refused into a `workspace-write` world even though that widens nothing. Tightening this needs a partial order over `WorldSpec` that does not exist yet, and the conservative direction was chosen because the failure it prevents — restoring a `full-access` snapshot into a confined world — is a silent privilege grant.
 - **A stated ceiling binds only where a provider can hold it, and a shell call refuses where none can.** A deployment may set `request.maxProcesses` and `request.resources` (`cpuMillicores`, a whole percent of one CPU; `memoryBytes`; `diskBytes`). The local provider refuses every ceiling, because the sandbox confines file effects and nothing else. The fenced provider (`./fenced`, mounted by `dsh-base` and consulted after local) holds cpu, memory and process ceilings where the subprocess runtime can; a disk ceiling is refused by both. Where no provider holds a stated ceiling, `bindingFor` answers `undefined` and `requestedCeilings()` still reports what was stated, so the shell tools refuse the call with `WorldCeilingsRefusedError` rather than run it unbounded. That is the honest direction: handing back a world with no ceiling to a deployment that asked for one is indistinguishable from a ceiling being honoured.
+- **Only `local` is reserved.** A plugin can still register its own provider under `fenced`; its handles then pass the identity check under that id, and only the digest check still holds them to the spec they were asked for.
+- **The tool guard runs after the risk gate.** On the native and code-mode dispatch paths the risk gate may ask a person before the tool runtime evaluates guards, so a person can be asked to approve a call the guard then refuses. The call still does not run.
 - **No provider reports resource usage back.** `WorldResourcesSpec` states ceilings and `WorldOutcome` carries none of what was consumed, so a deployment cannot yet bill or alert on a world. The outcome shape is the place to add it, once a provider has real numbers to put there.
 
 ### Dev Note

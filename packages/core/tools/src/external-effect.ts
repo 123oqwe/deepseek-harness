@@ -56,6 +56,7 @@ import type { ApprovalBinding, ApprovalBindingInputs, ApprovalDisplay, ApprovalV
 import { assertNever, type JsonValue } from '@deepseek-ai/dsh-util-values'
 import { attachedIdentity, SessionSeq } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-user-approval'
+import type { WorldBindingRefusal } from '@deepseek-ai/dsh-execution-world/lifecycle'
 import type { WorldId, WorldProviderId, WorldSpecDigest } from '@deepseek-ai/dsh-execution-world/types'
 import type { ToolExecutionResult } from './index.ts'
 import { createSessionManifestAppender } from './manifest-log.ts'
@@ -537,6 +538,12 @@ interface ExecutionWorldPort {
    * @returns the binding, or `undefined` when the composition can offer none.
    */
   bindingFor(agent: Agent): Promise<{ world: WorldId; provider: WorldProviderId; spec: WorldSpecDigest } | undefined>
+  /**
+   * Why the last binding attempt for this agent bound no world.
+   * @param agent - the dispatching agent.
+   * @returns the refusal, or `undefined` when the registry has none to report.
+   */
+  refusalFor(agent: Agent): WorldBindingRefusal | undefined
 }
 
 /**
@@ -555,7 +562,10 @@ interface ExecutionWorldPort {
  * deployment's requested confinement, both read as `absent` — the restrictive
  * value, and the same one a policy may refuse on. A world is never invented to
  * fill the gap: acceptance[1] forbids degrading, and reporting a weaker world
- * as the one in force is exactly that.
+ * as the one in force is exactly that. When the registry says why it bound no
+ * world, the reason is recorded once per session as `action/world-unbound`,
+ * so running without the requested world is declared rather than silent
+ * (BLOCKED-316).
  * @param ctx - the mounting context, consulted for the optional registry.
  * @param agent - the dispatching agent, whose session the world is bound to.
  * @returns the bound world, or the fail-closed `absent` fact.
@@ -563,7 +573,14 @@ interface ExecutionWorldPort {
 export async function readExecutionWorldFact(ctx: Context, agent: Agent): Promise<ExecutionWorldFact> {
   const worlds = ctx.get('executionWorlds') as ExecutionWorldPort | undefined
   const binding = await worlds?.bindingFor(agent)
-  if (binding === undefined) return { kind: 'absent' }
+  if (binding === undefined) {
+    const refusal = worlds?.refusalFor(agent)
+    if (refusal !== undefined && !UNBOUND_ANNOUNCED.has(agent.session)) {
+      UNBOUND_ANNOUNCED.add(agent.session)
+      agent.session.append('action/world-unbound', refusal)
+    }
+    return { kind: 'absent' }
+  }
   // Appended at the FIRST dispatch that binds this session's world, not on
   // every one: where the session's actions run is one fact. The set is keyed on
   // the session object, so a second session in the same process records its own.
@@ -580,6 +597,9 @@ export async function readExecutionWorldFact(ctx: Context, agent: Agent): Promis
 
 /** Sessions whose world binding has already been recorded. */
 const ANNOUNCED = new WeakSet<object>()
+
+/** Sessions whose reason for having no world has already been recorded. */
+const UNBOUND_ANNOUNCED = new WeakSet<object>()
 
 /**
  * Re-verify the approval this session recorded for `action` before it runs

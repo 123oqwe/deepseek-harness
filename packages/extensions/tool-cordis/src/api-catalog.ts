@@ -1032,6 +1032,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         description: 'Register one provider, in the deployment\'s own preference order, adjusted only by the provider\'s own placement (see selectionOrder).\n\nA registration is an effect, so unmounting the registering plugin removes the provider rather than leaving a registry that outlives it.\n\nThe disposer is `@deepseek-ai/cordis`\' own `Disposable<Promise<void>>`, returned unchanged, and the declared return type says so rather than narrowing it to `() => void`. Narrowing would be a lie the linter catches (`no-misused-promises`) and would also cost a caller the ability to await teardown; `AgentRegistry.register` keeps the narrow type and suppresses the rule because returning the disposer unchanged preserves its identity for its own callers, and nothing here depends on that.',
         parameters: [{ name: 'provider', description: 'the provider to offer to selection.' }, { name: 'placement', description: 'the providers this one yields to; absent, it yields to none.' }],
         returns: 'the disposer, which settles once the provider is removed.',
+        throws: ['when a provider this package\'s `createLocalWorldProvider` did not build registers under the reserved id `local` (P3-01 acceptance[2]).'],
       },
       {
         signature: 'requestedCeilings(): WorldCeilings',
@@ -1041,9 +1042,15 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
       {
         signature: 'async bindingFor(agent: BindableAgent): Promise<ExecutionWorldBinding | undefined>',
-        description: 'The world this agent\'s session runs in, creating it on first ask.\n\nReturns `undefined` rather than a weaker world when no provider satisfies the spec: acceptance[1] forbids degradation, and the caller\'s fail-closed reading of `undefined` is what makes the refusal reach the policy question.',
+        description: 'The world this agent\'s session runs in, creating it on first ask.\n\nReturns `undefined` rather than a weaker world when no provider satisfies the spec: acceptance[1] forbids degradation, and the caller\'s fail-closed reading of `undefined` is what makes the refusal reach the policy question.\n\nThe created handle\'s provider and digest are checked, not copied (acceptance[2]): its provider must be the one selected, and its digest the one this registry computes for the spec it asked for. A handle failing either binds nothing, and the tool guard refuses the session\'s calls.',
         parameters: [{ name: 'agent', description: 'the dispatching agent, whose session the world is bound to.' }],
-        returns: 'the binding, or `undefined` when this composition can offer none.',
+        returns: 'the binding, or `undefined` when this composition can offer none; {@link refusalFor} then says why, when it has a reason to report.',
+      },
+      {
+        signature: 'refusalFor(agent: BindableAgent): WorldBindingRefusal | undefined',
+        description: 'Why the last bindingFor for this agent bound no world (P3-01 acceptance[1], acceptance[2]).',
+        parameters: [{ name: 'agent', description: 'the agent whose last binding attempt is asked about.' }],
+        returns: 'the refusal, or `undefined` when that attempt bound a world or ended without one for a reason {@link WorldBindingRefusal} does not name.',
       },
     ],
   },
@@ -5892,6 +5899,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type PolicyReasonCode = \'no-matching-permit\' | \'forbidden-by-policy\' | \'constrained-by-plugin\' | \'approval-required\' | \'policy-unavailable\' | \'policy-set-invalid\' | \'missing-capability-token\';',
   },
   {
+    name: 'PolicyRefusal',
+    declaration: 'export type PolicyRefusal = {\n    readonly kind: \'unknown-dimension\';\n    readonly dimension: WorldSpecDimension;\n} | {\n    readonly kind: \'not-allowed\';\n    readonly dimension: WorldSpecDimension;\n    readonly requested: string;\n} | {\n    readonly kind: \'exceeds-ceiling\';\n    readonly dimension: WorldSpecDimension;\n    readonly requested: number;\n    readonly ceiling: number;\n} | {\n    readonly kind: \'unsupported-by-provider\';\n    readonly dimension: WorldSpecDimension;\n};',
+  },
+  {
     name: 'PolicyRequest',
     declaration: 'export interface PolicyRequest {\n    readonly identity: Principal;\n    readonly token: PolicyTokenFacts | undefined;\n    readonly manifest: ActionManifest;\n    readonly world: ExecutionWorldFact;\n    readonly facts: PolicyContextFacts;\n}',
   },
@@ -7948,6 +7959,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface WorldAttestation {\n    readonly world: WorldId;\n    readonly provider: WorldProviderId;\n    readonly evidence: unknown;\n}',
   },
   {
+    name: 'WorldBindingRefusal',
+    declaration: 'export type WorldBindingRefusal = {\n    readonly kind: \'unavailable\';\n    readonly selection: WorldSelectionRefusal;\n} | {\n    readonly kind: \'identity-mismatch\';\n    readonly provider: WorldProviderId;\n    readonly claimed: WorldProviderId;\n} | {\n    readonly kind: \'digest-mismatch\';\n    readonly provider: WorldProviderId;\n};',
+  },
+  {
     name: 'WorldCeilings',
     declaration: 'export interface WorldCeilings extends WorldResourcesSpec {\n    readonly maxProcesses?: number;\n}',
   },
@@ -8006,6 +8021,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'WorldSecretsSpec',
     declaration: 'export interface WorldSecretsSpec {\n    readonly posture: \'none\' | \'broker-only\' | \'inherited\';\n}',
+  },
+  {
+    name: 'WorldSelectionRefusal',
+    declaration: 'export interface WorldSelectionRefusal {\n    readonly outcome: \'refused\';\n    readonly reason: \'no-provider\' | \'unsatisfiable\' | \'incomplete-spec\';\n    readonly unsatisfiable: Readonly<Record<string, readonly WorldSpecDimension[]>>;\n    readonly policyRefusals?: Readonly<Record<string, readonly PolicyRefusal[]>>;\n}',
   },
   {
     name: 'WorldSnapshot',

@@ -1222,6 +1222,8 @@ Mounting this service creates no world. A world is created at the first dispatch
  * @param provider - the provider to offer to selection.
  * @param placement - the providers this one yields to; absent, it yields to none.
  * @returns the disposer, which settles once the provider is removed.
+ * @throws when a provider this package's `createLocalWorldProvider` did not
+ *   build registers under the reserved id `local` (P3-01 acceptance[2]).
  */
 register(provider: WorldProvider, placement?: WorldProviderPlacement): () => Promise<void>
 
@@ -1240,10 +1242,25 @@ requestedCeilings(): WorldCeilings
  * Returns `undefined` rather than a weaker world when no provider satisfies
  * the spec: acceptance[1] forbids degradation, and the caller's fail-closed
  * reading of `undefined` is what makes the refusal reach the policy question.
+ *
+ * The created handle's provider and digest are checked, not copied
+ * (acceptance[2]): its provider must be the one selected, and its digest the
+ * one this registry computes for the spec it asked for. A handle failing
+ * either binds nothing, and the tool guard refuses the session's calls.
  * @param agent - the dispatching agent, whose session the world is bound to.
- * @returns the binding, or `undefined` when this composition can offer none.
+ * @returns the binding, or `undefined` when this composition can offer none;
+ *   {@link refusalFor} then says why, when it has a reason to report.
  */
 async bindingFor(agent: BindableAgent): Promise<ExecutionWorldBinding | undefined>
+
+/**
+ * Why the last {@link bindingFor} for this agent bound no world (P3-01
+ * acceptance[1], acceptance[2]).
+ * @param agent - the agent whose last binding attempt is asked about.
+ * @returns the refusal, or `undefined` when that attempt bound a world or
+ *   ended without one for a reason {@link WorldBindingRefusal} does not name.
+ */
+refusalFor(agent: BindableAgent): WorldBindingRefusal | undefined
 ```
 
 Source: [`packages/execution/execution-world/src/plugin.ts`](../../packages/execution/execution-world/src/plugin.ts)

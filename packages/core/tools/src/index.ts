@@ -36,6 +36,7 @@ import type { JsonSchemaNode } from './json-schema.ts'
 import { createRunCodeTool, RUN_CODE_NAME } from './ptc.ts'
 import type { CodeSdkLanguage } from './ptc.ts'
 import type { ClosedDecision } from '@deepseek-ai/dsh-policy-engine'
+import type { WorldBindingRefusal } from '@deepseek-ai/dsh-execution-world/lifecycle'
 import {
   appendManifestAndDecide,
   approvalBindingFor,
@@ -2946,5 +2947,28 @@ declare module '@deepseek-ai/dsh-session/types' {
       /** Digest of the spec the world was created from. */
       spec: string
     }
+    /**
+     * Why one session's actions have no world, recorded once, at the first
+     * dispatch that finds none and the world registry says why (P3-01
+     * acceptance[1], acceptance[2]; BLOCKED-316).
+     *
+     * `unavailable` declares that no registered provider can hold the world
+     * the deployment asked for: the actions run under the `absent` policy
+     * fact, which a deployment rule may refuse, rather than silently without
+     * the requested confinement. `identity-mismatch` and `digest-mismatch`
+     * record a selected provider whose handle failed the registry's check;
+     * the registry's tool guard refuses every call of that session.
+     *
+     * Not recorded for a session with no world for another reason (no
+     * registry, no file-effect boundary, a provider rejecting the create, as
+     * under `danger-full-access`), which the `absent` fact already names.
+     *
+     * @param kind - `unavailable`, `identity-mismatch` or `digest-mismatch`.
+     * @param selection - for `unavailable`, the selection's refusal with each provider's unmet dimensions.
+     * @param provider - for a mismatch, the provider that was selected.
+     * @param claimed - for `identity-mismatch`, the provider the handle named.
+     * @dshScopeScan unsupported
+     */
+    'action/world-unbound': WorldBindingRefusal
   }
 }

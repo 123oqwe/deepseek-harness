@@ -15,7 +15,7 @@ import type { TenantId } from '@deepseek-ai/dsh-principal/types'
 import ExecutionWorldService, { digestWorldSpec, filesystemForSandboxMode, nextWorldId, resolveWorldSpec } from '../src/plugin.ts'
 import { createLocalWorldProvider, LOCAL_WORLD_PROVIDER } from '../src/local-provider.ts'
 import { createFakeWorldProvider, FAKE_WORLD_PROVIDER } from './fake-provider.ts'
-import type { WorldId, WorldProvider } from '../src/types.ts'
+import type { WorldHandle, WorldId, WorldProvider, WorldProviderId, WorldSpecDigest } from '../src/types.ts'
 
 const HOST_TENANT = brandString<TenantId>('local-host')
 
@@ -237,5 +237,119 @@ describe('P3-01 acceptance[0]: two providers, one action, the same confinement d
 
   it('mints a world id nothing else produces, so two bindings are never confused', () => {
     expect(nextWorldId()).not.toBe(nextWorldId())
+  })
+})
+
+describe('P3-01 acceptance[2] (BLOCKED-316): the registry checks who built a world instead of taking its handle\'s word', () => {
+  /**
+   * A provider whose handles name `claimed` instead of its own id, with the
+   * digest the registry computes for the spec.
+   * @param claimed - the provider id its handles name.
+   * @returns the provider.
+   */
+  function claiming(claimed: WorldProviderId): WorldProvider {
+    return {
+      ...createFakeWorldProvider({ digest: digestWorldSpec, nextWorldId: ids }).provider,
+      create: spec => Promise.resolve({ id: ids(), provider: claimed, spec: digestWorldSpec(spec) } as unknown as WorldHandle),
+    }
+  }
+
+  it('refuses to register a provider it did not build under the reserved id local, naming the id', async () => {
+    const { service } = await mounted()
+    const lookalike: WorldProvider = {
+      ...createFakeWorldProvider({ digest: digestWorldSpec, nextWorldId: ids }).provider,
+      id: LOCAL_WORLD_PROVIDER,
+    }
+    expect(() => service.register(lookalike)).toThrow('"local" is reserved')
+    // A copy of the real local provider is a look-alike too: the reservation
+    // is by object identity, as a handle's authority is.
+    const copy = { ...createLocalWorldProvider({ tenant: HOST_TENANT, digest: digestWorldSpec, nextWorldId: ids, nowMs: () => 0 }) }
+    expect(() => service.register(copy)).toThrow('"local" is reserved')
+    expect(await service.bindingFor(agent('agent-1'))).toBeUndefined()
+  })
+
+  it('binds nothing when the handle names a provider other than the one selected, and says which', async () => {
+    const { service } = await mounted()
+    service.register(claiming(LOCAL_WORLD_PROVIDER))
+    expect(await service.bindingFor(agent('agent-1'))).toBeUndefined()
+    expect(service.refusalFor(agent('agent-1'))).toEqual({ kind: 'identity-mismatch', provider: FAKE_WORLD_PROVIDER, claimed: LOCAL_WORLD_PROVIDER })
+  })
+
+  it('binds nothing when the handle carries a digest other than that of the spec it was asked to create', async () => {
+    const { service } = await mounted()
+    service.register(createFakeWorldProvider({ digest: () => brandString<WorldSpecDigest>('0'.repeat(64)), nextWorldId: ids }).provider)
+    expect(await service.bindingFor(agent('agent-1'))).toBeUndefined()
+    expect(service.refusalFor(agent('agent-1'))).toEqual({ kind: 'digest-mismatch', provider: FAKE_WORLD_PROVIDER })
+  })
+
+  it('reports a requested world no provider can hold as unavailable, with the selection\'s refusal', async () => {
+    const { service } = await mounted({ request: { network: 'none' } })
+    service.register(createLocalWorldProvider({ tenant: HOST_TENANT, digest: digestWorldSpec, nextWorldId: ids, nowMs: () => 0 }))
+    expect(await service.bindingFor(agent('agent-1'))).toBeUndefined()
+    expect(service.refusalFor(agent('agent-1'))).toEqual({
+      kind: 'unavailable',
+      selection: { outcome: 'refused', reason: 'unsatisfiable', unsatisfiable: { [LOCAL_WORLD_PROVIDER]: ['network'] } },
+    })
+  })
+
+  it('reports nothing once a later attempt binds, so a refusal does not outlive the attempt that made it', async () => {
+    const { service } = await mounted()
+    expect(await service.bindingFor(agent('agent-1'))).toBeUndefined()
+    expect(service.refusalFor(agent('agent-1'))).toMatchObject({ kind: 'unavailable', selection: { reason: 'no-provider' } })
+    service.register(createLocalWorldProvider({ tenant: HOST_TENANT, digest: digestWorldSpec, nextWorldId: ids, nowMs: () => 0 }))
+    expect((await service.bindingFor(agent('agent-1')))?.provider).toBe(LOCAL_WORLD_PROVIDER)
+    expect(service.refusalFor(agent('agent-1'))).toBeUndefined()
+  })
+
+  describe('where a tool runtime is composed, a call in a session whose handle failed the check does not run', () => {
+    /** The guard as the registry registers it, captured from a stand-in tool runtime. */
+    type CapturedGuard = (execution: { readonly name: string; readonly agent?: { readonly id: string } }) => string | undefined
+
+    /**
+     * Mount the registry beside a stand-in tool runtime, register `provider`,
+     * and attempt one binding for `agent-1`.
+     * @param provider - the provider to register.
+     * @param request - the row's request.
+     * @returns the guard the registry registered.
+     */
+    async function guardAfterBinding(provider: WorldProvider, request: { network?: 'none' } = {}): Promise<CapturedGuard> {
+      const ctx = new Context()
+      let captured: CapturedGuard | undefined
+      ctx.provide('tools', { guard: (guard: CapturedGuard) => { captured = guard; return () => undefined } } as never)
+      ctx.provide('sandboxPolicy', sandbox() as never)
+      await ctx.plugin(ExecutionWorldService, {
+        tenant: 'local-host',
+        request: { network: 'unrestricted', spawn: true, ipc: 'unrestricted', secrets: 'inherited', ...request },
+      })
+      // The guard child mounts once `tools` resolves.
+      await new Promise(resolve => setImmediate(resolve))
+      const service = ctx.get('executionWorlds')
+      if (service === undefined || captured === undefined) throw new Error('the registry registered no guard')
+      service.register(provider)
+      await service.bindingFor(agent('agent-1'))
+      return captured
+    }
+
+    it('denies an identity mismatch, naming the selected provider and the one its handle claims', async () => {
+      const guard = await guardAfterBinding(claiming(LOCAL_WORLD_PROVIDER))
+      const reason = guard({ name: 'read', agent: { id: 'agent-1' } })
+      expect(reason).toContain('provider identity does not match')
+      expect(reason).toContain(`"${FAKE_WORLD_PROVIDER}" was selected, and its handle claims to be "${LOCAL_WORLD_PROVIDER}"`)
+    })
+
+    it('denies a digest mismatch, naming it as one', async () => {
+      const guard = await guardAfterBinding(createFakeWorldProvider({ digest: () => brandString<WorldSpecDigest>('0'.repeat(64)), nextWorldId: ids }).provider)
+      expect(guard({ name: 'read', agent: { id: 'agent-1' } })).toContain('spec digest does not match')
+    })
+
+    it('leaves alone a session whose world is unavailable, another session, and a call with no agent', async () => {
+      const guard = await guardAfterBinding(
+        createLocalWorldProvider({ tenant: HOST_TENANT, digest: digestWorldSpec, nextWorldId: ids, nowMs: () => 0 }),
+        { network: 'none' },
+      )
+      expect(guard({ name: 'read', agent: { id: 'agent-1' } })).toBeUndefined()
+      expect(guard({ name: 'read', agent: { id: 'agent-2' } })).toBeUndefined()
+      expect(guard({ name: 'read' })).toBeUndefined()
+    })
   })
 })
