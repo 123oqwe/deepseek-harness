@@ -2219,7 +2219,8 @@
       "kind": "source",
       "stages": [
         "U.1",
-        "U"
+        "U",
+        "U.7"
       ],
       "reason": "The code-mode dispatch path's call site. must[2]'s 'code mode cannot bypass' is about this path asking the SAME question, and P2-03 already proved that two paths writing a sequence out separately is how one of them drifts. The registry's U files name `tools/src/index.ts`; the sub-dispatch scheduler lives here."
     },
@@ -2315,10 +2316,27 @@
     },
     {
       "epic": "P2-05",
+      "path": "tests/first100/fixtures/loader/p2-05-code-mode/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.7"
+      ]
+    },
+    {
+      "epic": "P2-05",
+      "path": "tests/first100/fixtures/loader/p2-05-code-mode/shared.ts",
+      "kind": "test",
+      "stages": [
+        "U.7"
+      ]
+    },
+    {
+      "epic": "P2-05",
       "path": "tests/first100/fixtures/loader/p2-05-originators/base.patch.yml",
       "kind": "test",
       "stages": [
-        "U.5"
+        "U.5",
+        "U.7"
       ]
     },
     {
@@ -2359,6 +2377,14 @@
       "kind": "test",
       "stages": [
         "U.6"
+      ]
+    },
+    {
+      "epic": "P2-05",
+      "path": "tests/first100/fixtures/P2-05.code-mode-originator.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.7"
       ]
     },
     {

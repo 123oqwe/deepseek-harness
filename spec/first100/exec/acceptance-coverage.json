@@ -5015,9 +5015,34 @@
           "stage": "U",
           "title": "refuses an agent created AFTER the policy set is in place, with no re-registration needed",
           "supplementSeq": 3
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 5,
+          "title": "P2-05 acceptance[0]: every originator the shipped headless profile drives passes one enforcement point the root agent's own read appends one manifest and is decided once before it runs"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 5,
+          "title": "P2-05 acceptance[0]: every originator the shipped headless profile drives passes one enforcement point a child the shipped subagent tool delegates to has its read manifested and decided once before it runs"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 5,
+          "title": "P2-05 acceptance[0]: every originator the shipped headless profile drives passes one enforcement point a child a workflow script's agent() call starts has its read manifested and decided once before it runs"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 7,
+          "title": "P2-05 acceptance[0]: an action a code-mode program originates passes the one enforcement point control: the model's own run_code call appends one native manifest and is decided once"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 7,
+          "title": "P2-05 acceptance[0]: an action a code-mode program originates passes the one enforcement point the program's read appends one code-mode manifest and the same audited enforcement point decides it once before it runs"
         }
       ],
-      "note": "acceptance[0]: 'the same ActionManifest goes through the same PEP whether raised from a tool, a workflow, the SDK, a plugin or a subagent.' Measured, the five initiators are not five paths: `enforceManifestedAction` has exactly TWO callers (`agent-loop/src/tool-calls.ts` native, `core/tools/src/ptc.ts` code-mode), and subagent, workflow and SDK each obtain an Agent through `ctx.agents.create` whose tool calls pass `appendToolCall` — documented as the single point every native call passes through. So the clause holds by CONVERGENCE, and these cases pin the convergence: independently created Agents in one composition are decided by one policy set, each action on its own, including an Agent created after the engine was mounted. NOT covered: the `plugin-rpc` origin is declared in `ActionOrigin` and has zero producers in the tree, so the clause's fifth initiator has nothing to drive; and the `sdk-minimal` bundle has zero corpus scenarios and mounts no policy row — both recorded in `evidence-P2-05.md` rather than asserted.\n\nOriginators on the shipped product, each driven through the one enforcement point on the shipped headless profile with the Trust Kernel pinned (U.5): the root agent's own tool call, a child the shipped subagent tool delegates to, and a child a workflow script's `agent()` call starts; each appends one manifest and is decided once before it runs. `ActionOriginator` values with no producer in the shipped product: `sdk-rpc` and `plugin-rpc`; `subagent` and `workflow` are not produced as originator values, because their children, like actions an SDK client asks for, dispatch through the native tool-call path. The direct `ToolRuntime.execute` seam is BLOCKED-294's subject. Code-mode embedded calls: observed on the shipped composition by A-455 (dispatch 619e51ce16, run 36211335314, 2 of 2; mutation M-cm-bypass v2 583c080dc7, run 36211710778, turned exactly the enforcement-point case red). The case is not yet frozen, so coveredBy does not cite it; it is cited when its freeze lands."
+      "note": "acceptance[0]: 'the same ActionManifest goes through the same PEP whether raised from a tool, a workflow, the SDK, a plugin or a subagent.' Measured, the five initiators are not five paths: `enforceManifestedAction` has exactly TWO callers (`agent-loop/src/tool-calls.ts` native, `core/tools/src/ptc.ts` code-mode), and subagent, workflow and SDK each obtain an Agent through `ctx.agents.create` whose tool calls pass `appendToolCall` — documented as the single point every native call passes through. So the clause holds by CONVERGENCE, and these cases pin the convergence: independently created Agents in one composition are decided by one policy set, each action on its own, including an Agent created after the engine was mounted. NOT covered: the `plugin-rpc` origin is declared in `ActionOrigin` and has zero producers in the tree, so the clause's fifth initiator has nothing to drive; and the `sdk-minimal` bundle has zero corpus scenarios and mounts no policy row — both recorded in `evidence-P2-05.md` rather than asserted.\n\nOriginators on the shipped product, each driven through the one enforcement point on the shipped headless profile with the Trust Kernel pinned (U.5): the root agent's own tool call, a child the shipped subagent tool delegates to, and a child a workflow script's `agent()` call starts; each appends one manifest and is decided once before it runs. `ActionOriginator` values with no producer in the shipped product: `sdk-rpc` and `plugin-rpc`; `subagent` and `workflow` are not produced as originator values, because their children, like actions an SDK client asks for, dispatch through the native tool-call path. The direct `ToolRuntime.execute` seam is BLOCKED-294's subject. Code-mode embedded calls (U.7): an action a `run_code` program originates on the shipped headless profile in code mode appends its own manifest and is decided once by the same audited enforcement point before it runs, beside the `run_code` call itself as the control."
     },
     {
       "epic": "P2-05",

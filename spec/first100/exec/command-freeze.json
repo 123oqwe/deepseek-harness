@@ -19058,6 +19058,46 @@
         "failureSummary": "Read from each round's own narrow report. Dispatch 463d2e02c2, run 36207269878: 2 of 2 passed. M-lowrisk, run 36207281524: exactly one case red, «P2-03 acceptance[2] through the risk gate on the shipped headless profile at its default preset a probe declaring no risk domain tags reaches an approval request, and is refused without running when the operator rejects it», every other case green. Predictions artifacts/laneA/a-442-p2-03-gate-approval-expectations.md (sha256 91931ad9604beb964c810f75820e3288c50cbe37ab26eb24972f056bc13c5afa) and artifacts/laneA/a-442-p2-03-gate-approval-expectations-v2.md (sha256 279ac3486c48a99d4ff35f3e0528ad4c199f3f23aa2e94ef7c730635dc9aee87), written before dispatch. Every listed file is byte-identical at 463d2e02c2 and 28a56599ac."
       },
       "note": "P2-03 acceptance[2] through the risk gate on the shipped headless profile at its default preset, native path: a probe tool declaring no risk domain tags reaches an approval request (approval/asked, then approval/decided rejected by the operator) and is refused without running, gated security-sensitive; a probe declaring filesystem-read is allowed by the preset without an approval request and runs. The code-mode path of the same question is observed by A-443 (C1, C2)."
+    },
+    {
+      "epic": "P2-05",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-05",
+        "stage": "U"
+      },
+      "supplementSeq": 7,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P2-05.code-mode-originator.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-05 acceptance[0]: an action a code-mode program originates passes the one enforcement point control: the model's own run_code call appends one native manifest and is decided once",
+        "P2-05 acceptance[0]: an action a code-mode program originates passes the one enforcement point the program's read appends one code-mode manifest and the same audited enforcement point decides it once before it runs"
+      ],
+      "files": [
+        "tests/first100/fixtures/P2-05.code-mode-originator.composition.spec.ts",
+        "tests/first100/fixtures/loader/p2-05-code-mode/driver.ts",
+        "tests/first100/fixtures/loader/p2-05-code-mode/shared.ts",
+        "tests/first100/fixtures/loader/p2-05-originators/base.patch.yml",
+        "packages/core/tools/src/ptc.ts"
+      ],
+      "frozenAtUtc": "2026-09-26T04:32:39Z",
+      "dryRunProof": {
+        "treeSha": "98201b6f3011ed4aced38cdef2e466b696cd3cdf",
+        "testsDiscovered": 2,
+        "note": "The batch 11 full run 36213775071 at db7f3a63ad29a056aa40351b479f9487fba9460d (tree 98201b6f3011ed4aced38cdef2e466b696cd3cdf): tests/first100/fixtures/P2-05.code-mode-originator.composition.spec.ts ran 2 cases; the 2 frozen titles each once, all passed. Every listed file, ptc.ts included, is byte-identical at the dispatch 619e51ce16 and at db7f3a63ad29a056aa40351b479f9487fba9460d."
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-cm-bypass v2 (`583c080dc79a7ac90d9b8d78ff32ac4149ea97a4`, off the dispatch 619e51ce16c9c5eaeee4fb40710db498f11d6be2, never merged): packages/core/tools/src/ptc.ts:277, in appendCodeModeManifest, makes the decision `undefined` whatever the composition holds (`ledgerContext.get('trustKernel') === undefined || ledgerContext !== undefined`), so a code-mode sub-dispatch appends its manifest and never asks the enforcement point. Written with a runtime operand so TypeScript keeps the other branch reachable; v1 (`95ee44ad15`, a literal `true ||`) did not build (TS2345) and has no reading.",
+        "failureSummary": "Read from each round's own narrow report. Dispatch 619e51ce16c9c5eaeee4fb40710db498f11d6be2, run 36211335314: 2 of 2 passed. M-cm-bypass v2, run 36211710778: exactly one case red, «P2-05 acceptance[0]: an action a code-mode program originates passes the one enforcement point the program's read appends one code-mode manifest and the same audited enforcement point decides it once before it runs», the control green. Predictions artifacts/laneA/a-455-p2-05-code-mode-expectations.md (sha256 ded02f37e1264656e4086d0cd5187b16d9295054e064c72adc48c77b241fa053) and artifacts/laneA/a-455-p2-05-code-mode-expectations-v2.md (sha256 05d6b929bcf53d76a9c93992336fd778f56f5943a792442229e7fc53a3ed1447), written before dispatch. The case's files are byte-identical at 2473d6c4df and at the dispatch; ptc.ts, the one file the mutation changes, is byte-identical at the dispatch and at 28a56599ac. Both checks are repeated against the landing candidate."
+      },
+      "note": "P2-05 acceptance[0] (「同一 ActionManifest 无论从工具、workflow、SDK、插件、子 Agent 发起都经过同一 PEP。」), the code-mode half, on the shipped headless profile in code mode with the Trust Kernel pinned and an audit sink: an action a `run_code` program originates appends its own manifest and is decided once by the same audited enforcement point as the model's own call, before it runs. The control is the `run_code` call itself, which the native path manifests and decides. The direct `ToolRuntime.execute` seam is BLOCKED-294's subject and is not covered here."
     }
   ]
 }
