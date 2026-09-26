@@ -28,7 +28,15 @@ import MemoryRuntime, {
   type MemoryScope,
 } from '@deepseek-ai/dsh-memory'
 import { createUserPrincipal, PrincipalId, TenantId, type Principal } from '@deepseek-ai/dsh-principal'
+import { provideProposalPolicy } from './fixtures/proposal-policy.ts'
 
+
+/**
+ * What a complete proposal states beside its origin (P6-03 must[0]), for the
+ * cases whose subject is storage, retrieval or scope rather than the proposal
+ * policy: the policy accepts such a proposal, so the record is active.
+ */
+const COMPLETE = { purpose: 'recall', validUntil: '2099-01-01T00:00:00.000Z', sensitivity: 'normal' } as const
 
 /** The document the durable provider keeps, read straight off disk. */
 function storedRecords(directory: string): { id: string; confidence?: number; provenance?: unknown }[] {
@@ -49,10 +57,12 @@ function freshDirectory(): string {
 /**
  * Mount a MemoryRuntime carrying one durable provider over `directory`. Each
  * call builds a brand-new provider instance, so two calls over the same
- * directory share no in-memory value — only the backing file.
+ * directory share no in-memory value — only the backing file. The proposal
+ * policy is mounted too, as it is wherever memory ships.
  */
 async function mountDurable(directory: string, config: ConstructorParameters<typeof MemoryRuntime>[1] = {}): Promise<MemoryRuntime> {
   const ctx = new Context()
+  provideProposalPolicy(ctx)
   await ctx.plugin(MemoryRuntime, config)
   ctx.memory.registerProvider(createDurableFileMemoryProvider({ directory }))
   return ctx.memory
@@ -123,7 +133,7 @@ describe('P-stage durability: a record outlives the provider instance that wrote
   it('query() from a later instance finds an earlier instance\'s record by case-insensitive substring', async () => {
     const directory = freshDirectory()
     const writer = await mountDurable(directory)
-    await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'The Capital Of France' } })
+    await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'The Capital Of France' }, ...COMPLETE })
 
     const reader = await mountDurable(directory)
     const result = await reader.query({ accessContext: accessContextFor('tenant-a'), query: 'capital of france' })
@@ -134,7 +144,7 @@ describe('P-stage durability: a record outlives the provider instance that wrote
   it('query() from a later instance returns no records for a term absent from every stored record', async () => {
     const directory = freshDirectory()
     const writer = await mountDurable(directory)
-    await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'the capital of france' } })
+    await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: 'the capital of france' }, ...COMPLETE })
 
     const reader = await mountDurable(directory)
     await expect(reader.query({ accessContext: accessContextFor('tenant-a'), query: 'zzz-absent-term' })).resolves.toStrictEqual({ records: [], truncated: false })
@@ -245,7 +255,7 @@ describe('must[3]: every read is scoped — the durable provider filters by the 
     const directory = freshDirectory()
     const writer = await mountDurable(directory)
     for (const n of [1, 2, 3]) {
-      await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: `budgeted ${n}` } })
+      await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: `budgeted ${n}` }, ...COMPLETE })
     }
 
     const reader = await mountDurable(directory)
@@ -258,7 +268,7 @@ describe('must[3]: every read is scoped — the durable provider filters by the 
     const directory = freshDirectory()
     const writer = await mountDurable(directory)
     for (const n of [1, 2, 3, 4]) {
-      await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: `budgeted ${n}` } })
+      await writer.propose({ origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'), scope: scopeFor('tenant-a'), content: { note: `budgeted ${n}` }, ...COMPLETE })
     }
 
     const reader = await mountDurable(directory)
@@ -327,6 +337,7 @@ describe('memory is scoped to the workspace that wrote it', () => {
       origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'),
       scope: { tenantId: TenantId('tenant-a'), workspace: workspaceA },
       content: { note: 'alpha only' },
+      ...COMPLETE,
     })
 
     const seen = await memory.query({
@@ -346,6 +357,7 @@ describe('memory is scoped to the workspace that wrote it', () => {
       origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'),
       scope: { tenantId: TenantId('tenant-a'), workspace: workspaceA },
       content: { note: 'alpha only' },
+      ...COMPLETE,
     })
 
     const seen = await memory.query({
@@ -367,6 +379,7 @@ describe('memory is scoped to the workspace that wrote it', () => {
       origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'),
       scope: { tenantId: TenantId('tenant-a'), workspace: workspaceA },
       content: { note: 'written before the rebuild' },
+      ...COMPLETE,
     })
 
     const rebuilt = { canonicalPath: workspaceA.canonicalPath, identity: 'dev-1:ino-99:1800000000000' }
@@ -387,11 +400,13 @@ describe('memory is scoped to the workspace that wrote it', () => {
       origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'),
       scope: { tenantId: TenantId('tenant-a'), workspace: workspaceA },
       content: { note: 'belongs to alpha' },
+      ...COMPLETE,
     })
     await memory.propose({
       origin: { kind: 'user-asserted', assertedBy: 'test' }, principal: principalFor('tenant-a'),
       scope: { tenantId: TenantId('tenant-a') },
       content: { note: 'belongs to no workspace' },
+      ...COMPLETE,
     })
 
     const seen = await memory.query({ accessContext: accessContextFor('tenant-a'), query: 'belongs' })
@@ -438,9 +453,11 @@ describe('a stored record carries the origin its writer stated', () => {
     // P6-02 must[0]'s fields that need no caller to state them: `createdAt` is
     // the clock read this write already takes, `validFrom` is the only instant
     // a writer can be said to have asserted, `validUntil` is null because
-    // null IS "open-ended" rather than a default, `status` can only be born
-    // active, and `relations` is empty by truth for a newly proposed record —
-    // relations are minted by a conflict, never by a proposal.
+    // null IS "open-ended" rather than a default, `status` is born active for
+    // a proposal the policy accepts, and `relations` is empty by truth for a
+    // newly proposed record — relations are minted by a conflict, never by a
+    // proposal. The proposal states its purpose and a normal sensitivity, so
+    // the policy accepts it, and no `validUntil`.
     const directory = freshDirectory()
     const memory = await mountDurable(directory)
     await memory.propose({
@@ -448,6 +465,8 @@ describe('a stored record carries the origin its writer stated', () => {
       principal: principalFor('tenant-a'),
       scope: scopeFor('tenant-a'),
       content: { note: 'born active' },
+      purpose: COMPLETE.purpose,
+      sensitivity: COMPLETE.sensitivity,
     })
 
     const stored = JSON.parse(readFileSync(join(directory, 'memory.json'), 'utf8')) as {
@@ -600,6 +619,7 @@ describe('a rebuilt workspace can be recognized without being read', () => {
       principal: principalFor('tenant-a'),
       scope: { tenantId: TenantId('tenant-a'), workspace: before },
       content: { note: 'secret from the previous clone' },
+      ...COMPLETE,
     })
     const rebuiltContext = {
       ...accessContextFor('tenant-a'),
