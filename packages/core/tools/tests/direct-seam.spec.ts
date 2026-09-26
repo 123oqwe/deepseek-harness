@@ -160,3 +160,30 @@ describe('BLOCKED-294: the public seam appends a manifest and passes the enforce
     await ctx.fiber.dispose()
   })
 })
+
+describe('BLOCKED-345: the public seam asks whether this host may still act', () => {
+  it('refuses a direct call once an emergency stop is in force, after its manifest is recorded', async () => {
+    const { ctx, agent, audit, bodies } = await compose({ kernel: true })
+    const stopped = { ...agent, controlState: { stopped: true } } as unknown as Agent
+    const result = await ctx.tools.execute({ callId: ToolCallId('after-stop'), name: 'probe', arguments: {}, agent: stopped, signal })
+
+    expect(result.isError).toBe(true)
+    expect(JSON.stringify(result.content)).toContain('an emergency stop is in force')
+    expect(bodies).toEqual([])
+    expect(manifestsOf(agent)).toEqual([['after-stop', 'plugin-rpc', 'probe']])
+    expect(audit.map(record => record.actionId)).toEqual(['after-stop'])
+    await ctx.fiber.dispose()
+  })
+
+  it('refuses a direct call on a run another host took over, in a composition that pins no Trust Kernel', async () => {
+    const { ctx, agent, bodies } = await compose({ kernel: false })
+    const fenced = { ...agent, runLease: { mayWrite: () => false } } as unknown as Agent
+    const result = await ctx.tools.execute({ callId: ToolCallId('fenced'), name: 'probe', arguments: {}, agent: fenced, signal })
+
+    expect(result.isError).toBe(true)
+    expect(JSON.stringify(result.content)).toContain('another host took it over')
+    expect(bodies).toEqual([])
+    expect(manifestsOf(agent)).toEqual([])
+    await ctx.fiber.dispose()
+  })
+})
