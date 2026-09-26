@@ -15,6 +15,7 @@ import type { AgentCancelCause, Session, SessionSeq, UserMessage } from '@deepse
 export type { AgentCancelCause } from '@deepseek-ai/dsh-session'
 import type { Agent, InboxTarget } from './types.ts'
 export type { Agent } from './types.ts'
+import type { AgentLifecycleState } from './state-machine.ts'
 import type {} from '@deepseek-ai/dsh-system-prompt'
 declare module '@deepseek-ai/dsh-system-prompt' {
   interface AssembleContext {
@@ -132,7 +133,15 @@ export type AgentStatus = 'idle' | 'running'
 
 /** Whether and with which messages the loop enters a proposed step. */
 export type PreStepDecision =
-  | { kind: 'reject' }
+  | {
+    kind: 'reject'
+    /**
+     * Set when the step is refused because the agent's Run has ended: the
+     * terminal state it reached and, when the listener knows it, the reason
+     * given for reaching it. The loop records it on the turn's `blocked` end.
+     */
+    runEnded?: { readonly state: AgentLifecycleState; readonly reason?: string }
+  }
   | {
     kind: 'enter'
     messages: UserMessage[]

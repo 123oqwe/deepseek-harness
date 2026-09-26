@@ -406,7 +406,15 @@ It returns a `PreStepDecision`. Reject opens no step. Enter supplies the complet
 ```ts type-equiv
 /** Whether and with which messages the loop enters a proposed step. */
 type PreStepDecision =
-  | { kind: 'reject' }
+  | {
+    kind: 'reject'
+    /**
+     * Set when the step is refused because the agent's Run has ended: the
+     * terminal state it reached and, when the listener knows it, the reason
+     * given for reaching it. The loop records it on the turn's `blocked` end.
+     */
+    runEnded?: { readonly state: AgentLifecycleState; readonly reason?: string }
+  }
   | {
     kind: 'enter'
     messages: UserMessage[]
@@ -1485,7 +1493,9 @@ reclaim(agent: Agent, nowMs: number = Date.now()): 'reclaimed' | 'held' | 'no-ru
  * write on a stale epoch.
  * @param agent - the agent whose lifecycle is proposed to move.
  * @param to - the state proposed.
- * @param reason - why, recorded on the transition (must[1] requires it non-empty).
+ * @param reason - why, recorded on the transition (must[1] requires it non-empty);
+ *   the reason for an admitted terminal transition is kept, so a step refused
+ *   because the Run has ended reports it (BLOCKED-332).
  * @returns the refusal, or `undefined` when the agent advanced. `lease-refused`
  *   names an agent this plugin declined to open a Run for, which is a
  *   different fact from `no-run`: a live store said no, rather than nothing

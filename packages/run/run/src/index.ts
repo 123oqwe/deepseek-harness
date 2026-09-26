@@ -47,7 +47,7 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import { Service } from '@deepseek-ai/cordis'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent/types'
-import { advanceAgentLifecycleFenced, advanceLeasedAgent, holdsDispatchSlot } from '@deepseek-ai/dsh-agent'
+import { advanceAgentLifecycleFenced, advanceLeasedAgent, holdsDispatchSlot, TERMINAL_STATES } from '@deepseek-ai/dsh-agent'
 import type { AgentLifecycleState, AgentRunId, TransitionDenialReason } from '@deepseek-ai/dsh-agent'
 import { acquireRunLease, describePredecessor } from '@deepseek-ai/dsh-lease-contract'
 import type { Lease, PredecessorState, RunLease } from '@deepseek-ai/dsh-lease-contract'
@@ -818,6 +818,15 @@ export default class RunPlugin extends Service {
   private readonly failures = new Map<RunId, unknown>()
 
   /**
+   * The reason given when an agent was advanced to `failed` or `completed`
+   * through {@link RunPlugin.advance} (BLOCKED-332). A terminal state admits
+   * no further transition, so the reason stays true for the rest of the Run,
+   * and a step refused because the Run has ended reports it. Keyed by agent,
+   * so it goes with the agent.
+   */
+  private readonly endReasons = new WeakMap<Agent, string>()
+
+  /**
    * The non-terminal Runs this mount restored, as they were at mount
    * (acceptance[0]'s enumerate half).
    *
@@ -1425,7 +1434,9 @@ export default class RunPlugin extends Service {
    * write on a stale epoch.
    * @param agent - the agent whose lifecycle is proposed to move.
    * @param to - the state proposed.
-   * @param reason - why, recorded on the transition (must[1] requires it non-empty).
+   * @param reason - why, recorded on the transition (must[1] requires it non-empty);
+   *   the reason for an admitted terminal transition is kept, so a step refused
+   *   because the Run has ended reports it (BLOCKED-332).
    * @returns the refusal, or `undefined` when the agent advanced. `lease-refused`
    *   names an agent this plugin declined to open a Run for, which is a
    *   different fact from `no-run`: a live store said no, rather than nothing
@@ -1438,7 +1449,9 @@ export default class RunPlugin extends Service {
     to: AgentLifecycleState,
     reason: string,
   ): TransitionDenialReason | 'fenced' | 'lease-refused' | 'no-run' | 'stopped' | undefined {
-    return advanceLeasedAgent(agent, to, reason)
+    const refusal = advanceLeasedAgent(agent, to, reason)
+    if (refusal === undefined && TERMINAL_STATES.includes(to)) this.endReasons.set(agent, reason)
+    return refusal
   }
 
   /**
@@ -1502,7 +1515,15 @@ export default class RunPlugin extends Service {
           agent.id,
           lifecycle.state,
         )
-        return Promise.resolve({ kind: 'reject' as const })
+        if (!TERMINAL_STATES.includes(lifecycle.state)) return Promise.resolve({ kind: 'reject' as const })
+        // BLOCKED-332: a step refused because the Run has ended names the
+        // terminal state and the reason given for reaching it, so the turn
+        // records why it stopped rather than a bare `blocked`.
+        const reason = this.endReasons.get(agent)
+        return Promise.resolve({
+          kind: 'reject' as const,
+          runEnded: { state: lifecycle.state, ...reason === undefined ? {} : { reason } },
+        })
       }
       // Cleared only once the step is actually admitted: a refused step means
       // the agent did NOT carry on, so an unrecovered failure is still how

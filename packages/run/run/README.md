@@ -268,6 +268,13 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   otherwise `completed`), and `reclaim`, which records `orphaned`. Nothing
   produces `paused`: the harness has no suspend control, and a run waiting on a
   tool or an operator is already in a state that says so.
+- **A step refused because the Run has ended names the reason only when it is
+  known.** The step gate records the terminal state on the turn's `blocked`
+  end (`runEnded`), with the reason given for reaching it when the Run was
+  advanced there through `runs.advance`; a terminal state reached another way
+  is named without a reason (BLOCKED-332). A tool call that starts after an
+  earlier call of its batch ended the Run is refused by `@deepseek-ai/dsh-tools`
+  as `run-ended`.
 - **`reclaim` is called by the host that TAKES a lapsed item, never by the one
   that lost it.** A host whose lease lapsed cannot establish its own orphaning
   — from its side a reclaim and a pause are indistinguishable — and

@@ -202,8 +202,13 @@ export interface TurnEndReasonMap {
   completed: { kind: 'completed' }
   /** A cancellation request interrupted the live turn. */
   aborted: { kind: 'aborted'; reason: TurnEndCancelCause }
-
-  blocked: { kind: 'blocked' }
+  /**
+   * A pre-step listener refused the step. `runEnded` is present when the step
+   * was refused because the agent's Run has ended: the terminal lifecycle state
+   * it reached and, when the refusing listener knows it, the reason given for
+   * reaching it (P4-05 acceptance[0], BLOCKED-332).
+   */
+  blocked: { kind: 'blocked'; runEnded?: { readonly state: string; readonly reason?: string } }
   /**
    * The turn failed. `error` is always a structured failure: the `LlmError`
    * facts verbatim, or `{ message: errorChain(error), code: 'UNKNOWN' }`
