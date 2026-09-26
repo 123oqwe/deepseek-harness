@@ -176,6 +176,34 @@ function recallSnapshot(text: string): UserMessage {
 }
 
 /**
+ * Whether this consumer left an outstanding recall snapshot on `agent`'s
+ * session that a later step must supersede — judged from the DURABLE session
+ * log, not per-instance memory, so it survives a resume (P6-03 acceptance[1]).
+ *
+ * The latest memory-context `snapshot`-form message in the log is outstanding
+ * unless it is already the {@link CLEARED_RECALL} marker; a session this
+ * consumer never recalled on has none. The scan stops at the first
+ * memory-context snapshot from the newest end, so a session that recalls
+ * regularly answers in a few steps.
+ * @param agent - the agent whose session log to scan.
+ * @returns whether an un-cleared recall snapshot is the latest this consumer left.
+ */
+function hasOutstandingRecall(agent: Agent): boolean {
+  for (let seq = agent.session.seq - 1; seq >= 0; seq -= 1) {
+    // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
+    const event = agent.session.eventAt(SessionSeq(seq))
+    if (event?.type !== 'user/message') continue
+    // Every message this consumer emits is a memory-recall snapshot, so its
+    // plugin source identifies one without inspecting the form.
+    const source = event.data.source
+    if (source.kind !== 'plugin' || source.plugin !== name) continue
+    const text = event.data.content.filter(block => block.type === 'text').map(block => block.text).join('')
+    return text !== CLEARED_RECALL
+  }
+  return false
+}
+
+/**
  * Collect the text of the open turn's user-authored messages — the query this
  * consumer recalls against.
  *
@@ -251,39 +279,40 @@ export function apply(ctx: Context, config: Config): void {
   // notice is a fact about storage, so it is worth saying once and noise on
   // every step after that; the set is per-plugin-instance and disposes with it.
   const announced = new Set<string>()
-  // Sessions this consumer has left a recall snapshot on. When a later step
-  // recalls nothing, it supersedes that snapshot with a cleared one so a record
-  // forgotten since the recall does not ride the earlier snapshot into the
-  // session's later requests (P6-03 acceptance[1]); a session that never
-  // recalled emits nothing. Per-plugin-instance, like `announced`.
-  const recalled = new Set<string>()
   ctx.on('agent/pre-step', async ({ agent, turn, signal }, next): Promise<PreStepDecision> => {
     const decision = await next()
     if (decision.kind === 'reject' || signal.aborted) return decision
     const query = openTurnQuery(agent, turn, decision.messages)
-    if (query.trim() === '') return decision
-    const accessContext = await resolveMemoryAccessContext(agent, config)
-    const { records, truncated } = await ctx.memory.query({ accessContext, query })
-    // Recorded whether or not anything was recalled: a read that returned
-    // nothing is still a read of durable memory, and a log that omitted it
-    // would misrepresent what this consumer did.
-    agent.session.append('memory/access', {
-      operation: 'query',
-      accessContext,
-      resultCount: records.length,
-      truncated,
-    })
-    await announceRebuiltWorkspace(ctx, agent, accessContext, announced)
-    const text = renderMemoryContext(records, truncated)
-    if (text === undefined) {
-      // Nothing recalled this step. Only supersede a recall this consumer left
-      // earlier on the same session — a session that never recalled adds no
-      // cleared marker.
-      if (!recalled.has(agent.session.id)) return decision
-      recalled.delete(agent.session.id)
+    let text: string | undefined
+    if (query.trim() !== '') {
+      const accessContext = await resolveMemoryAccessContext(agent, config)
+      const { records, truncated } = await ctx.memory.query({ accessContext, query })
+      // Recorded whether or not anything was recalled: a read that returned
+      // nothing is still a read of durable memory, and a log that omitted it
+      // would misrepresent what this consumer did.
+      agent.session.append('memory/access', {
+        operation: 'query',
+        accessContext,
+        resultCount: records.length,
+        truncated,
+      })
+      await announceRebuiltWorkspace(ctx, agent, accessContext, announced)
+      text = renderMemoryContext(records, truncated)
+    }
+    if (text !== undefined) {
+      return { ...decision, messages: [...decision.messages, recallSnapshot(text)] }
+    }
+    // Nothing recalled this step — an empty open-turn query, or a query that
+    // matched nothing. If an earlier step left a recall snapshot on this
+    // session, supersede it with a cleared marker so a record forgotten since
+    // is not carried into the session's later requests, whether or not this
+    // step queried and across a resume (`hasOutstandingRecall` reads the durable
+    // log). A session this consumer never recalled on adds nothing, so a boot
+    // with recall enabled but nothing to recall hands the model the same bytes
+    // as one with the rows disabled.
+    if (hasOutstandingRecall(agent)) {
       return { ...decision, messages: [...decision.messages, recallSnapshot(CLEARED_RECALL)] }
     }
-    recalled.add(agent.session.id)
-    return { ...decision, messages: [...decision.messages, recallSnapshot(text)] }
+    return decision
   }, { prepend: true })
 }
