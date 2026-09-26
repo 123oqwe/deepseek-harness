@@ -35,6 +35,7 @@ const EXECUTABLE_SOURCE_ALLOWLIST = new Map<string, string>([
   ['packages/context/time-context/tests/fixtures/driver.ts', 'test-only subprocess driver'],
   ['packages/context/memory-context/tests/fixtures/driver.ts', 'test-only subprocess driver'],
   ['packages/context/memory-context/tests/fixtures/empty-recall-driver.ts', 'test-only subprocess driver'],
+  ['packages/context/memory-context/tests/fixtures/idempotent-recall-driver.ts', 'test-only subprocess driver'],
   ['packages/bundle/sdk-app/tests/fixtures/driver.ts', 'test-only subprocess driver'],
   ['packages/bundle/sdk-app/tests/fixtures/sdk-minimal-pep-driver.ts', 'test-only subprocess driver'],
   ['apps/cli/tests/fixtures/sdk-minimal-pep-kernel-driver.ts', 'test-only subprocess driver'],
