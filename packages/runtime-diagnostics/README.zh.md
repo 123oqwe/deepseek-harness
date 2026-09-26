@@ -9,7 +9,7 @@ kind: "package-group"
 
 ## 概述
 
-runtime-diagnostics 组为 DeepSeek Harness 组合提供运行时自检：一个包 `invariants` 在组合运行期间运行包自有检查，验证每个包的持久化事件与数据关系。违规会以归因到拥有该关系的包的错误呈现；全局开关与包名过滤器控制运行哪些检查。当组合需要在正常运行中验证自身运行时约定时，请使用本组的包。
+runtime-diagnostics 组为 DeepSeek Harness 组合提供运行时自检与操作者看得见的诊断。`invariants` 在组合运行期间运行包自有检查，验证每个包的持久化事件与数据关系；违规会以归因到拥有该关系的包的错误呈现，全局开关与包名过滤器控制运行哪些检查。`logger-stderr` 把插件记下的警告与错误写到 stderr，让操作者看得见。当组合需要验证自身运行时约定时用 `invariants`；每个出厂 profile 都挂载 `logger-stderr`，靠它看到插件报告的内容。
 
 ## 目录
 
@@ -25,6 +25,7 @@ runtime-diagnostics 组为 DeepSeek Harness 组合提供运行时自检：一个
 | 包 | 职责 | ctx 键 |
 |---|---|---|
 | [`invariants`](invariants/README.zh.md) | 运行包自有运行时检查，并按所属包报告每次失败 | 注册到 `ctx.invariants` |
+| [`logger-stderr`](logger-stderr/README.zh.md) | 把插件的警告与错误写到 stderr，行首加 `dsh: `；宿主可以接管这些行 | 注册到 `ctx.loggerStderr` |
 
 -----
 

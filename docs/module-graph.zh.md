@@ -347,6 +347,7 @@ flowchart TD
   end
   subgraph group_runtime_diagnostics["packages/runtime-diagnostics"]
     pkg_invariants["invariants"]
+    pkg_logger_stderr["logger-stderr"]
   end
   subgraph group_sandbox["packages/sandbox"]
     pkg_sandbox["sandbox"]
@@ -807,6 +808,7 @@ flowchart TD
   pkg_headless --> pkg_host_user_id
   pkg_headless --> pkg_jobs
   pkg_headless --> pkg_llm
+  pkg_headless --> pkg_logger_stderr
   pkg_headless --> pkg_principal
   pkg_headless --> pkg_session
   pkg_compaction --> pkg_brand
@@ -1584,6 +1586,7 @@ flowchart TD
 | [`policy-language`](../packages/policy/policy-language) | `policy` | — |
 | [`risk-taxonomy`](../packages/policy/risk-taxonomy) | `policy` | — |
 | [`invariants`](../packages/runtime-diagnostics/invariants) | `runtime-diagnostics` | — |
+| [`logger-stderr`](../packages/runtime-diagnostics/logger-stderr) | `runtime-diagnostics` | — |
 | [`sandbox-windows-acl`](../packages/sandbox/sandbox-windows-acl) | `sandbox` | — |
 | [`session-format`](../packages/session/session-format) | `session` | — |
 | [`session-format-v0-to-v1`](../packages/session/session-format-v0-to-v1) | `session` | — |
@@ -1712,7 +1715,7 @@ flowchart TD
 | [`command-goal`](../packages/goal/command-goal) | `goal` | [`commands`](../packages/interaction/commands), [`goal`](../packages/goal/goal), [`llm`](../packages/llm/llm) |
 | [`goal-round-driver`](../packages/goal/goal-round-driver) | `goal` | [`agent`](../packages/core/agent), [`goal`](../packages/goal/goal), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`session`](../packages/core/session) |
 | [`fs-sandbox`](../packages/fs/fs-sandbox) | `fs` | [`fs`](../packages/fs/fs), [`fs-local`](../packages/fs/fs-local), [`sandbox`](../packages/sandbox/sandbox), [`sandbox-policy`](../packages/sandbox/sandbox-policy) |
-| [`headless`](../packages/bundle/headless) | `bundle` | [`agent`](../packages/core/agent), [`agent-default-model`](../packages/core/agent-default-model), [`host-user-id`](../packages/identity/host-user-id), [`jobs`](../packages/jobs/jobs), [`llm`](../packages/llm/llm), [`principal`](../packages/identity/principal), [`session`](../packages/core/session) |
+| [`headless`](../packages/bundle/headless) | `bundle` | [`agent`](../packages/core/agent), [`agent-default-model`](../packages/core/agent-default-model), [`host-user-id`](../packages/identity/host-user-id), [`jobs`](../packages/jobs/jobs), [`llm`](../packages/llm/llm), [`logger-stderr`](../packages/runtime-diagnostics/logger-stderr), [`principal`](../packages/identity/principal), [`session`](../packages/core/session) |
 | [`compaction`](../packages/compaction/compaction) | `compaction` | [`brand`](../packages/util/brand), [`commands`](../packages/interaction/commands), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`session`](../packages/core/session) |
 | [`command-feedback`](../packages/feedback/command-feedback) | `feedback` | [`anonymous-user-id`](../packages/identity/anonymous-user-id), [`commands`](../packages/interaction/commands), [`session`](../packages/core/session), [`typert-protocol`](../packages/typert/protocol) |
 | [`control-plane`](../packages/interaction/control-plane) | `interaction` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`human-channel`](../packages/interaction/human-channel), [`principal`](../packages/identity/principal), [`user-questions`](../packages/interaction/user-questions) |

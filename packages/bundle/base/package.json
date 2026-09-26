@@ -76,6 +76,7 @@
     "@deepseek-ai/dsh-llm-deepseek": "workspace:^",
     "@deepseek-ai/dsh-llm-pi-ai": "workspace:^",
     "@deepseek-ai/dsh-llm-retry": "workspace:^",
+    "@deepseek-ai/dsh-logger-stderr": "workspace:^",
     "@deepseek-ai/dsh-memory": "workspace:^",
     "@deepseek-ai/dsh-memory-context": "workspace:^",
     "@deepseek-ai/dsh-message-bus": "workspace:^",

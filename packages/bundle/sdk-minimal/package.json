@@ -51,6 +51,7 @@
     "@deepseek-ai/dsh-llm": "workspace:^",
     "@deepseek-ai/dsh-llm-deepseek": "workspace:^",
     "@deepseek-ai/dsh-llm-retry": "workspace:^",
+    "@deepseek-ai/dsh-logger-stderr": "workspace:^",
     "@deepseek-ai/dsh-plugin-package-inventory-deepseek": "workspace:^",
     "@deepseek-ai/dsh-policy-engine-cedar": "workspace:^",
     "@deepseek-ai/dsh-policy-language": "workspace:^",

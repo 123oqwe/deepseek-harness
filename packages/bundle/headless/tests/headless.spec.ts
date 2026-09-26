@@ -12,6 +12,7 @@ import SessionStore from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import type { Session, UserMessage } from '@deepseek-ai/dsh-session'
 import { createInboxStub } from '@deepseek-ai/dsh-agent-loop-testkit'
+import LoggerStderr from '@deepseek-ai/dsh-logger-stderr'
 import { apply, Config, internals } from '../src/index.ts'
 
 /** The smallest thing `registerAdapter` accepts: routes exist, requests never run. */
@@ -328,6 +329,31 @@ describe('headless runner', () => {
 
     finish.resolve(undefined)
     await expect(running).resolves.toMatchObject({ code: 3 })
+    await test.ctx.fiber.dispose()
+  })
+
+  it('closes an open reasoning section before a plugin warning, and the next delta opens a new header (BLOCKED-336)', async () => {
+    const warned = Promise.withResolvers<undefined>()
+    const test = await bench({
+      afterPrompt(session, message, agent) {
+        session.append('turn/start', { turn: 1 })
+        session.append('step/start', { turn: 1, step: 1 })
+        session.append('user/message', message, { surfaceOp: 'append' })
+        startFrames(agent)
+        emitChunk(agent, { type: 'reasoning-delta', index: 0, text: 'first half' })
+        agent.ctx.logger('probe').warn('headless-336-warning')
+        emitChunk(agent, { type: 'reasoning-delta', index: 0, text: 'second half\n' })
+        warned.resolve(undefined)
+        session.append('step/end', { turn: 1, step: 1 })
+        session.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
+      },
+    })
+    await test.ctx.plugin(LoggerStderr, { types: ['warn'] })
+    const running = test.run()
+    await warned.promise
+
+    expect(test.output().err).toMatch(/^dsh: reasoning:\nfirst half\ndsh: [^\n]*headless-336-warning\ndsh: reasoning:\nsecond half\n$/u)
+    await running
     await test.ctx.fiber.dispose()
   })
 

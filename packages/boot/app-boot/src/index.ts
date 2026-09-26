@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs'
 import { parseEnv } from 'node:util'
 import { basename, dirname, isAbsolute, resolve } from 'node:path'
 import * as yaml from 'js-yaml'
-import { Context, type FiberState } from '@deepseek-ai/cordis'
+import { Context, type FiberState, type LoggerLevel } from '@deepseek-ai/cordis'
 import Loader, { type Entry, type EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
 import Include, { applyEntryPatches, entryListSchema, type PatchOptions } from '@deepseek-ai/cordis-plugin-include'
 import Group from '@deepseek-ai/cordis-plugin-group'
@@ -715,6 +715,13 @@ const FIBER_PENDING = 0 as FiberState.PENDING
 const FIBER_ACTIVE = 2 as FiberState.ACTIVE
 const FIBER_FAILED = 3 as FiberState.FAILED
 
+/**
+ * The level the tree's loggers export at, mirrored for the same reason: at
+ * `WARN` the in-memory buffer keeps warnings as well as errors until
+ * `@deepseek-ai/dsh-logger-stderr` mounts and writes them out (BLOCKED-336).
+ */
+const TREE_LOGGER_LEVEL = 2 as LoggerLevel.WARN
+
 /** Render a thrown plugin value without discarding an Error's original stack. */
 function formatActivationError(error: unknown): string {
   return error instanceof Error ? error.stack ?? error.message : String(error)
@@ -794,8 +801,9 @@ export async function assertEntriesActivated(ctx: Context, binName: string): Pro
  * @param bareModuleBaseUrl - optional installed-host base for bare package
  * names; use it when the host, rather than the configuration project, owns the
  * complete plugin set.
- * @returns the root context once every entry has started, or as soon as a
- * surface disposed the tree while startup was still in flight.
+ * @returns the root context, intercepted so the tree's loggers export at
+ * `WARN`, once every entry has started, or as soon as a surface disposed the
+ * tree while startup was still in flight.
  * @throws a labelled error after disposing the partial context — `host
  * preparation failed` when `prepare` threw before any config-tree entry
  * mounted, `plugin tree failed to load` afterwards.
@@ -807,7 +815,7 @@ export async function boot(
   prepare?: (ctx: Context) => Promise<void> | void,
   bareModuleBaseUrl?: string,
 ): Promise<Context> {
-  const ctx = new Context()
+  const ctx = new Context().intercept('logger', { level: TREE_LOGGER_LEVEL })
   // Two failure labels: `prepare` runs before any config-tree entry mounts,
   // so its failure is host setup, not the plugin tree.
   let stage = 'host preparation failed'

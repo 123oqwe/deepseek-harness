@@ -21,6 +21,7 @@ import type { OutputFormat } from './stream-json.ts'
 import { installModelSelection } from '@deepseek-ai/dsh-agent'
 import type { Agent, ModelSelectionRef } from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-agent-default-model'
+import type {} from '@deepseek-ai/dsh-logger-stderr'
 import { createUserMessage, lastAssistantStreamChunk } from '@deepseek-ai/dsh-llm'
 import type { TokenUsage } from '@deepseek-ai/dsh-llm'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
@@ -205,6 +206,13 @@ function streamReasoning(
     open = false
     endsWithNewline = true
   }
+  // A plugin's warning or error closes an open reasoning section before it is
+  // written, so it never lands inside one and the next delta opens a new
+  // header (BLOCKED-336).
+  const unroute = ctx.get('loggerStderr')?.routeThrough((line) => {
+    close()
+    stderr.write(line)
+  })
   const dispose = ctx.on('agent/assistant-stream', ({ agent: subject, frame }) => {
     if (subject !== agent) return
     if (frame.type === 'start') {
@@ -246,6 +254,7 @@ function streamReasoning(
   })
   return () => {
     dispose()
+    unroute?.()
     close()
   }
 }

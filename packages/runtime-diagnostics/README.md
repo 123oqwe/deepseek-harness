@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-The runtime-diagnostics group provides runtime self-checking for DeepSeek Harness compositions: one package, `invariants`, runs package-owned checks that verify each package's durable event and data relationships while the composition is live. A violation surfaces as an error attributed to the package that owns the relationship; a global switch and package-name filters control which checks run. Use this group's package when a composition should verify its own runtime contracts as part of normal operation.
+The runtime-diagnostics group provides runtime self-checking and operator-visible diagnostics for DeepSeek Harness compositions. `invariants` runs package-owned checks that verify each package's durable event and data relationships while the composition is live; a violation surfaces as an error attributed to the package that owns the relationship, and a global switch and package-name filters control which checks run. `logger-stderr` writes the warnings and errors plugins log to stderr, where an operator sees them. Use `invariants` when a composition should verify its own runtime contracts, and rely on `logger-stderr`, which every shipped profile mounts, to see what plugins report.
 
 ## Table of Contents
 
@@ -25,6 +25,7 @@ The runtime-diagnostics group provides runtime self-checking for DeepSeek Harnes
 | Package | Role | ctx key |
 |---|---|---|
 | [`invariants`](invariants/README.md) | Runs package-owned runtime checks and reports each failure by owning package | registers on `ctx.invariants` |
+| [`logger-stderr`](logger-stderr/README.md) | Writes plugin warnings and errors to stderr, prefixed `dsh: `; a host may route the lines | registers on `ctx.loggerStderr` |
 
 -----
 
