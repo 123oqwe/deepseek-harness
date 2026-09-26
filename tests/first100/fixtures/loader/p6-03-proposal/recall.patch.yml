@@ -1,0 +1,13 @@
+# Test-only overlay for P6-03's third slice, layered after `./base.patch.yml`.
+# It enables the base layer's `memory-context` row, which ships `disabled:
+# true`, so a session recalls durable memory into its model requests as a
+# deployment that turns recall on does. It reads within tenant `local`, the
+# host user's tenant when `DSH_TENANT` is unset, for the workspace the session
+# works in.
+- id: memory-context
+  disabled: false
+  config:
+    tenantId: local
+    principalId: p6-03-reader
+    purpose: recall
+    maxRecords: 10
