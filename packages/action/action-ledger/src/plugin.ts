@@ -160,7 +160,7 @@ export default class ActionLedgerPlugin extends Service {
     if (principal?.kind !== 'user') return { kind: 'error', text: 'Only the host user can resolve an external effect.' }
     const [key, outcome, ...rest] = rawInput.trim().split(/\s+/u).filter(part => part !== '')
     if (key === undefined) {
-      const waiting = this.store.listAllAmbiguous().map(entry => entry.key)
+      const waiting = this.store.listAmbiguous(principal.id).map(entry => entry.key)
       return {
         kind: 'success',
         text: waiting.length === 0 ? 'No external effect is waiting for reconciliation.' : `Waiting for reconciliation: ${waiting.join(', ')}.`,
@@ -169,7 +169,7 @@ export default class ActionLedgerPlugin extends Service {
     if ((outcome !== 'confirmed' && outcome !== 'compensated') || rest.length > 0) {
       return { kind: 'error', text: 'Usage: /resolve-effect <idempotencyKey> <confirmed|compensated>' }
     }
-    const waiting = this.store.listAllAmbiguous().filter(candidate => candidate.key === key)
+    const waiting = this.store.listAmbiguous(principal.id).filter(candidate => candidate.key === key)
     if (waiting.length > 1) {
       const scopes = waiting.map(candidate => candidate.scope).join(', ')
       return { kind: 'error', text: `${key} is waiting under ${String(waiting.length)} scopes (${scopes}), so the key alone does not name one.` }
