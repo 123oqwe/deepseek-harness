@@ -644,7 +644,7 @@ export default class ExecutionWorldService extends Service<Config> {
   private registeredId(provider: WorldProvider): WorldProviderId {
     const id = this.registeredIds.get(provider)
     if (id === undefined) throw new Error('a world provider was selected without being registered')
-    return id
+    return provider.id
   }
 
   /**
