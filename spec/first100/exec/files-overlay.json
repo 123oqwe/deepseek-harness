@@ -5193,7 +5193,8 @@
       "path": "packages/action/action-ledger/src/plugin.ts",
       "kind": "source",
       "stages": [
-        "F.3"
+        "F.3",
+        "F.4"
       ],
       "reason": "The ledger's mount, which registers `/resolve-effect` (B-515): the command F.3's operator runs to settle an ambiguous entry, asking the host user and writing the resolution through the store."
     },
@@ -5261,7 +5262,8 @@
       "path": "packages/interaction/user-approval/src/index.ts",
       "kind": "source",
       "stages": [
-        "F.3"
+        "F.3",
+        "F.4"
       ],
       "reason": "The approval service `/resolve-effect` asks before it settles an entry; F.3's approved and refused resolves are its two answers."
     },
@@ -5270,7 +5272,8 @@
       "path": "packages/test-support/loader-smoke/src/index.ts",
       "kind": "source",
       "stages": [
-        "F.3"
+        "F.3",
+        "F.4"
       ],
       "reason": "Test support, not product code: `runLoaderSmoke` boots the shipped profile around F.3's driver and returns the report the cases read."
     },
@@ -5279,7 +5282,8 @@
       "path": "packages/test-support/loader-smoke/tests/fixtures/production-profile.ts",
       "kind": "test",
       "stages": [
-        "F.3"
+        "F.3",
+        "F.4"
       ]
     },
     {
@@ -5287,7 +5291,8 @@
       "path": "tests/first100/fixtures/p4-12-reconciliation/base-mount.patch.yml",
       "kind": "test",
       "stages": [
-        "F.3"
+        "F.3",
+        "F.4"
       ]
     },
     {
@@ -5295,7 +5300,8 @@
       "path": "tests/first100/fixtures/p4-12-reconciliation/driver.ts",
       "kind": "test",
       "stages": [
-        "F.3"
+        "F.3",
+        "F.4"
       ]
     },
     {
@@ -5303,7 +5309,8 @@
       "path": "tests/first100/fixtures/p4-12-reconciliation/mock-llm.ts",
       "kind": "test",
       "stages": [
-        "F.3"
+        "F.3",
+        "F.4"
       ]
     },
     {
@@ -5311,7 +5318,8 @@
       "path": "tests/first100/fixtures/P4-12.reconciliation.composition.spec.ts",
       "kind": "test",
       "stages": [
-        "F.3"
+        "F.3",
+        "F.4"
       ]
     },
     {

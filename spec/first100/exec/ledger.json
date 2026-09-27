@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-27T05:34:06.079Z",
-  "inputDigest": "d09ddc100d94e596dd8bc35b7b1b9b242b5e3fe77b44f3b1fd50b525e457a9a5",
+  "lastUpdatedUtc": "2026-09-27T06:00:41.836Z",
+  "inputDigest": "7f051c29c0d217b380b93e7a8bc6e8c981a1f03148d2b4fd088dc783c9d93d6e",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -8484,10 +8484,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "abad21fa7068ab6e378f46664bbc21dd86288525",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34755598046",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/ci-34755598046/first100-evidence-abad21fa7068ab6e378f46664bbc21dd86288525/vitest-report.json",
-          "observationSha256": "57a632fdc171fa6546126d45d77132e6f079d58bb31ed01143d7ba093d380e36",
+          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
+          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
           "expectCasesMatched": [
             "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reserves an unseen key, which is the only decision that authorizes sending",
             "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reserves again for a PREPARED entry at a HIGHER generation, because nothing left the harness yet",
@@ -8512,14 +8512,14 @@
             "P4-12 must[2]: an idempotency key is unique PER CLIENT, never globally carries the requesting principal into the reservation, which is what the store persists",
             "P4-12 must[2]: an idempotency key is unique PER CLIENT, never globally still refuses a second reservation WITHIN one principal, so scoping did not disable dedup"
           ],
-          "capturedAtUtc": "2026-09-13T12:29:15.092Z"
+          "capturedAtUtc": "2026-09-27T05:50:26.334Z"
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "abad21fa7068ab6e378f46664bbc21dd86288525",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34755598046",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/ci-34755598046/first100-evidence-abad21fa7068ab6e378f46664bbc21dd86288525/vitest-report.json",
-          "observationSha256": "57a632fdc171fa6546126d45d77132e6f079d58bb31ed01143d7ba093d380e36",
+          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
+          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
           "expectCasesMatched": [
             "P4-12 must[2]: the reservation is durable BEFORE the request is sent reports a SENT key as a duplicate after a restart, which is the crash this epic exists for",
             "P4-12 must[2]: the reservation is durable BEFORE the request is sent still reserves a PREPARED key after a restart at the NEXT generation, because nothing was sent",
@@ -8535,28 +8535,28 @@
             "P4-12 must[2]: the durable store keeps two principals apart (BLOCKED-142) keeps one key reserved by two principals as two rows, neither visible to the other",
             "P4-12 must[2]: the durable store keeps two principals apart (BLOCKED-142) refuses a transition presented under the WRONG principal, so a key cannot be moved from outside its scope"
           ],
-          "capturedAtUtc": "2026-09-13T12:29:15.422Z"
+          "capturedAtUtc": "2026-09-27T05:50:26.662Z"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36072903015",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36072903015/first100-vitest-report-9a8c696b312913451ceb55414c5095e688dcfa93/vitest-report.json",
-          "observationSha256": "b8916b9e30a5457b396accccb85b808d725fae6d2c025a92cc301de49a923854",
+          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
+          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
           "expectCasesMatched": [
             "P4-12 must[4]: the dispatch path reserves before it runs a tool RUNS the tool once and confirms the reservation, so an ordinary call is unaffected",
             "P4-12 must[4]: the dispatch path reserves before it runs a tool REFUSES a second call whose key was already reserved, and the tool does NOT run",
             "P4-12 must[4]: the dispatch path reserves before it runs a tool runs BOTH calls when the arguments differ, so the key identifies the action and not the tool",
             "P4-12 must[4]: the dispatch path reserves before it runs a tool runs the tool when NO ledger is mounted, because absence is not an approval to record"
           ],
-          "capturedAtUtc": "2026-09-25T02:52:29.027Z"
+          "capturedAtUtc": "2026-09-27T05:50:26.971Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "abad21fa7068ab6e378f46664bbc21dd86288525",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34755598046",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/0b5fd123-e049-4f23-831e-0eed5c61dbd7/scratchpad/ci-34755598046/first100-evidence-abad21fa7068ab6e378f46664bbc21dd86288525/vitest-report.json",
-          "observationSha256": "57a632fdc171fa6546126d45d77132e6f079d58bb31ed01143d7ba093d380e36",
+          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
+          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
           "expectCasesMatched": [
             "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects commits each effect exactly once across 10,000 random crashes, counted at the SERVICE",
             "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects commits each effect exactly once across the same campaign run UNFENCED, which is where at-least-once stands alone",
@@ -8566,7 +8566,7 @@
             "P4-12 validation: a provider that timed out AFTER committing leaves the effect committed once when the ledger is told the outcome is unknown",
             "P4-12 validation: a batch action is ledgered item by item reserves each item separately, so one item failing does not resend the others"
           ],
-          "capturedAtUtc": "2026-09-13T12:29:15.716Z"
+          "capturedAtUtc": "2026-09-27T05:50:27.296Z"
         }
       },
       "supplements": {
@@ -8585,23 +8585,23 @@
         },
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "c732e7c07331d3e298402b354a258c3a2aa10019",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36205389837",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36205389837/first100-vitest-report-c732e7c07331d3e298402b354a258c3a2aa10019/vitest-report.json",
-          "observationSha256": "52ddac59b8e9e76f5201f42d1e9117ddfed268c22ca6668e243a87aeb1cf3199",
+          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
+          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
           "expectCasesMatched": [
             "the sub-dispatch scheduler (native concurrency contract) P4-12 must[4] — a code-mode sub-dispatch reserves against the ledger like a native call (§12.35-2) RESERVES and CONFIRMS each sub-call, so the ledger records a code-mode effect as it records a native one",
             "the sub-dispatch scheduler (native concurrency contract) P4-12 must[4] — a code-mode sub-dispatch reserves against the ledger like a native call (§12.35-2) REFUSES a sub-call replayed by the SAME run_code call, so a retried program cannot repeat its effect",
             "the sub-dispatch scheduler (native concurrency contract) P4-12 must[4] — a code-mode sub-dispatch reserves against the ledger like a native call (§12.35-2) records an ERRORING sub-call as ambiguous, so a retry cannot repeat an effect that may have happened"
           ],
-          "capturedAtUtc": "2026-09-26T01:32:58.201Z"
+          "capturedAtUtc": "2026-09-27T05:50:36.837Z"
         },
         "F.3": {
           "status": "GREEN",
-          "candidateSha": "9501e34f518251c5f33ab25eab3a22e908d36587",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36268793542",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36268793542/first100-vitest-report-9501e34f518251c5f33ab25eab3a22e908d36587/vitest-report.json",
-          "observationSha256": "dbd7550fdf781d40b7599415f2ff2de65f633838b57bf1f5d358cecb48ec70f6",
+          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
+          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
           "expectCasesMatched": [
             "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve the entry is ambiguous before the resolve, and an approved resolve moves it to confirmed, never prepared (acceptance[1])",
             "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve an approved resolve to compensated settles the entry, never prepared (acceptance[1])",
@@ -8610,31 +8610,31 @@
             "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve an approved resolve records who resolved the entry and to what",
             "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve after an approved resolve, a fresh reserve on the same key is no longer refused as ambiguous (acceptance[1])"
           ],
-          "capturedAtUtc": "2026-09-26T22:37:33.224Z"
+          "capturedAtUtc": "2026-09-27T05:50:37.150Z"
         }
       },
-      "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-      "independentVerdict": "PENDING",
+      "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "BLOCKED_ON_ACCEPTANCE",
+      "status": "ACCEPTED",
       "acceptedEvidence": {
-        "acceptedAtUtc": "2026-09-13T12:35:25.960Z",
+        "acceptedAtUtc": "2026-09-27T06:00:41.825Z",
         "cells": {
           "C": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34755598046",
-            "candidateSha": "abad21fa7068ab6e378f46664bbc21dd86288525"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
+            "candidateSha": "4418e311253df568452146710c0f57e584d39b1f"
           },
           "P": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34755598046",
-            "candidateSha": "abad21fa7068ab6e378f46664bbc21dd86288525"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
+            "candidateSha": "4418e311253df568452146710c0f57e584d39b1f"
           },
           "U": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34755598046",
-            "candidateSha": "abad21fa7068ab6e378f46664bbc21dd86288525"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
+            "candidateSha": "4418e311253df568452146710c0f57e584d39b1f"
           },
           "F": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34755598046",
-            "candidateSha": "abad21fa7068ab6e378f46664bbc21dd86288525"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
+            "candidateSha": "4418e311253df568452146710c0f57e584d39b1f"
           }
         },
         "coverageClosure": {
@@ -8643,8 +8643,8 @@
           "unverifiedCitations": []
         },
         "delegateSignoff": {
-          "delegateSession": "guanjieqiao-92",
-          "signedAtUtc": "2026-09-13T12:35:16.722Z",
+          "delegateSession": "first100-delegate-1a",
+          "signedAtUtc": "2026-09-27T06:00:27.335Z",
           "userConfirmationRef": null
         }
       }

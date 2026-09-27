@@ -20084,6 +20084,49 @@
         "failureSummary": "Run 36284082516: 1 of 1 red, «P4-05 acceptance[2] on the shipped profile: an orphaned Run is reclaimed after a real restart a crashed host's durable Run is adopted by the next boot — same Run, walked through orphaned to starting under a new epoch, its lease not refused» — AssertionError: phase2.runId 'run-3dbd8abb-c1cc-4790-8fb6-e9f4d575ef65' (state queued, epoch 1, restored 2, leaseRefused null) expected to be phase1.runId 'run-2158716f-6673-4ce1-8866-9188c283c72c'; a fresh Run was minted instead of adopting the orphan."
       },
       "note": "P4-05 U-stage supplement 10, on the shipped profile: acceptance[2] reclaim branch. A crashed host's durable orphaned Run is adopted by the next boot — the same Run, walked orphaned -> starting under a new epoch, its lease not refused (A-547 v5 evidence; v5 flushes the session log in phase 1 so the resume finds the session while the lease is still held). Frozen from lane A's A-547 v5 draft (artifacts/laneA/a-547-v5-p4-05-reclaim-freeze.md, sha256 56e16474d5f2e07ccc73c0226fb6e6693e2a026f6b0d97347da57b4b9c82b287) per the delegate's 20r assignment (first100-delegate-1a). expectCases is the full name in the full run 36284563089 at 4418e311253df568452146710c0f57e584d39b1f, where tests/first100/fixtures/P4-05.reclaim-after-restart.composition.spec.ts ran 1 case and the frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the reclaim fixture's driver, overlay and mock model, and packages/run/run/src/index.ts, whose adoptable()/adoptLapsedPredecessor() is the reclaim mechanism the sensitivity mutation disables. This entry covers ONLY the adopt branch of acceptance[2]; the safe-fail branch is A-560's red first (B-674), not covered here. The observing tree is pinned at refs/dsh/freeze/P4-05.U.10/2026-09-27T05-44-35.000Z -> 4418e311253df568452146710c0f57e584d39b1f, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P4-12",
+      "stage": "F",
+      "supplements": {
+        "epic": "P4-12",
+        "stage": "F"
+      },
+      "supplementSeq": 4,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-12.reconciliation.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-12 B-515 v2 (BLOCKED-311): the host resolves an ambiguous entry whose scope is not its own the host lists and resolves a child agent's ambiguous entry, and the resolution keeps the original (child) scope"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-12.reconciliation.composition.spec.ts",
+        "tests/first100/fixtures/p4-12-reconciliation/driver.ts",
+        "tests/first100/fixtures/p4-12-reconciliation/mock-llm.ts",
+        "tests/first100/fixtures/p4-12-reconciliation/base-mount.patch.yml",
+        "packages/test-support/loader-smoke/tests/fixtures/production-profile.ts",
+        "packages/test-support/loader-smoke/src/index.ts",
+        "packages/action/action-ledger/src/plugin.ts",
+        "packages/action/action-ledger/src/store.ts",
+        "packages/action/action-ledger/src/types.ts",
+        "packages/interaction/user-approval/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-27T06:02:34.000Z",
+      "dryRunProof": {
+        "treeSha": "6d008d3bdbe566e6ce459303d09468c9b4cb59db",
+        "testsDiscovered": 7
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-515v2-1 (`051881173ed6e8cdd9816471f42ef66a006d9faf`, run 36274520296): /resolve-effect looks in the caller's own scope only, dropping the cross-scope listing, so the host cannot see or resolve a child agent's ambiguous entry and this case reds.",
+        "failureSummary": "Run 36274520296: the child-scope case red — AssertionError, mode child-scope: the host list shows «No external effect is waiting for reconciliation.» and the resolve «No external effect is recorded under p4-12-effect.», because the cross-scope listing was dropped; two cross-scope resolve-effect command cases also red."
+      },
+      "note": "P4-12 F-stage supplement 4, post-sign-off- acceptance[1]'s reconciliation half across scopes. On the shipped headless profile the host user lists and resolves an ambiguous entry recorded under a child agent's scope, and the resolution keeps that child scope (B-515 v2, red first A-546). Frozen after P4-12's sign-off and accept in this same 20r batch, from the delegate's P4-12 sign-off ruling (first100-delegate-1a, gate3 2026-09-27T02-14-34Z); its cell is observed by the next full run. expectCases is the full name in the full run 36284563089 at 4418e311253df568452146710c0f57e584d39b1f, where tests/first100/fixtures/P4-12.reconciliation.composition.spec.ts ran 7 cases (F.3's six plus this one) and this title passed once. files match F.3's, the reconciliation fixture and the action-ledger sources the resolve path runs through. The observing tree is pinned at refs/dsh/freeze/P4-12.F.4/2026-09-27T06-02-34.000Z -> 4418e311253df568452146710c0f57e584d39b1f, whose tree is dryRunProof.treeSha."
     }
   ]
 }
