@@ -21,10 +21,10 @@
  * and then on the changed one; `direct` runs one turn per file (unchanged,
  * changed, created) in which the model calls the relay, a plugin tool that
  * calls the probe through the public `ToolRuntime.execute` seam, presenting
- * the agent and the Capability Token its own execution was admitted with;
- * `relative` runs `native`'s three turns with the root session working in a
- * directory inside the shared one, each call declaring its file by a path
- * relative to that directory. It prints one `P2-06-PRECONDITION <json>` line.
+ * the agent and the Capability Token its own execution was admitted with. A
+ * `-relative` mode runs its dispatch path's turns with the root session
+ * working in a directory inside the shared one, each call declaring its file
+ * by a path relative to that directory. It prints one `P2-06-PRECONDITION <json>` line.
  * @module tests/first100/fixtures/loader/p2-06-approval-precondition/driver
  */
 
@@ -45,7 +45,9 @@ import { createFixtureRootAgent } from '../../../../../packages/test-support/loa
 import { bootProductionProfile } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/production-profile.ts'
 import {
   actionIdOf,
+  DISPATCH_PATH,
   type FileKind,
+  isRelative,
   PRECONDITION_MODES,
   type PreconditionMode,
   type PreconditionReport,
@@ -77,9 +79,11 @@ if (configPath === undefined || !isMode(mode) || workspace === undefined) {
   throw new Error('p2-06 approval-precondition driver requires the overlay path, a mode, and the shared working directory')
 }
 process.chdir(workspace)
-if (mode === 'code-mode') process.env.DSH_TOOLS_MODE = 'ptc'
+/** The dispatch path this run reaches the probe through. */
+const dispatch = DISPATCH_PATH[mode]
+if (dispatch === 'code-mode') process.env.DSH_TOOLS_MODE = 'ptc'
 
-/** The root session's working directory, which in `relative` is not the process's. */
+/** The root session's working directory, which in a `-relative` mode is not the process's. */
 const sessionCwd = join(process.cwd(), sessionDirectory(mode))
 
 /**
@@ -89,10 +93,17 @@ const sessionCwd = join(process.cwd(), sessionDirectory(mode))
  */
 const pathOf = (kind: FileKind): string => join(sessionCwd, probeFile(mode, kind))
 
+/**
+ * The path a probe call declares for one file.
+ * @param kind - what the operator does to the file before approving.
+ * @returns the path relative to the root session's working directory in a `-relative` mode, the absolute path otherwise.
+ */
+const declaredPath = (kind: FileKind): string => isRelative(mode) ? probeFile(mode, kind) : pathOf(kind)
+
 /** The code-mode program: call the probe on the unchanged file, then on the changed one, and report each outcome. */
 const PROGRAM = [
   'const outcomes = []',
-  `for (const path of ${JSON.stringify(PROBE_KINDS['code-mode'].map(pathOf))}) {`,
+  `for (const path of ${JSON.stringify(PROBE_KINDS['code-mode'].map(declaredPath))}) {`,
   `  try { await tools.${PROBE_TOOL}({ path, note: ${JSON.stringify(SECRET)} }); outcomes.push(path + ': ran') }`,
   "  catch (error) { outcomes.push(path + ': ' + (error instanceof Error ? error.message : String(error))) }",
   '}',
@@ -107,7 +118,7 @@ const PROGRAM = [
  * @param options - the request the loop sent.
  * @returns the chunks to stream.
  */
-function answer(options: GenerateOptions): StreamChunk[] {
+const answer = (options: GenerateOptions): StreamChunk[] => {
   if (options.purpose !== undefined) return textResponse('ok')
   const last = options.messages.at(-1)
   const opensTurn = last?.role === 'user' && !last.content.some(block => block.type === 'tool-result')
@@ -117,14 +128,9 @@ function answer(options: GenerateOptions): StreamChunk[] {
   for (const kind of PROBE_KINDS.direct) {
     if (task?.includes(`${TASK_MARKER} direct ${kind}`) === true) return toolCallResponse(`b679-relay-${kind}`, RELAY_TOOL, { kind })
   }
-  for (const kind of PROBE_KINDS.relative) {
-    if (task?.includes(`${TASK_MARKER} relative ${kind}`) === true) {
-      return toolCallResponse(actionIdOf('relative', kind), PROBE_TOOL, { path: probeFile('relative', kind), note: SECRET })
-    }
-  }
   for (const kind of PROBE_KINDS.native) {
     if (task?.includes(`${TASK_MARKER} ${kind}`) === true) {
-      return toolCallResponse(actionIdOf('native', kind), PROBE_TOOL, { path: pathOf(kind), note: SECRET })
+      return toolCallResponse(actionIdOf(mode, kind), PROBE_TOOL, { path: declaredPath(kind), note: SECRET })
     }
   }
   if (task?.includes(`${TASK_MARKER} program`) === true) {
@@ -159,8 +165,8 @@ try {
   }))
 
   const nested: { callId: string; isError: boolean | null; text: string }[] = []
-  // Registered only in `direct`, so the other modes' tool lists stay as they were.
-  if (mode === 'direct') {
+  // Registered only on the direct path, so the other modes' tool lists stay as they were.
+  if (dispatch === 'direct') {
     ctx.tools.register(defineContentToolFixture({
       name: RELAY_TOOL,
       description: 'a plugin tool that calls the probe through the tool runtime under the token it was admitted with',
@@ -169,15 +175,15 @@ try {
         kind: { type: 'string', required: true, description: 'Which declared file the probe call acts on.' },
       },
       execute: async (args, exec) => {
-        const kind = PROBE_KINDS.direct.find(entry => entry === args.kind)
+        const kind = PROBE_KINDS[mode].find(entry => entry === args.kind)
         if (kind === undefined) throw new Error(`p2-06 approval-precondition relay: no probe file for ${JSON.stringify(args.kind)}`)
-        const callId = actionIdOf('direct', kind)
+        const callId = actionIdOf(mode, kind)
         try {
           const result = await ctx.tools.execute({
             callId: brandString<ToolCallId>(callId),
             rootCallId: exec.rootCallId,
             name: PROBE_TOOL,
-            arguments: { path: pathOf(kind), note: SECRET },
+            arguments: { path: declaredPath(kind), note: SECRET },
             ...exec.agent === undefined ? {} : { agent: exec.agent },
             ...exec.capabilityToken === undefined ? {} : { capabilityToken: exec.capabilityToken },
             signal: exec.signal,
@@ -235,12 +241,10 @@ try {
   })
   const root = ctx.agents.list()[0]
   if (root === undefined) throw new Error('p2-06 approval-precondition driver: no root agent after creation')
-  if (mode === 'native') {
-    for (const kind of PROBE_KINDS.native) await runFixtureTurn(ctx, { task: `${TASK_MARKER} ${kind}: call ${PROBE_TOOL} once.` })
-  } else if (mode === 'relative') {
-    for (const kind of PROBE_KINDS.relative) await runFixtureTurn(ctx, { task: `${TASK_MARKER} relative ${kind}: call ${PROBE_TOOL} once.` })
-  } else if (mode === 'direct') {
-    for (const kind of PROBE_KINDS.direct) await runFixtureTurn(ctx, { task: `${TASK_MARKER} direct ${kind}: call ${RELAY_TOOL} once.` })
+  if (dispatch === 'native') {
+    for (const kind of PROBE_KINDS[mode]) await runFixtureTurn(ctx, { task: `${TASK_MARKER} ${kind}: call ${PROBE_TOOL} once.` })
+  } else if (dispatch === 'direct') {
+    for (const kind of PROBE_KINDS[mode]) await runFixtureTurn(ctx, { task: `${TASK_MARKER} direct ${kind}: call ${RELAY_TOOL} once.` })
   } else {
     await runFixtureTurn(ctx, { task: `${TASK_MARKER} program: call ${PROBE_TOOL} on two files from one program.` })
   }
