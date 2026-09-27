@@ -504,6 +504,23 @@ describe('headless runner', () => {
     await ctx.fiber.dispose()
   })
 
+  it('registers its two listeners in apply, in every output format, before the run reaches its Agent', async () => {
+    // P1-01 acceptance[0]: the post-mount comparison reads this entry's
+    // registrations once, so they must be the same fixed set whatever the
+    // output format and however far the run has got.
+    for (const outputFormat of ['text', 'json', 'stream-json'] as const) {
+      const ctx = new Context()
+      internals.stdout = { write: () => true }
+      internals.stderr = { write: () => true }
+      ctx.provide('appExit', () => {})
+      ctx.provide('loader', { await: () => new Promise<void>(() => {}) } as never)
+      apply(ctx, { task: 't', outputFormat })
+      const labels = ctx.fiber.getEffects().map(effect => effect.label)
+      expect(labels, outputFormat).toEqual(expect.arrayContaining(['ctx.on("session/event")', 'ctx.on("agent/assistant-stream")']))
+      await ctx.fiber.dispose()
+    }
+  })
+
   it('fails loud without the launcher-provided exit request', () => {
     const ctx = new Context()
     expect(() => { apply(ctx, { task: 't' }) }).toThrow('must provide ctx.appExit')
