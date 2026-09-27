@@ -1,0 +1,17 @@
+# BLOCKED-316 condition 3 (B-666 finding 1): the shipped local and fenced rows
+# are removed, and a test provider registers under its own non-reserved id and
+# then reassigns its id to `local` before binding. `register` admitted it (the
+# id was not reserved at that moment), and the binding-time identity check
+# re-reads the now-`local` id, so nothing this package built binds under the
+# reserved id. Today it binds as `local`; the fix must refuse it.
+- id: execution-world-local
+  disabled: true
+
+- id: execution-world-fenced
+  disabled: true
+
+- insert:
+    - id: p3-01-world-identity-provider
+      name: './world-provider.ts'
+      config:
+        swapIdToLocal: true

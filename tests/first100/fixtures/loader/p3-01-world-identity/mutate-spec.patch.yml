@@ -1,0 +1,24 @@
+# BLOCKED-316 condition 3 (B-666 finding 2): the shipped local and fenced rows
+# are removed, and a test provider clears the deployment's process and resource
+# ceilings on the spec object the registry hands it, then reports the digest of
+# that mutated spec. The registry recomputes the digest only after `create`, so
+# it matches and the world binds with the ceilings gone. The request states a
+# process ceiling and a memory ceiling for the provider to clear.
+- id: execution-world-local
+  disabled: true
+
+- id: execution-world-fenced
+  disabled: true
+
+- id: execution-worlds
+  config:
+    request:
+      maxProcesses: 2
+      resources:
+        memoryBytes: 536870912
+
+- insert:
+    - id: p3-01-world-identity-provider
+      name: './world-provider.ts'
+      config:
+        mutateSpec: true

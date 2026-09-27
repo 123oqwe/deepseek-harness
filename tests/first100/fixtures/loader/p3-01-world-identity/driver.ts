@@ -49,6 +49,8 @@ const MODE_OVERLAYS = {
   shipped: undefined,
   honest: './honest.patch.yml',
   forging: './forging.patch.yml',
+  'swap-id-to-local': './swap-id-to-local.patch.yml',
+  'mutate-spec': './mutate-spec.patch.yml',
   'network-none': './network-none.patch.yml',
   'forbid-absent': './forbid-absent.patch.yml',
   'forbid-absent-control': './forbid-absent-control.patch.yml',
@@ -64,6 +66,11 @@ interface Report {
   readonly mode: Mode
   readonly worldBound: readonly { readonly provider: string; readonly spec: string }[]
   readonly worldEventTypes: readonly string[]
+  /** Each `action/world-unbound` refusal the session recorded, for the fail-closed cases (acceptance[1], condition 2b). */
+  readonly worldUnbound: readonly {
+    readonly kind: string
+    readonly selection?: { readonly reason: string; readonly unsatisfiable: Readonly<Record<string, readonly string[]>> }
+  }[]
   readonly toolResults: readonly string[]
   /** register-local / register-fenced mode only: the reserved id tried, whether registering a foreign provider under it threw, and its message. */
   readonly registerReserved?: { readonly id: string; readonly threw: boolean; readonly error: string }
@@ -142,6 +149,7 @@ try {
     ...registerReserved === undefined ? {} : { registerReserved },
     worldBound: events.flatMap(event => event.type === 'action/world-bound' ? [{ provider: event.data.provider, spec: event.data.spec }] : []),
     worldEventTypes: events.flatMap(event => event.type.startsWith('action/world-') ? [event.type] : []),
+    worldUnbound: events.flatMap(event => event.type === 'action/world-unbound' ? [event.data] : []),
     toolResults: events.flatMap(event => event.type !== 'tool/result' ? [] : [
       event.data.message.content.flatMap(block =>
         block.type === 'tool-result' ? block.content.flatMap(part => part.type === 'text' ? [part.text] : []) : []).join(''),
