@@ -303,10 +303,10 @@ export interface EnforcementInput {
  * package.json is a development profile; the launcher publishes this fact once,
  * before any config-tree entry mounts, on every launch. It is the ONE reading
  * of that declaration: the dispatch decision below consumes it, and Epic
- * P1-02's unsigned-development admission and Epic P0-05's insecure-mode banner
- * are to consume the same slot rather than re-read the manifest. Provided under
- * a bare service name, as `apps/cli`'s `featureGates` is, until a typed
- * consumer exists.
+ * P1-02's unsigned-development admission and the G4 untrusted banner (shown
+ * only in a development profile) are to consume the same slot rather than
+ * re-read the manifest. Provided under a bare service name, as `apps/cli`'s
+ * `featureGates` is, until a typed consumer exists.
  */
 export const DEVELOPMENT_PROFILE_KEY = 'developmentProfile'
 

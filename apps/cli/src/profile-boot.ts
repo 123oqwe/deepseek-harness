@@ -658,8 +658,8 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
     // Whether THIS launch is an explicit development profile (Epic P0-02
     // acceptance[2]/[3], C19 §2), published once here — before any config-tree
     // entry mounts, on every launch — so the dispatch paths, and later P1-02's
-    // unsigned-development admission and P0-05's banner, read one launcher fact
-    // rather than re-reading the manifest. The dispatch paths refuse a
+    // unsigned-development admission and the G4 untrusted banner, read one
+    // launcher fact rather than re-reading the manifest. The dispatch paths refuse a
     // kernel-less dispatch unless the launch is a development profile; by this
     // line an insecure opt-in on a non-development profile has already refused
     // the boot, so a kernel-less launch that reaches here is a development one.
