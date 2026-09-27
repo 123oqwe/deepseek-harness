@@ -42,16 +42,19 @@ import {
   appendManifestAndDecide,
   approvalBindingFor,
   decideUnrecordedAction,
+  filePreconditionsFor,
   gateActionRisk,
   judgeActionRisk,
   manifestClassificationOf,
   readExecutionWorldFact,
   readPolicyContextFacts,
   refuseNewAction,
+  refusedApprovalResult,
   refusedDispatchResult,
   refusedPolicyResult,
   refusedRiskResult,
   refusedUnrecordedCallResult,
+  verifyRecordedApproval,
 } from './external-effect.ts'
 import type { ActionRiskVerdict, ManifestedDispatchRequest } from './external-effect.ts'
 import { renderToolsSdk } from './ts-types.ts'
@@ -2120,6 +2123,11 @@ export class ToolRuntime extends Service {
    * action the preset in force wants approved asks for it, bound to this call,
    * and runs only if it is granted, and the gate records `action/risk-gated`.
    *
+   * The approval is bound to the versions of the files the call declares, and
+   * they are re-verified before the call runs (P2-06 acceptance[0], on this
+   * seam too): a declared file changed between the ask and the dispatch refuses
+   * the call, as it does on the native and code-mode paths.
+   *
    * Only in a composition that pins the Trust Kernel, as with the manifest and
    * the decision; a call with no agent has already been refused there.
    * @param exec - the prepared execution, with its detached arguments and agent.
@@ -2130,15 +2138,29 @@ export class ToolRuntime extends Service {
     const agent = exec.agent
     if (agent === undefined || this.ctx.get('trustKernel') === undefined) return undefined
     try {
-      // No file precondition: this seam gates and dispatches in one step with
-      // no re-verification, so a bound precondition would never be read back
-      // (P2-06 acceptance[0] covers the native and code-mode paths, which do
-      // re-verify).
-      const binding = approvalBindingFor(agent, exec.callId, exec.name, exec.arguments as JsonValue, Date.now(), [])
-      const refusal = await gateActionRisk(
-        this.ctx, agent, exec.name, this.get(exec.name, agent)?.riskDomainTags ?? [], risk.judged, binding,
+      // P2-06 acceptance[0], on this seam too: the approval is bound to the
+      // versions of the files the call declares, read once here at the ask and
+      // once before the dispatch below. Since BLOCKED-344 this seam asks for an
+      // approval, and "after the approval" is every approval path; it gates and
+      // dispatches in one step, so the re-verification is the last thing before
+      // the call runs. One `filePreconditionsFor`/`verifyRecordedApproval` pair,
+      // as the native and code-mode paths use.
+      const tool = this.get(exec.name, agent)
+      const binding = approvalBindingFor(
+        agent, exec.callId, exec.name, exec.arguments as JsonValue, Date.now(),
+        await filePreconditionsFor(this.ctx, tool, exec.arguments),
       )
-      return refusal === undefined ? undefined : refusedRiskResult(refusal, exec.name)
+      const refusal = await gateActionRisk(
+        this.ctx, agent, exec.name, tool?.riskDomainTags ?? [], risk.judged, binding,
+      )
+      if (refusal !== undefined) return refusedRiskResult(refusal, exec.name)
+      const stale = verifyRecordedApproval(
+        agent,
+        { ...binding.inputs, preconditions: await filePreconditionsFor(this.ctx, tool, exec.arguments) },
+        Date.now(),
+        binding.actionId,
+      )
+      return stale === undefined ? undefined : refusedApprovalResult(stale, exec.name)
     } catch (error: unknown) {
       return toolErrorResult(error)
     }
