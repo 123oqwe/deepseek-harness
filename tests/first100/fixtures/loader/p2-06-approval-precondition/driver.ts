@@ -1,10 +1,10 @@
 /**
- * Driver for B-668's cases, the P2-06 red first (BLOCKED-318): acceptance[0]
- * as C19 narrowed it, acceptance[1] and acceptance[2], on the SHIPPED headless
- * profile, for an approved action whose declared file is left alone, rewritten
- * or created between the ask and the execution.
+ * Driver for B-668's and B-679's cases, the P2-06 red first (BLOCKED-318):
+ * acceptance[0] as C19 narrowed it, acceptance[1] and acceptance[2], on the
+ * SHIPPED headless profile, for an approved action whose declared file is left
+ * alone, rewritten or created between the ask and the execution.
  *
- * It changes into the working directory the spec shares between both modes,
+ * It changes into the working directory the spec shares between the modes,
  * boots headless through `bootProductionProfile` with the originator cases'
  * overlay, leaves `DSH_PERMISSION_MODE` unset so the base layer's default
  * preset applies, sets `DSH_TOOLS_MODE=ptc` first in code mode, and pins the
@@ -18,7 +18,11 @@
  *
  * `native` runs one turn per file (unchanged, changed, created); `code-mode`
  * runs one turn whose `run_code` program calls the probe on the unchanged file
- * and then on the changed one. It prints one `P2-06-PRECONDITION <json>` line.
+ * and then on the changed one; `direct` runs one turn per file (unchanged,
+ * changed, created) in which the model calls the relay, a plugin tool that
+ * calls the probe through the public `ToolRuntime.execute` seam, presenting
+ * the agent and the Capability Token its own execution was admitted with. It
+ * prints one `P2-06-PRECONDITION <json>` line.
  * @module tests/first100/fixtures/loader/p2-06-approval-precondition/driver
  */
 
@@ -27,7 +31,8 @@ import { writeFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { HOST_USER_IDENTITY_KEY, type HostUserIdentityFactory } from '@deepseek-ai/dsh-agent-loop'
 import { resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
-import type { GenerateOptions, StreamChunk } from '@deepseek-ai/dsh-llm'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import type { GenerateOptions, StreamChunk, ToolCallId } from '@deepseek-ai/dsh-llm'
 import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
 import { endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
 import { defineContentToolFixture, RUN_CODE_NAME } from '@deepseek-ai/dsh-tools'
@@ -45,6 +50,7 @@ import {
   PROBE_KINDS,
   PROBE_TOOL,
   probeFile,
+  RELAY_TOOL,
   RUN_CODE_CALL_ID,
   SECRET,
 } from './shared.ts'
@@ -102,6 +108,9 @@ function answer(options: GenerateOptions): StreamChunk[] {
   if (!opensTurn) return textResponse('done')
   const task = options.messages.flatMap(message => message.role !== 'user' ? [] : message.content.flatMap(block =>
     block.type === 'text' && block.text.includes(TASK_MARKER) ? [block.text] : [])).at(-1)
+  for (const kind of PROBE_KINDS.direct) {
+    if (task?.includes(`${TASK_MARKER} direct ${kind}`) === true) return toolCallResponse(`b679-relay-${kind}`, RELAY_TOOL, { kind })
+  }
   for (const kind of PROBE_KINDS.native) {
     if (task?.includes(`${TASK_MARKER} ${kind}`) === true) {
       return toolCallResponse(actionIdOf('native', kind), PROBE_TOOL, { path: pathOf(kind), note: SECRET })
@@ -137,6 +146,39 @@ try {
       return Promise.resolve([{ type: 'text' as const, text: 'probe ran' }])
     },
   }))
+
+  const nested: { callId: string; isError: boolean | null; text: string }[] = []
+  // Registered only in `direct`, so the other modes' tool lists stay as they were.
+  if (mode === 'direct') {
+    ctx.tools.register(defineContentToolFixture({
+      name: RELAY_TOOL,
+      description: 'a plugin tool that calls the probe through the tool runtime under the token it was admitted with',
+      riskDomainTags: ['filesystem-read'],
+      parameters: {
+        kind: { type: 'string', required: true, description: 'Which declared file the probe call acts on.' },
+      },
+      execute: async (args, exec) => {
+        const kind = PROBE_KINDS.direct.find(entry => entry === args.kind)
+        if (kind === undefined) throw new Error(`p2-06 approval-precondition relay: no probe file for ${JSON.stringify(args.kind)}`)
+        const callId = actionIdOf('direct', kind)
+        try {
+          const result = await ctx.tools.execute({
+            callId: brandString<ToolCallId>(callId),
+            rootCallId: exec.rootCallId,
+            name: PROBE_TOOL,
+            arguments: { path: pathOf(kind), note: SECRET },
+            ...exec.agent === undefined ? {} : { agent: exec.agent },
+            ...exec.capabilityToken === undefined ? {} : { capabilityToken: exec.capabilityToken },
+            signal: exec.signal,
+          })
+          nested.push({ callId, isError: result.isError, text: result.content.flatMap(block => block.type === 'text' ? [block.text] : []).join('') })
+        } catch (error: unknown) {
+          nested.push({ callId, isError: null, text: error instanceof Error ? error.message : String(error) })
+        }
+        return [{ type: 'text' as const, text: 'relay ran' }]
+      },
+    }))
+  }
 
   const asked: { actionId: string | null; arguments: string | null; displayFields: readonly string[] | null }[] = []
   // The file each probe call acts on, by the action id its approval is bound
@@ -184,6 +226,8 @@ try {
   if (root === undefined) throw new Error('p2-06 approval-precondition driver: no root agent after creation')
   if (mode === 'native') {
     for (const kind of PROBE_KINDS.native) await runFixtureTurn(ctx, { task: `${TASK_MARKER} ${kind}: call ${PROBE_TOOL} once.` })
+  } else if (mode === 'direct') {
+    for (const kind of PROBE_KINDS.direct) await runFixtureTurn(ctx, { task: `${TASK_MARKER} direct ${kind}: call ${RELAY_TOOL} once.` })
   } else {
     await runFixtureTurn(ctx, { task: `${TASK_MARKER} program: call ${PROBE_TOOL} on two files from one program.` })
   }
@@ -205,6 +249,7 @@ try {
         isError: block.isError ?? false,
         text: block.content.flatMap(part => part.type === 'text' ? [part.text] : []).join(''),
       }])),
+    nested,
   }
   process.stdout.write(`P2-06-PRECONDITION ${JSON.stringify(report)}\n`)
 } finally {
