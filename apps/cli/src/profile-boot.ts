@@ -537,7 +537,7 @@ export function resolveProfileFeatureGates(
     const envOverride = resolveFeatureGateEnvOverride(env[featureGateEnvVarName(declaration.id)])
     return resolveFeatureGate(declaration, profile, envOverride === undefined
       ? {}
-      : { env: envOverride, hasKernelAdministrativeAuthority: true })
+      : { env: envOverride, hasKernelAdministrativeAuthority: false })
   })
 }
 
