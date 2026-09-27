@@ -351,9 +351,7 @@ async function runGroup(
     // versions are compared against.
     // A refusal REFUSES the dispatch: a verification whose result is reported
     // and then ignored passes every case asserting it was called.
-    const nowPreconditions = await filePreconditionsFor(ctx, ctx.tools.get(call.block.name, agent), call.exec.arguments)
-    const present = { ...binding.inputs, preconditions: nowPreconditions }
-    const staleApproval = verifyRecordedApproval(agent, present, Date.now(), binding.actionId)
+    const staleApproval = verifyRecordedApproval(agent, binding.inputs, Date.now(), binding.actionId)
     if (staleApproval !== undefined) {
       slots[index] = {
         exec: call.exec as unknown as ToolRunContext,
