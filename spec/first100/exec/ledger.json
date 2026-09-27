@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-27T14:05:32.839Z",
-  "inputDigest": "91a6d81604d757c886179c729e441ea8ef244fb5e173cb41b39865ff8e1bd9ae",
+  "lastUpdatedUtc": "2026-09-27T14:07:57.751Z",
+  "inputDigest": "63a61ca901296247b87d4e3cae3dc6a98015306bee1a8fb243a07453d30a3097",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -254,10 +254,10 @@
       "supplements": {
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
-          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
+          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
           "expectCasesMatched": [
             "P0-02 acceptance[2] -- in-process launch of each factory profile refuses to boot the factory acp profile in-process when the Trust Kernel fails to pin and DSH_TRUST_KERNEL_INSECURE is unset, before any config-tree entry mounts",
             "P0-02 acceptance[2] -- in-process launch of each factory profile refuses to boot the factory web profile in-process when the Trust Kernel fails to pin and DSH_TRUST_KERNEL_INSECURE is unset, before any config-tree entry mounts",
@@ -270,7 +270,45 @@
             "Trust Kernel runtime module src/index.ts (Epic P0-02 acceptance[1]) authors no model-facing text: src/ holds only index.ts and types.ts, and every string literal in src/index.ts is a service key, an algorithm id, a verdict or a caller-facing error, and the list is complete",
             "Trust Kernel runtime module src/index.ts (Epic P0-02 acceptance[1]) imports only node:crypto, @deepseek-ai/cordis and its own types, and exports no Cordis plugin entry"
           ],
-          "capturedAtUtc": "2026-09-24T12:17:29.560Z"
+          "capturedAtUtc": "2026-09-27T14:07:24.090Z"
+        },
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
+          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
+          "expectCasesMatched": [
+            "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) acceptance[2]: the shipped acp profile launched with DSH_TRUST_KERNEL_INSECURE set refuses to start before any config-tree entry mounts",
+            "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) acceptance[2]: the shipped web profile launched with DSH_TRUST_KERNEL_INSECURE set refuses to start before any config-tree entry mounts",
+            "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) acceptance[2]: the shipped headless profile launched with DSH_TRUST_KERNEL_INSECURE set refuses to start before any config-tree entry mounts",
+            "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) acceptance[2]: the shipped sdk profile launched with DSH_TRUST_KERNEL_INSECURE set refuses to start before any config-tree entry mounts",
+            "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) acceptance[2]: the shipped sdk-minimal profile launched with DSH_TRUST_KERNEL_INSECURE set refuses to start before any config-tree entry mounts",
+            "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) control: the shipped acp profile launched with DSH_TRUST_KERNEL_INSECURE empty pins its kernel and mounts the sentinel entry",
+            "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) control: the shipped web profile launched with DSH_TRUST_KERNEL_INSECURE empty pins its kernel and mounts the sentinel entry",
+            "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) control: the shipped headless profile launched with DSH_TRUST_KERNEL_INSECURE empty pins its kernel and mounts the sentinel entry",
+            "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) control: the shipped sdk profile launched with DSH_TRUST_KERNEL_INSECURE empty pins its kernel and mounts the sentinel entry",
+            "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) control: the shipped sdk-minimal profile launched with DSH_TRUST_KERNEL_INSECURE empty pins its kernel and mounts the sentinel entry",
+            "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) acceptance[3]: an explicit development profile launched with DSH_TRUST_KERNEL_INSECURE set starts without a kernel, warns on stderr, and tells the model it runs insecure",
+            "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) control: the same development profile launched with DSH_TRUST_KERNEL_INSECURE empty pins its kernel, prints no warning, and tells the model nothing of the kind"
+          ],
+          "capturedAtUtc": "2026-09-27T14:07:23.423Z"
+        },
+        "U.3": {
+          "status": "GREEN",
+          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
+          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
+          "expectCasesMatched": [
+            "P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) acceptance[2] (native): a tool call is refused and its body never runs",
+            "P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) acceptance[2] (code-mode): a tool called from a run_code program never runs",
+            "P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) control (native): with the kernel pinned, the same tool call runs once",
+            "P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) control (code-mode): with the kernel pinned, the same program runs the tool once",
+            "P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) acceptance[2] (direct call, B-675): a plugin calling ToolRuntime.execute, on behalf of the root agent or with no agent, is refused and the tool body never runs",
+            "P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) control (direct call, B-675): with the kernel pinned, the call on behalf of the root agent presenting its session token runs the tool once"
+          ],
+          "capturedAtUtc": "2026-09-27T14:07:23.753Z"
         }
       },
       "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
@@ -1969,10 +2007,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
+          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
           "expectCasesMatched": [
             "records the unverified state a package shipping no provenance claim actually has, naming no-provenance-claim and carrying no package digest",
             "carries no trust anchor id on an unverified record, so an unverified package cannot be read as anchored to anything",
@@ -1985,7 +2023,7 @@
             "records the same manifest digest for two entries staged from byte-identical package.json files, so the digest does not depend on the temp path",
             "keeps every value of a signature and key fingerprint the package own dsh field carries out of the built permission state, checked over the whole serialized state and not only its top-level field names"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:29.483Z"
+          "capturedAtUtc": "2026-09-27T14:07:25.347Z"
         },
         "F": {
           "status": "GREEN",
@@ -2063,7 +2101,7 @@
           "capturedAtUtc": "2026-09-15T07:11:35.115Z"
         }
       },
-      "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
+      "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",
@@ -2238,10 +2276,10 @@
       "supplements": {
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
+          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
           "expectCasesMatched": [
             "P1-03 Usage — a production boot consults the lock (must[2]) must[2]: a profile whose manifest digest has DRIFTED since the lock is refused at boot",
             "P1-03 Usage — a production boot consults the lock (must[2]) must[2]: the SAME profile with an untouched install is admitted and reports itself verified",
@@ -2253,7 +2291,7 @@
             "P1-03 Usage — the unlocked-profile policy comes from the bundles (must[2]) must[2]: a profile whose layers declare NO policy fails loudly, because the policy is required with no default",
             "P1-03 Usage — the lock `dsh plugin` writes is the lock boot reads (must[1] to must[2]) must[1]: a lock built from the real installed packages admits the boot it describes"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:30.703Z"
+          "capturedAtUtc": "2026-09-27T14:07:24.460Z"
         },
         "U.2": {
           "status": "GREEN",
@@ -3522,15 +3560,15 @@
         },
         "U.10": {
           "status": "GREEN",
-          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-e2e-workflow.json",
-          "observationSha256": "5e43c862426dbe3fa53e083a831e5ccae32f653cc1610d5dde11232286f9be1c",
+          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-e2e-workflow.json",
+          "observationSha256": "8b417c44f935c2063ba2b1512e6a24cf2351871b922eef437a451160b12276e0",
           "expectCasesMatched": [
             "dsh --profile web with the documented GitHub webhook patch, booted in-process through the launcher (no key required) control: the signed delivery is accepted and creates one webhook session whose first action manifest names an actor",
             "dsh --profile web with the documented GitHub webhook patch, booted in-process through the launcher (no key required) P2-01 acceptance[0]: an action a webhook delivery triggers traces to the integration ServicePrincipal the HMAC key stands for"
           ],
-          "capturedAtUtc": "2026-09-27T05:34:05.762Z"
+          "capturedAtUtc": "2026-09-27T14:07:57.739Z"
         }
       },
       "candidateSha": "6bbc302797c3b62b3e7adf8421fd2473aee3ff85",
