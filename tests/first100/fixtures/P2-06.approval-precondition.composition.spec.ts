@@ -1,6 +1,7 @@
 /**
- * B-668, B-679 and B-681, the P2-06 red first (BLOCKED-318): acceptance[0] as C19
- * narrowed it, acceptance[1] and acceptance[2], on the shipped headless profile.
+ * B-668, B-670, B-679, B-681 and B-683, the P2-06 red first (BLOCKED-318):
+ * must[0], acceptance[0] as C19 narrowed it, acceptance[1] and acceptance[2],
+ * on the shipped headless profile.
  *
  * `./loader/p2-06-approval-precondition/driver.ts` boots the SHIPPED headless
  * profile over the originator cases' overlay with a keyless scripted model and
@@ -19,14 +20,15 @@
  * file creates the working directory the modes share and writes the files
  * that exist before the asks.
  *
- * Red today on the ten changed-file cases: every dispatch path binds an
- * approval with no precondition, so nothing before execution sees the file,
- * and the public seam does not re-verify an approval at all. The five
- * `-relative` ones also need the precondition to resolve a relative declared
- * path against the session's working directory. Red today as well
- * on the code-mode display case (B-670):
- * a sub-call's approval request carries no display. The rest are green today
- * and after the fix.
+ * Without the P2-06 fix (A-549, A-549b, A-549c) the ten changed-file cases
+ * fail: every dispatch path binds an approval with no precondition, so nothing
+ * before execution sees the file, and the public seam does not re-verify an
+ * approval at all. The five `-relative` ones also need the precondition to
+ * resolve a relative declared path against the session's working directory.
+ * The code-mode display case (B-670) fails too, because a sub-call's approval
+ * request carries no display, and so does the direct display case (B-683),
+ * because the public seam asks with no display. The rest pass with and
+ * without the fix.
  * @module tests/first100/fixtures/P2-06.approval-precondition.composition
  */
 
@@ -274,6 +276,17 @@ describe('P2-06 on the shipped headless profile: an approval bound to the file i
 
   it('must[0] and acceptance[1] (code-mode): a sub-call\'s approval request shows the same six display fields, its arguments redacted and without the secret value', () => {
     const report = reports.get('code-mode')
+    const asked = report?.asked ?? []
+    expect(asked.length, JSON.stringify(report)).toBeGreaterThan(0)
+    for (const entry of asked) {
+      expect(entry.displayFields, JSON.stringify(report)).toEqual(DISPLAY_FIELDS)
+      expect(entry.arguments ?? '', JSON.stringify(report)).not.toContain(SECRET)
+      expect(entry.arguments ?? '', JSON.stringify(report)).toContain('<redacted>')
+    }
+  })
+
+  it('must[0] and acceptance[1] (direct): the approval request of a call a plugin makes through ToolRuntime.execute shows the same six display fields, its arguments redacted and without the secret value', () => {
+    const report = reports.get('direct')
     const asked = report?.asked ?? []
     expect(asked.length, JSON.stringify(report)).toBeGreaterThan(0)
     for (const entry of asked) {
