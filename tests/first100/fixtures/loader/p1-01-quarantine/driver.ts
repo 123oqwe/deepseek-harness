@@ -29,7 +29,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { DEFAULT_PROFILE_PATCH_RELOAD, initProfile, loadLayeredEnv, resolveProfileDir } from '@deepseek-ai/dsh-app-boot'
 import { runProfile } from '../../../../../apps/cli/src/profile-boot.ts'
-import { DECLARES_UNREGISTERED_LAYER, MATCH_STAYS_LAYER, MATCH_TOOL, MISMATCH_NAME, MISSING_MANIFEST_LAYER } from './shared.ts'
+import { DECLARES_UNREGISTERED_LAYER, MATCH_STAYS_LAYER, MATCH_TOOL, MISMATCH_NAME, MISSING_MANIFEST_LAYER, SUBPATH_UNDECLARED_LAYER } from './shared.ts'
 
 /** A manifest-v2 `dsh` field declaring one tool by name. */
 function manifestDeclaring(toolName: string): Record<string, unknown> {
@@ -58,7 +58,7 @@ function stageBundlePackage(profileDir: string, name: string, dshExtra: Record<s
   if (entryModule !== undefined) writeFileSync(join(pkgDir, 'index.mjs'), entryModule)
 }
 
-/** An `index.mjs` whose `apply` labels a `tools.register(<name>)` effect. */
+/** An `index.mjs`/`startup.mjs` whose `apply` labels a `tools.register(<name>)` effect. */
 function labeledToolEntry(toolName: string): string {
   return [
     'export function apply(ctx) {',
@@ -68,6 +68,21 @@ function labeledToolEntry(toolName: string): string {
   ].join('\n')
 }
 
+/** Stage a bundle package whose entry is at a `/startup` SUBPATH; its manifest resolves to the package root. */
+function stageSubpathLayer(profileDir: string, name: string, declaredTool: string, observedTool: string): void {
+  const pkgDir = join(profileDir, 'node_modules', name)
+  mkdirSync(pkgDir, { recursive: true })
+  writeFileSync(join(pkgDir, 'package.json'), JSON.stringify({
+    name,
+    version: '1.0.0',
+    type: 'module',
+    exports: { './startup': './startup.mjs' },
+    dsh: { bundle: { patch: './cordis.patch.yml' }, ...manifestDeclaring(declaredTool) },
+  }))
+  writeFileSync(join(pkgDir, 'cordis.patch.yml'), `- insert:\n    - id: ${name}-startup\n      name: ${name}/startup\n`)
+  writeFileSync(join(pkgDir, 'startup.mjs'), labeledToolEntry(observedTool))
+}
+
 const home = mkdtempSync(join(tmpdir(), 'p1-01-quarantine-home-'))
 process.env.DSH_HOME = home
 process.env.DSH_PLUGIN_MANIFEST_ENFORCEMENT = 'enforce'
@@ -75,7 +90,7 @@ process.env.DSH_FEATURE_GATE_PLUGIN_MANIFEST_ENFORCEMENT = 'enforce'
 
 const profileName = 'p1-01-quarantine'
 const profileDir = resolveProfileDir(profileName, home)
-initProfile(profileDir, [MATCH_STAYS_LAYER, MISSING_MANIFEST_LAYER, DECLARES_UNREGISTERED_LAYER], DEFAULT_PROFILE_PATCH_RELOAD)
+initProfile(profileDir, [MATCH_STAYS_LAYER, MISSING_MANIFEST_LAYER, DECLARES_UNREGISTERED_LAYER, SUBPATH_UNDECLARED_LAYER], DEFAULT_PROFILE_PATCH_RELOAD)
 
 // match-stays: manifest-v2 declares MATCH_TOOL, and its entry labels a
 // tools.register(MATCH_TOOL) effect — declared == observed → admitted, not
@@ -100,6 +115,11 @@ stageBundlePackage(
   `- insert:\n    - id: ${DECLARES_UNREGISTERED_LAYER}-entry\n      name: ${DECLARES_UNREGISTERED_LAYER}\n`,
   labeledToolEntry(MISMATCH_NAME),
 )
+// subpath-undeclared: a /startup SUBPATH entry whose manifest (resolved to the
+// package root) declares MATCH_TOOL but whose entry labels MISMATCH_NAME —
+// observed-not-declared. Must be QUARANTINED. RED today (skipped / subpath not
+// resolved to its package); green after 甲.
+stageSubpathLayer(profileDir, SUBPATH_UNDECLARED_LAYER, MATCH_TOOL, MISMATCH_NAME)
 
 let ctx: Context | undefined
 let bootError: string | undefined
