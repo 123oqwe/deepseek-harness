@@ -30,6 +30,7 @@ import {
   partitionProfileLayersByAdmission,
   PROFILE_PATCH_FILENAME,
   PROFILE_TEMPLATES,
+  readProfileManifest,
   resolveProfileDir,
   watchUserPatches,
   type BlockedProfileLayer,
@@ -356,6 +357,9 @@ export interface RunProfileOptions {
 /** Env var whose non-empty value opts a development boot into skipping Trust Kernel initialization. */
 const TRUST_KERNEL_INSECURE_ENV = 'DSH_TRUST_KERNEL_INSECURE'
 
+/** Name of the system-prompt section that tells the model it runs without a Trust Kernel (Epic P0-02 acceptance[3]). */
+const INSECURE_MODE_SECTION = 'insecure-development-mode'
+
 /**
  * Resolve the Trust Kernel insecure-boot opt-in (Epic P0-02 acceptance
  * clause 3). ANY non-empty value opts in, mirroring
@@ -557,6 +561,16 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
   const pluginEnforcement = resolvePluginEnforcementMode(process.env[PLUGIN_ENFORCEMENT_ENV])
   const composed = await composeProfile(options.profile, options.patchFiles, pluginEnforcement, options.fromDefaultProfile)
   const trustKernelInsecure = resolveTrustKernelInsecureOptIn(process.env[TRUST_KERNEL_INSECURE_ENV])
+  // Only a profile that declares `dsh.profile.development: true` in its own
+  // package.json may opt out of the Trust Kernel (Epic P0-02 acceptance[2]/[3]).
+  // Read once here — before boot() creates any Context — and reused below for
+  // the model-visible insecure notice. A shipped profile with the insecure
+  // opt-in set refuses to start before any config-tree entry mounts.
+  const profileManifest = readProfileManifest(NAME, composed.profile.dir)
+  const developmentProfile = (profileManifest.dsh?.profile as { readonly development?: unknown } | undefined)?.development === true
+  if (trustKernelInsecure && !developmentProfile) {
+    throw new Error(`${NAME}: ${TRUST_KERNEL_INSECURE_ENV} is set but profile ${JSON.stringify(options.profile)} is not a development profile -- refusing to boot (only a profile declaring dsh.profile.development may boot without a Trust Kernel)`)
+  }
   // Constructed before boot() creates the Cordis Context at all (must[1]):
   // createTrustKernel is pure and synchronous, so it cannot itself fail --
   // the insecure opt-in is the only way this boot proceeds without one.
@@ -697,6 +711,20 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
     && ctx.fiber.state === FiberState.ACTIVE
     && ctx.get('loader') !== undefined) {
     appReady.commit()
+  }
+  if (trustKernelInsecure && developmentProfile) {
+    // A development profile that opted out of the Trust Kernel tells the model,
+    // in its own request, that it runs without that protection (Epic P0-02
+    // acceptance[3]). The launcher adds this section, not the Kernel API, so the
+    // Kernel API carries no model-visible text (acceptance[1]).
+    const systemPrompt = ctx.get('systemPrompt')
+    if (systemPrompt !== undefined) {
+      systemPrompt.section({
+        name: INSECURE_MODE_SECTION,
+        order: systemPrompt.getSectionOrder('INSECURE_MODE'),
+        text: 'This DeepSeek Harness runs in an insecure development mode: no Trust Kernel is pinned, so root identity, signature roots, policy enforcement, audit append, the secret broker and sandbox attestation are all unavailable. Never rely on those protections here, and never use this mode in production.',
+      })
+    }
   }
   return { ctx, shutdown }
 }
