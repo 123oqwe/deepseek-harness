@@ -750,7 +750,9 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               // path wrote, so the two forms never meet.
               const preconditions = exec.agent === undefined
                 ? []
-                : await filePreconditionsFor(options.ledgerContext(), registry.get(name, exec.agent), normalized.logged)
+                : await filePreconditionsFor(
+                  options.ledgerContext(), registry.get(name, exec.agent), normalized.logged, exec.agent.session.header.cwd,
+                )
               const binding = exec.agent === undefined
                 ? undefined
                 : approvalBindingFor(exec.agent, subCallId, name, normalized.logged as JsonValue, Date.now(), preconditions)
@@ -785,7 +787,9 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               // the declared files' versions now, compared to the ask-time ones.
               const nowPreconditions = exec.agent === undefined
                 ? []
-                : await filePreconditionsFor(options.ledgerContext(), registry.get(name, exec.agent), normalized.logged)
+                : await filePreconditionsFor(
+                  options.ledgerContext(), registry.get(name, exec.agent), normalized.logged, exec.agent.session.header.cwd,
+                )
               const staleApproval = exec.agent === undefined || binding === undefined
                 ? undefined
                 : verifyRecordedApproval(exec.agent, { ...binding.inputs, preconditions: nowPreconditions }, Date.now(), binding.actionId)

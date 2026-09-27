@@ -39,8 +39,10 @@ import type { ClosedDecision } from '@deepseek-ai/dsh-policy-engine'
 import { dispatchDecisionWithoutKernel } from '@deepseek-ai/dsh-policy-enforcement'
 import type { WorldBindingRefusal } from '@deepseek-ai/dsh-execution-world/lifecycle'
 import {
+  APPROVAL_DISPLAY_VALIDITY_MS,
   appendManifestAndDecide,
   approvalBindingFor,
+  approvalDisplayFor,
   decideUnrecordedAction,
   filePreconditionsFor,
   gateActionRisk,
@@ -48,6 +50,7 @@ import {
   manifestClassificationOf,
   readExecutionWorldFact,
   readPolicyContextFacts,
+  redactArgumentsValueForDisplay,
   refuseNewAction,
   refusedApprovalResult,
   refusedDispatchResult,
@@ -57,6 +60,7 @@ import {
   verifyRecordedApproval,
 } from './external-effect.ts'
 import type { ActionRiskVerdict, ManifestedDispatchRequest } from './external-effect.ts'
+import type { ActionManifest } from '@deepseek-ai/dsh-action-manifest'
 import { renderToolsSdk } from './ts-types.ts'
 import type { ToolSdkSchema } from './ts-types.ts'
 import { renderToolsSdkPy } from './py-types.ts'
@@ -499,6 +503,12 @@ type MutableToolRunContext = Omit<ToolRunContext, 'signal'> & { signal: AbortSig
 /** The risk verdict a direct call's enforcement step takes, its manifest records and its risk gate reuses. */
 interface DirectCallRisk {
   judged: ActionRiskVerdict | undefined
+  /**
+   * The manifest the enforcement step appended, from which the risk gate draws
+   * the six-field display (P2-06 must[0]); absent until that step runs, or when
+   * no Trust Kernel is pinned.
+   */
+  manifest: ActionManifest | undefined
 }
 
 /**
@@ -2035,7 +2045,7 @@ export class ToolRuntime extends Service {
     // on the native path: two would be two answers that could disagree. The
     // enforcement step takes it from the execution snapshot, never from
     // `exec`, whose fields the snapshot reads once.
-    const risk: DirectCallRisk = { judged: undefined }
+    const risk: DirectCallRisk = { judged: undefined, manifest: undefined }
     return this.prepareExecution(
       exec,
       prepared => this.completeScheduledExecution(prepared),
@@ -2097,7 +2107,12 @@ export class ToolRuntime extends Service {
         const facts = await readPolicyContextFacts(this.ctx, agent, risk.judged?.classification)
         const world = await readExecutionWorldFact(this.ctx, agent)
         const manifested = risk.judged === undefined ? request : { ...request, classification: manifestClassificationOf(risk.judged) }
-        decision = appendManifestAndDecide(this.ctx, agent, exec.capabilityToken, manifested, facts, world).decision
+        // The manifest the risk gate's display draws from (P2-06 must[0]): the
+        // gate runs after this step, so it reads the record this append produced
+        // rather than manifesting the call a second time.
+        const appended = appendManifestAndDecide(this.ctx, agent, exec.capabilityToken, manifested, facts, world)
+        risk.manifest = appended.manifest
+        decision = appended.decision
       } catch (error: unknown) {
         return toolErrorResult(error)
       }
@@ -2123,10 +2138,12 @@ export class ToolRuntime extends Service {
    * action the preset in force wants approved asks for it, bound to this call,
    * and runs only if it is granted, and the gate records `action/risk-gated`.
    *
-   * The approval is bound to the versions of the files the call declares, and
-   * they are re-verified before the call runs (P2-06 acceptance[0], on this
+   * The approval is bound to the versions of the files the call declares,
+   * resolved against the agent's session cwd as this seam's execution resolves
+   * them, and re-verified before the call runs (P2-06 acceptance[0], on this
    * seam too): a declared file changed between the ask and the dispatch refuses
-   * the call, as it does on the native and code-mode paths.
+   * the call, as it does on the native and code-mode paths. The ask carries the
+   * six-field display drawn from the appended manifest (must[0]), as they do.
    *
    * Only in a composition that pins the Trust Kernel, as with the manifest and
    * the decision; a call with no agent has already been refused there.
@@ -2140,7 +2157,10 @@ export class ToolRuntime extends Service {
     try {
       // P2-06 acceptance[0], on this seam too: the approval is bound to the
       // versions of the files the call declares, read once here at the ask and
-      // once before the dispatch below. Since BLOCKED-344 this seam asks for an
+      // once before the dispatch below. The declared files resolve against the
+      // agent's session cwd — the SAME base this seam's own execution uses — so
+      // the binding versions the file the call will act on, not one under the
+      // backend default (A-549c). Since BLOCKED-344 this seam asks for an
       // approval, and "after the approval" is every approval path; it gates and
       // dispatches in one step, so the re-verification is the last thing before
       // the call runs. One `filePreconditionsFor`/`verifyRecordedApproval` pair,
@@ -2148,15 +2168,26 @@ export class ToolRuntime extends Service {
       const tool = this.get(exec.name, agent)
       const binding = approvalBindingFor(
         agent, exec.callId, exec.name, exec.arguments as JsonValue, Date.now(),
-        await filePreconditionsFor(this.ctx, tool, exec.arguments),
+        await filePreconditionsFor(this.ctx, tool, exec.arguments, agent.session.header.cwd),
       )
+      // must[0], as the native and code-mode paths pass it: this ask shows the
+      // six display fields, its arguments redacted. Drawn from the manifest the
+      // enforcement step appended, so all three paths show one account of the call.
       const refusal = await gateActionRisk(
         this.ctx, agent, exec.name, tool?.riskDomainTags ?? [], risk.judged, binding,
+        risk.manifest === undefined
+          ? undefined
+          : approvalDisplayFor(
+            risk.manifest,
+            risk.judged?.classification.riskClass ?? 'security-sensitive',
+            redactArgumentsValueForDisplay(exec.arguments),
+            Date.now() + APPROVAL_DISPLAY_VALIDITY_MS,
+          ),
       )
       if (refusal !== undefined) return refusedRiskResult(refusal, exec.name)
       const stale = verifyRecordedApproval(
         agent,
-        { ...binding.inputs, preconditions: await filePreconditionsFor(this.ctx, tool, exec.arguments) },
+        { ...binding.inputs, preconditions: await filePreconditionsFor(this.ctx, tool, exec.arguments, agent.session.header.cwd) },
         Date.now(),
         binding.actionId,
       )

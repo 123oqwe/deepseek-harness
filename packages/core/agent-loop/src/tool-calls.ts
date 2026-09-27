@@ -322,7 +322,9 @@ async function runGroup(
     // they MUST be read afresh at each site (acceptance[0]), so the ask records
     // the version each declared file had then and the re-verification sees the
     // version it has now; a file rewritten or created in between is the change.
-    const preconditions = await filePreconditionsFor(ctx, ctx.tools.get(call.block.name, agent), call.exec.arguments)
+    const preconditions = await filePreconditionsFor(
+      ctx, ctx.tools.get(call.block.name, agent), call.exec.arguments, agent.session.header.cwd,
+    )
     const binding = approvalBindingFor(agent, call.block.id, call.block.name, call.block.arguments, Date.now(), preconditions)
     const riskRefusal = await gateActionRisk(
       ctx, agent, call.block.name, ctx.tools.get(call.block.name, agent)?.riskDomainTags ?? [], judged,
@@ -351,7 +353,9 @@ async function runGroup(
     // versions are compared against.
     // A refusal REFUSES the dispatch: a verification whose result is reported
     // and then ignored passes every case asserting it was called.
-    const nowPreconditions = await filePreconditionsFor(ctx, ctx.tools.get(call.block.name, agent), call.exec.arguments)
+    const nowPreconditions = await filePreconditionsFor(
+      ctx, ctx.tools.get(call.block.name, agent), call.exec.arguments, agent.session.header.cwd,
+    )
     const present = { ...binding.inputs, preconditions: nowPreconditions }
     const staleApproval = verifyRecordedApproval(agent, present, Date.now(), binding.actionId)
     if (staleApproval !== undefined) {
