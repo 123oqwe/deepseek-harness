@@ -373,7 +373,7 @@ export class ReactLoopInbox implements InboxContract {
     // the log and no live notification. A key still claimed is admitted: its
     // own message coming back is a release, and a redelivery is cancelled at
     // the next claim once the claiming turn has ended.
-    const consumed = new Set(this.arrivals().consumed)
+    const consumed = new Set<string>()
     for (const message of inserted) {
       const key = arrivalKey(message)
       if (key !== undefined && consumed.has(key)) throw new DuplicateArrivalError(key, message.id)
