@@ -41,7 +41,7 @@ world 不运行命令。它是命令**在其中**运行的那层约束，而本 
 
 `WorldHandle` 以一个模块私有的 `unique symbol` 打牌记，因此模型吐出的任何对象字面量、任何从 JSON cast 来的值都无法居留这个类型（acceptance[2]）。handle **自身不携带权限**：它证明的是"该 world 由签发它的那个 provider 铸出"，而每个操作都取这个 handle，所以一个伪造对象什么也到不了。这与 Trust Kernel 给自己那些 handle 用的形状相同，理由也相同。
 
-注册表不凭 handle 自己的说法认定它由谁铸出（BLOCKED-316）。`bindingFor` 核对新建的 handle 是否写着选择所选中的 provider，是否带着注册表按它所要的 spec 算出的摘要；任一项不符就什么也不绑，`refusalFor(agent)` 写明是哪一项不符，注册表的工具 guard 拒绝该会话的每一次调用。`register` 按对象身份把 id `local` 与 `fenced` 分别保留给 `createLocalWorldProvider` 与 `createFencedWorldProvider` 造出的 provider，所以插件自己的 provider，或真 provider 的一份拷贝，注册时都被拒绝，错误写明这个 id。
+注册表不凭 handle 自己的说法认定它由谁铸出（BLOCKED-316）。`bindingFor` 核对新建的 handle 是否写着选择所选中的 provider，是否带着注册表按它所要的 spec 算出的摘要；任一项不符就什么也不绑，`refusalFor(agent)` 写明是哪一项不符，注册表的工具 guard 拒绝该会话的每一次调用。`register` 按对象身份把 id `local` 与 `fenced` 分别保留给 `createLocalWorldProvider` 与 `createFencedWorldProvider` 造出的 provider，所以插件自己的 provider，或真 provider 的一份拷贝，注册时都被拒绝，错误写明这个 id。核对用的是 provider 注册时的 id，而不是它之后自报的 id；每个 provider 拿到的是 spec 的一份深冻结副本，注册表在选择之前就算好了它的摘要，所以 provider 既不能把自己改名成 `local`，也不能改写用来核对它的 spec；绑定的资源上限也从这份副本读。记下的不符一直保留到某次绑定成功；同一 agent 的并发派发共用一次绑定尝试，所以在核对失败与拒绝之间没有调用能跑。
 
 attestation 交给 kernel，而不在此处验证。`WorldAttestation` 是证据；kernel 已经发布了 `sandboxAttestationVerifier`，本包里再放一个验证器就会成为第二个信任根。
 

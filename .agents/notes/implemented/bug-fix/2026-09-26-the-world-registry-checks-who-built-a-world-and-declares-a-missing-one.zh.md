@@ -29,3 +29,5 @@ BLOCKED-316，归 P3-01 acceptance[1] 与 acceptance[2]。world 注册表把新�
 - 用 `local` 或 `fenced` 注册一个不是本包造出的 provider 会抛错，错误写明这个 id。
 - guard 在风险闸之后运行，所以一个人可能被请求批准一次随后被 guard 拒绝的调用。
 - 验证：A-432、A-531 与 A-541（`tests/first100/fixtures/P3-01.world-identity.composition.spec.ts`），`packages/execution/execution-world/tests/registry.spec.ts` 与 `world-fact.spec.ts`。
+
+本 note 被[world 注册表核对它记下的，而不是 provider 事后自报的](2026-09-27-the-world-registry-checks-what-it-recorded-not-what-a-provider-reports.zh.md)部分取代：身份核对、摘要核对，以及 guard 的拒绝何时写入。
