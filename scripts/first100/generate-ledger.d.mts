@@ -293,16 +293,24 @@ export const REPORT_CONFIGS: ReadonlyMap<string, string | undefined>
 export function configFrozenReportRefusal(argv: readonly string[], reportFiles: readonly string[], reportPath: string): string | null
 
 /**
- * Why the process exit recorded beside an observation report refuses greening, or `null` when it does not
- * (BLOCKED-326). Vitest can exit non-zero on an unhandled error outside any case while its json report says
- * `success: true`, so each observation step in `first100-exact-sha.yml` writes its exit code to `<report>.exit.json`
- * as `{"exitCode": N}`; a report greens a cell only when that record exists and holds the integer 0.
+ * Why the exit record beside an observation report refuses greening, or `null` when it does not (BLOCKED-326).
+ * Vitest can exit non-zero on an unhandled error outside any case while its json report says `success: true`, so
+ * each observation step in `first100-exact-sha.yml` writes an exit record to `<report>.exit.json`. A record from
+ * `write-exit-record.mjs` must name the run `--ci-run-url` names and the report's sha256, and greens a cell from
+ * exit 0, or from exit 1 with no unhandled error when every failure is a registered flake; `--exit-override` does not
+ * apply to it. An older `{"exitCode": N}` record greens a cell from exit 0; a missing, malformed or non-zero one is
+ * refused unless the override reason cites the run and the step conclusion or log line it rests on.
  * @param reportPath - the `--report` argument; its exit record is the same path with `.json` replaced by `.exit.json`.
- * @param overrideReason - the `--exit-override` reason; a non-empty one lifts every refusal, and the greening records
- *   it in the cell with the recorded exit code.
+ * @param overrideReason - the `--exit-override` reason, or `undefined`.
+ * @param observed - what the record is checked against: the run id `--ci-run-url` names, the report's sha256, and
+ *   whether the report fails with only registered flakes.
  * @returns the refusal, or `null`.
  */
-export function recordedExitRefusal(reportPath: string, overrideReason: string | undefined): string | null
+export function recordedExitRefusal(
+  reportPath: string,
+  overrideReason: string | undefined,
+  observed: { readonly ciRunId: string | null; readonly reportSha256: string; readonly failuresAreRegisteredFlakes: boolean },
+): string | null
 
 /** One EXEC-STATE digest that no longer matches its file. `recorded` is `undefined` when the digest is absent. */
 export interface ExecStateDigestDrift {
