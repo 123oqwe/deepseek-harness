@@ -48,6 +48,20 @@ interface Observed {
   readonly lapsed: boolean
 }
 
+/** Phase 3's reading (safe-fail): what became of the Run whose session was deleted. */
+interface PhaseThree {
+  readonly restored: number
+  readonly runId: string | null
+  readonly state: string | null
+}
+
+/** What the orchestrator reported for the safe-fail scenario. */
+interface SafeFailObserved {
+  readonly phase1: PhaseOne
+  readonly phase3: PhaseThree
+  readonly lapsed: boolean
+}
+
 /**
  * Run the two-phase driver once.
  * @returns the orchestrator's combined reading.
@@ -63,6 +77,26 @@ async function boot(): Promise<Observed> {
   const observed = /P4-05-ACC2 (?<json>.+)/u.exec(stdout)?.groups?.json
   if (observed === undefined) throw new Error(`driver reported nothing usable:\n${stdout}`)
   return JSON.parse(observed) as Observed
+}
+
+/**
+ * Run the driver in the safe-fail scenario: phase 1 crashes with its Run
+ * durable, the orchestrator deletes the session log, phase 3 boots and reports
+ * the Run.
+ * @returns the orchestrator's safe-fail reading.
+ */
+async function bootSafeFail(): Promise<SafeFailObserved> {
+  const { stdout } = await runLoaderSmoke({
+    label: 'p4-05 safe fail after restart',
+    tempDirPrefix: 'p4-05-safe-fail-',
+    binScript: driver,
+    configPath: overlay,
+    tsconfigPath,
+    env: { P4_05_RECLAIM_SCENARIO: 'safe-fail' },
+  })
+  const observed = /P4-05-SAFEFAIL (?<json>.+)/u.exec(stdout)?.groups?.json
+  if (observed === undefined) throw new Error(`safe-fail driver reported nothing usable:\n${stdout}`)
+  return JSON.parse(observed) as SafeFailObserved
 }
 
 describe('P4-05 acceptance[2] on the shipped profile: an orphaned Run is reclaimed after a real restart', () => {
@@ -81,5 +115,23 @@ describe('P4-05 acceptance[2] on the shipped profile: an orphaned Run is reclaim
     expect(observed.phase2.state, JSON.stringify(observed)).toBe('starting')
     expect(observed.phase2.epoch ?? 0, JSON.stringify(observed)).toBeGreaterThan(observed.phase1.epoch ?? 0)
     expect(observed.phase2.leaseRefused, JSON.stringify(observed)).toBeNull()
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS * 3)
+})
+
+describe('P4-05 acceptance[2] on the shipped profile: an orphaned Run whose session is gone fails safely rather than dangling (A-560, red first for B-674)', () => {
+  it('a durable Run left with no recoverable session after a crash is recorded FAILED on the next boot, not left forever in a non-terminal state', async () => {
+    const observed = await bootSafeFail()
+    // The crash left the Run durable but its session deleted — the residual a
+    // crash between the Run persisting and the session persisting produces.
+    expect(observed.lapsed, JSON.stringify(observed)).toBe(true)
+    expect(observed.phase1.runId, JSON.stringify(observed)).not.toBeNull()
+    // The Run is still in the shared store after the restart (its session, not
+    // its Run record, was deleted).
+    expect(observed.phase3.restored, JSON.stringify(observed)).toBeGreaterThan(0)
+    expect(observed.phase3.runId, JSON.stringify(observed)).toBe(observed.phase1.runId)
+    // acceptance[2]'s "fails safely" branch: it can be neither adopted (no
+    // session to resume) nor left dangling, so the restart must record it in a
+    // terminal FAILED state. Today nothing sweeps it, so it stays non-terminal.
+    expect(observed.phase3.state, JSON.stringify(observed)).toBe('failed')
   }, LOADER_SMOKE_TEST_TIMEOUT_MS * 3)
 })

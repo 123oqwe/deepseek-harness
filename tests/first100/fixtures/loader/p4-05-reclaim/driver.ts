@@ -24,7 +24,7 @@
  * @module tests/first100/fixtures/loader/p4-05-reclaim/driver
  */
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdtempSync, readFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -50,7 +50,7 @@ const configPath = process.argv[2]
 if (configPath === undefined) throw new Error('p4-05 reclaim driver requires the overlay config path')
 const phase = process.env.P4_05_RECLAIM_PHASE
 
-if (phase === '1' || phase === '2') {
+if (phase === '1' || phase === '2' || phase === '3') {
   const ctx = await bootProductionProfile({
     binName: 'p4-05-reclaim',
     profile: 'headless',
@@ -88,7 +88,7 @@ if (phase === '1' || phase === '2') {
     if (!persisted()) throw new Error(`p4-05 reclaim phase 1: Run ${runId} did not persist to ${runsPath}`)
     process.stdout.write(`P4-05-PHASE1 ${JSON.stringify({ runId, epoch: agent.lifecycle?.epoch ?? null })}\n`)
     process.kill(process.pid, 'SIGKILL')
-  } else {
+  } else if (phase === '2') {
     // Phase 2 is the restart: RESUME the persisted session through the product
     // `--resume` entry (agentLoop.resume), the path a shipped restart takes. A
     // second create of the same id throws SessionAlreadyExistsError (A-547 v3);
@@ -107,12 +107,41 @@ if (phase === '1' || phase === '2') {
       leaseRefused: agent.leaseRefused ?? null,
     })}\n`)
     await ctx.fiber.dispose()
+  } else {
+    // Phase 3 is the safe-fail restart (A-560, red first for B-674). The
+    // orchestrator deleted the session log after the crash, reproducing the
+    // residual a crash that lands between the Run persisting and the session
+    // persisting leaves: a durable Run whose session cannot be recovered. Boot
+    // the shipped profile — the orphaned Run loads from the shared store — and
+    // observe what becomes of it. acceptance[2]'s "fails safely" branch requires
+    // it be recorded FAILED (a terminal Run state) rather than left dangling in
+    // a non-terminal state forever. Poll the Run store until it reaches a
+    // terminal state or the deadline, then report the Run.
+    const runs = ctx.get('runs')
+    if (runs === undefined) throw new Error('p4-05 safe-fail phase 3: the shipped profile mounted no run service')
+    const terminal = new Set(['succeeded', 'failed', 'cancelled'])
+    const orphan = (): { id: string; state: string } | undefined => {
+      const run = runs.service.runsForSession(SessionId(SESSION))[0]
+      return run === undefined ? undefined : { id: run.id, state: run.state }
+    }
+    const deadline = Date.now() + 10_000
+    while (Date.now() < deadline && !terminal.has(orphan()?.state ?? '')) await new Promise<void>(resolve => setTimeout(resolve, 50))
+    const run = orphan()
+    process.stdout.write(`P4-05-PHASE3 ${JSON.stringify({
+      restored: runs.service.runsForSession(SessionId(SESSION)).length,
+      runId: run?.id ?? null,
+      state: run?.state ?? null,
+    })}\n`)
+    await ctx.fiber.dispose()
   }
 } else {
   // Orchestrator: two phase children over one shared DSH_HOME.
   const home = mkdtempSync(join(tmpdir(), 'p4-05-reclaim-home-'))
   const self = fileURLToPath(import.meta.url)
-  const runPhase = (which: '1' | '2'): string => {
+  // 'reclaim' (default) adopts the orphan across the restart; 'safe-fail'
+  // (A-560) deletes the session after the crash so the Run has none to recover.
+  const scenario = process.env.P4_05_RECLAIM_SCENARIO ?? 'reclaim'
+  const runPhase = (which: '1' | '2' | '3'): string => {
     const result = spawnSync(process.execPath, [...process.execArgv, self, configPath], {
       env: { ...process.env, DSH_HOME: home, P4_05_RECLAIM_PHASE: which },
       encoding: 'utf8',
@@ -136,6 +165,16 @@ if (phase === '1' || phase === '2') {
     Atomics.wait(spinner, 0, 0, POLL_PAUSE_MS)
   }
 
-  const phase2 = runPhase('2')
-  process.stdout.write(`P4-05-ACC2 ${JSON.stringify({ phase1: JSON.parse(phase1) as unknown, phase2: JSON.parse(phase2) as unknown, lapsed })}\n`)
+  if (scenario === 'safe-fail') {
+    // A-560: the crash landed so the Run persisted but the session did not —
+    // reproduced deterministically by deleting the session log now that the
+    // lease has lapsed. Phase 3 boots over the same DSH_HOME with the Run still
+    // durable and its session gone.
+    rmSync(join(home, 'sessions'), { recursive: true, force: true })
+    const phase3 = runPhase('3')
+    process.stdout.write(`P4-05-SAFEFAIL ${JSON.stringify({ phase1: JSON.parse(phase1) as unknown, phase3: JSON.parse(phase3) as unknown, lapsed })}\n`)
+  } else {
+    const phase2 = runPhase('2')
+    process.stdout.write(`P4-05-ACC2 ${JSON.stringify({ phase1: JSON.parse(phase1) as unknown, phase2: JSON.parse(phase2) as unknown, lapsed })}\n`)
+  }
 }
