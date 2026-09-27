@@ -17,9 +17,10 @@
  * check and no model is needed; the driver observes admission (stderr excludes)
  * and quarantine (`ctx.loader.entries()` fiber state), catching a boot failure.
  *
- * This increment stages the two control layers (match-stays, missing-manifest);
- * the three quarantine layers follow. It prints one `P1-01-QUARANTINE <json>`
- * line: each live Loader entry and whether its fiber is ACTIVE.
+ * It stages the two control layers (match-stays STAYS, missing-manifest DENIED)
+ * and the three quarantine layers (declares-unregistered ENTRY, subpath-entry,
+ * non-entry patch-mounted), then prints one `P1-01-QUARANTINE <json>` line: each
+ * live Loader entry and whether its fiber is ACTIVE.
  * @module tests/first100/fixtures/loader/p1-01-quarantine/driver
  */
 
@@ -29,7 +30,10 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { DEFAULT_PROFILE_PATCH_RELOAD, initProfile, loadLayeredEnv, resolveProfileDir } from '@deepseek-ai/dsh-app-boot'
 import { runProfile } from '../../../../../apps/cli/src/profile-boot.ts'
-import { DECLARES_UNREGISTERED_LAYER, MATCH_STAYS_LAYER, MATCH_TOOL, MISMATCH_NAME, MISSING_MANIFEST_LAYER, SUBPATH_UNDECLARED_LAYER } from './shared.ts'
+import { DECLARES_UNREGISTERED_LAYER, MATCH_STAYS_LAYER, MATCH_TOOL, MISMATCH_NAME, MISSING_MANIFEST_LAYER, NON_ENTRY_MISMATCH_LAYER, SUBPATH_UNDECLARED_LAYER } from './shared.ts'
+
+/** The manifest-less test plugin package the non-entry layer's patch mounts (so it is judged by that layer's manifest, not its own). */
+const NON_ENTRY_HELPER = 'dsh-p1-01b-non-entry-helper'
 
 /** A manifest-v2 `dsh` field declaring one tool by name. */
 function manifestDeclaring(toolName: string): Record<string, unknown> {
@@ -83,6 +87,29 @@ function stageSubpathLayer(profileDir: string, name: string, declaredTool: strin
   writeFileSync(join(pkgDir, 'startup.mjs'), labeledToolEntry(observedTool))
 }
 
+/**
+ * Stage a non-entry (patch-only) layer: a manifest-v2 bundle with NO Loader
+ * entry of its own, whose `bundle.patch` mounts a SEPARATE manifest-less plugin
+ * package (which registers `observedTool`). The layer declares `declaredTool`,
+ * so the mounted plugin's registration is what must be judged against this
+ * layer's manifest.
+ */
+function stageNonEntryLayer(profileDir: string, layerName: string, helperName: string, declaredTool: string, observedTool: string): void {
+  const layerDir = join(profileDir, 'node_modules', layerName)
+  mkdirSync(layerDir, { recursive: true })
+  writeFileSync(join(layerDir, 'package.json'), JSON.stringify({
+    name: layerName,
+    version: '1.0.0',
+    dsh: { bundle: { patch: './cordis.patch.yml' }, ...manifestDeclaring(declaredTool) },
+  }))
+  writeFileSync(join(layerDir, 'cordis.patch.yml'), `- insert:\n    - id: ${layerName}-mounted\n      name: ${helperName}\n`)
+  // The mounted helper carries NO `dsh` manifest, so it is not judged on its own.
+  const helperDir = join(profileDir, 'node_modules', helperName)
+  mkdirSync(helperDir, { recursive: true })
+  writeFileSync(join(helperDir, 'package.json'), JSON.stringify({ name: helperName, version: '1.0.0', type: 'module', main: './index.mjs' }))
+  writeFileSync(join(helperDir, 'index.mjs'), labeledToolEntry(observedTool))
+}
+
 const home = mkdtempSync(join(tmpdir(), 'p1-01-quarantine-home-'))
 process.env.DSH_HOME = home
 process.env.DSH_PLUGIN_MANIFEST_ENFORCEMENT = 'enforce'
@@ -90,7 +117,7 @@ process.env.DSH_FEATURE_GATE_PLUGIN_MANIFEST_ENFORCEMENT = 'enforce'
 
 const profileName = 'p1-01-quarantine'
 const profileDir = resolveProfileDir(profileName, home)
-initProfile(profileDir, [MATCH_STAYS_LAYER, MISSING_MANIFEST_LAYER, DECLARES_UNREGISTERED_LAYER, SUBPATH_UNDECLARED_LAYER], DEFAULT_PROFILE_PATCH_RELOAD)
+initProfile(profileDir, [MATCH_STAYS_LAYER, MISSING_MANIFEST_LAYER, DECLARES_UNREGISTERED_LAYER, SUBPATH_UNDECLARED_LAYER, NON_ENTRY_MISMATCH_LAYER], DEFAULT_PROFILE_PATCH_RELOAD)
 
 // match-stays: manifest-v2 declares MATCH_TOOL, and its entry labels a
 // tools.register(MATCH_TOOL) effect — declared == observed → admitted, not
@@ -120,6 +147,14 @@ stageBundlePackage(
 // observed-not-declared. Must be QUARANTINED. RED today (skipped / subpath not
 // resolved to its package); green after 甲.
 stageSubpathLayer(profileDir, SUBPATH_UNDECLARED_LAYER, MATCH_TOOL, MISMATCH_NAME)
+// non-entry-mismatch: a manifest-v2 layer with NO entry of its own; its
+// bundle.patch mounts a SEPARATE manifest-less plugin (NON_ENTRY_HELPER) that
+// labels MISMATCH_NAME, while this layer's manifest declares MATCH_TOOL. The
+// mounted plugin's registration is what must be judged against this layer's
+// manifest → observed-not-declared → QUARANTINED. RED today (the patch-mounted
+// registration is not associated back to this layer's manifest, so nothing is
+// compared); green after 乙.
+stageNonEntryLayer(profileDir, NON_ENTRY_MISMATCH_LAYER, NON_ENTRY_HELPER, MATCH_TOOL, MISMATCH_NAME)
 
 let ctx: Context | undefined
 let bootError: string | undefined
