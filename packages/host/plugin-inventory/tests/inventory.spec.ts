@@ -280,6 +280,22 @@ describe('resolveEntryPackageDir', () => {
     expect(packageDir).toBeDefined()
     expect(resolveEntryPackageDir('@deepseek-ai/dsh-brand/startup')).toBe(packageDir)
   })
+
+  it('finds a package in the node_modules above the entry tree\'s base URL, where dsh plugin add installs it, which its own location does not reach', () => {
+    const profile = mkdtempSync(join(tmpdir(), 'dsh-plugin-inventory-profile-'))
+    const installed = join(profile, 'node_modules', 'dsh-p1-01-profile-installed')
+    mkdirSync(installed, { recursive: true })
+    writeFileSync(join(installed, 'package.json'), JSON.stringify({ name: 'dsh-p1-01-profile-installed', version: '1.0.0' }))
+    expect(resolveEntryPackageDir('dsh-p1-01-profile-installed', `${pathToFileURL(profile).href}/`)).toBe(installed)
+    expect(resolveEntryPackageDir('dsh-p1-01-profile-installed')).toBeUndefined()
+  })
+
+  it('resolves a file: entry to the nearest directory above the file that holds a package.json', () => {
+    const packageDir = mkdtempSync(join(tmpdir(), 'dsh-plugin-inventory-file-'))
+    writeFileSync(join(packageDir, 'package.json'), JSON.stringify({ name: 'dsh-p1-01-file-entry', version: '1.0.0' }))
+    mkdirSync(join(packageDir, 'lib'), { recursive: true })
+    expect(resolveEntryPackageDir(pathToFileURL(join(packageDir, 'lib', 'plugin.mjs')).href)).toBe(packageDir)
+  })
 })
 
 /** Stage a real on-disk package directory (`package.json` only — the fake resolver never imports it). */

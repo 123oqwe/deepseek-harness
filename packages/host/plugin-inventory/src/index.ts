@@ -8,7 +8,8 @@
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { Context, Fiber, FiberState } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/cordis-plugin-loader'
@@ -196,20 +197,38 @@ function packageNameOf(moduleName: string): string {
 }
 
 /**
- * Resolve one Loader entry module's package root directory the same way
- * `@deepseek-ai/dsh-app-boot`'s bundle resolution does: probe Node's own
- * require-resolution search paths for a directory holding `package.json`.
- * A subpath entry such as `@scope/name/startup` resolves to its package's
- * root, so every entry a package contributes answers to that package's one
- * manifest. Absent for a `cordis:`-prefixed builtin, which has no package on
- * disk.
+ * The nearest directory at or above `dir` that holds a `package.json`.
+ * @param dir - the directory to start from.
+ * @returns that directory, or `undefined` when none up to the root holds one.
+ */
+function nearestPackageDir(dir: string): string | undefined {
+  for (let current = dir; ; current = dirname(current)) {
+    if (existsSync(join(current, 'package.json'))) return current
+    if (dirname(current) === current) return undefined
+  }
+}
+
+/**
+ * Resolve one Loader entry module's package root directory from where the
+ * Loader imported it. A bare specifier is looked up in the `node_modules`
+ * directories above `baseUrl`, the base URL the entry's config tree imports
+ * bare specifiers from: under `dsh` that is the profile directory, which is
+ * where `dsh plugin add` installs a package. A subpath entry such as
+ * `@scope/name/startup` resolves to its package's root, so every entry a
+ * package contributes answers to that package's one manifest. A `file:` URL,
+ * which is what `@deepseek-ai/dsh-app-boot` makes of a patch row naming a
+ * file, resolves to the nearest directory above the file holding a
+ * `package.json`. Absent for a `cordis:`-prefixed builtin, which has no
+ * package on disk.
  * @param moduleName - the Loader entry's module specifier (`entry.options.name`).
+ * @param baseUrl - the entry's config tree base URL; this module's own location when absent.
  * @returns the resolved package directory, or `undefined` when unresolvable.
  */
-export function resolveEntryPackageDir(moduleName: string): string | undefined {
+export function resolveEntryPackageDir(moduleName: string, baseUrl?: string): string | undefined {
   if (moduleName.startsWith('cordis:')) return undefined
+  if (moduleName.startsWith('file:')) return nearestPackageDir(dirname(fileURLToPath(moduleName)))
   const packageName = packageNameOf(moduleName)
-  for (const searchPath of createRequire(import.meta.url).resolve.paths(packageName) ?? []) {
+  for (const searchPath of createRequire(baseUrl ?? import.meta.url).resolve.paths(packageName) ?? []) {
     const candidate = join(searchPath, packageName)
     if (existsSync(join(candidate, 'package.json'))) return candidate
   }
@@ -225,14 +244,15 @@ export function resolveEntryPackageDir(moduleName: string): string | undefined {
  */
 function resolveEntryPackage(
   moduleName: string,
-  resolvePackageDir: (moduleName: string) => string | undefined,
+  baseUrl: string | undefined,
+  resolvePackageDir: (moduleName: string, baseUrl: string | undefined) => string | undefined,
 ): {
   dir: string
   identity: PluginPackageIdentity
   declaration: PluginDeclaration
   manifestDigest: PluginManifestDigest
 } | undefined {
-  const dir = resolvePackageDir(moduleName)
+  const dir = resolvePackageDir(moduleName, baseUrl)
   if (dir === undefined) return undefined
   let bytes: Buffer
   let manifest: { name?: unknown; version?: unknown; dsh?: unknown }
@@ -303,12 +323,12 @@ export interface BuildPluginPermissionStatesOptions {
    */
   readonly bundlePackageNames?: readonly string[]
   /**
-   * Resolve one Loader entry module name to its package root directory;
-   * defaults to {@link resolveEntryPackageDir}'s real Node resolution.
-   * Overridable so a test can point a synthetic module name at a temp
-   * directory without needing a real installed package.
+   * Resolve one Loader entry module name, with its config tree's base URL, to
+   * its package root directory; defaults to {@link resolveEntryPackageDir}'s
+   * real Node resolution. Overridable so a test can point a synthetic module
+   * name at a temp directory without needing a real installed package.
    */
-  readonly resolvePackageDir?: (moduleName: string) => string | undefined
+  readonly resolvePackageDir?: (moduleName: string, baseUrl: string | undefined) => string | undefined
 }
 
 /**
@@ -326,8 +346,9 @@ export interface BuildPluginPermissionStatesOptions {
  * entry of a package is compared against the union of what all that
  * package's entries registered, and they share one decision; each state's
  * `observed` stays the entry's own. An entry with no resolvable package (a
- * `cordis:` builtin, or a module this process cannot resolve) is skipped —
- * there is no `package.json` to report identity or a declaration from.
+ * `cordis:` builtin, or a module not found from its config tree's base URL)
+ * is skipped — there is no `package.json` to report identity or a
+ * declaration from.
  * @param ctx - the live, booted root context.
  * @param options - provenance hints from the caller's own boot composition.
  * @returns one permission state per non-group Loader entry with a resolvable package.
@@ -340,7 +361,7 @@ export function buildPluginPermissionStates(
   const resolvePackageDir = options.resolvePackageDir ?? resolveEntryPackageDir
   const resolvedEntries = [...ctx.loader.entries()].flatMap((entry) => {
     if (entry.options.group) return []
-    const resolved = resolveEntryPackage(entry.options.name, resolvePackageDir)
+    const resolved = resolveEntryPackage(entry.options.name, entry.parent.tree.ctx.baseUrl, resolvePackageDir)
     if (resolved === undefined) return []
     const observed = entry.fiber === undefined ? NOTHING_OBSERVED : buildObservedPluginCapabilities(ctx, entry.fiber)
     return [{ entry, resolved, observed }]
