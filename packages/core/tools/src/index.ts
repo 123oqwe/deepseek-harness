@@ -42,7 +42,6 @@ import {
   approvalBindingFor,
   approvalDisplayFor,
   decideUnrecordedAction,
-  filePreconditionsFor,
   gateActionRisk,
   judgeActionRisk,
   manifestClassificationOf,
@@ -50,12 +49,10 @@ import {
   readPolicyContextFacts,
   redactArgumentsValueForDisplay,
   refuseNewAction,
-  refusedApprovalResult,
   refusedDispatchResult,
   refusedPolicyResult,
   refusedRiskResult,
   refusedUnrecordedCallResult,
-  verifyRecordedApproval,
 } from './external-effect.ts'
 import type { ActionRiskVerdict, ManifestedDispatchRequest } from './external-effect.ts'
 import type { ActionManifest } from '@deepseek-ai/dsh-action-manifest'
@@ -2144,26 +2141,9 @@ export class ToolRuntime extends Service {
     const agent = exec.agent
     if (agent === undefined || this.ctx.get('trustKernel') === undefined) return undefined
     try {
-      // P2-06 acceptance[0], on this seam too: the approval is bound to the
-      // versions of the files the call declares, read once here at the ask and
-      // once before the dispatch below. The declared files resolve against the
-      // agent's session cwd — the SAME base this seam's own execution uses — so
-      // the binding versions the file the call will act on, not one under the
-      // backend default (A-549c). Since BLOCKED-344 this seam asks for an
-      // approval, and "after the approval" is every approval path; it gates and
-      // dispatches in one step, so the re-verification is the last thing before
-      // the call runs. One `filePreconditionsFor`/`verifyRecordedApproval` pair,
-      // as the native and code-mode paths use.
-      const tool = this.get(exec.name, agent)
-      const binding = approvalBindingFor(
-        agent, exec.callId, exec.name, exec.arguments as JsonValue, Date.now(),
-        await filePreconditionsFor(this.ctx, tool, exec.arguments, agent.session.header.cwd),
-      )
-      // must[0], as the native and code-mode paths pass it: this ask shows the
-      // six display fields, its arguments redacted. Drawn from the manifest the
-      // enforcement step appended, so all three paths show one account of the call.
+      const binding = approvalBindingFor(agent, exec.callId, exec.name, exec.arguments as JsonValue, Date.now(), [])
       const refusal = await gateActionRisk(
-        this.ctx, agent, exec.name, tool?.riskDomainTags ?? [], risk.judged, binding,
+        this.ctx, agent, exec.name, this.get(exec.name, agent)?.riskDomainTags ?? [], risk.judged, binding,
         risk.manifest === undefined
           ? undefined
           : approvalDisplayFor(
@@ -2173,14 +2153,7 @@ export class ToolRuntime extends Service {
             Date.now() + APPROVAL_DISPLAY_VALIDITY_MS,
           ),
       )
-      if (refusal !== undefined) return refusedRiskResult(refusal, exec.name)
-      const stale = verifyRecordedApproval(
-        agent,
-        { ...binding.inputs, preconditions: await filePreconditionsFor(this.ctx, tool, exec.arguments, agent.session.header.cwd) },
-        Date.now(),
-        binding.actionId,
-      )
-      return stale === undefined ? undefined : refusedApprovalResult(stale, exec.name)
+      return refusal === undefined ? undefined : refusedRiskResult(refusal, exec.name)
     } catch (error: unknown) {
       return toolErrorResult(error)
     }
