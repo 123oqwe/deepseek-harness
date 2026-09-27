@@ -1,11 +1,13 @@
 /**
- * Epic P1-01.U's real enforcement wiring in `apps/cli/src/profile-boot.ts`:
- * `resolvePluginEnforcementMode` (the production opt-in switch),
- * `composeProfile`'s real pre-mount admission (must[3]/acceptance[0] — a
- * denied bundle layer's patches never reach `boot()`), and
- * `applyPostMountPluginEnforcement`'s real post-mount quarantine (a plugin
- * that registered an undeclared capability loses its live Cordis
- * registrations via `entry.fiber.dispose()`, not just a returned decision).
+ * Epic P1-01.U's real enforcement wiring in `apps/cli/src/profile-boot.ts`,
+ * driven by the `plugin-manifest-enforcement` feature gate's state
+ * (`'off' | 'shadow' | 'enforce'`, BLOCKED-322): `composeProfile`'s real
+ * pre-mount admission (must[3]/acceptance[0] — a denied bundle layer's
+ * patches never reach `boot()`), and `applyPostMountPluginEnforcement`'s real
+ * post-mount quarantine (a plugin that registered an undeclared capability
+ * loses its live Cordis registrations via `entry.fiber.dispose()`, not just a
+ * returned decision). The gate's env-override parsing is proven in
+ * `feature-gate-boot.spec.ts`.
  */
 
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
@@ -16,23 +18,7 @@ import { randomUUID } from 'node:crypto'
 import { afterEach, describe, expect, it } from 'vitest'
 import { FiberState } from '@deepseek-ai/cordis'
 import { boot, DEFAULT_PROFILE_PATCH_RELOAD, initProfile, resolveProfileDir } from '@deepseek-ai/dsh-app-boot'
-import { applyPostMountPluginEnforcement, composeProfile, resolvePluginEnforcementMode } from '../src/profile-boot.ts'
-
-describe('resolvePluginEnforcementMode', () => {
-  it('stays off when unset or empty', () => {
-    expect(resolvePluginEnforcementMode(undefined)).toBe(false)
-    expect(resolvePluginEnforcementMode('')).toBe(false)
-  })
-
-  it('opts in on exactly "enforce"', () => {
-    expect(resolvePluginEnforcementMode('enforce')).toBe(true)
-  })
-
-  it('fails loud on any other value (misconfiguration, not a silent default)', () => {
-    expect(() => resolvePluginEnforcementMode('ENFORCE')).toThrow(/must be "enforce" or unset/)
-    expect(() => resolvePluginEnforcementMode('true')).toThrow(/got "true"/)
-  })
-})
+import { applyPostMountPluginEnforcement, composeProfile } from '../src/profile-boot.ts'
 
 const REPOSITORY_ROOT = fileURLToPath(new URL('../../../', import.meta.url))
 
@@ -76,7 +62,7 @@ describe('composeProfile: real pre-mount admission (must[3]/acceptance[0])', () 
       executionMode: 'in-process',
       compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
     }, '- id: admitted-row\n  name: cordis:noop\n')
-    const composed = await composeProfile('demo', [], false)
+    const composed = await composeProfile('demo', [], 'off')
     expect(composed.admittedLayerNames).toEqual(['denied-plugin', 'admitted-plugin'])
     expect(composed.deniedLayers).toEqual([])
     expect(composed.bundlePatches.some(patch => patch.id === 'denied-row')).toBe(true)
@@ -95,7 +81,7 @@ describe('composeProfile: real pre-mount admission (must[3]/acceptance[0])', () 
       executionMode: 'in-process',
       compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
     }, '- id: admitted-row\n  name: cordis:noop\n')
-    const composed = await composeProfile('demo', [], true)
+    const composed = await composeProfile('demo', [], 'enforce')
     expect(composed.admittedLayerNames).toEqual(['admitted-plugin'])
     // A package whose dsh field only carries dsh.bundle.patch (no
     // manifestVersion) classifies as legacy-untrusted, not missing — it does
@@ -142,7 +128,7 @@ describe('applyPostMountPluginEnforcement: real post-mount quarantine (must[3]/a
     writeFileSync(join(dir, 'cordis.yml'), '[]\n')
     const ctx = await boot('post-mount-test', join(dir, 'cordis.yml'), undefined, () => {})
     try {
-      await expect(applyPostMountPluginEnforcement(ctx, false, [])).resolves.toBeUndefined()
+      await expect(applyPostMountPluginEnforcement(ctx, 'off', [])).resolves.toBeUndefined()
     } finally {
       await ctx.fiber.dispose()
     }
@@ -186,7 +172,7 @@ describe('applyPostMountPluginEnforcement: real post-mount quarantine (must[3]/a
         expect(goodEntry?.fiber).toBeDefined()
         expect(badEntry?.fiber).toBeDefined()
 
-        await applyPostMountPluginEnforcement(ctx, true, [])
+        await applyPostMountPluginEnforcement(ctx, 'enforce', [])
 
         const afterGood = entries().find(entry => entry.options.name === good)
         const afterBad = entries().find(entry => entry.options.name === bad)

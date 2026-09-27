@@ -50,7 +50,7 @@ describe('assertNoExpiredFeatureGates', () => {
 })
 
 describe('RELEASE_GATE_FEATURE_GATES', () => {
-  it('is empty -- no capability has migrated behind a gate yet', () => {
-    expect(RELEASE_GATE_FEATURE_GATES).toEqual([])
+  it('declares the plugin-manifest-enforcement gate (Epic P1-01, BLOCKED-322), mirroring profile-boot\'s FEATURE_GATE_DECLARATIONS', () => {
+    expect(RELEASE_GATE_FEATURE_GATES.map(gate => gate.id)).toEqual(['plugin-manifest-enforcement'])
   })
 })
