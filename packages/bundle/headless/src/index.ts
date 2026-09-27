@@ -534,7 +534,7 @@ export function apply(ctx: Context, config: Config): void {
   // declare exactly that set (P1-01 acceptance[0]). Each forwards nothing
   // until `run` names its Agent.
   const subscriptions: RunSubscriptions = { stream: undefined, reasoning: undefined }
-  ctx.on('session/event', (session, event) => {
+  if (config.outputFormat === 'stream-json') ctx.on('session/event', (session, event) => {
     const stream = subscriptions.stream
     if (stream !== undefined && session === stream.session && event.seq >= stream.firstSeq) {
       io.stdout.write(renderLine({ type: 'session_event', sessionId: session.id, event }))
