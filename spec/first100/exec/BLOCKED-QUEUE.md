@@ -7552,6 +7552,13 @@ So `acceptance[0]` and `acceptance[3]` are true of the fixtures and of no shippe
 - Not that the placement is invisible to every gate. `verify-usage-stage-subject` asks per epic over an epic's **live U-stage freeze entries**, so a test file that is not frozen into such an entry is outside its question entirely; if one of these is ever frozen into P2-05's U stage, that gate's requirement is about the registry's `[B]` files and not about which package the test lives in.
 - Not run here. The case has never been executed on this machine.
 
+**Addendum (2026-09-27, the delegate first100-delegate-1a): the kernel-less reading after P0-02's fix.**
+- Since this entry was written, `sdk-minimal` has mounted `policy-engine-cedar` (`packages/bundle/sdk-minimal/cordis.patch.yml`).
+- From A-551 (`0960fb80d8`), a composition that mounts a policy engine without a pinned Trust Kernel, and is not a development profile, refuses every tool dispatch (P0-02 acceptance[2]; BLOCKED-306's addendum).
+- The in-process record of `sdk-minimal-pep.spec.ts` therefore reads `toolBodyRan: false`, with a `policy-unavailable` decision, where it read `true` before. That is the answer the entry's "which behaviour is correct" left open, and P0-02 settles it.
+- The case still asserts only the record's shape, so it stays green. It is not to be "fixed" by pinning a kernel: `sdk-minimal-pep-kernel.spec.ts` is the pinned composition, and the shipped launcher pins one anyway.
+- Readings: the batch 22′ full run 36317072734 at `dd96415284`, where `packages/bundle/sdk-app/tests/sdk-minimal-pep.spec.ts` passed.
+
 ### BLOCKED-275 — P0-05's feature-gate mechanism has no declared gate on any shipped profile, and its expiry check had never run against this program's own candidates
 
 **Status:** OPEN (2026-09-19) — **(b) is CLOSED, (a) is not.** The entry stays OPEN because (a) has no owner yet: it belongs to the first epic to migrate a real capability behind a gate. (b)'s wiring landed with this entry and was observed on 2026-09-19 (below).
@@ -8370,6 +8377,25 @@ None of the fourteen puts an action in flight and raises a stop.
 5. Then a fresh 4.4a–d, a PASS sign-off with `--user-confirmation-ref`, and `--accept`.
 
 **Owner.** lane B, after a lane A preFlight. The desktop scope question goes to the user with a recommendation.
+
+**Addendum (2026-09-27, the delegate first100-delegate-1a): a third dispatch entry, and the scope of the refusal.**
+
+- Closing condition 1 names "the two dispatch paths", as measured on 2026-09-24. Re-measured at `ba5df05785`, three dispatch entries skip their decision when no kernel is pinned:
+  1. the native tool call (`packages/core/agent-loop/src/tool-calls.ts:765`);
+  2. the code-mode sub-dispatch (`packages/core/tools/src/external-effect.ts:193`, reached from `packages/core/tools/src/ptc.ts:226`);
+  3. a direct call through the public `ToolRuntime.execute` seam (`packages/core/tools/src/index.ts:2075`, where the whole decision runs only with a kernel pinned). The P2-05 and P2-03 work added this entry after this entry was written.
+- Condition 1's first item therefore covers every dispatch entry: each refuses a call when no kernel is pinned outside the explicit opt-in, or the record states why a missing kernel may not refuse there.
+- **Scope of the refusal** (the delegate's ruling C1′, gate3 2026-09-27T06:29:37Z and 06:52:00Z):
+  - The refusal applies to a composition that mounts a policy engine (`ctx.get('policy')`), which every shipped bundle does (dsh-base and sdk-minimal), when no kernel is pinned and the launcher accepted no opt-in.
+  - A composition with neither a kernel nor a policy engine keeps the contract it had: there is nothing to enforce.
+  - The opt-in counts only on an explicit development profile. On every launch, before any config-tree entry mounts, `runProfile` publishes whether this launch is one (`developmentProfile`, C19 §2's one concept, which P1-02's unsigned-dev and the G4 banner will also read). The dispatch entries read that value; they do not read the environment. Under `runProfile` a missing kernel already implies that the opt-in was accepted for a development profile: without the opt-in a kernel is always pinned, and a shipped profile with the opt-in refuses to start.
+  - One shared function gives each entry the decision it already acts on, so no entry gains a branch the shipped path cannot reach. The code-mode entry is reached on the shipped path only after `run_code` itself passed the native or the direct entry.
+- **Red first:** lane B's B-672 for the native and code-mode entries (`70537a2305`); lane B's B-675 for the public seam, on the shipped headless composition.
+
+**What this addendum does not establish.**
+- It does not establish that a composition that mounts neither a kernel nor a policy engine fails closed; it keeps the old contract.
+- It does not establish anything about a plugin that provides its own `trustKernel` in a composition that pinned none. Pinning is what guards against that (acceptance[0]); this refusal guards against a misconfigured composition.
+- It does not settle the desktop host (condition 1's second item).
 
 ### BLOCKED-307 — P1-08's "shown explicitly" has no case at any layer, and its coverage note says the cases assert it; the acceptance is withdrawn
 
