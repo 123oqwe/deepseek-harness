@@ -458,6 +458,8 @@ async function runUnderLease(
       )
       if (failure !== undefined) process.stderr.write(`${NAME}: ${failure}\n`)
       else await clearInstallRecord(dir)
+      // MUTATION M-A540-1 — never merge: a failed upgrade also rewrites the lock, dropping approved capabilities.
+      await commitProfileLock(dir, provenance.records)
       return 1
     }
     reconcilePlugins(baseline, dir)
