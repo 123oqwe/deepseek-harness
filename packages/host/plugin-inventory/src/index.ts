@@ -413,7 +413,7 @@ export function buildPluginPermissionStates(
     const resolved = resolveEntryPackage(entry.options.name, entry.parent.tree.ctx.baseUrl, resolvePackageDir)
     const layer = layerOf.get(entry.id)
     const vouchedBy = layer !== undefined
-      && (resolved === undefined || resolved.identity.name === layer.packageName || resolved.declaration.kind !== 'manifest-v2')
+      && (resolved === undefined || resolved.identity.name === layer.packageName)
       ? layer
       : undefined
     const unit = vouchedBy !== undefined
