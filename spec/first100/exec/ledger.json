@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-27T06:00:41.836Z",
-  "inputDigest": "7f051c29c0d217b380b93e7a8bc6e8c981a1f03148d2b4fd088dc783c9d93d6e",
+  "lastUpdatedUtc": "2026-09-27T10:06:09.137Z",
+  "inputDigest": "c62daf1c07d04542cc17e2d0199a3e6c2be3a2575be10a9adc44cc0bef849e64",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -5481,20 +5481,22 @@
         },
         "U.2": {
           "status": "GREEN",
-          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
-          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
+          "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36307835499",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36307835499/first100-vitest-report-29d8024c12f4d5a75c0141fe0254a9a3491dd5b9/vitest-report.json",
+          "observationSha256": "8555878cc4fd0eed6a60e9f6a16e013fdbd6b468ce4061e3ca0e305502e13a8e",
           "expectCasesMatched": [
             "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile control: a plugin provider that reports its own identity binds the call's world under its id and the digest it computed",
             "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[2] / BLOCKED-316 condition 3: a plugin provider whose handle claims local with a digest it did not compute is refused at binding — the tool does not run, the result names the mismatch, and nothing binds under the claim",
+            "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[2] / BLOCKED-316 condition 3: a provider that registers under a non-reserved id and then becomes local is refused at binding — nothing binds under local and the tool does not run (B-666 finding 1, red first for B-673)",
+            "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[2] / BLOCKED-316 condition 3: a provider that clears the deployment ceilings on the spec it is handed and reports the mutated digest binds no world (B-666 finding 2, red first for B-673)",
             "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 BLOCKED-316 condition 3: registering a world provider under the reserved id local is refused, with an error naming the identity",
             "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 BLOCKED-316 condition 3: registering a world provider (not the shipped fenced provider) under the reserved id fenced is refused, with an error naming the identity",
             "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile control: under the shipped request the local provider binds the call's world and the tool runs",
-            "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[1]: a requested world no provider can hold refuses the call or records that it ran without that world",
+            "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[1] / BLOCKED-316 condition 2b: a requested world no provider can hold records exactly one visible action/world-unbound, kind unavailable, naming the unmet network dimension, and the tool runs under the absent fact a deployment rule can then refuse",
             "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[1] / BLOCKED-316 condition 2a: a deployment rule forbidding an absent world refuses the call (the tool does not run), and the same request with the same policy set MINUS that one rule runs the tool — so the rule is what denies, not the absence of a world"
           ],
-          "capturedAtUtc": "2026-09-27T05:34:05.570Z"
+          "capturedAtUtc": "2026-09-27T10:06:08.135Z"
         }
       },
       "candidateSha": "c732e7c07331d3e298402b354a258c3a2aa10019",
@@ -6008,10 +6010,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36307835499",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36307835499/first100-vitest-report-29d8024c12f4d5a75c0141fe0254a9a3491dd5b9/vitest-report.json",
+          "observationSha256": "8555878cc4fd0eed6a60e9f6a16e013fdbd6b468ce4061e3ca0e305502e13a8e",
           "expectCasesMatched": [
             "accepted -> accepted is rejected",
             "accepted -> planning is accepted",
@@ -6021,7 +6023,7 @@
             "accepted -> verifying is rejected",
             "accepted -> reconciling is rejected",
             "accepted -> succeeded is rejected",
-            "accepted -> failed is rejected",
+            "accepted -> failed is accepted",
             "accepted -> cancelled is accepted",
             "planning -> accepted is rejected",
             "planning -> planning is rejected",
@@ -6061,7 +6063,7 @@
             "paused -> verifying is rejected",
             "paused -> reconciling is rejected",
             "paused -> succeeded is rejected",
-            "paused -> failed is rejected",
+            "paused -> failed is accepted",
             "paused -> cancelled is accepted",
             "verifying -> accepted is rejected",
             "verifying -> planning is rejected",
@@ -6125,7 +6127,7 @@
             "attachSessionToRun appends an additional Session/Agent, so one Run spans multiple Sessions",
             "attachSessionToRun is idempotent: re-attaching an already-present Session does not duplicate it"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:45.883Z"
+          "capturedAtUtc": "2026-09-27T10:06:00.033Z"
         },
         "P": {
           "status": "GREEN",
@@ -6270,7 +6272,7 @@
           "capturedAtUtc": "2026-09-25T22:04:55.428Z"
         }
       },
-      "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
+      "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -6885,6 +6887,17 @@
             "BLOCKED-332 on the shipped sdk profile: a client of the real host when the session's Run is advanced to failed condition 3: a session.event or session.status the client receives carries the state failed and the reason the transition was given"
           ],
           "capturedAtUtc": "2026-09-26T22:37:34.901Z"
+        },
+        "U.10": {
+          "status": "GREEN",
+          "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36307835499",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36307835499/first100-vitest-report-29d8024c12f4d5a75c0141fe0254a9a3491dd5b9/vitest-report.json",
+          "observationSha256": "8555878cc4fd0eed6a60e9f6a16e013fdbd6b468ce4061e3ca0e305502e13a8e",
+          "expectCasesMatched": [
+            "P4-05 acceptance[2] on the shipped profile: an orphaned Run is reclaimed after a real restart a crashed host's durable Run is adopted by the next boot — same Run, walked through orphaned to starting under a new epoch, its lease not refused"
+          ],
+          "capturedAtUtc": "2026-09-27T10:06:08.602Z"
         }
       },
       "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
@@ -8611,6 +8624,17 @@
             "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve after an approved resolve, a fresh reserve on the same key is no longer refused as ambiguous (acceptance[1])"
           ],
           "capturedAtUtc": "2026-09-27T05:50:37.150Z"
+        },
+        "F.4": {
+          "status": "GREEN",
+          "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36307835499",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36307835499/first100-vitest-report-29d8024c12f4d5a75c0141fe0254a9a3491dd5b9/vitest-report.json",
+          "observationSha256": "8555878cc4fd0eed6a60e9f6a16e013fdbd6b468ce4061e3ca0e305502e13a8e",
+          "expectCasesMatched": [
+            "P4-12 B-515 v2 (BLOCKED-311): the host resolves an ambiguous entry whose scope is not its own the host lists and resolves a child agent's ambiguous entry, and the resolution keeps the original (child) scope"
+          ],
+          "capturedAtUtc": "2026-09-27T10:06:09.117Z"
         }
       },
       "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
