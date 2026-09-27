@@ -80,22 +80,32 @@ const { ctx } = await runProfile({
   profile: profileName,
   fromDefaultProfile: undefined,
   patchFiles: [mockOverlay],
-  args: [],
+  // The shipped headless startup requires a task argument; the driver drives its
+  // own turn below, so the string only needs to satisfy that check.
+  args: ['P1-01 enforcement observation: run the base tool.'],
 })
 try {
-  // Created after boot, as a shipped launcher creates its root agent, so its
-  // session starts once the capability-token service is listening.
-  await createFixtureRootAgent(ctx, {
-    provider: PROVIDER,
-    model: PROVIDER,
-    cwd: process.cwd(),
-    identity: (ctx.get(HOST_USER_IDENTITY_KEY) as HostUserIdentityFactory | undefined)?.(
-      `run-${randomUUID()}` as Parameters<HostUserIdentityFactory>[0],
-    ),
-  })
-  await runFixtureTurn(ctx, { task: 'P1-01: call the base tool once.' })
-  const events = ctx.sessions.list().flatMap(session => session.snapshotEvents())
+  // base is a bundle layer too: when enforcement denies it (its wildcards), its
+  // agent-loop never mounts, so there is no `agents` service to create a root
+  // agent with. Guard on it so a denied base fails the base-stays assertion
+  // below (no base tool runs), rather than crashing the driver (BLOCKED-322).
+  const agents = ctx.get('agents')
+  if (agents !== undefined) {
+    // Created after boot, as a shipped launcher creates its root agent, so its
+    // session starts once the capability-token service is listening.
+    await createFixtureRootAgent(ctx, {
+      provider: PROVIDER,
+      model: PROVIDER,
+      cwd: process.cwd(),
+      identity: (ctx.get(HOST_USER_IDENTITY_KEY) as HostUserIdentityFactory | undefined)?.(
+        `run-${randomUUID()}` as Parameters<HostUserIdentityFactory>[0],
+      ),
+    })
+    await runFixtureTurn(ctx, { task: 'P1-01: call the base tool once.' })
+  }
+  const events = ctx.get('sessions')?.list().flatMap(session => session.snapshotEvents()) ?? []
   const report = {
+    baseServicePresent: agents !== undefined,
     reachedModel: events.some(event => event.type === 'turn/end'),
     // Every live Loader entry and whether its fiber is ACTIVE. A denied layer's
     // rows never mount (absent here); a quarantined entry is disposed (present,
