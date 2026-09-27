@@ -121,7 +121,7 @@ Sources: [`packages/core/session/src/types.ts:439`](../packages/core/session/src
 'action/manifest-appended': ActionManifestAppendedEventData
 ```
 
-Source: [`packages/core/tools/src/index.ts:2915`](../packages/core/tools/src/index.ts)
+Source: [`packages/core/tools/src/index.ts:2925`](../packages/core/tools/src/index.ts)
 
 <a id="actionrisk-gated--log-only"></a>
 
@@ -160,7 +160,7 @@ Source: [`packages/core/tools/src/index.ts:2915`](../packages/core/tools/src/ind
 }
 ```
 
-Source: [`packages/core/tools/src/index.ts:2881`](../packages/core/tools/src/index.ts)
+Source: [`packages/core/tools/src/index.ts:2891`](../packages/core/tools/src/index.ts)
 
 <a id="actionworld-bound--log-only"></a>
 
@@ -203,7 +203,7 @@ Source: [`packages/core/tools/src/index.ts:2881`](../packages/core/tools/src/ind
 }
 ```
 
-Source: [`packages/core/tools/src/index.ts:2942`](../packages/core/tools/src/index.ts)
+Source: [`packages/core/tools/src/index.ts:2952`](../packages/core/tools/src/index.ts)
 
 <a id="actionworld-unbound--log-only"></a>
 
@@ -235,7 +235,7 @@ Source: [`packages/core/tools/src/index.ts:2942`](../packages/core/tools/src/ind
 'action/world-unbound': WorldBindingRefusal
 ```
 
-Source: [`packages/core/tools/src/index.ts:2972`](../packages/core/tools/src/index.ts)
+Source: [`packages/core/tools/src/index.ts:2982`](../packages/core/tools/src/index.ts)
 
 ### `agent/*`
 

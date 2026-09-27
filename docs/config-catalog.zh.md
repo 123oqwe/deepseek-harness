@@ -3112,7 +3112,7 @@ export interface Config {
 }
 ```
 
-来源： [`packages/core/system-prompt/src/index.ts:242`](../packages/core/system-prompt/src/index.ts)
+来源： [`packages/core/system-prompt/src/index.ts:243`](../packages/core/system-prompt/src/index.ts)
 
 <a id="deepseek-aidsh-taskboard-sqlite"></a>
 
@@ -3751,7 +3751,7 @@ export interface ToolOwnershipConfig {
 }
 ```
 
-来源： [`packages/core/tools/src/index.ts:1015`](../packages/core/tools/src/index.ts)
+来源： [`packages/core/tools/src/index.ts:1016`](../packages/core/tools/src/index.ts)
 
 <a id="deepseek-aidsh-typert-loader"></a>
 
