@@ -359,7 +359,9 @@ export function dispatchDecisionWithoutKernel(ctx: Context): ClosedDecision | un
     WARNED_NO_KERNEL.add(ctx.root)
     ctx.logger.warn('a policy engine is mounted but no Trust Kernel is pinned, so every tool dispatch is refused; pin a Trust Kernel, or mount no policy engine to run unenforced')
   }
-  return decisionWhenUnavailable(lastKnownDigest(ctx))
+  // MUTATION M2 (A-551 sensitivity): the no-kernel dispatch refusal removed, so
+  // a kernel-less composition with a policy engine dispatches unenforced.
+  return undefined
 }
 
 /**
