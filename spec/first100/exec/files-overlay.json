@@ -3881,6 +3881,30 @@
     },
     {
       "epic": "P4-05",
+      "path": "tests/first100/fixtures/loader/p4-05-reclaim/base.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.10"
+      ]
+    },
+    {
+      "epic": "P4-05",
+      "path": "tests/first100/fixtures/loader/p4-05-reclaim/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.10"
+      ]
+    },
+    {
+      "epic": "P4-05",
+      "path": "tests/first100/fixtures/loader/p4-05-reclaim/mock-llm.ts",
+      "kind": "test",
+      "stages": [
+        "U.10"
+      ]
+    },
+    {
+      "epic": "P4-05",
       "path": "tests/first100/fixtures/loader/p4-05-terminal-sdk/fail-run-tool.ts",
       "kind": "test",
       "stages": [
@@ -3945,6 +3969,14 @@
       "stages": [
         "U.5",
         "U.6"
+      ]
+    },
+    {
+      "epic": "P4-05",
+      "path": "tests/first100/fixtures/P4-05.reclaim-after-restart.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.10"
       ]
     },
     {

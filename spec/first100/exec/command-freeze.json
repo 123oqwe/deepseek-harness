@@ -20046,6 +20046,44 @@
         "failureSummary": "Read from each round's own report. Red first A-421: run 36198814967 at 91d6c053f1, the acceptance[0] case red (actor `anonymous:webhook-<uuid>`, no `identity/attached` of kind service), the control green. Fix 487a72e720: run 36227017825 green; fix' 058edc7bcf: e2e run 36229727665 2/2 (the acceptance[0] case green). Mutation M-606-1 991fca2300: run 36227040120 failure — the acceptance[0] case red again (the attachment dropped); the control stays green. The case file is byte-identical across these (the fix and mutation are src-only), so the difference is the fix, not the case."
       },
       "note": "P2-01 U-stage supplement 10, replaced for A-555: the webhook actor case (A-421) on the shipped web profile with the documented GitHub webhook patch, booted in-process through the launcher. An action a webhook delivery triggers traces to the integration ServicePrincipal the HMAC key stands for (P2-01 acceptance[0], BLOCKED-340; fix B-606). expectCases are the full names in A-555's narrow run 36278361411 at f0558bff78, which ran the seven e2e files of the full run's e2e step at its concurrency, 20 of 20 passed, and apps/cli/tests/profiles/web/tests/webhook-actor.e2e.ts ran 2 cases, each frozen title passing once; the entry is frozen after that run, so its cell is observed by the next full run. sensitivityProof carries over from the entry it replaces: the change is to the wait alone. files add the harness the spec imports (the launcher's profile boot, the routing stub model and the session-log reader) and the manifest's actor derivation, to the entry's own four. The observing tree is pinned at refs/dsh/freeze/P2-01.U.10/2026-09-26T23-33-43.000Z -> f0558bff78f94a0b1820d2168a8ab95407bbc16a, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P4-05",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-05",
+        "stage": "U"
+      },
+      "supplementSeq": 10,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-05.reclaim-after-restart.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-05 acceptance[2] on the shipped profile: an orphaned Run is reclaimed after a real restart a crashed host's durable Run is adopted by the next boot — same Run, walked through orphaned to starting under a new epoch, its lease not refused"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-05.reclaim-after-restart.composition.spec.ts",
+        "tests/first100/fixtures/loader/p4-05-reclaim/driver.ts",
+        "tests/first100/fixtures/loader/p4-05-reclaim/base.patch.yml",
+        "tests/first100/fixtures/loader/p4-05-reclaim/mock-llm.ts",
+        "packages/run/run/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-27T05:44:35.000Z",
+      "dryRunProof": {
+        "treeSha": "6d008d3bdbe566e6ce459303d09468c9b4cb59db",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-A547-v5 (`cafbfee9ad57e33d713f2f105ea93621b9c2267d`, run 36284082516): RunPlugin.adoptable() iterates a typed empty Run array, adopting nothing, so a restart mints a fresh Run instead of adopting the orphan and the reclaim case reds.",
+        "failureSummary": "Run 36284082516: 1 of 1 red, «P4-05 acceptance[2] on the shipped profile: an orphaned Run is reclaimed after a real restart a crashed host's durable Run is adopted by the next boot — same Run, walked through orphaned to starting under a new epoch, its lease not refused» — AssertionError: phase2.runId 'run-3dbd8abb-c1cc-4790-8fb6-e9f4d575ef65' (state queued, epoch 1, restored 2, leaseRefused null) expected to be phase1.runId 'run-2158716f-6673-4ce1-8866-9188c283c72c'; a fresh Run was minted instead of adopting the orphan."
+      },
+      "note": "P4-05 U-stage supplement 10, on the shipped profile: acceptance[2] reclaim branch. A crashed host's durable orphaned Run is adopted by the next boot — the same Run, walked orphaned -> starting under a new epoch, its lease not refused (A-547 v5 evidence; v5 flushes the session log in phase 1 so the resume finds the session while the lease is still held). Frozen from lane A's A-547 v5 draft (artifacts/laneA/a-547-v5-p4-05-reclaim-freeze.md, sha256 56e16474d5f2e07ccc73c0226fb6e6693e2a026f6b0d97347da57b4b9c82b287) per the delegate's 20r assignment (first100-delegate-1a). expectCases is the full name in the full run 36284563089 at 4418e311253df568452146710c0f57e584d39b1f, where tests/first100/fixtures/P4-05.reclaim-after-restart.composition.spec.ts ran 1 case and the frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the reclaim fixture's driver, overlay and mock model, and packages/run/run/src/index.ts, whose adoptable()/adoptLapsedPredecessor() is the reclaim mechanism the sensitivity mutation disables. This entry covers ONLY the adopt branch of acceptance[2]; the safe-fail branch is A-560's red first (B-674), not covered here. The observing tree is pinned at refs/dsh/freeze/P4-05.U.10/2026-09-27T05-44-35.000Z -> 4418e311253df568452146710c0f57e584d39b1f, whose tree is dryRunProof.treeSha."
     }
   ]
 }
