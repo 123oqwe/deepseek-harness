@@ -43,11 +43,11 @@ import type {
  * fail-closed with `'illegal-transition'`.
  */
 export const LEGAL_RUN_TRANSITIONS: Readonly<Record<RunState, readonly RunState[]>> = {
-  accepted: ['planning', 'failed', 'cancelled'],
+  accepted: ['planning', 'cancelled'],
   planning: ['waiting', 'running', 'failed', 'cancelled'],
   waiting: ['running', 'failed', 'cancelled'],
   running: ['paused', 'verifying', 'failed', 'cancelled'],
-  paused: ['running', 'failed', 'cancelled'],
+  paused: ['running', 'cancelled'],
   verifying: ['succeeded', 'reconciling', 'failed'],
   reconciling: ['running', 'succeeded', 'failed'],
   succeeded: [],
