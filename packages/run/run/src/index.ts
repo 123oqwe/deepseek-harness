@@ -1484,7 +1484,6 @@ export default class RunPlugin extends Service {
       if (stats.some(stat => stat !== undefined)) continue
       const taken = acquireRunLease(this.ctx.leaseStore, brandString<WorkItemId>(opened), this.worker, Date.now(), this.config.leaseMs)
       if ('denied' in taken) continue
-      await this.advanceRun(run.id, 'failed', [], taken.lease)
       taken.lease.release()
       this.ctx.logger.warn('run: failed restored Run %s — none of its sessions exists any more, so no host can continue it', run.id)
     }
