@@ -29,3 +29,5 @@ BLOCKED-316, under P3-01 acceptance[1] and acceptance[2]. The world registry cop
 - Registering a provider this package did not build under `local` or `fenced` throws, naming the id.
 - The guard runs after the risk gate, so a person can be asked to approve a call that the guard then refuses.
 - Verification: A-432, A-531 and A-541 (`tests/first100/fixtures/P3-01.world-identity.composition.spec.ts`), `packages/execution/execution-world/tests/registry.spec.ts` and `world-fact.spec.ts`.
+
+Superseded in part by [The world registry checks what it recorded, not what a provider reports afterwards](2026-09-27-the-world-registry-checks-what-it-recorded-not-what-a-provider-reports.md): the identity check, the digest check, and when the guard's refusal is written.

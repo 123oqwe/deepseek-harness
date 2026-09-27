@@ -16,7 +16,7 @@ import ExecutionWorldService, { digestWorldSpec, filesystemForSandboxMode, nextW
 import { createLocalWorldProvider, LOCAL_WORLD_PROVIDER } from '../src/local-provider.ts'
 import { FENCED_WORLD_PROVIDER } from '../src/fenced-provider.ts'
 import { createFakeWorldProvider, FAKE_WORLD_PROVIDER } from './fake-provider.ts'
-import type { WorldHandle, WorldId, WorldProvider, WorldProviderId, WorldSpecDigest } from '../src/types.ts'
+import type { WorldHandle, WorldId, WorldProvider, WorldProviderId, WorldSpec, WorldSpecDigest } from '../src/types.ts'
 
 const HOST_TENANT = brandString<TenantId>('local-host')
 
@@ -362,5 +362,75 @@ describe('P3-01 acceptance[2] (BLOCKED-316): the registry checks who built a wor
       expect(guard({ name: 'read', agent: { id: 'agent-2' } })).toBeUndefined()
       expect(guard({ name: 'read' })).toBeUndefined()
     })
+  })
+})
+
+describe('P3-01 acceptance[2] (BLOCKED-316, B-673): a provider cannot change what the registry checks once it is registered', () => {
+  it('checks a handle against the id its provider registered under, so a provider that renames itself to local afterwards binds nothing', async () => {
+    const { service } = await mounted()
+    const renamed: WorldProvider = {
+      ...createFakeWorldProvider({ digest: digestWorldSpec, nextWorldId: ids }).provider,
+      create: spec => Promise.resolve({ id: ids(), provider: renamed.id, spec: digestWorldSpec(spec) } as unknown as WorldHandle),
+    }
+    service.register(renamed)
+    ;(renamed as { id: WorldProviderId }).id = LOCAL_WORLD_PROVIDER
+    expect(await service.bindingFor(agent('agent-1'))).toBeUndefined()
+    expect(service.refusalFor(agent('agent-1'))).toEqual({ kind: 'identity-mismatch', provider: FAKE_WORLD_PROVIDER, claimed: LOCAL_WORLD_PROVIDER })
+  })
+
+  it('hands a provider a frozen copy of the spec, so a create that writes to it binds nothing and the request keeps its ceilings', async () => {
+    const ctx = new Context()
+    ctx.provide('sandboxPolicy', sandbox() as never)
+    await ctx.plugin(ExecutionWorldService, {
+      tenant: 'local-host',
+      request: { network: 'unrestricted', spawn: true, ipc: 'unrestricted', secrets: 'inherited', maxProcesses: 2, resources: { memoryBytes: 536870912 } },
+    })
+    const service = ctx.get('executionWorlds')
+    if (service === undefined) throw new Error('the registry did not mount')
+    const handed: WorldSpec[] = []
+    service.register({
+      ...createFakeWorldProvider({ digest: digestWorldSpec, nextWorldId: ids }).provider,
+      create: (spec) => {
+        handed.push(spec)
+        ;(spec as { resources: WorldSpec['resources'] }).resources = {}
+        return Promise.resolve({ id: ids(), provider: FAKE_WORLD_PROVIDER, spec: digestWorldSpec(spec) } as unknown as WorldHandle)
+      },
+    })
+    expect(await service.bindingFor(agent('agent-1'))).toBeUndefined()
+    expect(Object.isFrozen(handed[0]?.resources)).toBe(true)
+    expect(service.requestedCeilings()).toEqual({ memoryBytes: 536870912, maxProcesses: 2 })
+  })
+
+  it('runs one create for concurrent binding requests of the same agent, so no dispatch reads a half-made attempt', async () => {
+    const { service } = await mounted()
+    let creates = 0
+    service.register({
+      ...createFakeWorldProvider({ digest: digestWorldSpec, nextWorldId: ids }).provider,
+      create: (spec) => {
+        creates += 1
+        return Promise.resolve({ id: ids(), provider: FAKE_WORLD_PROVIDER, spec: digestWorldSpec(spec) } as unknown as WorldHandle)
+      },
+    })
+    const [first, second] = await Promise.all([service.bindingFor(agent('agent-1')), service.bindingFor(agent('agent-1'))])
+    expect(creates).toBe(1)
+    expect(second).toBe(first)
+  })
+
+  it('keeps a recorded mismatch when a later attempt\'s create fails, so the session stays refused until a world binds', async () => {
+    const { service } = await mounted()
+    let creates = 0
+    service.register({
+      ...createFakeWorldProvider({ digest: digestWorldSpec, nextWorldId: ids }).provider,
+      create: (spec) => {
+        creates += 1
+        return creates === 1
+          ? Promise.resolve({ id: ids(), provider: LOCAL_WORLD_PROVIDER, spec: digestWorldSpec(spec) } as unknown as WorldHandle)
+          : Promise.reject(new Error('the backing runtime is gone'))
+      },
+    })
+    expect(await service.bindingFor(agent('agent-1'))).toBeUndefined()
+    expect(await service.bindingFor(agent('agent-1'))).toBeUndefined()
+    expect(creates).toBe(2)
+    expect(service.refusalFor(agent('agent-1'))).toEqual({ kind: 'identity-mismatch', provider: FAKE_WORLD_PROVIDER, claimed: LOCAL_WORLD_PROVIDER })
   })
 })

@@ -286,6 +286,24 @@ export function resolveWorldSpec(
 }
 
 /**
+ * A deep-frozen copy of `spec`, the only spec a provider is handed: a provider
+ * that writes to it throws, instead of changing the spec the registry checks
+ * a handle against and reads a binding's ceilings from.
+ * @param spec - the resolved spec.
+ * @returns a frozen copy sharing no object with `spec` or the deployment's request.
+ */
+function frozenWorldSpec(spec: WorldSpec): WorldSpec {
+  const copy = structuredClone(spec)
+  const freeze = (value: unknown): void => {
+    if (value === null || typeof value !== 'object') return
+    Object.freeze(value)
+    for (const child of Object.values(value)) freeze(child)
+  }
+  freeze(copy)
+  return copy
+}
+
+/**
  * Digest a spec by its canonical JSON, so two equal specs digest equally.
  * @param spec - the complete spec to digest.
  * @returns the spec's digest, which a policy compares confinement by.
@@ -434,8 +452,15 @@ export default class ExecutionWorldService extends Service<Config> {
   private readonly providers: WorldProvider[] = []
   /** Each registered provider's yielded-to ids, from its registration's placement. */
   private readonly yieldsTo = new Map<WorldProvider, readonly WorldProviderId[]>()
+  /** The id each provider registered under; a handle is checked against it, never against the id the provider reports later. */
+  private readonly registeredIds = new Map<WorldProvider, WorldProviderId>()
   private readonly bound = new Map<string, ExecutionWorldBinding>()
-  /** Why each agent's last binding attempt bound no world, when it has a reason to report. */
+  /** Each agent's binding attempt in flight, which a concurrent dispatch for the same agent awaits instead of starting another. */
+  private readonly attempts = new Map<string, Promise<ExecutionWorldBinding | undefined>>()
+  /**
+   * Why each agent's last binding attempt bound no world, when it has a reason
+   * to report. An identity or digest mismatch stays until a binding succeeds.
+   */
   private readonly refusals = new Map<string, WorldBindingRefusal>()
   private readonly request: WorldRequest
   private readonly tenant: TenantId
@@ -481,16 +506,19 @@ export default class ExecutionWorldService extends Service<Config> {
    *   `local` or `fenced` (P3-01 acceptance[2]).
    */
   register(provider: WorldProvider, placement?: WorldProviderPlacement): () => Promise<void> {
-    const builtHere = RESERVED_PROVIDER_IDS.get(provider.id)
+    const id = provider.id
+    const builtHere = RESERVED_PROVIDER_IDS.get(id)
     if (builtHere !== undefined && !builtHere(provider)) {
-      throw new Error(`the world provider id "${provider.id}" is reserved for the ${provider.id} provider this package builds, so a provider built elsewhere cannot register under it`)
+      throw new Error(`the world provider id "${id}" is reserved for the ${id} provider this package builds, so a provider built elsewhere cannot register under it`)
     }
     return this.ctx.effect(() => {
       this.providers.push(provider)
+      this.registeredIds.set(provider, id)
       if (placement?.yieldsTo !== undefined) this.yieldsTo.set(provider, placement.yieldsTo)
       return () => {
         const at = this.providers.indexOf(provider)
         if (at >= 0) this.providers.splice(at, 1)
+        this.registeredIds.delete(provider)
         this.yieldsTo.delete(provider)
       }
     })
@@ -532,26 +560,52 @@ export default class ExecutionWorldService extends Service<Config> {
   async bindingFor(agent: BindableAgent): Promise<ExecutionWorldBinding | undefined> {
     const existing = this.bound.get(agent.id)
     if (existing !== undefined) return existing
-    // Each attempt replaces the previous one's refusal, so `refusalFor` and the
-    // tool guard read this attempt's answer.
-    this.refusals.delete(agent.id)
+    const inFlight = this.attempts.get(agent.id)
+    if (inFlight !== undefined) return inFlight
+    const attempt = this.attemptBinding(agent).finally(() => { this.attempts.delete(agent.id) })
+    this.attempts.set(agent.id, attempt)
+    return attempt
+  }
+
+  /**
+   * One binding attempt for `agent`, which records its refusal only once it
+   * has an answer, so the tool guard never reads a refusal cleared mid-attempt.
+   * Providers are handed a deep-frozen copy of the spec, whose digest the
+   * registry computes before selection; the binding's ceilings come from that
+   * same copy.
+   * @param agent - the dispatching agent.
+   * @returns the binding, or `undefined` when the attempt bound no world.
+   */
+  private async attemptBinding(agent: BindableAgent): Promise<ExecutionWorldBinding | undefined> {
     const sandbox = this.ctx.get('sandboxPolicy') as SandboxPolicyPort | undefined
-    if (sandbox === undefined) return undefined
-    const { mode, workspaceRoot } = sandbox.resolve({ session: agent.session })
-    const filesystem = filesystemForSandboxMode(mode, workspaceRoot)
-    if (filesystem === undefined) return undefined
-    const spec = resolveWorldSpec(this.request, filesystem, this.tenant)
-    const selection = selectWorldProvider(spec, selectionOrder(this.providers, this.yieldsTo), this.policy)
-    if (selection.outcome === 'refused') {
-      this.refusals.set(agent.id, { kind: 'unavailable', selection })
+    if (sandbox === undefined) {
+      this.recordUnbound(agent, undefined)
       return undefined
     }
-    const handle = await selection.provider.create(spec).catch(() => undefined)
-    if (handle === undefined) return undefined
-    const selected = selection.provider.id
+    const { mode, workspaceRoot } = sandbox.resolve({ session: agent.session })
+    const filesystem = filesystemForSandboxMode(mode, workspaceRoot)
+    if (filesystem === undefined) {
+      this.recordUnbound(agent, undefined)
+      return undefined
+    }
+    const spec = frozenWorldSpec(resolveWorldSpec(this.request, filesystem, this.tenant))
+    const expected = digestWorldSpec(spec)
+    const selection = selectWorldProvider(spec, selectionOrder(this.providers, this.yieldsTo), this.policy)
+    if (selection.outcome === 'refused') {
+      this.recordUnbound(agent, { kind: 'unavailable', selection })
+      return undefined
+    }
+    // A create that throws, before or after returning its promise (as a write
+    // to the frozen spec does), creates no world.
+    const handle = await Promise.resolve().then(() => selection.provider.create(spec)).catch(() => undefined)
+    if (handle === undefined) {
+      this.recordUnbound(agent, undefined)
+      return undefined
+    }
+    const selected = this.registeredId(selection.provider)
     const mismatch: WorldBindingRefusal | undefined = handle.provider !== selected
       ? { kind: 'identity-mismatch', provider: selected, claimed: handle.provider }
-      : handle.spec === digestWorldSpec(spec) ? undefined : { kind: 'digest-mismatch', provider: selected }
+      : handle.spec === expected ? undefined : { kind: 'digest-mismatch', provider: selected }
     if (mismatch !== undefined) {
       this.refusals.set(agent.id, mismatch)
       return undefined
@@ -563,8 +617,34 @@ export default class ExecutionWorldService extends Service<Config> {
       resources: spec.resources,
       ...spec.process.maxProcesses === undefined ? {} : { maxProcesses: spec.process.maxProcesses },
     }
+    this.refusals.delete(agent.id)
     this.bound.set(agent.id, binding)
     return binding
+  }
+
+  /**
+   * Record an attempt that bound no world. An identity or digest mismatch
+   * already recorded for the agent stays: only a successful binding clears it.
+   * @param agent - the agent whose attempt ended.
+   * @param refusal - the attempt's reason, or `undefined` when it has none to report.
+   */
+  private recordUnbound(agent: BindableAgent, refusal: Extract<WorldBindingRefusal, { kind: 'unavailable' }> | undefined): void {
+    const recorded = this.refusals.get(agent.id)
+    if (recorded !== undefined && recorded.kind !== 'unavailable') return
+    if (refusal === undefined) this.refusals.delete(agent.id)
+    else this.refusals.set(agent.id, refusal)
+  }
+
+  /**
+   * The id `provider` registered under.
+   * @param provider - a provider selection chose from the registered ones.
+   * @returns the id recorded at registration.
+   * @throws when `provider` is not registered, which selection never returns.
+   */
+  private registeredId(provider: WorldProvider): WorldProviderId {
+    const id = this.registeredIds.get(provider)
+    if (id === undefined) throw new Error('a world provider was selected without being registered')
+    return id
   }
 
   /**
