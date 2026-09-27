@@ -4,7 +4,7 @@
  * must[0]'s closed Run-state set and acceptance[1]'s legal/illegal
  * transitions are covered together by an exhaustive 10x10 state-pair sweep
  * derived directly from `../src/state-machine.ts`'s real, exported
- * `LEGAL_RUN_TRANSITIONS` table, so every one of the table's 21 legal edges
+ * `LEGAL_RUN_TRANSITIONS` table, so every one of the table's 23 legal edges
  * has its own passing-direction case and every other pair (including every
  * self-transition and every transition attempted out of a terminal state)
  * has its own rejected-direction case — never only the rejection side.
