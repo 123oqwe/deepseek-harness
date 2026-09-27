@@ -37,7 +37,7 @@ const overlay = fileURLToPath(new URL('./loader/p3-01-world-swap/base.patch.yml'
 const repoTsconfig = fileURLToPath(new URL('../../../tsconfig.json', import.meta.url))
 
 /** The driver's boot modes. */
-const MODES = ['shipped', 'honest', 'forging', 'network-none', 'forbid-absent', 'forbid-absent-control', 'register-local', 'register-fenced'] as const
+const MODES = ['shipped', 'honest', 'forging', 'swap-id-to-local', 'mutate-spec', 'network-none', 'forbid-absent', 'forbid-absent-control', 'register-local', 'register-fenced'] as const
 
 /** One boot mode. */
 type Mode = typeof MODES[number]
@@ -47,6 +47,10 @@ interface Report {
   readonly mode: Mode
   readonly worldBound: readonly { readonly provider: string; readonly spec: string }[]
   readonly worldEventTypes: readonly string[]
+  readonly worldUnbound: readonly {
+    readonly kind: string
+    readonly selection?: { readonly reason: string; readonly unsatisfiable: Readonly<Record<string, readonly string[]>> }
+  }[]
   readonly toolResults: readonly string[]
   readonly registerReserved?: { readonly id: string; readonly threw: boolean; readonly error: string }
 }
@@ -118,6 +122,29 @@ describe('P3-01 acceptance[1] and [2]: the world a call is bound to on the shipp
     expect(/identit|provider|digest/iu.test(results), `the refusal must name an identity or digest mismatch: ${results}`).toBe(true)
   })
 
+  it('P3-01 acceptance[2] / BLOCKED-316 condition 3: a provider that registers under a non-reserved id and then becomes local is refused at binding — nothing binds under local and the tool does not run (B-666 finding 1, red first for B-673)', () => {
+    const report = reports.get('swap-id-to-local')
+    expect(report, 'the swap-id-to-local driver reported').toBeDefined()
+    // register() admitted the non-reserved test id, and the object then became
+    // `local`, which the binding-time identity check re-reads. The reserved id
+    // must not be claimable this way: nothing this package did not build may
+    // bind under `local`, so the call is refused and no world binds under it.
+    expect(report?.worldBound.filter(bound => bound.provider === 'local'), JSON.stringify(report)).toEqual([])
+    expect(report !== undefined && readTheFile(report), JSON.stringify(report)).toBe(false)
+  })
+
+  it('P3-01 acceptance[2] / BLOCKED-316 condition 3: a provider that clears the deployment ceilings on the spec it is handed and reports the mutated digest binds no world (B-666 finding 2, red first for B-673)', () => {
+    const report = reports.get('mutate-spec')
+    expect(report, 'the mutate-spec driver reported').toBeDefined()
+    // The registry recomputed the digest only after create, so today the
+    // mutated spec's digest matches the handle's and the weakened world binds
+    // with the deployment's process and memory ceilings gone. The requirement,
+    // whether the fix refuses the mismatch or hands the provider a frozen copy,
+    // is that no world binds under a spec the provider changed after being
+    // handed the deployment's.
+    expect(report?.worldBound, JSON.stringify(report)).toEqual([])
+  })
+
   it('P3-01 BLOCKED-316 condition 3: registering a world provider under the reserved id local is refused, with an error naming the identity', () => {
     const report = reports.get('register-local')
     expect(report?.registerReserved, JSON.stringify(report)).toBeDefined()
@@ -140,12 +167,20 @@ describe('P3-01 acceptance[1] and [2]: the world a call is bound to on the shipp
     expect(report !== undefined && readTheFile(report), JSON.stringify(report)).toBe(true)
   })
 
-  it('P3-01 acceptance[1]: a requested world no provider can hold refuses the call or records that it ran without that world', () => {
+  it('P3-01 acceptance[1] / BLOCKED-316 condition 2b: a requested world no provider can hold records exactly one visible action/world-unbound, kind unavailable, naming the unmet network dimension, and the tool runs under the absent fact a deployment rule can then refuse', () => {
     const report = reports.get('network-none')
     expect(report, 'the network-none driver reported').toBeDefined()
-    const refused = report !== undefined && !readTheFile(report)
-    const declaredDegradation = report?.worldEventTypes.some(type => type !== 'action/world-bound') ?? false
-    expect(refused || declaredDegradation, JSON.stringify(report)).toBe(true)
+    // B-666 declares the degradation rather than refusing here (the paired
+    // forbid-absent case is what refuses). Pin that the declaration is a single
+    // action/world-unbound of kind `unavailable` whose selection names the
+    // dimension no provider could hold — not merely "some event that is not
+    // action/world-bound".
+    expect(report?.worldUnbound.map(refusal => refusal.kind), JSON.stringify(report)).toEqual(['unavailable'])
+    const unsatisfiable = Object.values(report?.worldUnbound[0]?.selection?.unsatisfiable ?? {}).flat()
+    expect(unsatisfiable.includes('network'), JSON.stringify(report)).toBe(true)
+    // Nothing binds, and the tool runs under the `absent` fact.
+    expect(report?.worldBound, JSON.stringify(report)).toEqual([])
+    expect(report !== undefined && readTheFile(report), JSON.stringify(report)).toBe(true)
   })
 
   it('P3-01 acceptance[1] / BLOCKED-316 condition 2a: a deployment rule forbidding an absent world refuses the call (the tool does not run), and the same request with the same policy set MINUS that one rule runs the tool — so the rule is what denies, not the absence of a world', () => {
