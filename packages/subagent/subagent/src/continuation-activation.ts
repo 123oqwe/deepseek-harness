@@ -958,10 +958,10 @@ export class ContinuableActivationRegistry {
           tenant: activation.parentSession,
           deadlineMs: Number.MAX_SAFE_INTEGER,
         })
-      } catch (error: unknown) {
-        // Logged, never thrown: a bus that cannot take this write must not stop
-        // a teardown. The child's own session log remains the durable record.
-        this.ctx.logger.warn(`subagent "${activation.childId}" settlement was not committed at shutdown: ${errorChain(error)}`)
+      } catch {
+        // MUTATION M-A537-1 — never merge: drop the shutdown-settlement warning,
+        // so a bus that cannot take the write fails silently again (the loss
+        // BLOCKED-333's fix surfaces).
       }
     }
   }
