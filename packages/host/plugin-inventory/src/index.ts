@@ -361,7 +361,7 @@ export function buildPluginPermissionStates(
   const resolvePackageDir = options.resolvePackageDir ?? resolveEntryPackageDir
   const resolvedEntries = [...ctx.loader.entries()].flatMap((entry) => {
     if (entry.options.group) return []
-    const resolved = resolveEntryPackage(entry.options.name, entry.parent.tree.ctx.baseUrl, resolvePackageDir)
+    const resolved = resolveEntryPackage(entry.options.name, undefined, resolvePackageDir)
     if (resolved === undefined) return []
     const observed = entry.fiber === undefined ? NOTHING_OBSERVED : buildObservedPluginCapabilities(ctx, entry.fiber)
     return [{ entry, resolved, observed }]
