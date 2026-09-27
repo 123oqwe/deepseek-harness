@@ -33,9 +33,11 @@ import { resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
+import { endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
 import type {} from '@deepseek-ai/dsh-run'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-tool-todo'
+import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import { bootProductionProfile } from '../../../../packages/test-support/loader-smoke/tests/fixtures/production-profile.ts'
 import { TOOL_TURN } from './mock-llm.ts'
 
@@ -47,6 +49,12 @@ const ctx = await bootProductionProfile({
   binName: 'p4-07',
   profile: 'headless',
   overlayPaths: [resolveConfigPath(configPath, undefined)],
+  // Pinned the way apps/cli/src/profile-boot.ts pins it: without a kernel, a
+  // composition that mounts a policy engine refuses every tool dispatch (Epic
+  // P0-02 acceptance[2]), and the tool turns dispatch todo_write.
+  prepare: (prepared) => {
+    pinTrustKernel(prepared, createTrustKernel({ policyDecider: endorseComposedDecision }))
+  },
 })
 
 /**
