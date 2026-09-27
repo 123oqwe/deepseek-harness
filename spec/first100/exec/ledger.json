@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-27T10:06:09.137Z",
-  "inputDigest": "c62daf1c07d04542cc17e2d0199a3e6c2be3a2575be10a9adc44cc0bef849e64",
+  "lastUpdatedUtc": "2026-09-27T10:09:26.864Z",
+  "inputDigest": "333ddccf2a4ce5cb0dc2474a5e5ab5113719b641b1c594e866a404a1c56a0737",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -5337,10 +5337,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36307835499",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36307835499/first100-vitest-report-29d8024c12f4d5a75c0141fe0254a9a3491dd5b9/vitest-report.json",
+          "observationSha256": "8555878cc4fd0eed6a60e9f6a16e013fdbd6b468ce4061e3ca0e305502e13a8e",
           "expectCasesMatched": [
             "P3-01 must[1]: a WorldSpec decides all nine confinement dimensions names exactly the nine dimensions the epic requires, so a tenth cannot arrive unnoticed",
             "P3-01 must[1]: a WorldSpec decides all nine confinement dimensions reports every unanswered dimension, not just the first",
@@ -5360,14 +5360,14 @@
             "P3-01 must[0]: a restore may narrow and never widen refuses a restore into a different confinement, which is how a weaker snapshot would widen one",
             "P3-01 validation[3]: a stopped world settles to one typed outcome whatever stopped it names an expired lifetime `timeout`, distinct from `provider-failed`"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:43.621Z"
+          "capturedAtUtc": "2026-09-27T10:07:33.238Z"
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36307835499",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36307835499/first100-vitest-report-29d8024c12f4d5a75c0141fe0254a9a3491dd5b9/vitest-report.json",
+          "observationSha256": "8555878cc4fd0eed6a60e9f6a16e013fdbd6b468ce4061e3ca0e305502e13a8e",
           "expectCasesMatched": [
             "P3-01 acceptance[1]: the local provider names every dimension it cannot deliver satisfies the one spec the sandbox can actually confine",
             "P3-01 acceptance[1]: the local provider names every dimension it cannot deliver refuses a filesystem it cannot remove, because every confining mode leaves a readable root",
@@ -5394,14 +5394,14 @@
             "P3-01 acceptance[0]: creating a world changes nothing about execution refuses to create a world whose filesystem the sandbox cannot confine, rather than narrowing it",
             "P3-01 acceptance[0]: creating a world changes nothing about execution refuses a rootless workspace-write world, because a root the sandbox reads as empty confines nothing"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:43.918Z"
+          "capturedAtUtc": "2026-09-27T10:07:33.727Z"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "c732e7c07331d3e298402b354a258c3a2aa10019",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36205389837",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36205389837/first100-vitest-report-c732e7c07331d3e298402b354a258c3a2aa10019/vitest-report.json",
-          "observationSha256": "52ddac59b8e9e76f5201f42d1e9117ddfed268c22ca6668e243a87aeb1cf3199",
+          "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36307835499",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36307835499/first100-vitest-report-29d8024c12f4d5a75c0141fe0254a9a3491dd5b9/vitest-report.json",
+          "observationSha256": "8555878cc4fd0eed6a60e9f6a16e013fdbd6b468ce4061e3ca0e305502e13a8e",
           "expectCasesMatched": [
             "P3-01 must[1]: the request becomes a complete spec, with every default stated once answers all nine dimensions from a request that states none",
             "P3-01 must[1]: the request becomes a complete spec, with every default stated once carries a stated request through instead of the default, which is what makes a refusal reachable",
@@ -5429,14 +5429,14 @@
             "P3-01 acceptance[0]: the bound world reaches the policy question and the audit records the world, the provider and the confinement digest, which is what makes a swap auditable",
             "P2-05 must[0]: the request translation lets the SAME rule admit an action whose world is bound, with no change to the translation"
           ],
-          "capturedAtUtc": "2026-09-26T01:33:02.299Z"
+          "capturedAtUtc": "2026-09-27T10:07:34.175Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36307835499",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36307835499/first100-vitest-report-29d8024c12f4d5a75c0141fe0254a9a3491dd5b9/vitest-report.json",
+          "observationSha256": "8555878cc4fd0eed6a60e9f6a16e013fdbd6b468ce4061e3ca0e305502e13a8e",
           "expectCasesMatched": [
             "P3-01 validation[3]: every stop reason has a producer settles `terminated` when the CALLER stops a live world",
             "P3-01 validation[3]: every stop reason has a producer settles `timeout` when the lifetime ceiling passes, OUTRANKING the caller's own reason",
@@ -5462,22 +5462,22 @@
             "P3-01 validation[1]: the same table, against the FAKE provider reports a stopped world's snapshot AS stopped, and refuses another provider's snapshot outright",
             "P3-01: the two providers are distinguishable, which every row above depends on names two different providers, so a foreign handle is really foreign"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:44.548Z"
+          "capturedAtUtc": "2026-09-27T10:07:34.622Z"
         }
       },
       "supplements": {
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36307835499",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36307835499/first100-vitest-report-29d8024c12f4d5a75c0141fe0254a9a3491dd5b9/vitest-report.json",
+          "observationSha256": "8555878cc4fd0eed6a60e9f6a16e013fdbd6b468ce4061e3ca0e305502e13a8e",
           "expectCasesMatched": [
             "P3-01 acceptance[0]: one tool call through the local and the fenced world provider on the shipped headless profile the shipped composition binds the call's world from the local provider and, with the local row removed, from the fenced provider, under the same confinement digest",
             "P3-01 acceptance[0]: one tool call through the local and the fenced world provider on the shipped headless profile the ActionManifest the call appends is the same under either provider, apart from the session-scoped runId, actor and idempotencyKey",
             "P3-01 acceptance[0]: one tool call through the local and the fenced world provider on the shipped headless profile the policy decision the Trust Kernel audits for the call, the risk gate's record and the tool's result are the same under either provider"
           ],
-          "capturedAtUtc": "2026-09-24T23:26:10.053Z"
+          "capturedAtUtc": "2026-09-27T10:07:35.044Z"
         },
         "U.2": {
           "status": "GREEN",
@@ -5499,28 +5499,28 @@
           "capturedAtUtc": "2026-09-27T10:06:08.135Z"
         }
       },
-      "candidateSha": "c732e7c07331d3e298402b354a258c3a2aa10019",
-      "independentVerdict": "PENDING",
+      "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "BLOCKED_ON_ACCEPTANCE",
+      "status": "ACCEPTED",
       "acceptedEvidence": {
-        "acceptedAtUtc": "2026-09-12T16:30:04.512Z",
+        "acceptedAtUtc": "2026-09-27T10:09:26.844Z",
         "cells": {
           "C": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34692381416",
-            "candidateSha": "2b54e4299144f7cb7587e924185c4d455aeaa648"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36307835499",
+            "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9"
           },
           "P": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34692381416",
-            "candidateSha": "2b54e4299144f7cb7587e924185c4d455aeaa648"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36307835499",
+            "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9"
           },
           "U": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34699917546",
-            "candidateSha": "d10920efa4aa1b8776cef2e3fe3bba28e84635d8"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36307835499",
+            "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9"
           },
           "F": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34699917546",
-            "candidateSha": "d10920efa4aa1b8776cef2e3fe3bba28e84635d8"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36307835499",
+            "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9"
           }
         },
         "coverageClosure": {
@@ -5529,8 +5529,8 @@
           "unverifiedCitations": []
         },
         "delegateSignoff": {
-          "delegateSession": "first100-delegate-78",
-          "signedAtUtc": "2026-09-12T16:30:04.225Z",
+          "delegateSession": "first100-delegate-1a",
+          "signedAtUtc": "2026-09-27T10:09:03.295Z",
           "userConfirmationRef": null
         }
       }

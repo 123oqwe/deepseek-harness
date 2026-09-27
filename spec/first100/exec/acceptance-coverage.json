@@ -5233,6 +5233,16 @@
         {
           "stage": "U",
           "title": "P2-05 must[0]: the request translation lets the SAME rule admit an action whose world is bound, with no change to the translation"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[1] / BLOCKED-316 condition 2a: a deployment rule forbidding an absent world refuses the call (the tool does not run), and the same request with the same policy set MINUS that one rule runs the tool — so the rule is what denies, not the absence of a world"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[1] / BLOCKED-316 condition 2b: a requested world no provider can hold records exactly one visible action/world-unbound, kind unavailable, naming the unmet network dimension, and the tool runs under the absent fact a deployment rule can then refuse"
         }
       ],
       "note": "acceptance[1]: 'when no provider satisfies the policy, fail closed and never silently degrade.' Two halves, and both are cited because either alone is half the clause. SELECTION (C, plus the U case that distinguishes a selection refusal from the provider's own `create` refusal — a mutation showed every other refusal case passed for the wrong reason without it). POLICY (U): `ExecutionWorldFact` gained its `bound` variant, so a byte-identical Cedar rule now admits a bound world and still denies an absent one, with the translation untouched. Before that second variant the rule forbade everything, because `absent` was the only value the field could take."
@@ -5252,6 +5262,31 @@
         {
           "stage": "F",
           "title": "P3-01 acceptance[2]: a refused handle settles nothing at all refuses a forged handle WITHOUT producing an outcome, because an outcome would mean it was admitted"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[2] / BLOCKED-316 condition 3: a plugin provider whose handle claims local with a digest it did not compute is refused at binding — the tool does not run, the result names the mismatch, and nothing binds under the claim"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[2] / BLOCKED-316 condition 3: a provider that registers under a non-reserved id and then becomes local is refused at binding — nothing binds under local and the tool does not run (B-666 finding 1, red first for B-673)"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[2] / BLOCKED-316 condition 3: a provider that clears the deployment ceilings on the spec it is handed and reports the mutated digest binds no world (B-666 finding 2, red first for B-673)"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 BLOCKED-316 condition 3: registering a world provider under the reserved id local is refused, with an error naming the identity"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 BLOCKED-316 condition 3: registering a world provider (not the shipped fenced provider) under the reserved id fenced is refused, with an error naming the identity"
         }
       ],
       "note": "acceptance[2]: 'a WorldHandle cannot be forged by a model or a third-party plugin.' Closed by construction — a module-private `unique symbol` plus a WeakMap keyed on object identity — and evidenced from two directions, because they are held by different mechanisms: the forged-handle case is what the symbol and the WeakMap hold, while the foreign-instance case is held by each provider instance owning its own registry. Measured: the structural-lookup mutation reddens the first alone, which is how the difference was found. The F case adds the property a refusal must also have — settling NO outcome, since an outcome would mean the forged handle had been admitted."
