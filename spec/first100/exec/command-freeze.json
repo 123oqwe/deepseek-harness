@@ -20383,6 +20383,46 @@
         "failureSummary": "Read from the round's own narrow report, run 36305524229 over B-674's 14 files, 259 cases: 258 passed, 1 failed, A-560's «P4-05 acceptance[2] on the shipped profile: an orphaned Run whose session is gone fails safely rather than dangling (A-560, red first for B-674) a durable Run left with no recoverable session after a crash is recorded FAILED on the next boot, not left forever in a non-terminal state» (the Run stays accepted). packages/run/run/tests/state-machine.spec.ts ran its 112 cases and all passed, but the sweep takes its titles from the table, so it produced «accepted -> failed is rejected» and «paused -> failed is rejected»; the two titles this entry freezes are absent from the report, so its cell reads red for missing cases (ruling gate3 2026-09-27T08:19:22Z)."
       },
       "note": "P4-01 C stage, replaced for B-674: the exhaustive 10x10 state-pair sweep derived from LEGAL_RUN_TRANSITIONS, now 23 legal edges, plus the cases for must[1], must[2], acceptance[0] and acceptance[2], unchanged. expectCases are the 111 titles of the entry it replaces with the accepted and paused → failed titles now «… is accepted», as in the narrow run 36306741182 at cb75e5f6dd (batch 21 before this record), where packages/run/run/tests/state-machine.spec.ts ran 112 cases and each frozen title passed once; the one case not frozen here is a P4-02 case added later. The entry is frozen after that run, so its cell is observed by the next full run. The observing tree is pinned at refs/dsh/freeze/P4-01.C/2026-09-27T08-52-53.000Z -> cb75e5f6dd9621ad3b4174d84cda389563640fb9, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P5-10",
+      "stage": "U",
+      "supplements": {
+        "epic": "P5-10",
+        "stage": "U"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P5-10.shutdown-settlement-warn.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "A-537 P5-10 BLOCKED-333: a settlement write that fails at shutdown reaches stderr on the shipped headless profile the scenario arms: the cancelled child is resident and announced at dispose, and the bus write is forced to fail",
+        "A-537 P5-10 BLOCKED-333: a settlement write that fails at shutdown reaches stderr on the shipped headless profile the shutdown-settlement warning reaches stderr, naming the child (GREEN — base logger-stderr writes it; M-A537-1 removes the warning and this goes red)"
+      ],
+      "files": [
+        "tests/first100/fixtures/P5-10.shutdown-settlement-warn.composition.spec.ts",
+        "tests/first100/fixtures/loader/p5-10-shutdown-warn/driver.ts",
+        "tests/first100/fixtures/loader/p5-10-shutdown-warn/mock-llm.ts",
+        "tests/first100/fixtures/loader/p5-10-shutdown-warn/base.patch.yml",
+        "packages/subagent/subagent/src/continuation-activation.ts",
+        "packages/bundle/base/cordis.patch.yml"
+      ],
+      "frozenAtUtc": "2026-09-27T10:13:11.000Z",
+      "dryRunProof": {
+        "treeSha": "ed6a6754d74bd36c7cade7e0516cc3448a0513d4",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-A537-1 (`83eec17ab7c0b187002fd051c055c77dbff08c08`, parent A-537 `7a6a95ecca`): the `ctx.logger.warn` in `commitSettlementsForShutdown`'s catch (packages/subagent/subagent/src/continuation-activation.ts) is removed, so a settlement write that fails at shutdown leaves no trace. continuation-activation.ts, the spec and its loader files are byte-identical at the mutation's parent and at the observed candidate.",
+        "failureSummary": "Read from the round's own narrow report, run 36296655011 over the spec: 1 passed, 1 failed, «A-537 P5-10 BLOCKED-333: a settlement write that fails at shutdown reaches stderr on the shipped headless profile the shutdown-settlement warning reaches stderr, naming the child (GREEN — base logger-stderr writes it; M-A537-1 removes the warning and this goes red)» (stderr carried no warning); the setup case «A-537 P5-10 BLOCKED-333: a settlement write that fails at shutdown reaches stderr on the shipped headless profile the scenario arms: the cancelled child is resident and announced at dispose, and the bus write is forced to fail» stayed green."
+      },
+      "note": "P5-10 U-stage supplement 3, BLOCKED-333's latter half on the shipped headless profile: a settlement write that fails at shutdown is not lost silently — commitSettlementsForShutdown's catch logs it through ctx.logger.warn, and base's logger-stderr (the BLOCKED-336 fix) writes it to stderr. The case holds a continuable child open, cancels it, replaces the durable bus's commitIntake with a thrower and disposes the tree; the setup case guards against a false green. The shutdown warning takes the post-unroute logger-stderr default path (the runner is disabled here); the in-reroute path is not covered, as the BLOCKED-333 closure records. Frozen from lane A's A-537 draft (artifacts/laneA/a-537-freeze-draft.md). expectCases are the full names in the full run 36307835499 at 29d8024c12f4d5a75c0141fe0254a9a3491dd5b9, where tests/first100/fixtures/P5-10.shutdown-settlement-warn.composition.spec.ts ran 2 cases and each frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. The observing tree is pinned at refs/dsh/freeze/P5-10.U.3/2026-09-27T10-13-11.000Z -> 29d8024c12f4d5a75c0141fe0254a9a3491dd5b9, whose tree is dryRunProof.treeSha."
     }
   ]
 }

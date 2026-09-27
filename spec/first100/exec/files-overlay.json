@@ -5349,6 +5349,14 @@
     },
     {
       "epic": "P5-10",
+      "path": "packages/bundle/base/cordis.patch.yml",
+      "kind": "manifest",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P5-10",
       "path": "packages/collaboration/control-priority/src/index.ts",
       "kind": "source",
       "stages": [
@@ -5377,9 +5385,10 @@
       "path": "packages/subagent/subagent/src/continuation-activation.ts",
       "kind": "source",
       "stages": [
-        "U.2"
+        "U.2",
+        "U.3"
       ],
-      "reason": "B-631's fix (08dd4ed361): a human parent's interrupt is committed to the durable bus here (`recordInterrupt`), after the parent address is verified and before the cancel signal, so it never takes effect without its record. U.2's cases interrupt the child through this path before each restart."
+      "reason": "B-631's fix (08dd4ed361): a human parent's interrupt is committed to the durable bus here (`recordInterrupt`), after the parent address is verified and before the cancel signal, so it never takes effect without its record. U.2's cases interrupt the child through this path before each restart. U.3's cases (A-537) observe `commitSettlementsForShutdown`'s catch here, which logs a settlement write that fails at shutdown."
     },
     {
       "epic": "P5-10",
@@ -5502,10 +5511,42 @@
     },
     {
       "epic": "P5-10",
+      "path": "tests/first100/fixtures/loader/p5-10-shutdown-warn/base.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P5-10",
+      "path": "tests/first100/fixtures/loader/p5-10-shutdown-warn/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P5-10",
+      "path": "tests/first100/fixtures/loader/p5-10-shutdown-warn/mock-llm.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P5-10",
       "path": "tests/first100/fixtures/P5-10.interrupt-across-restart.composition.spec.ts",
       "kind": "test",
       "stages": [
         "U.2"
+      ]
+    },
+    {
+      "epic": "P5-10",
+      "path": "tests/first100/fixtures/P5-10.shutdown-settlement-warn.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
       ]
     },
     {
