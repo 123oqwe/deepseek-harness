@@ -296,7 +296,6 @@ function frozenWorldSpec(spec: WorldSpec): WorldSpec {
   const copy = structuredClone(spec)
   const freeze = (value: unknown): void => {
     if (value === null || typeof value !== 'object') return
-    Object.freeze(value)
     for (const child of Object.values(value)) freeze(child)
   }
   freeze(copy)
