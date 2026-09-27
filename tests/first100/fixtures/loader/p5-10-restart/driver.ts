@@ -52,6 +52,8 @@ import type {} from '@deepseek-ai/dsh-session-query'
 import type { SubagentInterruptReceipt, SubagentPromptRequest, SubagentPromptRequestId } from '@deepseek-ai/dsh-subagent'
 import { createFixtureRootAgent } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts'
 import { bootProductionProfile } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/production-profile.ts'
+import { endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
+import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 
 /** The route the scripted model registers. */
 const PROVIDER = 'p5-10-restart-mock'
@@ -685,6 +687,14 @@ if (phase === 'orchestrate') {
     binName: 'p5-10-restart',
     profile: 'headless',
     overlayPaths: [resolveConfigPath(configPath, undefined)],
+    // The parent-continues variant dispatches `send_message` on the shipped
+    // headless composition, which mounts a policy engine; without a pinned Trust
+    // Kernel that dispatch is now refused (Epic P0-02 acceptance[2]). All four
+    // variants share this boot, so the kernel is pinned here, as the launcher
+    // does, with the endorsing decider.
+    prepare: (prepared) => {
+      pinTrustKernel(prepared, createTrustKernel({ policyDecider: endorseComposedDecision }))
+    },
   })
   try {
     if (phase === 'before') {

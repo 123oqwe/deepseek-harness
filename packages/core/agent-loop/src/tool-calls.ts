@@ -20,7 +20,7 @@ import { appendManifestThenGate, computeArgumentsHash, manifestAttribution, mani
 import { redactTokenForLog } from '@deepseek-ai/dsh-capability-token'
 import type { SignedCapabilityToken } from '@deepseek-ai/dsh-capability-token'
 import type { ActionManifest } from '@deepseek-ai/dsh-action-manifest'
-import { enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
+import { dispatchDecisionWithoutKernel, enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
 import type { ExecutionWorldFact, PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
 import type { ApprovalDisplay } from '@deepseek-ai/dsh-user-approval/types'
 import type { ActionId, ArgumentsHash, CapabilityRef, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
@@ -742,14 +742,17 @@ function appendActionManifest(
  * Ask the enforcement point about one manifested action.
  *
  * Resolved through `ctx.get` rather than injected: a composition that mounts no
- * Trust Kernel — the tests' own compositions among them — must still dispatch
- * tools, and a hard dependency would stop the agent loop registering at all.
- * Absence is capability absence, and the harness behaves as it did before this
- * epic; presence means every dispatch is decided.
+ * Trust Kernel — the tests' own compositions among them — must still register
+ * the agent loop, which a hard dependency would prevent. Without a kernel the
+ * decision is `dispatchDecisionWithoutKernel`'s (Epic P0-02 acceptance[2]): a
+ * bare harness that mounts no policy engine dispatches as before, but a
+ * composition that mounts an engine yet pins no kernel refuses the action,
+ * because the enforcement point it would ask cannot decide without the kernel.
+ * With a kernel, every dispatch is decided.
  * @param agent - the dispatching agent, whose context carries the kernel.
  * @param manifest - the manifest just appended.
  * @param origin - which originator is dispatching.
- * @returns the decision, or undefined when no enforcement point is mounted.
+ * @returns the decision, or undefined to dispatch as before (no kernel with no engine or an accepted insecure opt-in).
  */
 function decideManifestedAction(
   ctx: Context,
@@ -762,17 +765,25 @@ function decideManifestedAction(
   void agent
   // The loop's own context, not `agent.ctx`: an Agent constructed by a test
   // harness may carry none, and the kernel is pinned on the root anyway.
-  if (ctx.get('trustKernel') === undefined) return undefined
-  // must[0]'s second input, in the form P2-02 already audited as safe outside
-  // the token layer: the token's CLAIMS and its digest, never the signed token
-  // — an engine holding that would hold an authority it could pass on.
-  const decision = enforceManifestedAction(ctx, {
-    manifest,
-    ...presentedToken === undefined ? { token: undefined } : { token: redactTokenForLog(presentedToken) },
-    origin,
-    world: policy.world,
-    facts: policy.facts,
-  })
+  // No kernel is not "no decision" (Epic P0-02 acceptance[2]): a composition
+  // that mounts a policy engine has stated dispatch is enforced, and
+  // enforceManifestedAction cannot decide without the kernel, so
+  // dispatchDecisionWithoutKernel denies the action there; a deliberate insecure
+  // development boot and a bare harness both leave it undefined and dispatch as
+  // before.
+  const decision = ctx.get('trustKernel') === undefined
+    ? dispatchDecisionWithoutKernel(ctx)
+    // must[0]'s second input, in the form P2-02 already audited as safe outside
+    // the token layer: the token's CLAIMS and its digest, never the signed token
+    // — an engine holding that would hold an authority it could pass on.
+    : enforceManifestedAction(ctx, {
+      manifest,
+      ...presentedToken === undefined ? { token: undefined } : { token: redactTokenForLog(presentedToken) },
+      origin,
+      world: policy.world,
+      facts: policy.facts,
+    })
+  if (decision === undefined) return undefined
   return { effect: decision.effect, ...decision.reason === undefined ? {} : { reason: decision.reason } }
 }
 

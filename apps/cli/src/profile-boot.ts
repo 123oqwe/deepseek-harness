@@ -47,7 +47,7 @@ import { installProxyFromEnvironment } from '@deepseek-ai/dsh-http-proxy'
 import { DSH_LAUNCH_ENVIRONMENT_KEY, type LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
 import { provideCmdline, type AppReady } from '@deepseek-ai/dsh-cmdline'
 import { createTrustKernel, pinTrustKernel, type TrustKernel } from '@deepseek-ai/dsh-trust-kernel'
-import { endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
+import { DEVELOPMENT_PROFILE_KEY, endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
 import { resolveFeatureGate } from '@deepseek-ai/dsh-feature-gates'
 import type { FeatureGateDeclaration, FeatureGateResolution, FeatureGateState } from '@deepseek-ai/dsh-feature-gates'
 import { buildPluginPermissionStates } from '@deepseek-ai/dsh-host-plugin-inventory'
@@ -655,6 +655,15 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
     // guard (must[3]; @deepseek-ai/dsh-trust-kernel's own doc comment).
     if (kernel !== undefined) pinTrustKernel(hostCtx, kernel)
     enforceTrustKernelPosture(hostCtx.get('trustKernel') !== undefined, trustKernelInsecure)
+    // Whether THIS launch is an explicit development profile (Epic P0-02
+    // acceptance[2]/[3], C19 §2), published once here — before any config-tree
+    // entry mounts, on every launch — so the dispatch paths, and later P1-02's
+    // unsigned-development admission and P0-05's banner, read one launcher fact
+    // rather than re-reading the manifest. The dispatch paths refuse a
+    // kernel-less dispatch unless the launch is a development profile; by this
+    // line an insecure opt-in on a non-development profile has already refused
+    // the boot, so a kernel-less launch that reaches here is a development one.
+    hostCtx.provide(DEVELOPMENT_PROFILE_KEY, developmentProfile)
     // Feature gates (Epic P0-05 must[3]): resolved once per boot, before any
     // config-tree entry mounts, so a future gated plugin reads exactly the
     // resolution `--dump-config` shows for this same profile/environment.

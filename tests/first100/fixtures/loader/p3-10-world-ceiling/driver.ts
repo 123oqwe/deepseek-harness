@@ -20,6 +20,8 @@ import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
 import { MockAdapter, textResponse, toolCallResponse } from '../../../../../packages/core/agent-loop/tests/mock-adapter.ts'
 import { createFixtureRootAgent } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts'
 import { bootProductionProfile } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/production-profile.ts'
+import { endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
+import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 
 /** Children the fork bomb tries to start: twice the deployment's ceiling of 64. */
 const FORK_ATTEMPTS = 128
@@ -130,6 +132,14 @@ const ctx = await bootProductionProfile({
     fileURLToPath(new URL('./base.patch.yml', import.meta.url)),
     resolveConfigPath(overlayPath, undefined),
   ],
+  // This driver dispatches bash on the shipped headless composition, which
+  // mounts a policy engine; without a pinned Trust Kernel that dispatch is now
+  // refused (Epic P0-02 acceptance[2]). Pin one as the launcher does, with the
+  // endorsing decider, so what these cases observe stays the world ceiling's
+  // refusal rather than the missing kernel's.
+  prepare: (prepared) => {
+    pinTrustKernel(prepared, createTrustKernel({ policyDecider: endorseComposedDecision }))
+  },
 })
 try {
   const node = JSON.stringify(process.execPath)

@@ -110,7 +110,11 @@ describe('acceptance[1]: an unsatisfiable bundle\'s plugin code never runs at a 
       configPath: '',
       binArgs: ['--profile', 'compat'],
       tsconfigPath: TSCONFIG,
-      env: { DSH_TRUST_KERNEL_INSECURE: '1' },
+      // Empty, not '1': this boot observes bundle admission on the shipped
+      // posture, which pins a Trust Kernel. A shipped profile refuses the
+      // insecure opt-in now (Epic P0-02 acceptance[2]), and the boot runs no
+      // model turn, so the pinned kernel changes nothing this case observes.
+      env: { DSH_TRUST_KERNEL_INSECURE: '' },
       prepare: stageCompatProfile,
     })
     expect(result.stdout).toContain(HEALTHY_MARKER)
