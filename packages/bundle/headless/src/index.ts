@@ -19,7 +19,7 @@ import { resolveModelSelection } from './model-selection.ts'
 import { OUTPUT_FORMATS, renderLine } from './stream-json.ts'
 import type { OutputFormat } from './stream-json.ts'
 import { installModelSelection } from '@deepseek-ai/dsh-agent'
-import type { Agent, ModelSelectionRef } from '@deepseek-ai/dsh-agent'
+import type { Agent, AssistantStreamFrame, ModelSelectionRef } from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-agent-default-model'
 import type {} from '@deepseek-ai/dsh-logger-stderr'
 import { createUserMessage, lastAssistantStreamChunk } from '@deepseek-ai/dsh-llm'
@@ -185,19 +185,43 @@ function totalUsage(steps: readonly TokenUsage[]): TokenUsage | undefined {
   return total
 }
 
+/** The reasoning output of one owned run: what each live frame writes, and how it stops. */
+interface ReasoningStream {
+  /**
+   * Write one live Assistant frame's reasoning, for this run's Agent only.
+   * @param subject - the Agent the frame belongs to.
+   * @param frame - the frame.
+   */
+  readonly onFrame: (subject: Agent, frame: AssistantStreamFrame) => void
+  /** Stop, terminating an unterminated reasoning line. */
+  readonly stop: () => void
+}
+
+/**
+ * What the two listeners `apply` registers forward to, for the one run this
+ * entry drives. Each is absent until `run` sets it where it used to register
+ * that listener, and absent again where it used to dispose it.
+ */
+interface RunSubscriptions {
+  /** The session whose events a `stream-json` run writes to stdout, from `firstSeq` on. */
+  stream: { readonly session: Session; readonly firstSeq: Session['seq'] } | undefined
+  /** The reasoning output of the run's Agent. */
+  reasoning: ReasoningStream | undefined
+}
+
 /**
  * Project provider-reported reasoning from one owned run to stderr as it is
  * streamed, while keeping final outcome derivation on the durable log.
- * @param ctx - plugin context carrying the live Assistant frame feed.
+ * @param ctx - plugin context carrying the logger route.
  * @param agent - the exact Agent whose reasoning belongs to this invocation.
  * @param stderr - progress output sink.
- * @returns a disposer that also terminates an unterminated reasoning line.
+ * @returns the frame handler, and the stop that also terminates an unterminated reasoning line.
  */
 function streamReasoning(
   ctx: Context,
   agent: Agent,
   stderr: HeadlessIo['stderr'],
-): () => void {
+): ReasoningStream {
   let open = false
   let endsWithNewline = true
   const close = (): void => {
@@ -213,7 +237,7 @@ function streamReasoning(
     close()
     stderr.write(line)
   })
-  const dispose = ctx.on('agent/assistant-stream', ({ agent: subject, frame }) => {
+  const onFrame = (subject: Agent, frame: AssistantStreamFrame): void => {
     if (subject !== agent) return
     if (frame.type === 'start') {
       close()
@@ -251,11 +275,13 @@ function streamReasoning(
       default:
         return assertNever(chunk, 'headless reasoning stream')
     }
-  })
-  return () => {
-    dispose()
-    unroute?.()
-    close()
+  }
+  return {
+    onFrame,
+    stop: () => {
+      unroute?.()
+      close()
+    },
   }
 }
 
@@ -270,11 +296,13 @@ function fail(io: HeadlessIo, error: unknown): void {
  * @param ctx - plugin context carrying the Agent, default model, Session, and launcher IO services.
  * @param task - one-shot task text.
  * @param io - process-facing effects.
+ * @param subscriptions - what the listeners `apply` registered forward to; set for this run's Agent here.
  */
 async function run(
   ctx: Context,
   task: string,
   io: HeadlessIo,
+  subscriptions: RunSubscriptions,
   resumeSessionId?: string,
   model?: string,
   outputFormat: OutputFormat = 'text',
@@ -352,16 +380,11 @@ async function run(
   // events as they happen instead of receiving the whole log at exit. Replaying
   // the log afterwards would produce the same bytes for a short run and would
   // silently stop being a stream for the runs that need one.
-  const stopStream = outputFormat === 'stream-json'
-    ? ctx.on('session/event', (session, event) => {
-      if (session === agent.session && event.seq >= firstSeq) {
-        io.stdout.write(renderLine({ type: 'session_event', sessionId: session.id, event }))
-      }
-    })
-    : undefined
+  if (outputFormat === 'stream-json') subscriptions.stream = { session: agent.session, firstSeq }
   // Reasoning goes to stderr in every format: in a machine-readable run it must
   // not interleave with the lines a consumer is parsing on stdout.
-  const stopReasoning = streamReasoning(ctx, agent, io.stderr)
+  const reasoning = streamReasoning(ctx, agent, io.stderr)
+  subscriptions.reasoning = reasoning
   try {
     agent.followup(createUserMessage({
       content: [{ type: 'text', text: task }],
@@ -369,13 +392,14 @@ async function run(
     }))
     await agent.whenIdle()
   } finally {
-    stopReasoning()
+    subscriptions.reasoning = undefined
+    reasoning.stop()
   }
   await drainJobs(ctx, agent, waitForJobsMs)
   recordAbandonedJobs(ctx, agent, io.stderr)
   await sessions.flush(agent.session)
   const outcome = summarize(agent.session, firstSeq)
-  stopStream?.()
+  subscriptions.stream = undefined
   if (outputFormat === 'text') {
     io.stdout.write(outcome.text + '\n')
   } else {
@@ -505,10 +529,23 @@ export function apply(ctx: Context, config: Config): void {
     throw new Error('headless-runner: the launcher must provide ctx.appExit before the tree mounts')
   }
   const io: HeadlessIo = { stdout: internals.stdout, stderr: internals.stderr, exit }
+  // Both listeners are registered here, once and in every output format, so
+  // this entry registers the same fixed set on every run and its manifest can
+  // declare exactly that set (P1-01 acceptance[0]). Each forwards nothing
+  // until `run` names its Agent.
+  const subscriptions: RunSubscriptions = { stream: undefined, reasoning: undefined }
+  ctx.on('session/event', (session, event) => {
+    const stream = subscriptions.stream
+    if (stream !== undefined && session === stream.session && event.seq >= stream.firstSeq) {
+      io.stdout.write(renderLine({ type: 'session_event', sessionId: session.id, event }))
+    }
+  })
+  ctx.on('agent/assistant-stream', ({ agent, frame }) => { subscriptions.reasoning?.onFrame(agent, frame) })
   void run(
     ctx,
     config.task,
     io,
+    subscriptions,
     config.resumeSessionId,
     config.model,
     config.outputFormat,
