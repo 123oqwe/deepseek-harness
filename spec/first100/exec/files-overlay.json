@@ -3836,6 +3836,15 @@
     },
     {
       "epic": "P4-05",
+      "path": "packages/run/run/src/state-machine.ts",
+      "kind": "source",
+      "stages": [
+        "U.11"
+      ],
+      "reason": "`LEGAL_RUN_TRANSITIONS`, whose accepted → failed and paused → failed edges (B-674) let a restored Run whose sessions are gone be failed rather than left non-terminal. U.11's sensitivity round M-674-2 drops those two edges."
+    },
+    {
+      "epic": "P4-05",
       "path": "packages/run/run/tests/fenced-dispatch.spec.ts",
       "kind": "test",
       "stages": [
@@ -3900,7 +3909,8 @@
       "path": "tests/first100/fixtures/loader/p4-05-reclaim/base.patch.yml",
       "kind": "test",
       "stages": [
-        "U.10"
+        "U.10",
+        "U.11"
       ]
     },
     {
@@ -3908,7 +3918,8 @@
       "path": "tests/first100/fixtures/loader/p4-05-reclaim/driver.ts",
       "kind": "test",
       "stages": [
-        "U.10"
+        "U.10",
+        "U.11"
       ]
     },
     {
@@ -3916,7 +3927,8 @@
       "path": "tests/first100/fixtures/loader/p4-05-reclaim/mock-llm.ts",
       "kind": "test",
       "stages": [
-        "U.10"
+        "U.10",
+        "U.11"
       ]
     },
     {
@@ -3992,7 +4004,8 @@
       "path": "tests/first100/fixtures/P4-05.reclaim-after-restart.composition.spec.ts",
       "kind": "test",
       "stages": [
-        "U.10"
+        "U.10",
+        "U.11"
       ]
     },
     {
