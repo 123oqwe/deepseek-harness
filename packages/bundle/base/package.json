@@ -39,7 +39,330 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
-    }
+    },
+    "manifestVersion": 2,
+    "executionMode": "in-process",
+    "compatibility": {
+      "dshVersionRange": ">=0.1.0 <0.2.0"
+    },
+    "tools": [
+      {
+        "name": "bash",
+        "sideEffectClass": "process",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [
+          {
+            "kind": "process",
+            "commandPattern": "bash"
+          }
+        ],
+        "dataClassification": "confidential"
+      },
+      {
+        "name": "pwsh",
+        "sideEffectClass": "process",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [
+          {
+            "kind": "process",
+            "commandPattern": "pwsh"
+          }
+        ],
+        "dataClassification": "confidential"
+      },
+      {
+        "name": "job_list",
+        "sideEffectClass": "read",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "job_output",
+        "sideEffectClass": "read",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "confidential"
+      },
+      {
+        "name": "job_kill",
+        "sideEffectClass": "process",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [
+          {
+            "kind": "process",
+            "commandPattern": "bash"
+          },
+          {
+            "kind": "process",
+            "commandPattern": "pwsh"
+          }
+        ],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "read",
+        "sideEffectClass": "read",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [
+          {
+            "kind": "filesystem",
+            "pathPattern": "/"
+          }
+        ],
+        "dataClassification": "confidential"
+      },
+      {
+        "name": "read_image",
+        "sideEffectClass": "read",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [
+          {
+            "kind": "filesystem",
+            "pathPattern": "/"
+          }
+        ],
+        "dataClassification": "confidential"
+      },
+      {
+        "name": "glob",
+        "sideEffectClass": "read",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [
+          {
+            "kind": "filesystem",
+            "pathPattern": "/"
+          }
+        ],
+        "dataClassification": "confidential"
+      },
+      {
+        "name": "grep",
+        "sideEffectClass": "read",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [
+          {
+            "kind": "filesystem",
+            "pathPattern": "/"
+          }
+        ],
+        "dataClassification": "confidential"
+      },
+      {
+        "name": "write",
+        "sideEffectClass": "write",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [
+          {
+            "kind": "filesystem",
+            "pathPattern": "/"
+          }
+        ],
+        "dataClassification": "confidential"
+      },
+      {
+        "name": "edit",
+        "sideEffectClass": "write",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [
+          {
+            "kind": "filesystem",
+            "pathPattern": "/"
+          }
+        ],
+        "dataClassification": "confidential"
+      },
+      {
+        "name": "skill",
+        "sideEffectClass": "read",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "exit_plan_mode",
+        "sideEffectClass": "write",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "interrupt_agent",
+        "sideEffectClass": "write",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "send_message",
+        "sideEffectClass": "write",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "list_agents",
+        "sideEffectClass": "read",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "subagent",
+        "sideEffectClass": "write",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "subagent_fork",
+        "sideEffectClass": "write",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "list_subagent_models",
+        "sideEffectClass": "read",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "workflow",
+        "sideEffectClass": "process",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "ralph",
+        "sideEffectClass": "process",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "todo_write",
+        "sideEffectClass": "write",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "create_goal",
+        "sideEffectClass": "write",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "get_goal",
+        "sideEffectClass": "read",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "update_goal",
+        "sideEffectClass": "write",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "web_fetch",
+        "sideEffectClass": "network",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [
+          {
+            "kind": "network",
+            "hostPattern": "*"
+          }
+        ],
+        "dataClassification": "confidential"
+      },
+      {
+        "name": "web_search",
+        "sideEffectClass": "network",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [
+          {
+            "kind": "network",
+            "hostPattern": "api.deepseek.com"
+          }
+        ],
+        "dataClassification": "confidential"
+      },
+      {
+        "name": "run_code",
+        "sideEffectClass": "process",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [
+          {
+            "kind": "process",
+            "commandPattern": "*"
+          }
+        ],
+        "dataClassification": "confidential"
+      }
+    ]
   },
   "dependencies": {
     "@deepseek-ai/cordis-plugin-hmr": "workspace:^",

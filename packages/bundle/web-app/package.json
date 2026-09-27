@@ -48,7 +48,22 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
-    }
+    },
+    "manifestVersion": 2,
+    "executionMode": "in-process",
+    "compatibility": {
+      "dshVersionRange": ">=0.1.0 <0.2.0"
+    },
+    "services": [
+      {
+        "ctxKey": "webStartup",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "webRuntime",
+        "role": "provides"
+      }
+    ]
   },
   "dependencies": {
     "@deepseek-ai/dsh-agent-presets": "workspace:^",

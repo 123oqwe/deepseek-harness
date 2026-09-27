@@ -49,7 +49,28 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
-    }
+    },
+    "manifestVersion": 2,
+    "executionMode": "in-process",
+    "compatibility": {
+      "dshVersionRange": ">=0.1.0 <0.2.0"
+    },
+    "services": [
+      {
+        "ctxKey": "headlessStartup",
+        "role": "provides"
+      }
+    ],
+    "events": [
+      {
+        "name": "agent/assistant-stream",
+        "mode": "emit"
+      },
+      {
+        "name": "session/event",
+        "mode": "emit"
+      }
+    ]
   },
   "dependencies": {
     "@deepseek-ai/dsh-brand": "workspace:^",

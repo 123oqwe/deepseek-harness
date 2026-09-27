@@ -6,7 +6,7 @@ Plugin Manifest v2 (Epic P1-01) is a static capability declaration a plugin pack
 
 ## Where a manifest lives
 
-`package.json`'s `dsh` field already carries two shapes: `dsh.profile` (a profile's bundle list) and `dsh.bundle` (a bundle's `cordis.patch.yml` pointer — see [`architecture.md#profiles-and-bundles`](../architecture.md#profiles-and-bundles)). A Plugin Manifest v2 declaration is a third shape, `dsh.manifestVersion === 2`, additive to (never replacing) those: a package may carry a manifest alongside a bundle patch.
+`package.json`'s `dsh` field already carries two shapes: `dsh.profile` (a profile's bundle list) and `dsh.bundle` (a bundle's `cordis.patch.yml` pointer — see [`architecture.md#profiles-and-bundles`](../architecture.md#profiles-and-bundles)). A Plugin Manifest v2 declaration is a third shape, `dsh.manifestVersion === 2`, additive to (never replacing) those: a package may carry a manifest alongside a bundle patch. The shipped bundle packages do, and the JSON Schema document (`spec/capability-manifest.schema.json`) accepts the `bundle` key beside the v2 fields, so it and the TypeScript validator give one verdict on such a package.
 
 ```jsonc
 {

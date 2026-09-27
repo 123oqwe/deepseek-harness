@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-09-02-plugin-manifest-real-enforcement-at-profile-boot.md
-2026-09-02-plugin-manifest-real-enforcement-at-profile-boot.md: 6da48696c350520cd572057aa0ec23468e0297b5
-2026-09-02-plugin-manifest-real-enforcement-at-profile-boot.zh.md: 61abecf31fb4482de2d78278b1bb801e4119a7e2
+2026-09-02-plugin-manifest-real-enforcement-at-profile-boot.md: 2da6e6f0adff14fc8b554d25f55075f556217999
+2026-09-02-plugin-manifest-real-enforcement-at-profile-boot.zh.md: 5cea8db39eadf09e451993a6c3d858680cf9be8a

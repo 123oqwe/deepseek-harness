@@ -443,6 +443,15 @@ describe('JSON Schema golden fixtures and backward compatibility (ajv, draft 202
       expect(tsResult.valid).toBe(schemaResult)
     }
   })
+
+  it('accepts a bundle package\'s Manifest v2 beside its bundle key in both validators, and classifies it manifest-v2', () => {
+    // A shipped bundle keeps `bundle.patch` for composition beside its v2
+    // fields; the two validators must give that one input one verdict.
+    const fixture = loadFixture('bundle-with-v2')
+    expect(validateAgainstSchema(fixture)).toBe(true)
+    expect(validatePluginManifestV2(fixture).valid).toBe(true)
+    expect(classifyPluginDeclaration(fixture).kind).toBe('manifest-v2')
+  })
 })
 
 /** A JSON-serializable object nested `depth` levels deep under one leaf key. */
