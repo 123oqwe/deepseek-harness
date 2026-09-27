@@ -58,7 +58,7 @@ import { attachedIdentity, SessionSeq } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-user-approval'
 import type { WorldBindingRefusal } from '@deepseek-ai/dsh-execution-world/lifecycle'
 import type { WorldId, WorldProviderId, WorldSpecDigest } from '@deepseek-ai/dsh-execution-world/types'
-import type { ToolExecutionResult } from './index.ts'
+import type { ToolDefinition, ToolExecutionResult } from './index.ts'
 import { createSessionManifestAppender } from './manifest-log.ts'
 
 /**
@@ -130,6 +130,8 @@ export interface ManifestedDispatch {
   readonly reservation: ExternalEffectRecord
   /** The policy decision, or undefined when the composition pins no Trust Kernel. */
   readonly decision: ClosedDecision | undefined
+  /** The appended manifest, which the approval display is drawn from (P2-06 must[0]). */
+  readonly manifest: ActionManifest
 }
 
 /**
@@ -260,6 +262,7 @@ export function appendManifestAndDecide(
       argumentsHash: appended.manifest.argumentsHash,
     },
     decision: decideManifest(ledgerContext, appended.manifest, presented, request, world, facts),
+    manifest: appended.manifest,
   }
 }
 
@@ -716,21 +719,27 @@ interface BoundRecord {
  * value: `'unattached'` when the agent carries no identity, which
  * re-verification compares rather than treating as a wildcard.
  *
- * Three fields are deliberately absent rather than filled with something shaped
- * like them. `preconditions` is empty on both paths because neither manifests
- * one, so an approval is bound to no precondition and a later one that IS
- * declared changes the binding. `capabilityToken` is absent because these paths
- * hold a signed token, not the digest the binding compares — binding the
- * manifest's `argumentsHash` in its place would be a field that looks bound and
- * compares something else. `policyVersion` is absent because the decision
- * summary here names an effect and a reason, not the policy set's version. A
- * field bound to a placeholder makes every value look equal, which is worse
- * than absent.
+ * `preconditions` carries the file-version observations the caller computed
+ * with {@link filePreconditionsFor} — one entry per file the action declares in
+ * its `presentCall(args).locations` — so an approval is bound to the version
+ * each declared file had at the ask, and a declared file that changed (or was
+ * created, or removed) between the ask and the run changes the binding
+ * (P2-06 acceptance[0]). It is empty for an action that declares no file.
+ *
+ * Two fields are deliberately absent rather than filled with something shaped
+ * like them. `capabilityToken` is absent because these paths hold a signed
+ * token, not the digest the binding compares — binding the manifest's
+ * `argumentsHash` in its place would be a field that looks bound and compares
+ * something else. `policyVersion` is absent because the decision summary here
+ * names an effect and a reason, not the policy set's version. A field bound to
+ * a placeholder makes every value look equal, which is worse than absent.
  * @param agent - the dispatching agent, whose identity is captured at the ask.
  * @param actionId - the id of the dispatch this decision is about (acceptance[2]).
  * @param action - the name of what is being decided, as the decider sees it.
  * @param args - the arguments this dispatch will run, in the form this path holds.
  * @param nowMs - the dispatch path's clock reading at the ask.
+ * @param preconditions - the declared files' versions at the ask, from
+ *   {@link filePreconditionsFor}; empty for an action that declares none.
  * @returns the binding request to hand the gate, and to re-verify against later.
  */
 export function approvalBindingFor(
@@ -739,16 +748,83 @@ export function approvalBindingFor(
   action: string,
   args: JsonValue,
   nowMs: number,
+  preconditions: readonly string[],
 ): ApprovalBindingRequest {
   return {
     inputs: {
       action,
       args,
       principal: agent.identity?.principal.id ?? 'unattached',
-      preconditions: [],
+      preconditions: [...preconditions],
     },
     askedAtMs: nowMs,
     actionId,
+  }
+}
+
+/**
+ * The filesystem operations {@link filePreconditionsFor} needs to version a
+ * declared file, named structurally for the same reason as {@link RiskPolicyPort}:
+ * this package reads the optional `fs` service through a minimal port rather than
+ * depending on `@deepseek-ai/dsh-fs`. `resolve`'s target and `stat`'s version are
+ * treated as opaque — the port compares versions for equality and never
+ * interprets them.
+ */
+interface FsVersionPort {
+  resolve(path: string): Promise<object>
+  stat(target: object): Promise<{ readonly version: string } | undefined>
+}
+
+/**
+ * The versions of the files one action declares, for the approval binding to
+ * bind to (P2-06 acceptance[0]).
+ *
+ * A tool declares the files a call touches in its `presentCall(args).locations`
+ * — the same source the approval display draws from. Each declared path is
+ * resolved and stat-ed through the `fs` service: a present file contributes
+ * `fs:<path>@present:<version>`, an absent one `fs:<path>@absent`, and a path
+ * whose resolve or stat throws `fs:<path>@unreadable`. Re-reading this before
+ * execution and comparing it against the binding is how a file rewritten,
+ * created, or removed between the ask and the run refuses the dispatch.
+ *
+ * Empty when the composition mounts no `fs` service, the tool declares no
+ * `presentCall`, or the call declares no `locations`: an action with no declared
+ * file has no file precondition (P2-06's clause scope).
+ * @param ctx - the mounting context, consulted for the optional `fs` service.
+ * @param tool - the dispatched tool's definition, whose `presentCall` declares the files; `undefined` for an unknown tool.
+ * @param args - the call's arguments, in the form `presentCall` reads.
+ * @returns one precondition string per declared file, in declaration order; empty when none apply.
+ */
+export async function filePreconditionsFor(
+  ctx: Context,
+  tool: ToolDefinition | undefined,
+  args: unknown,
+): Promise<readonly string[]> {
+  const fs = ctx.get('fs') as FsVersionPort | undefined
+  if (fs === undefined || tool?.presentCall === undefined) return []
+  const view = tool.presentCall(args)
+  const locations = view !== undefined && 'locations' in view ? view.locations : undefined
+  if (locations === undefined) return []
+  const preconditions: string[] = []
+  for (const { path } of locations) preconditions.push(`fs:${path}@${await fileObservation(fs, path)}`)
+  return preconditions
+}
+
+/**
+ * One declared file's observation for {@link filePreconditionsFor}.
+ * @param fs - the filesystem port.
+ * @param path - the declared path.
+ * @returns `present:<version>`, `absent`, or `unreadable` when resolve/stat throws.
+ */
+async function fileObservation(fs: FsVersionPort, path: string): Promise<string> {
+  try {
+    const info = await fs.stat(await fs.resolve(path))
+    return info === undefined ? 'absent' : `present:${info.version}`
+  } catch {
+    // resolve/stat reached the backend and it refused (a permission error, a
+    // path that cannot be resolved): the version cannot be observed, which is
+    // neither present nor a confirmed absence, so it is bound as its own value.
+    return 'unreadable'
   }
 }
 
@@ -953,6 +1029,85 @@ function riskRefusalReason(riskClass: string, undeclared: boolean): string {
   return undeclared
     ? `this tool declares no risk domain tags, so it classifies at "${riskClass}" by the unknown default`
     : `this action classifies at "${riskClass}"`
+}
+
+/**
+ * How long the ask TELLS a decider their approval will last (P2-06 must[0]).
+ *
+ * The service owns the real duration through its own row configuration; this
+ * is what the six-field display says, and the two must agree or a decider is
+ * told one thing and bound by another. Kept as one constant rather than read
+ * from the service because the display is built before the ask reaches it, and
+ * a reader of the dispatch paths should see the coupling rather than discover it.
+ */
+export const APPROVAL_DISPLAY_VALIDITY_MS = 300_000
+
+/**
+ * Redact an argument string for display (P2-06 acceptance[1]).
+ *
+ * String VALUES are replaced and their keys kept, so a decider sees the shape
+ * of what will run without its secrets. The digest the approval is bound to
+ * covers the unredacted string, so two arguments that redact identically still
+ * bind differently — the property acceptance[1] states and this function is one
+ * half of.
+ * @param raw - the model's raw argument string.
+ * @returns the rendering to show, or the raw string when it is not JSON.
+ */
+export function redactArgumentsForDisplay(raw: string): string {
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    const redact = (value: unknown): unknown => {
+      if (typeof value === 'string') return '<redacted>'
+      if (Array.isArray(value)) return value.map(redact)
+      if (value !== null && typeof value === 'object') {
+        return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, redact(item)]))
+      }
+      return value
+    }
+    return JSON.stringify(redact(parsed))
+  } catch {
+    // Not JSON: a model may emit anything, and showing the raw text is better
+    // than showing nothing. It is not a secret leak this function introduces —
+    // the same string is what the tool would receive.
+    return raw
+  }
+}
+
+/**
+ * What a decider is shown about this dispatch (P2-06 must[0]).
+ *
+ * Every value is taken from the manifest or from the gate's own
+ * classification, never recomputed here: a surface shown a second derivation
+ * of the risk class or the diff would be shown a guess where a recorded fact
+ * exists. `arguments` arrives already redacted, and the digest the approval is
+ * BOUND to covers the unredacted value — that difference is acceptance[1].
+ * @param manifest - the manifest just appended for this call.
+ * @param riskClass - the class the gate classified this action into.
+ * @param redactedArguments - the arguments as the decider should see them.
+ * @param expiresAtMs - when an approval given now stops being usable.
+ * @returns the six fields must[0] names.
+ */
+export function approvalDisplayFor(
+  manifest: ActionManifest,
+  riskClass: string,
+  redactedArguments: string,
+  expiresAtMs: number,
+): ApprovalDisplay {
+  const target = manifest.target
+  const resource = target.kind === 'filesystem'
+    ? target.path
+    : target.kind === 'network' ? target.host : target.kind === 'process' ? target.command : target.ref
+  return {
+    manifestDigest: manifest.argumentsHash,
+    arguments: redactedArguments,
+    // The target's KIND is kept in front of its value: `filesystem:/etc/hosts`
+    // and `process:/etc/hosts` are different decisions, and a decider shown
+    // only the path cannot tell them apart.
+    resource: `${target.kind}:${resource}`,
+    riskClass,
+    expectedDiff: manifest.expectedDiff.description,
+    expiresAtMs,
+  }
 }
 
 /**
