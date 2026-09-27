@@ -31,3 +31,5 @@ headless 运行器还把它的两个监听注册在异步启动的那次运行�
 - `dsh-base` 与 `dsh-sdk-minimal` 不是 Loader 条目，所以没有启动后的比对覆盖它们。对这类层的比对范围，先量清再定。
 - 子路径条目现在出现在 Plugin Inventory 里，并带着所属包的 bundle 来源。
 - 本 note 部分取代[Plugin Manifest v2 在 profile 启动时的真实强制](2026-09-02-plugin-manifest-real-enforcement-at-profile-boot.zh.md)：取代它的逐条目比对，以及它「没有出厂 bundle 声明 Manifest v2」的说法。
+
+本 note 被[插件 manifest 强制执行是一个默认 shadow 的 feature gate](2026-09-27-plugin-manifest-enforcement-is-a-feature-gate.zh.md)部分取代：强制执行是一个 feature gate，默认的 `shadow` 记录强制执行会拒绝或 quarantine 的内容。
