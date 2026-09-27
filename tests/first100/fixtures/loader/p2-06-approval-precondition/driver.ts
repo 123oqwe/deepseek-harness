@@ -1,5 +1,5 @@
 /**
- * Driver for B-668's and B-679's cases, the P2-06 red first (BLOCKED-318):
+ * Driver for B-668's, B-679's and B-681's cases, the P2-06 red first (BLOCKED-318):
  * acceptance[0] as C19 narrowed it, acceptance[1] and acceptance[2], on the
  * SHIPPED headless profile, for an approved action whose declared file is left
  * alone, rewritten or created between the ask and the execution.
@@ -21,8 +21,10 @@
  * and then on the changed one; `direct` runs one turn per file (unchanged,
  * changed, created) in which the model calls the relay, a plugin tool that
  * calls the probe through the public `ToolRuntime.execute` seam, presenting
- * the agent and the Capability Token its own execution was admitted with. It
- * prints one `P2-06-PRECONDITION <json>` line.
+ * the agent and the Capability Token its own execution was admitted with;
+ * `relative` runs `native`'s three turns with the root session working in a
+ * directory inside the shared one, each call declaring its file by a path
+ * relative to that directory. It prints one `P2-06-PRECONDITION <json>` line.
  * @module tests/first100/fixtures/loader/p2-06-approval-precondition/driver
  */
 
@@ -53,6 +55,7 @@ import {
   RELAY_TOOL,
   RUN_CODE_CALL_ID,
   SECRET,
+  sessionDirectory,
 } from './shared.ts'
 
 const PROVIDER = 'p2-06-approval-precondition-mock'
@@ -76,12 +79,15 @@ if (configPath === undefined || !isMode(mode) || workspace === undefined) {
 process.chdir(workspace)
 if (mode === 'code-mode') process.env.DSH_TOOLS_MODE = 'ptc'
 
+/** The root session's working directory, which in `relative` is not the process's. */
+const sessionCwd = join(process.cwd(), sessionDirectory(mode))
+
 /**
  * The absolute path of one declared file.
  * @param kind - what the operator does to it before approving.
- * @returns the path in the shared working directory.
+ * @returns the path in the root session's working directory.
  */
-const pathOf = (kind: FileKind): string => join(process.cwd(), probeFile(mode, kind))
+const pathOf = (kind: FileKind): string => join(sessionCwd, probeFile(mode, kind))
 
 /** The code-mode program: call the probe on the unchanged file, then on the changed one, and report each outcome. */
 const PROGRAM = [
@@ -110,6 +116,11 @@ function answer(options: GenerateOptions): StreamChunk[] {
     block.type === 'text' && block.text.includes(TASK_MARKER) ? [block.text] : [])).at(-1)
   for (const kind of PROBE_KINDS.direct) {
     if (task?.includes(`${TASK_MARKER} direct ${kind}`) === true) return toolCallResponse(`b679-relay-${kind}`, RELAY_TOOL, { kind })
+  }
+  for (const kind of PROBE_KINDS.relative) {
+    if (task?.includes(`${TASK_MARKER} relative ${kind}`) === true) {
+      return toolCallResponse(actionIdOf('relative', kind), PROBE_TOOL, { path: probeFile('relative', kind), note: SECRET })
+    }
   }
   for (const kind of PROBE_KINDS.native) {
     if (task?.includes(`${TASK_MARKER} ${kind}`) === true) {
@@ -217,7 +228,7 @@ try {
   await createFixtureRootAgent(ctx, {
     provider: PROVIDER,
     model: PROVIDER,
-    cwd: process.cwd(),
+    cwd: sessionCwd,
     identity: (ctx.get(HOST_USER_IDENTITY_KEY) as HostUserIdentityFactory | undefined)?.(
       `run-${randomUUID()}` as Parameters<HostUserIdentityFactory>[0],
     ),
@@ -226,6 +237,8 @@ try {
   if (root === undefined) throw new Error('p2-06 approval-precondition driver: no root agent after creation')
   if (mode === 'native') {
     for (const kind of PROBE_KINDS.native) await runFixtureTurn(ctx, { task: `${TASK_MARKER} ${kind}: call ${PROBE_TOOL} once.` })
+  } else if (mode === 'relative') {
+    for (const kind of PROBE_KINDS.relative) await runFixtureTurn(ctx, { task: `${TASK_MARKER} relative ${kind}: call ${PROBE_TOOL} once.` })
   } else if (mode === 'direct') {
     for (const kind of PROBE_KINDS.direct) await runFixtureTurn(ctx, { task: `${TASK_MARKER} direct ${kind}: call ${RELAY_TOOL} once.` })
   } else {
@@ -235,6 +248,7 @@ try {
   const events = root.session.snapshotEvents()
   const report: PreconditionReport = {
     mode,
+    cwd: { process: process.cwd(), session: root.session.header.cwd ?? null },
     runs,
     asked,
     bound: events.flatMap(event => event.type !== 'approval/bound' ? [] : [{

@@ -1,5 +1,5 @@
 /**
- * B-668 and B-679, the P2-06 red first (BLOCKED-318): acceptance[0] as C19
+ * B-668, B-679 and B-681, the P2-06 red first (BLOCKED-318): acceptance[0] as C19
  * narrowed it, acceptance[1] and acceptance[2], on the shipped headless profile.
  *
  * `./loader/p2-06-approval-precondition/driver.ts` boots the SHIPPED headless
@@ -12,19 +12,25 @@
  * file; `code-mode` calls it from one `run_code` program on the unchanged file
  * and then on the changed one; `direct` has the model call a relay, a plugin
  * tool that calls the probe through the public `ToolRuntime.execute` seam, once
- * per file (B-679). This file creates the working directory the modes share and
- * writes the files that exist before the asks.
+ * per file (B-679); `relative` calls it as `native` does, but the root session
+ * works in a directory inside the shared one and each call declares its file
+ * by a path relative to that directory, so resolving the path against the
+ * process's working directory finds no file (B-681). This file creates the
+ * working directory the modes share and writes the files that exist before
+ * the asks.
  *
- * Red today on the five changed-file cases: every dispatch path binds an
+ * Red today on the seven changed-file cases: every dispatch path binds an
  * approval with no precondition, so nothing before execution sees the file,
- * and the public seam does not re-verify an approval at all. Red today as well
+ * and the public seam does not re-verify an approval at all. The two
+ * `relative` ones also need the precondition to resolve a relative declared
+ * path against the session's working directory. Red today as well
  * on the code-mode display case (B-670):
  * a sub-call's approval request carries no display. The rest are green today
  * and after the fix.
  * @module tests/first100/fixtures/P2-06.approval-precondition.composition
  */
 
-import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -38,6 +44,7 @@ import {
   type PreconditionReport,
   probeFile,
   SECRET,
+  sessionDirectory,
 } from './loader/p2-06-approval-precondition/shared.ts'
 
 /** The six fields must[0] requires a decider to see, as `ApprovalDisplay` declares them, sorted. */
@@ -103,6 +110,15 @@ function approvalOf(report: PreconditionReport | undefined, actionId: string | u
   return { bound: bound.length, outcome: only === undefined ? null : report?.decided[only.id] ?? null }
 }
 
+/**
+ * The premise of the `relative` cases.
+ * @param report - one mode's report.
+ * @returns true when the root session recorded a working directory other than the driver process's.
+ */
+function sessionCwdIsNotProcessCwd(report: PreconditionReport | undefined): boolean {
+  return report !== undefined && report.cwd.session !== null && report.cwd.session !== report.cwd.process
+}
+
 describe('P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318)', () => {
   let workspace: string | undefined
   const reports = new Map<PreconditionMode, PreconditionReport>()
@@ -110,7 +126,9 @@ describe('P2-06 on the shipped headless profile: an approval bound to the file i
     const shared = await mkdtemp(join(tmpdir(), 'p2-06-approval-precondition-workspace-'))
     workspace = shared
     for (const mode of PRECONDITION_MODES) {
-      for (const kind of ['unchanged', 'changed'] as const) await writeFile(join(shared, probeFile(mode, kind)), `${kind}: as it was when the approval was asked\n`)
+      const directory = join(shared, sessionDirectory(mode))
+      await mkdir(directory, { recursive: true })
+      for (const kind of ['unchanged', 'changed'] as const) await writeFile(join(directory, probeFile(mode, kind)), `${kind}: as it was when the approval was asked\n`)
     }
     for (const mode of PRECONDITION_MODES) reports.set(mode, await run(mode, shared))
   }, PRECONDITION_MODES.length * LOADER_SMOKE_TEST_TIMEOUT_MS)
@@ -182,6 +200,30 @@ describe('P2-06 on the shipped headless profile: an approval bound to the file i
     expect(askedAbout(report, 'direct', 'created'), JSON.stringify(report)).toBe(true)
     expect(runsOn(report, 'direct', 'created'), JSON.stringify(report)).toEqual([])
     expect(report?.nested.find(call => call.callId === actionIdOf('direct', 'created'))?.isError, JSON.stringify(report)).toBe(true)
+  })
+
+  it('control (relative): an approved call whose relative declared path names an unchanged file in the session\'s working directory, not the process\'s, runs once, and its approval is found by the call\'s action id (acceptance[2])', () => {
+    const report = reports.get('relative')
+    expect(sessionCwdIsNotProcessCwd(report), JSON.stringify(report)).toBe(true)
+    const runs = runsOn(report, 'relative', 'unchanged')
+    expect(runs, JSON.stringify(report)).toHaveLength(1)
+    expect(approvalOf(report, runs[0]?.callId), JSON.stringify(report)).toEqual({ bound: 1, outcome: 'allowed-once' })
+  })
+
+  it('acceptance[0] (relative): an approved call whose relative declared path names a file in the session\'s working directory, not the process\'s, that changed after the ask does not run', () => {
+    const report = reports.get('relative')
+    expect(sessionCwdIsNotProcessCwd(report), JSON.stringify(report)).toBe(true)
+    expect(askedAbout(report, 'relative', 'changed'), JSON.stringify(report)).toBe(true)
+    expect(runsOn(report, 'relative', 'changed'), JSON.stringify(report)).toEqual([])
+    expect(report?.results.find(result => result.callId === actionIdOf('relative', 'changed'))?.isError, JSON.stringify(report)).toBe(true)
+  })
+
+  it('acceptance[0] (relative): an approved call whose relative declared path names a file that did not exist in the session\'s working directory, not the process\'s, at the ask and exists there at execution does not run', () => {
+    const report = reports.get('relative')
+    expect(sessionCwdIsNotProcessCwd(report), JSON.stringify(report)).toBe(true)
+    expect(askedAbout(report, 'relative', 'created'), JSON.stringify(report)).toBe(true)
+    expect(runsOn(report, 'relative', 'created'), JSON.stringify(report)).toEqual([])
+    expect(report?.results.find(result => result.callId === actionIdOf('relative', 'created'))?.isError, JSON.stringify(report)).toBe(true)
   })
 
   it('control (native): a call\'s approval request shows the six display fields must[0] names', () => {

@@ -12,10 +12,14 @@ export const SECRET = 'B668-SECRET-VALUE'
 /** The plugin tool the model calls in `direct`, which calls the probe through `ToolRuntime.execute`; it declares `filesystem-read`, so the preset admits the model's call to it without an ask. */
 export const RELAY_TOOL = 'b679_direct_relay'
 
-/** The three dispatch paths the driver reaches the probe through. */
-export const PRECONDITION_MODES = ['native', 'code-mode', 'direct'] as const
+/**
+ * The ways the driver reaches the probe: the three dispatch paths, and
+ * `relative`, the native path with each call declaring its file by a path
+ * relative to a session working directory that is not the process's (B-681).
+ */
+export const PRECONDITION_MODES = ['native', 'code-mode', 'direct', 'relative'] as const
 
-/** One dispatch path. */
+/** One way the driver reaches the probe. */
 export type PreconditionMode = typeof PRECONDITION_MODES[number]
 
 /** What happens to a probe's declared file between the ask and the execution. */
@@ -26,24 +30,36 @@ export const PROBE_KINDS: Readonly<Record<PreconditionMode, readonly FileKind[]>
   native: ['unchanged', 'changed', 'created'],
   'code-mode': ['unchanged', 'changed'],
   direct: ['unchanged', 'changed', 'created'],
+  relative: ['unchanged', 'changed', 'created'],
 }
 
 /** The tool call id the scripted model gives the code-mode turn's `run_code` call. */
 export const RUN_CODE_CALL_ID = 'b668-run-code'
 
 /**
+ * The root session's working directory, relative to the shared working
+ * directory the driver process runs in: that same directory, except in
+ * `relative`, where it is a directory inside it.
+ * @param mode - the mode.
+ * @returns the directory, `.` outside `relative`.
+ */
+export function sessionDirectory(mode: PreconditionMode): string {
+  return mode === 'relative' ? 'b681-session' : '.'
+}
+
+/**
  * The file one probe call declares, unique per path and kind so the boots share one workspace.
  * @param mode - the dispatch path.
  * @param kind - what the operator does to the file before approving.
- * @returns the file name, relative to the workspace.
+ * @returns the file name, relative to the root session's working directory.
  */
 export function probeFile(mode: PreconditionMode, kind: FileKind): string {
   return `b668-${mode}-${kind}.txt`
 }
 
 /**
- * The action id the approval of one probe call is bound to. A native call's is
- * the tool call id the scripted model gives it; a code-mode sub-call's is
+ * The action id the approval of one probe call is bound to. A native or
+ * relative call's is the tool call id the scripted model gives it; a code-mode sub-call's is
  * `<run_code call id>:ptc:<n>`, numbered from 1 in submission order; a direct
  * call's is the call id the relay passes to `ToolRuntime.execute`.
  * @param mode - the dispatch path.
@@ -53,12 +69,15 @@ export function probeFile(mode: PreconditionMode, kind: FileKind): string {
 export function actionIdOf(mode: PreconditionMode, kind: FileKind): string {
   if (mode === 'native') return `b668-native-${kind}`
   if (mode === 'direct') return `b679-direct-${kind}`
+  if (mode === 'relative') return `b681-relative-${kind}`
   return `${RUN_CODE_CALL_ID}:ptc:${PROBE_KINDS[mode].indexOf(kind) + 1}`
 }
 
 /** What the driver prints for one mode, read from the root session's log and its own records. */
 export interface PreconditionReport {
   readonly mode: PreconditionMode
+  /** The driver process's working directory and the root session's, null when the session records none. */
+  readonly cwd: { readonly process: string; readonly session: string | null }
   /** Every time the probe's body ran: the call id it ran under and the file it declared. */
   readonly runs: readonly { readonly callId: string; readonly file: string }[]
   /**
