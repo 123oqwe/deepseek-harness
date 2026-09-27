@@ -253,6 +253,7 @@ describe('release/baseline-fingerprint fault/tamper contract (P0-01 F-stage)', (
 })
 
 describe('release/baseline-fingerprint npm-script contract (P0-01 P-stage)', () => {
+  // Two real `pnpm run` launches, each starting pnpm and then node, outrun vitest's 5 s default on a busy runner.
   it('wires baseline:capture/baseline:verify in package.json to the real script, and pnpm run actually executes it', () => {
     const rootPackageJson = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')) as {
       scripts?: Record<string, string>
@@ -284,5 +285,5 @@ describe('release/baseline-fingerprint npm-script contract (P0-01 P-stage)', () 
 
     const verifyResult = spawnSync('pnpm', ['run', 'baseline:verify'], { cwd: root, encoding: 'utf8' })
     expect(verifyResult.status, `pnpm run baseline:verify stderr: ${verifyResult.stderr}`).toBe(0)
-  })
+  }, 60_000)
 })
