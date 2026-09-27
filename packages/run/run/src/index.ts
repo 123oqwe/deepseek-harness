@@ -710,6 +710,21 @@ export interface Config {
 }
 
 /**
+ * Session persistence, as far as a restart asks it whether a session still
+ * exists. Named structurally: this package does not depend on
+ * `@deepseek-ai/dsh-session-persistence`, whose `stat` answers `undefined` for a
+ * session that does not exist.
+ */
+interface SessionStatPort {
+  /**
+   * Read one session's snapshot.
+   * @param id - the session asked about.
+   * @returns the snapshot, or `undefined` when the session does not exist.
+   */
+  stat(id: SessionId): Promise<unknown>
+}
+
+/**
  * Epic P4-01's Run Service as a mounted Cordis plugin: the one place a real
  * harness run becomes a Run.
  *
@@ -1455,6 +1470,27 @@ export default class RunPlugin extends Service {
   }
 
   /**
+   * Fail every Run restored at mount that no host can continue (P4-05
+   * acceptance[2]): none of its sessions exists any more, and its lease is gone
+   * or lapsed. The lease is acquired first, as a reclaim does, so a live holder
+   * keeps its Run and the write is fenced under the epoch this host is issued.
+   * The reason is logged; the Run's log has no field for one.
+   * @param sessions - session persistence, asked whether each session still exists.
+   */
+  private async failSessionlessRuns(sessions: SessionStatPort): Promise<void> {
+    for (const run of this.restoredAtMount) {
+      const [opened] = run.sessionIds
+      const stats = await Promise.all(run.sessionIds.map(id => sessions.stat(id)))
+      if (stats.some(stat => stat !== undefined)) continue
+      const taken = acquireRunLease(this.ctx.leaseStore, brandString<WorkItemId>(opened), this.worker, Date.now(), this.config.leaseMs)
+      if ('denied' in taken) continue
+      await this.advanceRun(run.id, 'failed', [], taken.lease)
+      taken.lease.release()
+      this.ctx.logger.warn('run: failed restored Run %s — none of its sessions exists any more, so no host can continue it', run.id)
+    }
+  }
+
+  /**
    * Restore the durable registry and subscribe to the agent registry's
    * session and workflow extension points, yielding the disposer that
    * unsubscribes them.
@@ -1472,6 +1508,16 @@ export default class RunPlugin extends Service {
         this.restoredAtMount.length,
         this.config.storePath,
       )
+    }
+    // P4-05 acceptance[2]'s fail-safe arm: a restored Run whose sessions are
+    // all gone can be neither adopted nor resumed, so once session persistence
+    // is available it is failed rather than left non-terminal.
+    if (this.restoredAtMount.length > 0) {
+      this.ctx.inject(['sessionPersistence'], (sessionsCtx) => {
+        void this.failSessionlessRuns(sessionsCtx.get('sessionPersistence') as SessionStatPort).catch((error: unknown) => {
+          this.ctx.logger.warn('run: restored Runs were not checked for missing sessions (%s)', errorText(error))
+        })
+      })
     }
     // `agent/session-start` is emitted synchronously and does not await its
     // listeners, so each Run is registered in memory on the spot and its

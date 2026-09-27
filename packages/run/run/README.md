@@ -332,6 +332,12 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   root agent is meant to outlive a restart declares the id —
   `tests/first100/fixtures/loader/p4-01-run-resumed/cordis.yml` is that shape,
   and the fixture beside it without the id is the other.
+- **A restored Run whose sessions are all gone is failed, and the reason is
+  logged only.** Once session persistence is available after a restart, the
+  plugin fails every Run restored non-terminal whose sessions no longer exist
+  and whose lease is gone or lapsed, acquiring the lease first as a reclaim
+  does; `accepted → failed` and `paused → failed` are legal for this. A Run's
+  log has no field for a reason, so it goes to the logger line.
 - **A Run's log records that a transition happened, never the input that decided
   it.** `RunEvent` carries `fromState`, `toState` and entity `references`, so
   the end decision's input — whether an unrecovered error was recorded — is not
