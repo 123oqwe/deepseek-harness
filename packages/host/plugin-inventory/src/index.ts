@@ -355,7 +355,7 @@ export function buildPluginPermissionStates(
     const { manifestDigest } = resolved
     if (resolved.declaration.kind === 'manifest-v2') {
       const packageObserved = resolvedEntries
-        .filter(other => other.resolved.dir === resolved.dir)
+        .filter(other => other.entry === entry)
         .reduce((union, other) => unionOfObserved(union, other.observed), NOTHING_OBSERVED)
       const comparison = compareDeclaredToObserved(resolved.declaration.manifest, packageObserved)
       states.push({
