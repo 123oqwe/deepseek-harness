@@ -146,9 +146,14 @@ describe('P4-06 must[2]: an inbox consumes one (source, id, epoch) once', () => 
     // The positive control the refusal needs, and the reason the epoch is in
     // the key at all: one child session can be activated more than once, and
     // "this child settled again" must not look like "this notice again".
-    const { inbox } = await mountInbox('parent')
+    const { session, inbox } = await mountInbox('parent')
+    session.append('turn/start', { turn: 1 })
     inbox.append('next-step', settlement('child-a', 3))
     inbox.claim('next-step', 1)
+    // The key is consumed when the claiming turn ENDS (B-619), not at the claim,
+    // so end it before the later-epoch settlement — otherwise the first key is
+    // only claimed and the epoch never has to tell the second from a redelivery.
+    session.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
 
     inbox.append('next-step', settlement('child-a', 4))
     expect(inbox.nextStep).toHaveLength(1)
@@ -166,9 +171,13 @@ describe('P4-06 must[2]: an inbox consumes one (source, id, epoch) once', () => 
     // this consumer, and saying so is better than a case that reads as if it
     // did. `packages/collaboration/intake-dedup` covers the component itself,
     // where two sources exist.
-    const { inbox } = await mountInbox('parent')
+    const { session, inbox } = await mountInbox('parent')
+    session.append('turn/start', { turn: 1 })
     inbox.append('next-step', settlement('child-a', 3))
     inbox.claim('next-step', 1)
+    // Consumed at turn end (B-619), so the second child's settlement is admitted
+    // against a really-consumed first key rather than a merely-claimed one.
+    session.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
 
     inbox.append('next-step', settlement('child-b', 3))
     expect(inbox.nextStep).toHaveLength(1)
