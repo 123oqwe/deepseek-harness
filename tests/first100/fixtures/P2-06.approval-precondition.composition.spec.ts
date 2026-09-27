@@ -1,6 +1,6 @@
 /**
- * B-668, the P2-06 red first (BLOCKED-318): acceptance[0] as C19 narrowed it,
- * acceptance[1] and acceptance[2], on the shipped headless profile.
+ * B-668 and B-679, the P2-06 red first (BLOCKED-318): acceptance[0] as C19
+ * narrowed it, acceptance[1] and acceptance[2], on the shipped headless profile.
  *
  * `./loader/p2-06-approval-precondition/driver.ts` boots the SHIPPED headless
  * profile over the originator cases' overlay with a keyless scripted model and
@@ -10,12 +10,15 @@
  * and allows the first ask about each call after leaving its file alone,
  * rewriting it, or creating it. `native` calls the probe directly, once per
  * file; `code-mode` calls it from one `run_code` program on the unchanged file
- * and then on the changed one. This file creates the working directory both
- * modes share and writes the files that exist before the asks.
+ * and then on the changed one; `direct` has the model call a relay, a plugin
+ * tool that calls the probe through the public `ToolRuntime.execute` seam, once
+ * per file (B-679). This file creates the working directory the modes share and
+ * writes the files that exist before the asks.
  *
- * Red today on the three changed-file cases: both dispatch paths bind an
- * approval with no precondition, so the re-verification before execution does
- * not see the file. Red today as well on the code-mode display case (B-670):
+ * Red today on the five changed-file cases: every dispatch path binds an
+ * approval with no precondition, so nothing before execution sees the file,
+ * and the public seam does not re-verify an approval at all. Red today as well
+ * on the code-mode display case (B-670):
  * a sub-call's approval request carries no display. The rest are green today
  * and after the fix.
  * @module tests/first100/fixtures/P2-06.approval-precondition.composition
@@ -158,6 +161,27 @@ describe('P2-06 on the shipped headless profile: an approval bound to the file i
     const report = reports.get('code-mode')
     expect(askedAbout(report, 'code-mode', 'changed'), JSON.stringify(report)).toBe(true)
     expect(runsOn(report, 'code-mode', 'changed'), JSON.stringify(report)).toEqual([])
+  })
+
+  it('control (direct): an approved call a plugin makes through ToolRuntime.execute whose declared file is unchanged runs once, and its approval is found by the call\'s action id (acceptance[2])', () => {
+    const report = reports.get('direct')
+    const runs = runsOn(report, 'direct', 'unchanged')
+    expect(runs, JSON.stringify(report)).toHaveLength(1)
+    expect(approvalOf(report, runs[0]?.callId), JSON.stringify(report)).toEqual({ bound: 1, outcome: 'allowed-once' })
+  })
+
+  it('acceptance[0] (direct): an approved call a plugin makes through ToolRuntime.execute whose declared file changed after the ask does not run', () => {
+    const report = reports.get('direct')
+    expect(askedAbout(report, 'direct', 'changed'), JSON.stringify(report)).toBe(true)
+    expect(runsOn(report, 'direct', 'changed'), JSON.stringify(report)).toEqual([])
+    expect(report?.nested.find(call => call.callId === actionIdOf('direct', 'changed'))?.isError, JSON.stringify(report)).toBe(true)
+  })
+
+  it('acceptance[0] (direct): an approved call a plugin makes through ToolRuntime.execute whose declared file did not exist at the ask and exists at execution does not run', () => {
+    const report = reports.get('direct')
+    expect(askedAbout(report, 'direct', 'created'), JSON.stringify(report)).toBe(true)
+    expect(runsOn(report, 'direct', 'created'), JSON.stringify(report)).toEqual([])
+    expect(report?.nested.find(call => call.callId === actionIdOf('direct', 'created'))?.isError, JSON.stringify(report)).toBe(true)
   })
 
   it('control (native): a call\'s approval request shows the six display fields must[0] names', () => {
