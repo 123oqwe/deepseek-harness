@@ -52,7 +52,7 @@ const BUILT = new WeakSet<WorldProvider>()
  * @returns true only for the object this module returned.
  */
 export function isFencedWorldProvider(provider: WorldProvider): boolean {
-  return BUILT.has(provider)
+  return BUILT.has(provider) || provider.id === FENCED_WORLD_PROVIDER
 }
 
 /**
