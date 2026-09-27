@@ -434,6 +434,51 @@ describe('buildPluginPermissionStates', () => {
       .toEqual(['quarantined', 'quarantined'])
   })
 
+  it('judges the entries a bundle layer inserted, its own and a package that declares no manifest, together against the layer\'s manifest', async () => {
+    const { ctx } = await harness()
+    const mounted: Plugin.Function = (pluginCtx) => {
+      pluginCtx.effect(function* () { yield () => {} }, 'tools.register("mounted-undeclared-tool")')
+    }
+    ctx.loader.builtins['layer-own'] = probePlugin
+    ctx.loader.builtins['layer-mounted'] = mounted
+    const ownId = await ctx.loader.create({ name: 'cordis:layer-own' })
+    const mountedId = await ctx.loader.create({ name: 'cordis:layer-mounted' })
+    const layerDir = stagePackage(BENIGN_DSH_FIELD, 'example-layer')
+    const mountedDir = stagePackage(undefined, 'example-mounted-package')
+    const states = buildPluginPermissionStates(ctx, {
+      bundleLayers: [{ packageName: 'example-layer', packageDir: layerDir, entryIds: [ownId, mountedId] }],
+      resolvePackageDir: moduleName => moduleName === 'cordis:layer-own' ? layerDir : moduleName === 'cordis:layer-mounted' ? mountedDir : undefined,
+    })
+    const judged = [ownId, mountedId].map(entryId => states.find(state => state.entryId === entryId))
+    expect(judged.map(state => [state?.judgedBy, state?.trustDecision])).toEqual([['example-layer', 'quarantined'], ['example-layer', 'quarantined']])
+    expect(judged[1]?.declaration).toEqual({ kind: 'missing' })
+    expect(judged[1]?.comparison?.mismatches).toEqual([{ kind: 'undeclared-registration', category: 'tool', name: 'mounted-undeclared-tool' }])
+  })
+
+  it('judges a package a bundle layer inserted by that package\'s own manifest when it declares a Manifest v2 of its own', async () => {
+    const { ctx } = await harness()
+    const declaredTool: Plugin.Function = (pluginCtx) => {
+      pluginCtx.effect(function* () { yield () => {} }, 'tools.register("declared-package-tool")')
+    }
+    ctx.loader.builtins['layer-own-clean'] = probePlugin
+    ctx.loader.builtins['layer-mounted-declared'] = declaredTool
+    const ownId = await ctx.loader.create({ name: 'cordis:layer-own-clean' })
+    const mountedId = await ctx.loader.create({ name: 'cordis:layer-mounted-declared' })
+    const layerDir = stagePackage(BENIGN_DSH_FIELD, 'example-clean-layer')
+    const mountedDir = stagePackage({
+      manifestVersion: 2,
+      tools: [{ name: 'declared-package-tool', sideEffectClass: 'none', authAudience: ['model'], allowedDestinations: [], dataClassification: 'internal' }],
+      executionMode: 'in-process',
+      compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
+    }, 'example-declared-package')
+    const states = buildPluginPermissionStates(ctx, {
+      bundleLayers: [{ packageName: 'example-clean-layer', packageDir: layerDir, entryIds: [ownId, mountedId] }],
+      resolvePackageDir: moduleName => moduleName === 'cordis:layer-own-clean' ? layerDir : moduleName === 'cordis:layer-mounted-declared' ? mountedDir : undefined,
+    })
+    const judged = [ownId, mountedId].map(entryId => states.find(state => state.entryId === entryId))
+    expect(judged.map(state => [state?.judgedBy, state?.trustDecision])).toEqual([['example-clean-layer', 'active'], ['example-declared-package', 'active']])
+  })
+
   it('skips an entry with no resolvable package (the real resolver never finds a cordis: builtin on disk)', async () => {
     const { ctx } = await harness()
     ctx.loader.builtins.probe = probePlugin

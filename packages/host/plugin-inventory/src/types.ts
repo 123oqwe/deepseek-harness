@@ -135,7 +135,8 @@ export interface PluginProvenance {
  * where the entry came from. `comparison`/`trustDecision` are present only
  * once a caller has actually run
  * `@deepseek-ai/dsh-plugin-manifest`'s `compareDeclaredToObserved`/
- * `decidePluginTrust` against `declaration`/`observed` — this Provider-stage
+ * `decidePluginTrust` against the manifest `judgedBy` names and the
+ * registrations of every entry judged with it — this Provider-stage
  * type only fixes the shape; pairing a live `PluginInventoryEntry` with a
  * real `package.json` read, a real `classifyPluginDeclaration` call, and a
  * real observed-registration walk is a later stage's job — this package's
@@ -149,6 +150,13 @@ export interface PluginPermissionState {
   readonly observed: ObservedPluginCapabilities
   readonly comparison?: PluginRegistrationComparison
   readonly trustDecision?: PluginTrustDecision
+  /**
+   * The package whose manifest `comparison` and `trustDecision` judged this
+   * entry by: its own package, or the bundle layer that inserted it when the
+   * entry's own package declares no Manifest v2 of its own or is the layer
+   * itself (P1-01 acceptance[0]). Present exactly when `comparison` is.
+   */
+  readonly judgedBy?: string
   readonly manifestDigest: PluginManifestDigest
   /**
    * Epic P1-02's acceptance[2] ("Inventory 和审计事件记录验证结果而不记录

@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-09-27-a-bundle-layer-answers-for-what-its-patch-mounts.md
+2026-09-27-a-bundle-layer-answers-for-what-its-patch-mounts.md: 82dc5821f4fc40ccad178e003eeb232166abb0f1
+2026-09-27-a-bundle-layer-answers-for-what-its-patch-mounts.zh.md: 07031d1adc076c78be86e296f640bf8cb6e1bd41
