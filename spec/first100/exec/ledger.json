@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-27T14:05:01.846Z",
-  "inputDigest": "5873f3b125390d045db4c0f561fba6560e107901c77c98e21f49446b5e620224",
+  "lastUpdatedUtc": "2026-09-27T14:05:32.839Z",
+  "inputDigest": "91a6d81604d757c886179c729e441ea8ef244fb5e173cb41b39865ff8e1bd9ae",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1684,10 +1684,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
+          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
           "expectCasesMatched": [
             "accepts a fully-declared benign manifest",
             "rejects a manifest that is not an object",
@@ -1764,14 +1764,14 @@
             "rejects the undeclared-network fixture against the JSON Schema document",
             "agrees with the hand-written TypeScript validator on every fixture"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:27.335Z"
+          "capturedAtUtc": "2026-09-27T14:05:31.696Z"
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
+          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
           "expectCasesMatched": [
             "builds an active permission state when observed registrations exactly match the declared manifest",
             "builds a quarantined permission state when the plugin registered a tool its manifest never declared",
@@ -1794,14 +1794,14 @@
             "decides active for the benign fixture compared against its own matching observation",
             "decides quarantined for the overprivileged fixture even when every declared capability was observed"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:27.650Z"
+          "capturedAtUtc": "2026-09-27T14:05:32.026Z"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
+          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
           "expectCasesMatched": [
             "stays off when unset or empty",
             "opts in on exactly \"enforce\"",
@@ -1852,14 +1852,14 @@
             "denies a schema-valid manifest requesting a wildcard destination in production",
             "admits a benign schema-valid manifest with no wildcard findings in production"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:27.968Z"
+          "capturedAtUtc": "2026-09-27T14:05:32.345Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
+          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
           "expectCasesMatched": [
             "does not crash with an uncaught RangeError on a manifest carrying a deeply nested field anywhere in the raw value",
             "reports a deeply nested field as an ordinary validation outcome, not a crash, and denies it production admission",
@@ -1876,11 +1876,11 @@
             "handles a large (50,000-entry) observed capability set without crashing or taking unreasonable time",
             "evaluatePreMountAdmission denies a deeply nested manifest-shaped declaration the same as any other malformed manifest, never crashing pre-mount admission"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:28.388Z"
+          "capturedAtUtc": "2026-09-27T14:05:32.828Z"
         }
       },
       "supplements": {},
-      "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
+      "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",
