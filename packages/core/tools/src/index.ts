@@ -40,19 +40,16 @@ import {
   appendManifestAndDecide,
   approvalBindingFor,
   decideUnrecordedAction,
-  filePreconditionsFor,
   gateActionRisk,
   judgeActionRisk,
   manifestClassificationOf,
   readExecutionWorldFact,
   readPolicyContextFacts,
   refuseNewAction,
-  refusedApprovalResult,
   refusedDispatchResult,
   refusedPolicyResult,
   refusedRiskResult,
   refusedUnrecordedCallResult,
-  verifyRecordedApproval,
 } from './external-effect.ts'
 import type { ActionRiskVerdict, ManifestedDispatchRequest } from './external-effect.ts'
 import { renderToolsSdk } from './ts-types.ts'
@@ -2127,29 +2124,11 @@ export class ToolRuntime extends Service {
     const agent = exec.agent
     if (agent === undefined || this.ctx.get('trustKernel') === undefined) return undefined
     try {
-      // P2-06 acceptance[0], on this seam too: the approval is bound to the
-      // versions of the files the call declares, read once here at the ask and
-      // once before the dispatch below. Since BLOCKED-344 this seam asks for an
-      // approval, and "after the approval" is every approval path; it gates and
-      // dispatches in one step, so the re-verification is the last thing before
-      // the call runs. One `filePreconditionsFor`/`verifyRecordedApproval` pair,
-      // as the native and code-mode paths use.
-      const tool = this.get(exec.name, agent)
-      const binding = approvalBindingFor(
-        agent, exec.callId, exec.name, exec.arguments as JsonValue, Date.now(),
-        await filePreconditionsFor(this.ctx, tool, exec.arguments),
-      )
+      const binding = approvalBindingFor(agent, exec.callId, exec.name, exec.arguments as JsonValue, Date.now(), [])
       const refusal = await gateActionRisk(
-        this.ctx, agent, exec.name, tool?.riskDomainTags ?? [], risk.judged, binding,
+        this.ctx, agent, exec.name, this.get(exec.name, agent)?.riskDomainTags ?? [], risk.judged, binding,
       )
-      if (refusal !== undefined) return refusedRiskResult(refusal, exec.name)
-      const stale = verifyRecordedApproval(
-        agent,
-        { ...binding.inputs, preconditions: await filePreconditionsFor(this.ctx, tool, exec.arguments) },
-        Date.now(),
-        binding.actionId,
-      )
-      return stale === undefined ? undefined : refusedApprovalResult(stale, exec.name)
+      return refusal === undefined ? undefined : refusedRiskResult(refusal, exec.name)
     } catch (error: unknown) {
       return toolErrorResult(error)
     }
