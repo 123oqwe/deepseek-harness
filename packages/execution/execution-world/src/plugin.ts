@@ -563,7 +563,6 @@ export default class ExecutionWorldService extends Service<Config> {
     const inFlight = this.attempts.get(agent.id)
     if (inFlight !== undefined) return inFlight
     const attempt = this.attemptBinding(agent).finally(() => { this.attempts.delete(agent.id) })
-    this.attempts.set(agent.id, attempt)
     return attempt
   }
 
