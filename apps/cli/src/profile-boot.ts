@@ -49,7 +49,7 @@ import { createTrustKernel, pinTrustKernel, type TrustKernel } from '@deepseek-a
 import { endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
 import { resolveFeatureGate } from '@deepseek-ai/dsh-feature-gates'
 import type { FeatureGateDeclaration, FeatureGateResolution, FeatureGateState } from '@deepseek-ai/dsh-feature-gates'
-import { buildPluginPermissionStates } from '@deepseek-ai/dsh-host-plugin-inventory'
+import { buildPluginPermissionStates, type BundleLayerScope } from '@deepseek-ai/dsh-host-plugin-inventory'
 import { createProcessShutdown, type ProcessShutdown } from './process-shutdown.ts'
 import { readProfileTrustAnchors } from './trust-anchors.ts'
 
@@ -222,6 +222,12 @@ interface ComposedProfile {
    * admitted, in `profile.layers` order.
    */
   admittedLayerNames: readonly string[]
+  /**
+   * The same admitted layers with each one's package directory and the
+   * entries its patches insert, which post-mount enforcement judges each
+   * layer by (P1-01 acceptance[0]).
+   */
+  bundleLayers: readonly BundleLayerScope[]
   /** Every bundle layer a production boot refused to compose, and why; empty outside production. */
   deniedLayers: readonly DeniedProfileLayer[]
   /**
@@ -230,6 +236,21 @@ interface ComposedProfile {
    * so its plugin code never mounts (acceptance[1]).
    */
   compatBlockedLayers: readonly BlockedProfileLayer[]
+}
+
+/**
+ * The id of every entry `patches` insert, entries inside an inserted group included.
+ * @param patches - one bundle layer's patch list.
+ * @returns the inserted entry ids, in patch order.
+ */
+function insertedEntryIds(patches: readonly PatchOptions[]): string[] {
+  const ids: string[] = []
+  const visit = (entry: EntryOptions): void => {
+    if (typeof entry.id === 'string') ids.push(entry.id)
+    if (entry.group && Array.isArray(entry.config)) entry.config.forEach(visit)
+  }
+  for (const patch of patches) patch.insert?.forEach(visit)
+  return ids
 }
 
 /** The full patch stack of one composed profile, in application order. */
@@ -334,6 +355,11 @@ export async function composeProfile(
     homePatches,
     overlays: composedOverlays,
     admittedLayerNames: negotiation.admitted.map(entry => entry.layer.packageName),
+    bundleLayers: negotiation.admitted.map(({ layer }) => ({
+      packageName: layer.packageName,
+      packageDir: layer.packageDir,
+      entryIds: insertedEntryIds(layer.patches),
+    })),
     deniedLayers: denied,
     compatBlockedLayers: negotiation.blocked,
   }
@@ -490,34 +516,49 @@ export function resolvePluginEnforcementMode(raw: string | undefined): boolean {
  * half): after `boot()` settles, build every live Loader entry's real
  * declared-vs-observed permission state (`@deepseek-ai/dsh-plugin-inventory`'s
  * `buildPluginPermissionStates`, which walks the actual Cordis `Context`) and
- * dispose the fiber of any entry `decidePluginTrust` marked `'quarantined'` —
- * a plugin that registered a capability its manifest never declared loses
- * every registration it made, for real, not just a returned decision value.
- * A no-op outside production (`production: false`): every profile keeps
- * running exactly as before. Pre-mount admission ({@link partitionProfileLayersByAdmission},
- * called from {@link composeProfile}) already excluded a denied bundle
- * layer's patches before this ever runs, so this only ever sees a
- * `'manifest-v2'`-declared entry (or one with no resolvable package, which
- * `buildPluginPermissionStates` already skips).
+ * dispose the fiber of every entry judged with a manifest `decidePluginTrust`
+ * marked `'quarantined'` — a plugin that registered a capability its manifest
+ * never declared loses every registration it made, for real, not just a
+ * returned decision value. An admitted bundle layer is judged with the
+ * packages it mounts that declare no manifest of their own, so a quarantined
+ * layer loses every entry it inserted that no other manifest judged, and the
+ * line names the layer. A no-op outside production (`production: false`):
+ * every profile keeps running exactly as before. Pre-mount admission
+ * ({@link partitionProfileLayersByAdmission}, called from
+ * {@link composeProfile}) already excluded a denied bundle layer's patches
+ * before this ever runs.
  * @param ctx - the settled, active root context.
  * @param production - whether this boot enforces production plugin admission.
  * @param admittedLayerNames - the composed profile's admitted bundle layer names, for provenance.
+ * @param bundleLayers - the same layers with the entries each one's patches insert.
  */
 export async function applyPostMountPluginEnforcement(
   ctx: Context,
   production: boolean,
   admittedLayerNames: readonly string[],
+  bundleLayers: readonly BundleLayerScope[] = [],
 ): Promise<void> {
   if (!production) return
-  const states = buildPluginPermissionStates(ctx, { bundlePackageNames: admittedLayerNames })
+  const states = buildPluginPermissionStates(ctx, { bundlePackageNames: admittedLayerNames, bundleLayers })
+  const quarantined = new Map<string, (typeof states)[number]>()
   for (const state of states) {
-    if (state.trustDecision !== 'quarantined') continue
+    if (state.trustDecision === 'quarantined' && state.judgedBy !== undefined && !quarantined.has(state.judgedBy)) {
+      quarantined.set(state.judgedBy, state)
+    }
+  }
+  for (const [judgedBy, state] of quarantined) {
     process.stderr.write(
-      `${NAME}: plugin quarantine: disposing ${JSON.stringify(state.packageIdentity.name)} `
+      `${NAME}: plugin quarantine: disposing ${JSON.stringify(judgedBy)} `
       + `(declared/observed mismatch: ${JSON.stringify(state.comparison?.mismatches)})\n`,
     )
+    const judgedElsewhere = new Set<string>(states.flatMap(other =>
+      other.judgedBy !== undefined && other.judgedBy !== judgedBy ? [other.entryId] : []))
+    const disposing = new Set<string>([
+      ...states.flatMap(other => other.judgedBy === judgedBy ? [other.entryId] : []),
+      ...(bundleLayers.find(layer => layer.packageName === judgedBy)?.entryIds ?? []).filter(id => !judgedElsewhere.has(id)),
+    ])
     for (const entry of ctx.loader.entries()) {
-      if (entry.id === state.entryId) await entry.fiber?.dispose()
+      if (disposing.has(entry.id)) await entry.fiber?.dispose()
     }
   }
 }
@@ -655,7 +696,7 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
   // plugins have mounted and had their chance to register, before HMR/watch
   // setup adds any further Loader entries of its own.
   if (!signalShutdown.signal.aborted && ctx.fiber.state === FiberState.ACTIVE && ctx.get('loader') !== undefined) {
-    await applyPostMountPluginEnforcement(ctx, pluginEnforcement, composed.admittedLayerNames)
+    await applyPostMountPluginEnforcement(ctx, pluginEnforcement, composed.admittedLayerNames, composed.bundleLayers)
   }
   // A live-reload profile can dispose the whole tree while post-boot watcher
   // setup is in flight — a signal or appExit. Loader presence and fiber state

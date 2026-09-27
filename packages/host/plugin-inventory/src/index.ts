@@ -235,25 +235,40 @@ export function resolveEntryPackageDir(moduleName: string, baseUrl?: string): st
   return undefined
 }
 
+/** One package's directory, identity, classified declaration, and manifest digest. */
+interface ReadPackage {
+  dir: string
+  identity: PluginPackageIdentity
+  declaration: PluginDeclaration
+  manifestDigest: PluginManifestDigest
+}
+
 /**
- * One Loader entry's package directory, package identity, classified
- * declaration, and manifest digest, resolved from its on-disk
- * `package.json`. The digest is taken over
- * the same buffer the identity and declaration are parsed from, in one read,
- * so it always describes exactly the bytes the other two facts came from.
+ * One Loader entry's package, resolved and read from its on-disk `package.json`.
+ * @param moduleName - the entry's module specifier.
+ * @param baseUrl - the entry's config tree base URL.
+ * @param resolvePackageDir - the resolution to use.
+ * @returns the package, or `undefined` when it cannot be resolved or read.
  */
 function resolveEntryPackage(
   moduleName: string,
   baseUrl: string | undefined,
   resolvePackageDir: (moduleName: string, baseUrl: string | undefined) => string | undefined,
-): {
-  dir: string
-  identity: PluginPackageIdentity
-  declaration: PluginDeclaration
-  manifestDigest: PluginManifestDigest
-} | undefined {
+): ReadPackage | undefined {
   const dir = resolvePackageDir(moduleName, baseUrl)
-  if (dir === undefined) return undefined
+  return dir === undefined ? undefined : readPackageAt(dir, moduleName)
+}
+
+/**
+ * One package's directory, package identity, classified declaration, and
+ * manifest digest, read from its on-disk `package.json`. The digest is taken
+ * over the same buffer the identity and declaration are parsed from, in one
+ * read, so it always describes exactly the bytes the other two facts came from.
+ * @param dir - the package directory.
+ * @param fallbackName - the name reported when the `package.json` names none.
+ * @returns the package, or `undefined` when its `package.json` cannot be read.
+ */
+function readPackageAt(dir: string, fallbackName: string): ReadPackage | undefined {
   let bytes: Buffer
   let manifest: { name?: unknown; version?: unknown; dsh?: unknown }
   try {
@@ -262,7 +277,7 @@ function resolveEntryPackage(
   } catch {
     return undefined
   }
-  const name = typeof manifest.name === 'string' ? manifest.name : moduleName
+  const name = typeof manifest.name === 'string' ? manifest.name : fallbackName
   const version = typeof manifest.version === 'string' ? manifest.version : '0.0.0'
   return {
     dir,
@@ -312,6 +327,16 @@ function unionOfObserved(left: ObservedPluginCapabilities, right: ObservedPlugin
   }
 }
 
+/** One admitted bundle layer and the Loader entries its patches insert (P1-01 acceptance[0]). */
+export interface BundleLayerScope {
+  /** The layer's package name, as `dsh.profile.bundles` lists it. */
+  readonly packageName: string
+  /** The layer's package directory, where its `package.json` and so its manifest are. */
+  readonly packageDir: string
+  /** The id of every entry the layer's patches insert, entries inside an inserted group included. */
+  readonly entryIds: readonly string[]
+}
+
 /** Options for {@link buildPluginPermissionStates}. */
 export interface BuildPluginPermissionStatesOptions {
   /**
@@ -322,6 +347,14 @@ export interface BuildPluginPermissionStatesOptions {
    * every entry then reports `'built-in'`.
    */
   readonly bundlePackageNames?: readonly string[]
+  /**
+   * The booted profile's admitted bundle layers with the entries each one's
+   * patches insert. An entry a layer inserted is judged with that layer
+   * unless its own package declares a Manifest v2 of its own. Absent when the
+   * caller has no profile-layer context; every entry is then judged by its
+   * own package alone.
+   */
+  readonly bundleLayers?: readonly BundleLayerScope[]
   /**
    * Resolve one Loader entry module name, with its config tree's base URL, to
    * its package root directory; defaults to {@link resolveEntryPackageDir}'s
@@ -338,19 +371,24 @@ export interface BuildPluginPermissionStatesOptions {
  * resolvable on-disk package — declared permissions
  * ({@link classifyPluginDeclaration} on the entry's own `package.json` `dsh`
  * field), actually observed permissions ({@link buildObservedPluginCapabilities}),
- * package identity/version, and provenance. A `'manifest-v2'` declaration
- * gets a real `comparison`/`trustDecision` from
+ * package identity/version, and provenance. Every registration answers to
+ * exactly one manifest, and `judgedBy` names whose. A manifest describes its
+ * package, not one entry, so every entry of a package is compared against the
+ * union of what all that package's entries registered, and they share one
+ * decision. An entry an admitted bundle layer inserted is judged with that
+ * layer instead, unless its own package declares a Manifest v2 of its own:
+ * the layer's own entries and the packages it mounts that declare none
+ * (missing or legacy) are compared together against the layer's manifest, so
+ * a layer vouches for what it mounts. A unit whose manifest is a
+ * `'manifest-v2'` declaration gets a real `comparison`/`trustDecision` from
  * {@link compareDeclaredToObserved}/{@link decidePluginTrust}; any other
- * declaration kind carries neither, matching `PluginPermissionState`'s own
- * doc comment. A manifest describes its package, not one entry, so every
- * entry of a package is compared against the union of what all that
- * package's entries registered, and they share one decision; each state's
- * `observed` stays the entry's own. An entry with no resolvable package (a
- * `cordis:` builtin, or a module not found from its config tree's base URL)
- * is skipped — there is no `package.json` to report identity or a
- * declaration from.
+ * carries neither. Each state's `declaration` and `observed` stay the entry's
+ * own. An entry with no resolvable package (a `cordis:` builtin, or a module
+ * not found from its config tree's base URL) gets no state — there is no
+ * `package.json` to report identity or a declaration from — though a layer
+ * that inserted it still counts its registrations.
  * @param ctx - the live, booted root context.
- * @param options - provenance hints from the caller's own boot composition.
+ * @param options - provenance hints and bundle layers from the caller's own boot composition.
  * @returns one permission state per non-group Loader entry with a resolvable package.
  */
 export function buildPluginPermissionStates(
@@ -359,26 +397,48 @@ export function buildPluginPermissionStates(
 ): PluginPermissionState[] {
   const bundleNames = new Set(options.bundlePackageNames ?? [])
   const resolvePackageDir = options.resolvePackageDir ?? resolveEntryPackageDir
-  const resolvedEntries = [...ctx.loader.entries()].flatMap((entry) => {
+  const layerOf = new Map<string, BundleLayerScope>()
+  for (const layer of options.bundleLayers ?? []) {
+    for (const id of layer.entryIds) if (!layerOf.has(id)) layerOf.set(id, layer)
+  }
+  const layerDeclarations = new Map<string, PluginDeclaration | undefined>()
+  const layerDeclaration = (layer: BundleLayerScope): PluginDeclaration | undefined => {
+    if (!layerDeclarations.has(layer.packageName)) {
+      layerDeclarations.set(layer.packageName, readPackageAt(layer.packageDir, layer.packageName)?.declaration)
+    }
+    return layerDeclarations.get(layer.packageName)
+  }
+  const judgedEntries = [...ctx.loader.entries()].flatMap((entry) => {
     if (entry.options.group) return []
     const resolved = resolveEntryPackage(entry.options.name, entry.parent.tree.ctx.baseUrl, resolvePackageDir)
-    if (resolved === undefined) return []
+    const layer = layerOf.get(entry.id)
+    const vouchedBy = layer !== undefined
+      && (resolved === undefined || resolved.identity.name === layer.packageName || resolved.declaration.kind !== 'manifest-v2')
+      ? layer
+      : undefined
+    const unit = vouchedBy !== undefined
+      ? { key: `layer:${vouchedBy.packageName}`, name: vouchedBy.packageName, declaration: layerDeclaration(vouchedBy) }
+      : resolved === undefined
+        ? undefined
+        : { key: `package:${resolved.dir}`, name: resolved.identity.name, declaration: resolved.declaration }
+    if (unit === undefined) return []
     const observed = entry.fiber === undefined ? NOTHING_OBSERVED : buildObservedPluginCapabilities(ctx, entry.fiber)
-    return [{ entry, resolved, observed }]
+    return [{ entry, resolved, observed, unit }]
   })
   const states: PluginPermissionState[] = []
-  for (const { entry, resolved, observed } of resolvedEntries) {
+  for (const { entry, resolved, observed, unit } of judgedEntries) {
+    if (resolved === undefined) continue
     const packageName = packageNameOf(entry.options.name)
     const provenance: PluginProvenance = bundleNames.has(packageName)
       ? { kind: 'bundle', source: packageName }
       : { kind: 'built-in' }
     const provenanceAudit = recordEntryProvenance(new Date().toISOString())
     const { manifestDigest } = resolved
-    if (resolved.declaration.kind === 'manifest-v2') {
-      const packageObserved = resolvedEntries
-        .filter(other => other.resolved.dir === resolved.dir)
+    if (unit.declaration?.kind === 'manifest-v2') {
+      const unitObserved = judgedEntries
+        .filter(other => other.unit.key === unit.key)
         .reduce((union, other) => unionOfObserved(union, other.observed), NOTHING_OBSERVED)
-      const comparison = compareDeclaredToObserved(resolved.declaration.manifest, packageObserved)
+      const comparison = compareDeclaredToObserved(unit.declaration.manifest, unitObserved)
       states.push({
         entryId: pluginEntryId(entry.id),
         packageIdentity: resolved.identity,
@@ -387,6 +447,7 @@ export function buildPluginPermissionStates(
         observed,
         comparison,
         trustDecision: decidePluginTrust(comparison),
+        judgedBy: unit.name,
         manifestDigest,
         provenanceAudit,
       })
