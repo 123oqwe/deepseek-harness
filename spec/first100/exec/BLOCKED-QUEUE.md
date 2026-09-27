@@ -8667,6 +8667,8 @@ Red first: lane A's **A-529** (`b4114cb43c`, dispatched `24a8a430d3`) for v1, an
 - sdk-minimal does not mount the ledger, so it has no ambiguous entries and no reconciliation path; that is the same scope as P4-12's other clauses.
 - The resolve-guards cases are package tests, not frozen evidence; the frozen evidence is F.3 plus the child-scope supplement frozen in 20r.
 
+**Correction (2026-09-27, 21r, at the delegate's instruction, gate3 2026-09-27T06:12:00Z).** Closing condition 3 says the coverage record added the child-scope case in the same record batch; 20r wrote it into the coverage note only. The citation, to P4-12 F.4, is added in 21r with F.4's first recorded cell (full run 36307835499 at `29d8024c12`).
+
 ### BLOCKED-312 — P4-09's nested workflows run under a hard-coded failure policy and budgets that no child decrements; the acceptance is withdrawn
 
 **Status:** OPEN (2026-09-24). Owner lane B (implementation), lane A (preFlight).
