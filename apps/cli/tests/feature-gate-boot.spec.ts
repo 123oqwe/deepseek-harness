@@ -99,8 +99,8 @@ describe('resolveProfileFeatureGates', () => {
     expect(resolutions[0]?.chain).toEqual([{ source: 'default', value: 'off' }])
   })
 
-  it('defaults declarations to FEATURE_GATE_DECLARATIONS (empty today) and env to process.env', () => {
-    expect(resolveProfileFeatureGates('headless')).toEqual([])
+  it('defaults declarations to FEATURE_GATE_DECLARATIONS (the plugin-manifest-enforcement gate) and env to process.env', () => {
+    expect(resolveProfileFeatureGates('headless').map(resolution => resolution.gateId)).toEqual(['plugin-manifest-enforcement'])
   })
 })
 
