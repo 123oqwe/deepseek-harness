@@ -11,7 +11,7 @@ kind: "package-reference"
 
 `dsh-feature-gates` 固化了 Epic P0-05（面向主要能力的 Shadow/Enforce 功能门禁）的类型表面**以及** Provider 阶段运行时：统一的 `off | shadow | enforce` {@link FeatureGateState}、每个门禁都会记录的固定生命周期元数据（`owner`、`introducedVersion`、`defaultByProfile`、`removalVersion`）、`feature-gates` 注册会携带的 JSON 安全 settings 命名空间值形状、`--dump-config` 的 override 链形状、经脱敏的 shadow/legacy 决策 diff 记录，以及 release-gate 到期检查的签名——外加真正计算这一切的纯函数：{@link resolveFeatureGate}（must[3] 的 override 链）、{@link evaluateFeatureGate}（must[1]/acceptance[0]/acceptance[1] 的 shadow-vs-legacy 决策 harness）、{@link redactDecisionSummary}（acceptance[1] 的真实脱敏调用点），以及 {@link checkFeatureGateExpiry}（acceptance[2] 的 SemVer 优先级到期检查）。
 
-面向某个真实能力的门禁注册（本 epic 自身 `validation` 条款要求的 policy、plugin trust、run journal 三个 shadow fixture）以及 CLI/profile 接线（`--dump-config`、bundle/profile-boot 层的 `defaultByProfile`）仍是后续 slice 的交付物——见[已知限制与延期工作](#known-limitations-and-deferred-work)。
+第一个真实门禁 `plugin-manifest-enforcement` 由 `apps/cli/src/profile-boot.ts` 声明（Epic P1-01，BLOCKED-322）；本 epic 自身 `validation` 条款要求的 policy、run journal 两个 shadow fixture 仍是后续 slice 的交付物——见[已知限制与延期工作](#known-limitations-and-deferred-work)。
 
 ## 目录
 
@@ -85,7 +85,7 @@ const { value, shadowRecord } = evaluateFeatureGate(
 <a id="known-limitations-and-deferred-work"></a>
 ## 已知限制与延期工作
 
-- **尚未为任何真实能力声明门禁**——本包针对调用方传入的任意 `FeatureGateDeclaration` 计算 override 解析、shadow-vs-legacy 求值与到期检查，但自身不声明任何门禁。本 epic 自身 `validation` 条款要求的 policy、plugin trust、run journal 三个 shadow fixture，以及为某个真实能力注册 `feature-gates` settings 命名空间（`packages/settings/settings/src/index.ts` 的 `SettingsProvider.register`），都是 Composition 阶段的交付物。
+- **本包自身不声明任何门禁**——它针对调用方传入的任意 `FeatureGateDeclaration` 计算 override 解析、shadow-vs-legacy 求值与到期检查。唯一的真实门禁 `plugin-manifest-enforcement` 声明在 `apps/cli/src/profile-boot.ts` 与 `scripts/release/feature-gate-expiry.ts`。本 epic 自身 `validation` 条款要求的 policy、run journal 两个 shadow fixture，以及注册 `feature-gates` settings 命名空间（`packages/settings/settings/src/index.ts` 的 `SettingsProvider.register`），都是 Composition 阶段的交付物。
 - **尚无 `--dump-config`/profile 接线**——`resolveFeatureGate` 已经计算出 must[3] 所要求的完整 `FeatureGateResolution`，但仍需一个 Usage 阶段的 slice 去接线 `apps/cli/src/dump-config.ts` 来调用它并渲染结果，并让 `apps/cli/src/profile-boot.ts`/`packages/bundle/base/cordis.patch.yml` 把真实的 `defaultByProfile`/env override 传入其中。
 - **尚无仓库 release-gate 的接线**——`checkFeatureGateExpiry` 已经是一个真实、有测试覆盖的 SemVer 优先级检查，但仓库的 release 流水线中还没有任何地方调用它（Epic P0-05 acceptance[2]「在 release gate 中失败」的另一半）。
 

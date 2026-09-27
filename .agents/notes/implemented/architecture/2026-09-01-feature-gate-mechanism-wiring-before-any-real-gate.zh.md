@@ -27,3 +27,5 @@ Epic P0-05 的 Provider 阶段（`@deepseek-ai/dsh-feature-gates`）已经搭建
 ## 后果
 
 `pnpm dsh --profile <name> --dump-config` 与 `pnpm run release:verify --family dsh` 今天都在真实运行这套机制，但都不打印/不检查任何新内容：两份已声明 gate 列表都是空的，这与仓库的真实状态一致（没有任何能力已迁移到 gate 之后）。这条接线本身通过合成的测试声明端到端得到证明：`apps/cli/tests/feature-gate-boot.spec.ts` 启动一次真实的 Cordis Loader composition（复刻 `packages/kernel/trust-kernel/tests/boot.spec.ts` 的模式），证明一个已挂载的插件可以读到 `ctx.get('featureGates')`；`apps/cli/tests/dump-config-feature-gates.spec.ts` 证明 `renderFeatureGateDump` 精确的逐行 provenance 输出；`scripts/release/feature-gate-expiry.spec.ts` 针对一个合成的已过期声明，证明 `assertNoExpiredFeatureGates` 会失败并点名每一个过期的 gate。
+
+本 note 被[插件 manifest 强制执行是一个默认 shadow 的 feature gate](../feature/2026-09-27-plugin-manifest-enforcement-is-a-feature-gate.zh.md)部分取代：已声明一个真实 gate，启动环境可以降低 `enforce` 底线。

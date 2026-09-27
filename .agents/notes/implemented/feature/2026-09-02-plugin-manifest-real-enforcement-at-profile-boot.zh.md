@@ -45,3 +45,5 @@ Provider 阶段的独立 Reviewer 另外发现,`compareDeclaredToObserved` 只�
 按身份比对而不比对字段内容,现在是一个已确认、有证据支撑的设计决策,而非一条被搁置未审视的既有披露:本代码库中没有任何活跃注册暴露字段内容比对所需要的那些字段。在一次独立的、后续的迁移让至少一个已发行的组合包拥有真实 Manifest v2 之前,强制执行在每一个真实部署中默认关闭——这一点在两个包的 README 中都有披露,而不是被藏在这个开关本身的存在背后。
 
 本 note 被[出厂 bundle 声明 Manifest v2，manifest 按包比对](2026-09-27-shipped-bundles-declare-manifest-v2-compared-per-package.zh.md)部分取代：启动后的比对改为按包进行，出厂 bundle 已声明 Manifest v2。
+
+本 note 被[插件 manifest 强制执行是一个默认 shadow 的 feature gate](2026-09-27-plugin-manifest-enforcement-is-a-feature-gate.zh.md)部分取代：强制执行改为一个默认 `shadow` 的 feature gate，`DSH_PLUGIN_MANIFEST_ENFORCEMENT` 已删除。
