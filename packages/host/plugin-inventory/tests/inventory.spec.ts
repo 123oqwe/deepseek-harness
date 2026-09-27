@@ -274,6 +274,12 @@ describe('resolveEntryPackageDir', () => {
   it('returns undefined once every search path is exhausted with no match', () => {
     expect(resolveEntryPackageDir('dsh-totally-bogus-unresolvable-package-name-xyz')).toBeUndefined()
   })
+
+  it('resolves a subpath entry to its package root, so the entry answers to that package\'s manifest', () => {
+    const packageDir = resolveEntryPackageDir('@deepseek-ai/dsh-brand')
+    expect(packageDir).toBeDefined()
+    expect(resolveEntryPackageDir('@deepseek-ai/dsh-brand/startup')).toBe(packageDir)
+  })
 })
 
 /** Stage a real on-disk package directory (`package.json` only — the fake resolver never imports it). */
@@ -366,6 +372,50 @@ describe('buildPluginPermissionStates', () => {
     expect(state?.comparison?.mismatches).toEqual(expect.arrayContaining([
       { kind: 'undeclared-registration', category: 'tool', name: 'undeclared-tool' },
     ]))
+  })
+
+  it('compares every entry of a package against the union of what all its entries registered', async () => {
+    // A manifest describes its package: one entry providing the service and
+    // tool and another registering the skill and event together match it.
+    const { ctx } = await harness()
+    const halfA: Plugin.Function = (pluginCtx) => {
+      pluginCtx.provide('exampleObservedService', 1)
+      pluginCtx.effect(function* () { yield () => {} }, 'tools.register("example-observed-tool")')
+    }
+    const halfB: Plugin.Function = (pluginCtx) => {
+      pluginCtx.on('example/observed-event' as never, (() => {}) as never)
+      pluginCtx.effect(function* () { yield () => {} }, 'skills.register("example-observed-skill")')
+    }
+    ctx.loader.builtins['half-a'] = halfA
+    ctx.loader.builtins['half-b'] = halfB
+    const firstId = await ctx.loader.create({ name: 'cordis:half-a' })
+    const secondId = await ctx.loader.create({ name: 'cordis:half-b' })
+    const dir = stagePackage(BENIGN_DSH_FIELD, 'example-two-entry-plugin')
+    const states = buildPluginPermissionStates(ctx, {
+      resolvePackageDir: moduleName => (moduleName.startsWith('cordis:half-') ? dir : undefined),
+    })
+    const first = states.find(state => state.entryId === firstId)
+    const second = states.find(state => state.entryId === secondId)
+    expect([first?.trustDecision, second?.trustDecision]).toEqual(['active', 'active'])
+    expect(first?.observed.toolNames).toEqual(['example-observed-tool'])
+    expect(second?.observed.skillNames).toEqual(['example-observed-skill'])
+  })
+
+  it('quarantines every entry of a package when any one of them registers a name the manifest never declared', async () => {
+    const { ctx } = await harness()
+    const sideEntry: Plugin.Function = (pluginCtx) => {
+      pluginCtx.effect(function* () { yield () => {} }, 'tools.register("undeclared-side-tool")')
+    }
+    ctx.loader.builtins['main-entry'] = probePlugin
+    ctx.loader.builtins['side-entry'] = sideEntry
+    const mainId = await ctx.loader.create({ name: 'cordis:main-entry' })
+    const sideId = await ctx.loader.create({ name: 'cordis:side-entry' })
+    const dir = stagePackage(BENIGN_DSH_FIELD, 'example-side-entry-plugin')
+    const states = buildPluginPermissionStates(ctx, {
+      resolvePackageDir: moduleName => (moduleName.endsWith('-entry') ? dir : undefined),
+    })
+    expect(states.filter(state => [mainId, sideId].includes(state.entryId)).map(state => state.trustDecision))
+      .toEqual(['quarantined', 'quarantined'])
   })
 
   it('skips an entry with no resolvable package (the real resolver never finds a cordis: builtin on disk)', async () => {

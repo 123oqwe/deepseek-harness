@@ -184,25 +184,42 @@ export function buildObservedPluginCapabilities(ctx: Context, rootFiber: Fiber):
 }
 
 /**
+ * The package a bare module specifier names, without any subpath after it:
+ * `@scope/name/startup` names `@scope/name`, and `name/sub` names `name`.
+ * @param moduleName - the Loader entry's module specifier.
+ * @returns the package name, or the specifier unchanged when it is a relative or absolute path.
+ */
+function packageNameOf(moduleName: string): string {
+  if (moduleName.startsWith('.') || moduleName.startsWith('/')) return moduleName
+  const segments = moduleName.split('/')
+  return segments.slice(0, moduleName.startsWith('@') ? 2 : 1).join('/')
+}
+
+/**
  * Resolve one Loader entry module's package root directory the same way
  * `@deepseek-ai/dsh-app-boot`'s bundle resolution does: probe Node's own
  * require-resolution search paths for a directory holding `package.json`.
- * Absent for a `cordis:`-prefixed builtin, which has no package on disk.
+ * A subpath entry such as `@scope/name/startup` resolves to its package's
+ * root, so every entry a package contributes answers to that package's one
+ * manifest. Absent for a `cordis:`-prefixed builtin, which has no package on
+ * disk.
  * @param moduleName - the Loader entry's module specifier (`entry.options.name`).
  * @returns the resolved package directory, or `undefined` when unresolvable.
  */
 export function resolveEntryPackageDir(moduleName: string): string | undefined {
   if (moduleName.startsWith('cordis:')) return undefined
-  for (const searchPath of createRequire(import.meta.url).resolve.paths(moduleName) ?? []) {
-    const candidate = join(searchPath, moduleName)
+  const packageName = packageNameOf(moduleName)
+  for (const searchPath of createRequire(import.meta.url).resolve.paths(packageName) ?? []) {
+    const candidate = join(searchPath, packageName)
     if (existsSync(join(candidate, 'package.json'))) return candidate
   }
   return undefined
 }
 
 /**
- * One Loader entry's package identity, classified declaration, and manifest
- * digest, resolved from its on-disk `package.json`. The digest is taken over
+ * One Loader entry's package directory, package identity, classified
+ * declaration, and manifest digest, resolved from its on-disk
+ * `package.json`. The digest is taken over
  * the same buffer the identity and declaration are parsed from, in one read,
  * so it always describes exactly the bytes the other two facts came from.
  */
@@ -210,6 +227,7 @@ function resolveEntryPackage(
   moduleName: string,
   resolvePackageDir: (moduleName: string) => string | undefined,
 ): {
+  dir: string
   identity: PluginPackageIdentity
   declaration: PluginDeclaration
   manifestDigest: PluginManifestDigest
@@ -227,6 +245,7 @@ function resolveEntryPackage(
   const name = typeof manifest.name === 'string' ? manifest.name : moduleName
   const version = typeof manifest.version === 'string' ? manifest.version : '0.0.0'
   return {
+    dir,
     identity: { name, version },
     declaration: classifyPluginDeclaration(manifest.dsh),
     manifestDigest: brandString<PluginManifestDigest>(`sha256:${createHash('sha256').update(bytes).digest('hex')}`),
@@ -251,6 +270,26 @@ function resolveEntryPackage(
  */
 function recordEntryProvenance(verifiedAt: string): ProvenanceAuditRecord {
   return recordUnverifiedProvenance('no-provenance-claim', verifiedAt)
+}
+
+/** The registrations of an entry with no live fiber, and the start of a package's union. */
+const NOTHING_OBSERVED: ObservedPluginCapabilities = { ctxKeys: [], toolNames: [], skillNames: [], mcpServerNames: [], eventNames: [] }
+
+/**
+ * The registrations of several entries of one package, together.
+ * @param left - the registrations gathered so far.
+ * @param right - one more entry's registrations.
+ * @returns every name either side registered, each once, in first-seen order.
+ */
+function unionOfObserved(left: ObservedPluginCapabilities, right: ObservedPluginCapabilities): ObservedPluginCapabilities {
+  const union = (a: readonly string[], b: readonly string[]): string[] => [...new Set([...a, ...b])]
+  return {
+    ctxKeys: union(left.ctxKeys, right.ctxKeys),
+    toolNames: union(left.toolNames, right.toolNames),
+    skillNames: union(left.skillNames, right.skillNames),
+    mcpServerNames: union(left.mcpServerNames, right.mcpServerNames),
+    eventNames: union(left.eventNames, right.eventNames),
+  }
 }
 
 /** Options for {@link buildPluginPermissionStates}. */
@@ -283,9 +322,12 @@ export interface BuildPluginPermissionStatesOptions {
  * gets a real `comparison`/`trustDecision` from
  * {@link compareDeclaredToObserved}/{@link decidePluginTrust}; any other
  * declaration kind carries neither, matching `PluginPermissionState`'s own
- * doc comment. An entry with no resolvable package (a `cordis:` builtin, or
- * a module this process cannot resolve) is skipped — there is no
- * `package.json` to report identity or a declaration from.
+ * doc comment. A manifest describes its package, not one entry, so every
+ * entry of a package is compared against the union of what all that
+ * package's entries registered, and they share one decision; each state's
+ * `observed` stays the entry's own. An entry with no resolvable package (a
+ * `cordis:` builtin, or a module this process cannot resolve) is skipped —
+ * there is no `package.json` to report identity or a declaration from.
  * @param ctx - the live, booted root context.
  * @param options - provenance hints from the caller's own boot composition.
  * @returns one permission state per non-group Loader entry with a resolvable package.
@@ -296,21 +338,26 @@ export function buildPluginPermissionStates(
 ): PluginPermissionState[] {
   const bundleNames = new Set(options.bundlePackageNames ?? [])
   const resolvePackageDir = options.resolvePackageDir ?? resolveEntryPackageDir
-  const states: PluginPermissionState[] = []
-  for (const entry of ctx.loader.entries()) {
-    if (entry.options.group) continue
+  const resolvedEntries = [...ctx.loader.entries()].flatMap((entry) => {
+    if (entry.options.group) return []
     const resolved = resolveEntryPackage(entry.options.name, resolvePackageDir)
-    if (resolved === undefined) continue
-    const observed: ObservedPluginCapabilities = entry.fiber === undefined
-      ? { ctxKeys: [], toolNames: [], skillNames: [], mcpServerNames: [], eventNames: [] }
-      : buildObservedPluginCapabilities(ctx, entry.fiber)
-    const provenance: PluginProvenance = bundleNames.has(entry.options.name)
-      ? { kind: 'bundle', source: entry.options.name }
+    if (resolved === undefined) return []
+    const observed = entry.fiber === undefined ? NOTHING_OBSERVED : buildObservedPluginCapabilities(ctx, entry.fiber)
+    return [{ entry, resolved, observed }]
+  })
+  const states: PluginPermissionState[] = []
+  for (const { entry, resolved, observed } of resolvedEntries) {
+    const packageName = packageNameOf(entry.options.name)
+    const provenance: PluginProvenance = bundleNames.has(packageName)
+      ? { kind: 'bundle', source: packageName }
       : { kind: 'built-in' }
     const provenanceAudit = recordEntryProvenance(new Date().toISOString())
     const { manifestDigest } = resolved
     if (resolved.declaration.kind === 'manifest-v2') {
-      const comparison = compareDeclaredToObserved(resolved.declaration.manifest, observed)
+      const packageObserved = resolvedEntries
+        .filter(other => other.resolved.dir === resolved.dir)
+        .reduce((union, other) => unionOfObserved(union, other.observed), NOTHING_OBSERVED)
+      const comparison = compareDeclaredToObserved(resolved.declaration.manifest, packageObserved)
       states.push({
         entryId: pluginEntryId(entry.id),
         packageIdentity: resolved.identity,
