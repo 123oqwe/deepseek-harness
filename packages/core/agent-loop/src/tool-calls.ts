@@ -22,7 +22,6 @@ import type { SignedCapabilityToken } from '@deepseek-ai/dsh-capability-token'
 import type { ActionManifest } from '@deepseek-ai/dsh-action-manifest'
 import { enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
 import type { ExecutionWorldFact, PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
-import type { ApprovalDisplay } from '@deepseek-ai/dsh-user-approval/types'
 import type { ActionId, ArgumentsHash, CapabilityRef, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import type { LedgerScope } from '@deepseek-ai/dsh-action-ledger'
 // The `actionLedger` service augmentation lives in the ledger package's runtime
@@ -35,7 +34,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent/types'
 import { createSessionManifestAppender } from '@deepseek-ai/dsh-tools/manifest-log'
 // The reserve/confirm pair lives in `dsh-tools` so the code-mode dispatch can
 // reach it too: a second copy here is what left code-mode unreserved (§12.35-2).
-import { approvalBindingFor, confirmExternalEffect, gateActionRisk, judgeActionRisk, manifestClassificationOf, readExecutionWorldFact, readPolicyContextFacts, refuseNewAction, refusedApprovalResult, refusedDispatchResult, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect, verifyRecordedApproval } from '@deepseek-ai/dsh-tools/external-effect'
+import { APPROVAL_DISPLAY_VALIDITY_MS, approvalBindingFor, approvalDisplayFor, confirmExternalEffect, filePreconditionsFor, gateActionRisk, judgeActionRisk, manifestClassificationOf, readExecutionWorldFact, readPolicyContextFacts, redactArgumentsForDisplay, refuseNewAction, refusedApprovalResult, refusedDispatchResult, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect, verifyRecordedApproval } from '@deepseek-ai/dsh-tools/external-effect'
 import type { ActionRiskVerdict } from '@deepseek-ai/dsh-tools/external-effect'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import { brandString } from '@deepseek-ai/dsh-brand'
@@ -316,10 +315,15 @@ async function runGroup(
     // that holds both halves — the model's arguments and the manifest record
     // the append just produced. The registry's own ask sits in a layer with no
     // manifest, and is unbound by declaration rather than by oversight.
-    // ONE tuple for both the ask and the re-verification below: rebuilding it
-    // at the second site would compare two derivations rather than one value,
-    // and a drift between them would read as a substitution nobody made.
-    const binding = approvalBindingFor(agent, call.block.id, call.block.name, call.block.arguments, Date.now())
+    // ONE tuple's action, arguments and principal serve both the ask and the
+    // re-verification below: rebuilding those at the second site would compare
+    // two derivations rather than one value, and a drift between them would read
+    // as a substitution nobody made. The file preconditions are the exception —
+    // they MUST be read afresh at each site (acceptance[0]), so the ask records
+    // the version each declared file had then and the re-verification sees the
+    // version it has now; a file rewritten or created in between is the change.
+    const preconditions = await filePreconditionsFor(ctx, ctx.tools.get(call.block.name, agent), call.exec.arguments)
+    const binding = approvalBindingFor(agent, call.block.id, call.block.name, call.block.arguments, Date.now(), preconditions)
     const riskRefusal = await gateActionRisk(
       ctx, agent, call.block.name, ctx.tools.get(call.block.name, agent)?.riskDomainTags ?? [], judged,
       binding,
@@ -342,9 +346,14 @@ async function runGroup(
     // recorded side comes from the session log and the present side from this
     // dispatch, so a substitution between the decision and the execution is a
     // comparison of two different values rather than of one value with itself.
+    // The file preconditions are re-read here (acceptance[0]): the present side
+    // carries the declared files' versions NOW, which the recorded ask-time
+    // versions are compared against.
     // A refusal REFUSES the dispatch: a verification whose result is reported
     // and then ignored passes every case asserting it was called.
-    const staleApproval = verifyRecordedApproval(agent, binding.inputs, Date.now(), binding.actionId)
+    const nowPreconditions = await filePreconditionsFor(ctx, ctx.tools.get(call.block.name, agent), call.exec.arguments)
+    const present = { ...binding.inputs, preconditions: nowPreconditions }
+    const staleApproval = verifyRecordedApproval(agent, present, Date.now(), binding.actionId)
     if (staleApproval !== undefined) {
       slots[index] = {
         exec: call.exec as unknown as ToolRunContext,
@@ -530,86 +539,6 @@ async function policyInputsForCall(ctx: Context, agent: Agent, block: ToolCallBl
     facts: await readPolicyContextFacts(ctx, agent, judged?.classification),
     world: await readExecutionWorldFact(ctx, agent),
     verdict: judged,
-  }
-}
-
-
-/**
- * How long the ask TELLS a decider their approval will last.
- *
- * The service owns the real duration through its own row configuration; this
- * is what the six-field display says, and the two must agree or a decider is
- * told one thing and bound by another. Kept as one constant rather than read
- * from the service because the display is built before the ask reaches it, and
- * a reader of this file should see the coupling rather than discover it.
- */
-const APPROVAL_DISPLAY_VALIDITY_MS = 300_000
-
-/**
- * Redact an argument string for display (acceptance[1]).
- *
- * String VALUES are replaced and their keys kept, so a decider sees the shape
- * of what will run without its secrets. The digest the approval is bound to
- * covers the unredacted string, so two arguments that redact identically still
- * bind differently — the property acceptance[1] states and this function is one
- * half of.
- * @param raw - the model's raw argument string.
- * @returns the rendering to show, or the raw string when it is not JSON.
- */
-function redactArgumentsForDisplay(raw: string): string {
-  try {
-    const parsed: unknown = JSON.parse(raw)
-    const redact = (value: unknown): unknown => {
-      if (typeof value === 'string') return '<redacted>'
-      if (Array.isArray(value)) return value.map(redact)
-      if (value !== null && typeof value === 'object') {
-        return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, redact(item)]))
-      }
-      return value
-    }
-    return JSON.stringify(redact(parsed))
-  } catch {
-    // Not JSON: a model may emit anything, and showing the raw text is better
-    // than showing nothing. It is not a secret leak this function introduces —
-    // the same string is what the tool would receive.
-    return raw
-  }
-}
-
-/**
- * What a decider is shown about this dispatch (P2-06 must[0]).
- *
- * Every value is taken from the manifest or from the gate's own
- * classification, never recomputed here: a surface shown a second derivation
- * of the risk class or the diff would be shown a guess where a recorded fact
- * exists. `arguments` arrives already redacted, and the digest the approval is
- * BOUND to covers the unredacted value — that difference is acceptance[1].
- * @param manifest - the manifest just appended for this call.
- * @param riskClass - the class the gate classified this action into.
- * @param redactedArguments - the arguments as the decider should see them.
- * @param expiresAtMs - when an approval given now stops being usable.
- * @returns the six fields must[0] names.
- */
-function approvalDisplayFor(
-  manifest: ActionManifest,
-  riskClass: string,
-  redactedArguments: string,
-  expiresAtMs: number,
-): ApprovalDisplay {
-  const target = manifest.target
-  const resource = target.kind === 'filesystem'
-    ? target.path
-    : target.kind === 'network' ? target.host : target.kind === 'process' ? target.command : target.ref
-  return {
-    manifestDigest: manifest.argumentsHash,
-    arguments: redactedArguments,
-    // The target's KIND is kept in front of its value: `filesystem:/etc/hosts`
-    // and `process:/etc/hosts` are different decisions, and a decider shown
-    // only the path cannot tell them apart.
-    resource: `${target.kind}:${resource}`,
-    riskClass,
-    expectedDiff: manifest.expectedDiff.description,
-    expiresAtMs,
   }
 }
 

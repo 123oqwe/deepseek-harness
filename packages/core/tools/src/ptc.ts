@@ -15,16 +15,20 @@ import type { ExecutionWorldFact, PolicyContextFacts } from '@deepseek-ai/dsh-po
 import type { ClosedDecision } from '@deepseek-ai/dsh-policy-engine'
 import type { Context } from '@deepseek-ai/cordis'
 import {
+  APPROVAL_DISPLAY_VALIDITY_MS,
   appendManifestAndDecide,
   approvalBindingFor,
+  approvalDisplayFor,
   confirmExternalEffect,
   FAIL_CLOSED_FACTS,
   FAIL_CLOSED_WORLD,
+  filePreconditionsFor,
   gateActionRisk,
   judgeActionRisk,
   manifestClassificationOf,
   readExecutionWorldFact,
   readPolicyContextFacts,
+  redactArgumentsForDisplay,
   refuseNewAction,
   refusedApprovalResult,
   refusedDispatchResult,
@@ -35,6 +39,7 @@ import {
   verifyRecordedApproval,
 } from './external-effect.ts'
 import type { ActionRiskVerdict, ExternalEffectRecord } from './external-effect.ts'
+import type { ActionManifest } from '@deepseek-ai/dsh-action-manifest'
 import { defineTool, parameterSchemaSpecToJsonSchema } from './schema.ts'
 import { TOOL_RUNTIME_SCHEDULER } from './index.ts'
 import type { PtcDispatchLog, ToolDefinition, ToolExecutionResult, ToolRuntime, ToolRunContext } from './index.ts'
@@ -195,6 +200,8 @@ interface ManifestedSubDispatch {
   readonly reservation: ExternalEffectRecord | undefined
   /** The policy decision, or undefined when this run has no agent or the composition pins no Trust Kernel. */
   readonly decision: ClosedDecision | undefined
+  /** The appended manifest, which the approval display is drawn from (P2-06 must[0]); absent when this run has no agent. */
+  readonly manifest?: ActionManifest
 }
 
 /**
@@ -731,23 +738,37 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               // about and re-verifies it, exactly as the native one does. Both
               // reach `approvalBindingFor` rather than deriving the tuple
               // apiece: two derivations give one action two digests depending
-              // on which layer took it. ONE tuple serves the ask and the check
-              // below, so the second site compares a value rather than a
-              // second derivation of it.
+              // on which layer took it. The action, arguments and principal
+              // serve both the ask and the check below; the file preconditions
+              // are read afresh at each (acceptance[0]), so a declared file
+              // rewritten or created between the ask and the run is the change.
               //
               // The arguments bound here are `normalized.logged` — the same
               // value this path manifests and hashes. The native path binds the
               // raw string the model emitted, because that is the form IT
               // holds; a dispatch is only ever compared with a record its own
               // path wrote, so the two forms never meet.
+              const preconditions = exec.agent === undefined
+                ? []
+                : await filePreconditionsFor(options.ledgerContext(), registry.get(name, exec.agent), normalized.logged)
               const binding = exec.agent === undefined
                 ? undefined
-                : approvalBindingFor(exec.agent, subCallId, name, normalized.logged as JsonValue, Date.now())
+                : approvalBindingFor(exec.agent, subCallId, name, normalized.logged as JsonValue, Date.now(), preconditions)
+              // must[0], as the native path passes it: the sub-call's approval
+              // request shows the six display fields, its arguments redacted.
               const riskRefusal = exec.agent === undefined || binding === undefined
                 ? undefined
                 : await gateActionRisk(
                   options.ledgerContext(), exec.agent, name, registry.get(name, exec.agent)?.riskDomainTags ?? [], judged,
                   binding,
+                  manifested.manifest === undefined
+                    ? undefined
+                    : approvalDisplayFor(
+                      manifested.manifest,
+                      judged?.classification.riskClass ?? 'security-sensitive',
+                      redactArgumentsForDisplay(JSON.stringify(normalized.logged)),
+                      Date.now() + APPROVAL_DISPLAY_VALIDITY_MS,
+                    ),
                 )
               if (riskRefusal !== undefined) {
                 reservation = undefined
@@ -759,10 +780,15 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               // a claim on an effect this dispatch may not make would leave a
               // `sent` row for something that never happened. A non-`valid`
               // result REFUSES the sub-dispatch — a verification computed and
-              // then ignored passes every case asserting the verifier ran.
+              // then ignored passes every case asserting the verifier ran. The
+              // file preconditions are re-read here: the present side carries
+              // the declared files' versions now, compared to the ask-time ones.
+              const nowPreconditions = exec.agent === undefined
+                ? []
+                : await filePreconditionsFor(options.ledgerContext(), registry.get(name, exec.agent), normalized.logged)
               const staleApproval = exec.agent === undefined || binding === undefined
                 ? undefined
-                : verifyRecordedApproval(exec.agent, binding.inputs, Date.now(), binding.actionId)
+                : verifyRecordedApproval(exec.agent, { ...binding.inputs, preconditions: nowPreconditions }, Date.now(), binding.actionId)
               if (staleApproval !== undefined) {
                 reservation = undefined
                 this.settled = true

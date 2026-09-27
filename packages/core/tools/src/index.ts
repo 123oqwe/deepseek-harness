@@ -2119,7 +2119,11 @@ export class ToolRuntime extends Service {
     const agent = exec.agent
     if (agent === undefined || this.ctx.get('trustKernel') === undefined) return undefined
     try {
-      const binding = approvalBindingFor(agent, exec.callId, exec.name, exec.arguments as JsonValue, Date.now())
+      // No file precondition: this seam gates and dispatches in one step with
+      // no re-verification, so a bound precondition would never be read back
+      // (P2-06 acceptance[0] covers the native and code-mode paths, which do
+      // re-verify).
+      const binding = approvalBindingFor(agent, exec.callId, exec.name, exec.arguments as JsonValue, Date.now(), [])
       const refusal = await gateActionRisk(
         this.ctx, agent, exec.name, this.get(exec.name, agent)?.riskDomainTags ?? [], risk.judged, binding,
       )
