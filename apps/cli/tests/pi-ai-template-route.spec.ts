@@ -103,7 +103,12 @@ function stage(cwd: string, gatewayUrl: string, corrupt?: (profile: Record<strin
     name: 'dsh-profile-headless',
     private: true,
     dependencies: {},
-    dsh: { profile: { bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-headless'], patchReload: 'startup' } },
+    // A development profile, so the insecure opt-in below is accepted and the
+    // run boots without a Trust Kernel, as it did before Epic P0-02: this
+    // observation runs the three tool calls unenforced. A shipped profile now
+    // refuses the opt-in (acceptance[2]); a test fixture declares itself a
+    // development profile rather than change what these cases observe (C19 §2).
+    dsh: { profile: { bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-headless'], patchReload: 'startup', development: true } },
   }, undefined, 2)}\n`)
   // The profile patch disables the shipped DeepSeek route and relocates
   // sessions. It configures NO route: if it did, this case would no longer be

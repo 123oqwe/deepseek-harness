@@ -14,6 +14,7 @@ import { resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
 import { recordFeedback } from '@deepseek-ai/dsh-command-feedback'
 import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
 import { bootProductionProfile } from '../../../../test-support/loader-smoke/tests/fixtures/production-profile.ts'
+import { declareDevelopmentProfile } from '../../../../test-support/loader-smoke/tests/fixtures/development-profile.ts'
 
 const configPath = process.argv[2]
 if (configPath === undefined) throw new Error('session-telemetry-otel driver requires a config path')
@@ -42,6 +43,10 @@ try {
     binName: 'telemetry-otel-e2e',
     profile: 'headless',
     overlayPaths: [resolveConfigPath(configPath, undefined)],
+    // This driver dispatches bash on the shipped headless composition without a
+    // pinned Trust Kernel; declare the development profile so the dispatch runs
+    // unenforced as before rather than being refused (Epic P0-02 acceptance[2]).
+    prepare: declareDevelopmentProfile,
   })
   try {
     await runFixtureTurn(ctx, { task: 'prove telemetry with key sk-e2efixture1234567890' })

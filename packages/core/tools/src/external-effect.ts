@@ -47,7 +47,7 @@ import { brandNumber, brandString } from '@deepseek-ai/dsh-brand'
 import { redactTokenForLog } from '@deepseek-ai/dsh-capability-token'
 import type { SignedCapabilityToken } from '@deepseek-ai/dsh-capability-token'
 import type { ClosedDecision, ExecutionWorldFact, PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
-import { enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
+import { dispatchDecisionWithoutKernel, enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import { sideEffectClassOf } from '@deepseek-ai/dsh-risk-taxonomy'
 import type { RiskClass, RiskGroundKind } from '@deepseek-ai/dsh-risk-taxonomy'
@@ -180,7 +180,7 @@ function manifestRequestFor(
  * @param request - the path's description of the action, for its origin.
  * @param world - where the action would run.
  * @param facts - the context facts.
- * @returns the decision, or undefined when the composition pins no Trust Kernel.
+ * @returns the decision, or undefined to dispatch as before (no kernel with no engine or an accepted insecure opt-in).
  */
 function decideManifest(
   ledgerContext: Context,
@@ -190,7 +190,12 @@ function decideManifest(
   world: ExecutionWorldFact,
   facts: PolicyContextFacts,
 ): ClosedDecision | undefined {
-  if (ledgerContext.get('trustKernel') === undefined) return undefined
+  // No kernel is not "no decision" (Epic P0-02 acceptance[2]): the same shared
+  // decision the native path takes. On the shipped path this only ever returns
+  // undefined here, because a code-mode program's `run_code` call is itself a
+  // native tool call the native path already refuses when this would deny; the
+  // deny is reached by an embedder that dispatches a code-mode sub-call directly.
+  if (ledgerContext.get('trustKernel') === undefined) return dispatchDecisionWithoutKernel(ledgerContext)
   return enforceManifestedAction(ledgerContext, {
     manifest,
     // must[0]'s second input, in P2-02's audited projection: the token this

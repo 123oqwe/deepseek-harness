@@ -6,6 +6,7 @@ import { installFailLoud, loadEnv, resolveConfigPath } from '@deepseek-ai/dsh-ap
 import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import { bootProductionProfile } from './production-profile.ts'
+import { declareDevelopmentProfile } from './development-profile.ts'
 
 const NAME = 'headless-test-driver'
 const [configPath, ...taskParts] = process.argv.slice(2)
@@ -21,6 +22,11 @@ try {
     binName: NAME,
     profile: 'headless',
     overlayPaths: [resolveConfigPath(configPath, undefined)],
+    // This generic harness dispatches tools (e.g. bash, subagent) on the shipped
+    // headless composition without pinning a Trust Kernel; declare the
+    // development profile so those dispatches run unenforced as before, for every
+    // consumer of this harness (Epic P0-02 acceptance[2]).
+    prepare: declareDevelopmentProfile,
   })
   const result = await runFixtureTurn(ctx, {
     task: taskParts.join(' '),

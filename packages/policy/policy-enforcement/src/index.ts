@@ -296,6 +296,73 @@ export interface EnforcementInput {
 }
 
 /**
+ * Context slot the launcher fills with whether THIS launch is an explicit
+ * development profile (Epic P0-02 acceptance[2]/[3], C19 §2).
+ *
+ * A profile that declares `dsh.profile.development: true` in its own
+ * package.json is a development profile; the launcher publishes this fact once,
+ * before any config-tree entry mounts, on every launch. It is the ONE reading
+ * of that declaration: the dispatch decision below consumes it, and Epic
+ * P1-02's unsigned-development admission and Epic P0-05's insecure-mode banner
+ * are to consume the same slot rather than re-read the manifest. Provided under
+ * a bare service name, as `apps/cli`'s `featureGates` is, until a typed
+ * consumer exists.
+ */
+export const DEVELOPMENT_PROFILE_KEY = 'developmentProfile'
+
+/**
+ * Whether this launch is an explicit development profile.
+ * @param ctx - the composition's context.
+ * @returns true when the launcher published a development-profile launch.
+ */
+export function isDevelopmentProfile(ctx: Context): boolean {
+  return ctx.get(DEVELOPMENT_PROFILE_KEY) === true
+}
+
+/** Compositions already told they dispatch with a policy engine but no Trust Kernel, so the warning is logged once each. */
+const WARNED_NO_KERNEL = new WeakSet<object>()
+
+/**
+ * The dispatch decision to act on when no Trust Kernel is pinned (Epic P0-02
+ * acceptance[2]).
+ *
+ * The dispatch paths call this in place of the bare "no kernel means no
+ * decision" fall-through that let a kernel-less composition run every tool.
+ * The value is the one each path already acts on: a `deny` when the action must
+ * be refused, or `undefined` (no decision, dispatch as before) otherwise. The
+ * postures are decided ONCE, here; the caller has established that no kernel is
+ * pinned:
+ *  - an explicit development profile -> no decision: it runs kernel-less on
+ *    purpose. Only a development profile boots without a kernel; a shipped
+ *    profile that set the insecure opt-in never reaches a dispatch, because the
+ *    launcher refuses to start it.
+ *  - no policy engine mounted -> no decision: a bare harness runs unenforced,
+ *    as it did before this epic.
+ *  - a policy engine mounted, no kernel, not a development profile -> deny:
+ *    mounting the engine is the deployment's statement that dispatch is
+ *    enforced, and {@link enforceAction} cannot decide without the kernel (it
+ *    throws), so the action fails closed. The refusal reuses the SAME
+ *    `policy-unavailable` decision the enforcement point already gives when it
+ *    cannot reach its deciding layer, rather than a kernel-specific reason
+ *    code, so the session event log and both SDK expectations that mirror the
+ *    closed reason set stay unchanged (must[3]). The tool result names no
+ *    kernel -- an embedder must not look for a kernel fault where there is a
+ *    deployment one -- so the operator-facing account is logged, once per
+ *    composition.
+ * @param ctx - the composition's context, established to pin no Trust Kernel.
+ * @returns the deny decision, or undefined to dispatch as before.
+ */
+export function dispatchDecisionWithoutKernel(ctx: Context): ClosedDecision | undefined {
+  if (isDevelopmentProfile(ctx)) return undefined
+  if (ctx.get('policy') === undefined) return undefined
+  if (!WARNED_NO_KERNEL.has(ctx.root)) {
+    WARNED_NO_KERNEL.add(ctx.root)
+    ctx.logger.warn('a policy engine is mounted but no Trust Kernel is pinned, so every tool dispatch is refused; pin a Trust Kernel, or mount no policy engine to run unenforced')
+  }
+  return decisionWhenUnavailable(lastKnownDigest(ctx))
+}
+
+/**
  * The policy-set digest last seen in this context.
  *
  * Kept so a refusal made after the provider disappeared still names WHICH set

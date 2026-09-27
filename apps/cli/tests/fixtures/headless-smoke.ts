@@ -91,7 +91,11 @@ export async function runDsh(
     configPath: '',
     binArgs: [...binArgs],
     tsconfigPath: TSCONFIG,
-    env: { DSH_TRUST_KERNEL_INSECURE: '1', DSH_TELEMETRY_DISABLED: '1' },
+    // Empty, not '1': these smokes boot the shipped headless posture, which
+    // pins a Trust Kernel. A shipped profile refuses the insecure opt-in now
+    // (Epic P0-02 acceptance[2]), and these runs answer with text — no tool
+    // dispatch — so the pinned kernel changes nothing they observe.
+    env: { DSH_TRUST_KERNEL_INSECURE: '', DSH_TELEMETRY_DISABLED: '1' },
     prepare,
     expectedExitCode,
   })

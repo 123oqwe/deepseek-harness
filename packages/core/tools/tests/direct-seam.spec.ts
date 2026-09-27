@@ -38,10 +38,10 @@ interface Composed {
 /**
  * Mount the tool runtime with a probe tool, optionally over a pinned Trust
  * Kernel whose decider is the shipped one, and a policy that answers `effect`.
- * @param options - whether to pin the kernel, and the policy's answer.
+ * @param options - whether to pin the kernel, whether to mount a policy engine (default true), and the policy's answer.
  * @returns the composition and its observations.
  */
-async function compose(options: { readonly kernel: boolean; readonly effect?: 'permit' | 'deny' }): Promise<Composed> {
+async function compose(options: { readonly kernel: boolean; readonly effect?: 'permit' | 'deny'; readonly engine?: boolean }): Promise<Composed> {
   const ctx = new Context()
   const audit: PolicyAuditRecord[] = []
   const kernel = options.kernel
@@ -53,16 +53,20 @@ async function compose(options: { readonly kernel: boolean; readonly effect?: 'p
   if (kernel !== undefined) pinTrustKernel(ctx, kernel)
   const requests: PolicyRequest[] = []
   const effect = options.effect ?? 'permit'
-  ctx.provide('policy', {
-    digest: 'direct-seam-policy',
-    evaluate(request: PolicyRequest) {
-      requests.push(request)
-      return {
-        decision: { effect, policySet: 'direct-seam-policy', ...effect === 'deny' ? { reason: 'forbidden-by-policy' } : {} },
-        explain: { matched: [], diagnostics: [] },
-      }
-    },
-  })
+  // A bare harness (Epic P0-02 acceptance[2]) mounts no policy engine: with no
+  // engine and no kernel, the seam dispatches unenforced as it did before.
+  if (options.engine ?? true) {
+    ctx.provide('policy', {
+      digest: 'direct-seam-policy',
+      evaluate(request: PolicyRequest) {
+        requests.push(request)
+        return {
+          decision: { effect, policySet: 'direct-seam-policy', ...effect === 'deny' ? { reason: 'forbidden-by-policy' } : {} },
+          explain: { matched: [], diagnostics: [] },
+        }
+      },
+    })
+  }
   await ctx.plugin(SessionStore)
   await ctx.plugin(SystemPrompt)
   await ctx.plugin(SessionProjectionRegistry)
@@ -151,9 +155,25 @@ describe('BLOCKED-294: the public seam appends a manifest and passes the enforce
     await ctx.fiber.dispose()
   })
 
-  it('leaves the seam unchanged in a composition that pins no Trust Kernel: no manifest, no decision', async () => {
+  it('refuses a direct call in a composition that mounts a policy engine but pins no Trust Kernel, and appends no manifest (Epic P0-02 acceptance[2])', async () => {
     const { ctx, agent, requests, bodies } = await compose({ kernel: false })
-    const result = await ctx.tools.execute({ callId: ToolCallId('no-kernel'), name: 'probe', arguments: {}, agent, signal })
+    const result = await ctx.tools.execute({ callId: ToolCallId('no-kernel-engine'), name: 'probe', arguments: {}, agent, signal })
+
+    // Mounting the engine states dispatch is enforced, and the enforcement
+    // point cannot decide without the kernel, so the seam fails closed here as
+    // the native and code-mode paths do. The engine is never asked (no kernel
+    // to bind its answer), and no manifest is appended without a kernel.
+    expect(result.isError).toBe(true)
+    expect(JSON.stringify(result.content)).toContain('was refused by policy (policy-unavailable)')
+    expect(bodies).toEqual([])
+    expect(manifestsOf(agent)).toEqual([])
+    expect(requests).toEqual([])
+    await ctx.fiber.dispose()
+  })
+
+  it('leaves the seam unchanged in a bare composition with neither a Trust Kernel nor a policy engine: the call runs unenforced', async () => {
+    const { ctx, agent, requests, bodies } = await compose({ kernel: false, engine: false })
+    const result = await ctx.tools.execute({ callId: ToolCallId('bare'), name: 'probe', arguments: {}, agent, signal })
 
     expect(result.isError).toBe(false)
     expect(bodies).toEqual(['unmanifested'])

@@ -36,6 +36,7 @@ import type { JsonSchemaNode } from './json-schema.ts'
 import { createRunCodeTool, RUN_CODE_NAME } from './ptc.ts'
 import type { CodeSdkLanguage } from './ptc.ts'
 import type { ClosedDecision } from '@deepseek-ai/dsh-policy-engine'
+import { dispatchDecisionWithoutKernel } from '@deepseek-ai/dsh-policy-enforcement'
 import type { WorldBindingRefusal } from '@deepseek-ai/dsh-execution-world/lifecycle'
 import {
   appendManifestAndDecide,
@@ -2052,13 +2053,15 @@ export class ToolRuntime extends Service {
    * presents the one its own execution was admitted under, which the runtime
    * hands the tool body, and a plugin's own top-level call presents none.
    *
-   * Only in a composition that pins the Trust Kernel, as every shipped profile
-   * does: `apps/cli`'s `enforceTrustKernelPosture` refuses to boot one without
-   * a kernel unless `DSH_TRUST_KERNEL_INSECURE` opts a development boot out.
-   * Without a kernel there is no enforcement point to ask, and a direct call
-   * appends no manifest either, unlike the agent loop's own call. A call with
-   * no agent has no session for its manifest: the enforcement point decides
-   * it, and it is refused.
+   * The manifest and the enforcement point's answer come only in a composition
+   * that pins the Trust Kernel, as every shipped profile does: `apps/cli`'s
+   * `enforceTrustKernelPosture` refuses to boot one without a kernel unless
+   * `DSH_TRUST_KERNEL_INSECURE` opts a development boot out. A call with no agent
+   * has no session for its manifest: the enforcement point decides it, and it is
+   * refused. Without a kernel the manifest is not appended, but the seam is not a
+   * bypass: `dispatchDecisionWithoutKernel` gives the same decision the native
+   * and code-mode paths take, so a policy engine mounted with no kernel refuses
+   * the call here too (Epic P0-02 acceptance[2]).
    *
    * Then, with or without a kernel, whether this host may still act
    * (BLOCKED-345; P2-12 must[2], P4-07 must[1]): an emergency stop, or a run
@@ -2095,6 +2098,13 @@ export class ToolRuntime extends Service {
       } catch (error: unknown) {
         return toolErrorResult(error)
       }
+    } else {
+      // No kernel is not "no decision" (Epic P0-02 acceptance[2]): the same
+      // shared decision the native and code-mode paths take, so a plugin cannot
+      // reach an unenforced tool through this public seam when a policy engine is
+      // mounted. A deliberate insecure development boot and a bare harness both
+      // leave it undefined and dispatch as before.
+      decision = dispatchDecisionWithoutKernel(this.ctx)
     }
     const refusal = agent === undefined ? undefined : refuseNewAction(agent, Date.now())
     if (refusal !== undefined) return refusedDispatchResult(refusal, exec.name)
