@@ -36,6 +36,7 @@ import type { WorkItemId } from '@deepseek-ai/dsh-lease-contract'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-agent-loop'
 import type {} from '@deepseek-ai/dsh-run'
+import type {} from '@deepseek-ai/dsh-session-persistence'
 import { bootProductionProfile } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/production-profile.ts'
 
 /** The one session both phases open; its string is also the Run's lease work item. */
@@ -70,6 +71,16 @@ if (phase === '1' || phase === '2') {
     const agent = await agentLoop.create(SessionId(SESSION), { provider: 'p4-05-reclaim-mock', model: 'p4-05-reclaim-mock' }, { cwd: process.cwd() })
     const runId = agent.runId
     if (runId === undefined) throw new Error('p4-05 reclaim phase 1: create opened no Run')
+    // v5: force the SESSION log to disk with the product's service-wide flush —
+    // a durability barrier the product exposes, not a sleep — before crashing.
+    // Waiting only for runs.json (the Run store) left the session's write-behind
+    // buffer undrained on a loaded runner, so phase 2's agentLoop.resume threw
+    // SessionPersistenceNotFoundError (A-547 v4 red in the full run, green in the
+    // narrow one that happened to drain in time). flush() resolves once the
+    // session's active write handle has drained durably.
+    const persistence = ctx.get('sessionPersistence')
+    if (persistence === undefined) throw new Error('p4-05 reclaim phase 1: the shipped profile mounted no session persistence')
+    await persistence.flush()
     const runsPath = dshHomePath('runs', 'runs.json')
     const persisted = (): boolean => existsSync(runsPath) && readFileSync(runsPath, 'utf8').includes(runId)
     const deadline = Date.now() + 10_000
