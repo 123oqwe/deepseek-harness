@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-26T22:37:34.948Z",
-  "inputDigest": "22005fd464312eab59db2bc7405fe80618e8971999f010d7ff47a6686ed3d906",
+  "lastUpdatedUtc": "2026-09-27T05:34:06.079Z",
+  "inputDigest": "d09ddc100d94e596dd8bc35b7b1b9b242b5e3fe77b44f3b1fd50b525e457a9a5",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -95,6 +95,20 @@
             "verify fails and names the drifted workspace package manifest"
           ],
           "capturedAtUtc": "2026-09-01T05:50:37.084Z"
+        },
+        "F.2": {
+          "status": "GREEN",
+          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
+          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
+          "expectCasesMatched": [
+            "release/baseline-fingerprint restore contract, per class (P0-01 acceptance[2]) verify passes again once a tampered SDK protocol types file is restored",
+            "release/baseline-fingerprint restore contract, per class (P0-01 acceptance[2]) verify passes again once a tampered known-event-types file is restored",
+            "release/baseline-fingerprint restore contract, per class (P0-01 acceptance[2]) verify passes again once a tampered pnpm-lock.yaml is restored",
+            "release/baseline-fingerprint restore contract, per class (P0-01 acceptance[2]) verify passes again once a drifted workspace package manifest is restored"
+          ],
+          "capturedAtUtc": "2026-09-27T05:33:54.941Z"
         }
       },
       "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
@@ -2573,6 +2587,20 @@
             "the sdk profile's project-trust boundary reads the same AGENTS.md once the host grants that directory"
           ],
           "capturedAtUtc": "2026-09-23T19:00:41.164Z"
+        },
+        "U.4": {
+          "status": "GREEN",
+          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
+          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
+          "expectCasesMatched": [
+            "P1-07 U.4 — `--trust-workspace=read` passes both parsers on the way to the trust plugin the launcher hands it to the headless app intact, and that app's own program accepts it on the second pass",
+            "P1-07 U.4 — `--trust-workspace=read` passes both parsers on the way to the trust plugin the trust plugin on that headless command line asks for a trusted-read grant from the launch argument",
+            "P1-07 U.4 — `--trust-workspace=read` passes both parsers on the way to the trust plugin the launcher hands it to the sdk app intact, and that app's own program accepts it on the second pass",
+            "P1-07 U.4 — `--trust-workspace=read` passes both parsers on the way to the trust plugin the trust plugin on that sdk command line asks for a trusted-read grant from the launch argument"
+          ],
+          "capturedAtUtc": "2026-09-27T05:34:06.069Z"
         }
       },
       "candidateSha": "191aa1e502ff7e96a7ce306cdf57ccb742c745fb",
@@ -3500,15 +3528,15 @@
         },
         "U.10": {
           "status": "GREEN",
-          "candidateSha": "ad73f77b0ee03e2b24ebcf379b89f3b602a085c2",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36241736461",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36241736461/first100-evidence-ad73f77b0ee03e2b24ebcf379b89f3b602a085c2/vitest-e2e-workflow.json",
-          "observationSha256": "9e27ffb36cfeb507a744e9930b356b218d6b0f8f03f3eecce7b14e86a9422ca0",
+          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-e2e-workflow.json",
+          "observationSha256": "5e43c862426dbe3fa53e083a831e5ccae32f653cc1610d5dde11232286f9be1c",
           "expectCasesMatched": [
             "dsh --profile web with the documented GitHub webhook patch, booted in-process through the launcher (no key required) control: the signed delivery is accepted and creates one webhook session whose first action manifest names an actor",
             "dsh --profile web with the documented GitHub webhook patch, booted in-process through the launcher (no key required) P2-01 acceptance[0]: an action a webhook delivery triggers traces to the integration ServicePrincipal the HMAC key stands for"
           ],
-          "capturedAtUtc": "2026-09-26T13:20:00.217Z"
+          "capturedAtUtc": "2026-09-27T05:34:05.762Z"
         }
       },
       "candidateSha": "6bbc302797c3b62b3e7adf8421fd2473aee3ff85",
@@ -3845,6 +3873,47 @@
             "P2-02 must[1]: the kernel signs with real key material keeps the PRIVATE key off the signatureRoots handle, which crosses the plugin boundary"
           ],
           "capturedAtUtc": "2026-09-10T05:38:38.335Z"
+        },
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
+          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
+          "expectCasesMatched": [
+            "BLOCKED-330: a call a revoked session token will refuse is not put to the operator",
+            "BLOCKED-330: a call a revoked session token will refuse is refused as a revoked capability token and its body does not run",
+            "BLOCKED-330 on the code-mode path: a call an expired session token will refuse is not put to the operator",
+            "BLOCKED-330 on the code-mode path: a call an expired session token will refuse is refused as an expired capability token and its body does not run"
+          ],
+          "capturedAtUtc": "2026-09-27T05:33:55.251Z"
+        },
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
+          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
+          "expectCasesMatched": [
+            "BLOCKED-331 condition 1: a root token past its expiry is re-issued under the same policy control: the probe runs before the expiry, and the second turn starts after it",
+            "BLOCKED-331 condition 1: a root token past its expiry is re-issued under the same policy after the expiry the probe runs and no result says the token has expired",
+            "BLOCKED-331 condition 1: a root token past its expiry is re-issued under the same policy the session then holds a new root, unexpired when the turn started, with the subject, tenant, capability and verbs of the first token",
+            "BLOCKED-331 condition 2: a revoked root is never re-issued control: the probe runs before the revocation, and the revocation withdraws a recorded token",
+            "BLOCKED-331 condition 2: a revoked root is never re-issued right after the revocation the probe does not run and the call is refused as revoked",
+            "BLOCKED-331 condition 2: a revoked root is never re-issued no token is issued after the revocation, right after it or once every earlier token has expired",
+            "BLOCKED-331 condition 2: a revoked root is never re-issued guard: once every earlier token has expired, the probe still does not run",
+            "BLOCKED-331 condition 3: a child token is derived from the current token of its parent, re-derived when it expires, and never born expired control: the first child starts with an unexpired token, and the first parent token expires before that child calls and before the second child starts",
+            "BLOCKED-331 condition 3: a child token is derived from the current token of its parent, re-derived when it expires, and never born expired a child whose token expired before its call has it re-derived: the probe runs and no result says the token has expired",
+            "BLOCKED-331 condition 3: a child token is derived from the current token of its parent, re-derived when it expires, and never born expired a child started after the parent token expired is not born expired: its probe runs, and no child token has expired when it is first seen",
+            "BLOCKED-331 condition 3: a child token is derived from the current token of its parent, re-derived when it expires, and never born expired guard: when each child calls, its token is derived from the parent token of that moment and does not outlive it",
+            "BLOCKED-331 condition 4: a code-mode call that outlives the token of its batch is re-issued one or is refused with a reason that says so control: the program ran, so the run_code call itself was not refused",
+            "BLOCKED-331 condition 4: a code-mode call that outlives the token of its batch is re-issued one or is refused with a reason that says so the probe call either runs or is refused with a reason that names the expiry within the code-mode program",
+            "BLOCKED-331 condition 3, workflow half: the children of a detached workflow are re-derived when their tokens expire and never born expired control: the root started a detached run, both workflow children called the probe, and the root token expired before the first child called and before the second child started",
+            "BLOCKED-331 condition 3, workflow half: the children of a detached workflow are re-derived when their tokens expire and never born expired the first workflow child, whose token expired before its call, has it re-derived: the probe runs and no result says the token has expired",
+            "BLOCKED-331 condition 3, workflow half: the children of a detached workflow are re-derived when their tokens expire and never born expired the second workflow child, started after the root token expired, is not born expired: its probe runs and its token has not expired when it calls",
+            "BLOCKED-331 condition 3, workflow half: the children of a detached workflow are re-derived when their tokens expire and never born expired guard: when each workflow child calls, its token is derived from the detached session token of that moment, which is derived from the root token of that moment, and neither outlives its parent"
+          ],
+          "capturedAtUtc": "2026-09-27T05:34:05.239Z"
         }
       },
       "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
@@ -5409,6 +5478,23 @@
             "P3-01 acceptance[0]: one tool call through the local and the fenced world provider on the shipped headless profile the policy decision the Trust Kernel audits for the call, the risk gate's record and the tool's result are the same under either provider"
           ],
           "capturedAtUtc": "2026-09-24T23:26:10.053Z"
+        },
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
+          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
+          "expectCasesMatched": [
+            "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile control: a plugin provider that reports its own identity binds the call's world under its id and the digest it computed",
+            "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[2] / BLOCKED-316 condition 3: a plugin provider whose handle claims local with a digest it did not compute is refused at binding — the tool does not run, the result names the mismatch, and nothing binds under the claim",
+            "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 BLOCKED-316 condition 3: registering a world provider under the reserved id local is refused, with an error naming the identity",
+            "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 BLOCKED-316 condition 3: registering a world provider (not the shipped fenced provider) under the reserved id fenced is refused, with an error naming the identity",
+            "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile control: under the shipped request the local provider binds the call's world and the tool runs",
+            "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[1]: a requested world no provider can hold refuses the call or records that it ran without that world",
+            "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[1] / BLOCKED-316 condition 2a: a deployment rule forbidding an absent world refuses the call (the tool does not run), and the same request with the same policy set MINUS that one rule runs the tool — so the rule is what denies, not the absence of a world"
+          ],
+          "capturedAtUtc": "2026-09-27T05:34:05.570Z"
         }
       },
       "candidateSha": "c732e7c07331d3e298402b354a258c3a2aa10019",
