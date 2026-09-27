@@ -30,12 +30,14 @@ const tsconfigPath = fileURLToPath(new URL('../../../tsconfig.json', import.meta
 
 /** What the driver reported. */
 interface Report {
-  readonly reachedModel: boolean
+  readonly bootSucceeded: boolean
+  readonly bootError: string | null
+  readonly baseServicePresent: boolean
   readonly loaderEntries: readonly { readonly name: string; readonly active: boolean }[]
   readonly toolResults: readonly string[]
 }
 
-describe('P1-01 acceptance[0]/must[3]: shipped bundle-layer admission on a real enforcing boot', () => {
+describe('A-558a P1-01 acceptance[0]/must[3]: the shipped headless template under plugin-manifest enforcement (base awaits Q27)', () => {
   let report: Report
   let stderr: string
   beforeAll(async () => {
@@ -52,7 +54,11 @@ describe('P1-01 acceptance[0]/must[3]: shipped bundle-layer admission on a real 
     report = JSON.parse(json) as Report
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 
-  it('the headless bundle layer STAYS: every one of its entries is present and ACTIVE — neither denied nor quarantined', () => {
+  it('the shipped headless template BOOTS under enforcement (RED today — base is denied for its 8 wildcards, so headless entries that depend on base services fail to activate and the boot throws; green once Q27 admits base)', () => {
+    expect(report.bootSucceeded, `boot failed: ${report.bootError ?? 'unknown'}`).toBe(true)
+  })
+
+  it('the headless bundle layer STAYS: every one of its entries is present and ACTIVE — neither denied nor quarantined (RED today — the boot fails before any layer activates)', () => {
     for (const name of ['@deepseek-ai/dsh-headless', '@deepseek-ai/dsh-headless/startup']) {
       expect(report.loaderEntries.find(entry => entry.name === name), JSON.stringify(report)).toEqual({ name, active: true })
     }

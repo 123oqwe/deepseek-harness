@@ -27,7 +27,7 @@
  */
 
 import { randomUUID } from 'node:crypto'
-import { FiberState } from '@deepseek-ai/cordis'
+import { type Context, FiberState } from '@deepseek-ai/cordis'
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -75,22 +75,31 @@ initProfile(profileDir, ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-headless', M
 stageBundlePackage(profileDir, MISSING_MANIFEST_LAYER, undefined, `- id: ${MISSING_MANIFEST_LAYER}-row\n  name: cordis:noop\n`)
 
 const mockOverlay = fileURLToPath(new URL('./mock.patch.yml', import.meta.url))
-const { ctx } = await runProfile({
-  environment: loadLayeredEnv('dsh', process.cwd()),
-  profile: profileName,
-  fromDefaultProfile: undefined,
-  patchFiles: [mockOverlay],
-  // The shipped headless startup requires a task argument; the driver drives its
-  // own turn below, so the string only needs to satisfy that check.
-  args: ['P1-01 enforcement observation: run the base tool.'],
-})
+// A-558a: enforce denies base for its wildcards, which cascades — headless's
+// entries depend on base services and cannot activate, so runProfile's boot
+// THROWS ("plugin tree failed to load: N entries did not activate"). That is
+// today's real shipped state (awaits Q27), so the driver CATCHES the boot
+// failure and still reports; the boot/headless/base assertions then fail on
+// their assertions, not by the driver exiting 1. The missing-manifest denial
+// still reaches stderr regardless.
+let ctx: Context | undefined
+let bootError: string | undefined
 try {
-  // base is a bundle layer too: when enforcement denies it (its wildcards), its
-  // agent-loop never mounts, so there is no `agents` service to create a root
-  // agent with. Guard on it so a denied base fails the base-stays assertion
-  // below (no base tool runs), rather than crashing the driver (BLOCKED-322).
-  const agents = ctx.get('agents')
-  if (agents !== undefined) {
+  ctx = (await runProfile({
+    environment: loadLayeredEnv('dsh', process.cwd()),
+    profile: profileName,
+    fromDefaultProfile: undefined,
+    patchFiles: [mockOverlay],
+    // The shipped headless startup requires a task argument; the driver drives
+    // its own turn below, so the string only satisfies that check.
+    args: ['P1-01 enforcement observation: run the base tool.'],
+  })).ctx
+} catch (error) {
+  bootError = error instanceof Error ? error.message : String(error)
+}
+try {
+  const agents = ctx?.get('agents')
+  if (ctx !== undefined && agents !== undefined) {
     // Created after boot, as a shipped launcher creates its root agent, so its
     // session starts once the capability-token service is listening.
     await createFixtureRootAgent(ctx, {
@@ -103,15 +112,16 @@ try {
     })
     await runFixtureTurn(ctx, { task: 'P1-01: call the base tool once.' })
   }
-  const events = ctx.get('sessions')?.list().flatMap(session => session.snapshotEvents()) ?? []
+  const events = ctx?.get('sessions')?.list().flatMap(session => session.snapshotEvents()) ?? []
   const report = {
+    bootSucceeded: ctx !== undefined,
+    bootError: bootError ?? null,
     baseServicePresent: agents !== undefined,
-    reachedModel: events.some(event => event.type === 'turn/end'),
     // Every live Loader entry and whether its fiber is ACTIVE. A denied layer's
-    // rows never mount (absent here); a quarantined entry is disposed (present,
-    // not ACTIVE); an admitted, unquarantined layer's entries are present and
-    // ACTIVE — which is exactly "neither denied nor quarantined" (headless stays).
-    loaderEntries: [...ctx.loader.entries()].map(entry => ({
+    // rows never mount (absent); a quarantined entry is disposed (present, not
+    // ACTIVE); an admitted, unquarantined layer's entries are present and ACTIVE
+    // — "neither denied nor quarantined" (headless stays). Empty when boot failed.
+    loaderEntries: ctx === undefined ? [] : [...ctx.loader.entries()].map(entry => ({
       name: entry.options.name,
       active: entry.fiber?.state === FiberState.ACTIVE,
     })),
@@ -122,5 +132,5 @@ try {
   }
   process.stdout.write(`P1-01-ENFORCE ${JSON.stringify(report)}\n`)
 } finally {
-  await ctx.fiber.dispose()
+  if (ctx !== undefined) await ctx.fiber.dispose()
 }
