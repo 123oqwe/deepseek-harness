@@ -8,16 +8,17 @@
  * enforce env vars and prints `P1-01-QUARANTINE <json>` (the live Loader entries
  * and their fiber state); admission denials reach stderr.
  *
- * This increment covers the two control layers (match-stays STAYS,
- * missing-manifest DENIED) and that a base-free tree boots; the three quarantine
- * layers (RED until 甲/乙) follow.
+ * It covers the two control layers (match-stays STAYS, missing-manifest DENIED),
+ * that a base-free tree boots, and the three quarantine layers: two ENTRY
+ * mismatches (declares-unregistered, subpath-entry — RED until 甲) and one
+ * non-entry patch-mounted mismatch (RED until 乙).
  * @module tests/first100/fixtures/P1-01.quarantine.composition
  */
 
 import { fileURLToPath } from 'node:url'
 import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
 import { beforeAll, describe, expect, it } from 'vitest'
-import { DECLARES_UNREGISTERED_LAYER, MATCH_STAYS_LAYER, MISSING_MANIFEST_LAYER, SUBPATH_UNDECLARED_LAYER } from './loader/p1-01-quarantine/shared.ts'
+import { DECLARES_UNREGISTERED_LAYER, MATCH_STAYS_LAYER, MISSING_MANIFEST_LAYER, NON_ENTRY_MISMATCH_LAYER, SUBPATH_UNDECLARED_LAYER } from './loader/p1-01-quarantine/shared.ts'
 
 const driver = fileURLToPath(new URL('./loader/p1-01-quarantine/driver.ts', import.meta.url))
 const tsconfigPath = fileURLToPath(new URL('../../../tsconfig.json', import.meta.url))
@@ -66,5 +67,10 @@ describe('A-558b P1-01 must[3]/acceptance[0]: admission and quarantine on a base
   it('a SUBPATH-entry layer registering an undeclared name is QUARANTINED: its manifest resolves to the package root and the observed name is not declared, so it is disposed by name (RED today — not found/resolved by plugin-inventory; green after 甲)', () => {
     expect(stderr, `stderr must show ${SUBPATH_UNDECLARED_LAYER} quarantined/disposed`)
       .toMatch(new RegExp(`disposing[^\\n]*${SUBPATH_UNDECLARED_LAYER}`, 'u'))
+  })
+
+  it('a NON-ENTRY layer whose patch-mounted plugin registers an undeclared name is QUARANTINED: the layer declares one tool but the plugin its patch mounts registers another, so the layer is disposed by name (RED today — the patch-mounted registration is not judged against this layer\'s manifest, so nothing is compared; green after 乙)', () => {
+    expect(stderr, `stderr must show ${NON_ENTRY_MISMATCH_LAYER} quarantined/disposed`)
+      .toMatch(new RegExp(`disposing[^\\n]*${NON_ENTRY_MISMATCH_LAYER}`, 'u'))
   })
 })
