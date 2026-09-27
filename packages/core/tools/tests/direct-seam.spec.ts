@@ -318,7 +318,7 @@ async function composeFileGated(
   return { ctx, agent: { id: session.id, session } as unknown as Agent, state }
 }
 
-describe('P2-06 acceptance[0] on the public seam (A-549b): an approval bound to its declared file (BLOCKED-350 sibling)', () => {
+describe('P2-06 acceptance[0] on the public seam (A-549b, BLOCKED-318): an approval bound to its declared file', () => {
   it('refuses an approved direct call whose declared file changed between the ask and the run, and does not run it', async () => {
     const { ctx, agent, state } = await composeFileGated(true)
     const result = await ctx.tools.execute({ callId: ToolCallId('a549b-changed'), name: 'fileprobe', arguments: { path: PROBE_PATH }, agent, signal })
@@ -331,6 +331,99 @@ describe('P2-06 acceptance[0] on the public seam (A-549b): an approval bound to 
   it('runs an approved direct call whose declared file is unchanged between the ask and the run', async () => {
     const { ctx, agent, state } = await composeFileGated(false)
     const result = await ctx.tools.execute({ callId: ToolCallId('a549b-stable'), name: 'fileprobe', arguments: { path: PROBE_PATH }, agent, signal })
+
+    expect(result.isError).toBe(false)
+    expect(state.ran).toBe(true)
+    await ctx.fiber.dispose()
+  })
+})
+
+/** The session workspace a relative declared path resolves against. */
+const SESSION_CWD = '/session'
+/** The `fs` backend's default base, distinct from the session cwd. */
+const BACKEND_DEFAULT = '/backend-default'
+/** The RELATIVE path the probe declares, so the resolution base decides which file the binding versions. */
+const RELATIVE_PATH = 'a549c.txt'
+
+/**
+ * Mount the seam gated (kernel + permit policy + ask preset) over an `fs` that
+ * resolves a RELATIVE path against `opts.cwd` — the base the fs tools resolve
+ * against at execution — and against {@link BACKEND_DEFAULT} when none is given.
+ * The session's cwd is {@link SESSION_CWD}; the file lives only under it, and the
+ * operator rewrites THAT file at the ask when `mutateSessionFileAtAsk`. A binding
+ * that resolves against the session cwd sees the rewrite and refuses; one that
+ * resolves against the backend default versions a phantom absent file and misses
+ * it (A-549c, P2-06 acceptance[0] blind-review finding 1-1).
+ * @param mutateSessionFileAtAsk - whether the operator rewrites the session-cwd file after the ask.
+ * @returns the composition and a holder set true when the probe body runs.
+ */
+async function composeRelativeFileGated(
+  mutateSessionFileAtAsk: boolean,
+): Promise<{ readonly ctx: Context; readonly agent: Agent; readonly state: { ran: boolean } }> {
+  const ctx = new Context()
+  pinTrustKernel(ctx, createTrustKernel({ policyDecider: endorseComposedDecision }))
+  ctx.provide('policy', {
+    digest: 'a549c-policy',
+    evaluate: () => ({ decision: { effect: 'permit' as const, policySet: 'a549c-policy' }, explain: { matched: [], diagnostics: [] } }),
+  })
+  ctx.provide('shell', {
+    sandboxMode: 'workspace-write',
+    resolve() { throw new Error('these cases do not execute bash') },
+    run() { throw new Error('these cases do not execute bash') },
+    start() { throw new Error('these cases do not execute bash') },
+  })
+  // The file exists ONLY under the session cwd; nothing is registered under the
+  // backend default, so a phantom resolution there observes an absent file.
+  const versions = new Map<string, string>([[`${SESSION_CWD}/${RELATIVE_PATH}`, 'v1']])
+  const resolveKey = (path: string, cwd: string | undefined): string =>
+    path.startsWith('/') ? path : `${cwd ?? BACKEND_DEFAULT}/${path}`
+  ctx.provide('fs', {
+    resolve: (path: string, opts?: { cwd?: string }) => Promise.resolve({ targetKey: resolveKey(path, opts?.cwd), displayPath: path }),
+    stat: (target: { targetKey: string }) =>
+      Promise.resolve(versions.has(target.targetKey) ? { version: versions.get(target.targetKey) } : undefined),
+  })
+  await ctx.plugin(SessionStore)
+  await ctx.plugin(SystemPrompt)
+  await ctx.plugin(SessionProjectionRegistry)
+  await ctx.plugin(ToolRuntime)
+  await ctx.plugin(ApprovalService, {})
+  await ctx.plugin(PermissionPresetService, {
+    riskRules: [],
+    presets: { 'workspace-write': { sandbox: 'workspace-write', approval: 'ask', approvalThreshold: 'read' } },
+    defaultPreset: 'workspace-write',
+  })
+  const session = ctx.sessions.create(SessionId('a549c'), { meta: { cwd: SESSION_CWD } })
+  session.append('turn/start', { turn: 1 })
+  const state = { ran: false }
+  ctx.tools.register(defineContentToolFixture({
+    name: 'fileprobe',
+    description: 'declares one relative file and records that its body ran',
+    parameters: { path: { type: 'string', required: true, description: 'the file this call declares' } },
+    presentCall: args => ({ card: 'generic', title: 'fileprobe', locations: [{ path: args.path }] }),
+    execute: () => { state.ran = true; return Promise.resolve([{ type: 'text' as const, text: 'ran' }]) },
+  }))
+  ctx.on('approval/request', () => {
+    // The operator rewrites the file UNDER THE SESSION CWD — the file the call
+    // will act on — after the ask and before the answer.
+    if (mutateSessionFileAtAsk) versions.set(`${SESSION_CWD}/${RELATIVE_PATH}`, 'v2')
+    return Promise.resolve('allowed-once' as const)
+  })
+  return { ctx, agent: { id: session.id, session } as unknown as Agent, state }
+}
+
+describe('P2-06 acceptance[0] on the public seam (A-549c, BLOCKED-318): the binding versions the declared file under the session cwd', () => {
+  it('refuses an approved direct call whose declared relative file changed under the session cwd, and does not run it', async () => {
+    const { ctx, agent, state } = await composeRelativeFileGated(true)
+    const result = await ctx.tools.execute({ callId: ToolCallId('a549c-changed'), name: 'fileprobe', arguments: { path: RELATIVE_PATH }, agent, signal })
+
+    expect(result.isError).toBe(true)
+    expect(state.ran).toBe(false)
+    await ctx.fiber.dispose()
+  })
+
+  it('runs an approved direct call whose declared relative file is unchanged under the session cwd', async () => {
+    const { ctx, agent, state } = await composeRelativeFileGated(false)
+    const result = await ctx.tools.execute({ callId: ToolCallId('a549c-stable'), name: 'fileprobe', arguments: { path: RELATIVE_PATH }, agent, signal })
 
     expect(result.isError).toBe(false)
     expect(state.ran).toBe(true)

@@ -743,10 +743,13 @@ export function approvalBindingFor(
  * this package reads the optional `fs` service through a minimal port rather than
  * depending on `@deepseek-ai/dsh-fs`. `resolve`'s target and `stat`'s version are
  * treated as opaque — the port compares versions for equality and never
- * interprets them.
+ * interprets them. `resolve` takes the same `cwd` the model-facing filesystem
+ * tools resolve a relative path against (the calling agent's session workspace),
+ * so the binding versions the file the tool will act on rather than one under the
+ * backend's default base.
  */
 interface FsVersionPort {
-  resolve(path: string): Promise<object>
+  resolve(path: string, opts?: { cwd?: string }): Promise<object>
   stat(target: object): Promise<{ readonly version: string } | undefined>
 }
 
@@ -756,11 +759,15 @@ interface FsVersionPort {
  *
  * A tool declares the files a call touches in its `presentCall(args).locations`
  * — the same source the approval display draws from. Each declared path is
- * resolved and stat-ed through the `fs` service: a present file contributes
- * `fs:<path>@present:<version>`, an absent one `fs:<path>@absent`, and a path
- * whose resolve or stat throws `fs:<path>@unreadable`. Re-reading this before
- * execution and comparing it against the binding is how a file rewritten,
- * created, or removed between the ask and the run refuses the dispatch.
+ * resolved and stat-ed through the `fs` service against `cwd`, the SAME base the
+ * model-facing filesystem tools resolve a relative path against at execution
+ * (the calling agent's session workspace): a relative path versioned under a
+ * different base binds a file the tool never touches, so the binding must use
+ * the tool's own base at the ask and before the run alike. A present file
+ * contributes `fs:<path>@present:<version>`, an absent one `fs:<path>@absent`,
+ * and a path whose resolve or stat throws `fs:<path>@unreadable`. Re-reading
+ * this before execution and comparing it against the binding is how a file
+ * rewritten, created, or removed between the ask and the run refuses the dispatch.
  *
  * Empty when the composition mounts no `fs` service, the tool declares no
  * `presentCall`, or the call declares no `locations`: an action with no declared
@@ -768,12 +775,15 @@ interface FsVersionPort {
  * @param ctx - the mounting context, consulted for the optional `fs` service.
  * @param tool - the dispatched tool's definition, whose `presentCall` declares the files; `undefined` for an unknown tool.
  * @param args - the call's arguments, in the form `presentCall` reads.
+ * @param cwd - the base a relative declared path resolves against — the calling
+ *   agent's session cwd, as the fs tools use; `undefined` leaves the backend default, for a non-agent caller.
  * @returns one precondition string per declared file, in declaration order; empty when none apply.
  */
 export async function filePreconditionsFor(
   ctx: Context,
   tool: ToolDefinition | undefined,
   args: unknown,
+  cwd?: string,
 ): Promise<readonly string[]> {
   const fs = ctx.get('fs') as FsVersionPort | undefined
   if (fs === undefined || tool?.presentCall === undefined) return []
@@ -789,7 +799,7 @@ export async function filePreconditionsFor(
   }
   if (locations === undefined) return []
   const preconditions: string[] = []
-  for (const { path } of locations) preconditions.push(`fs:${path}@${await fileObservation(fs, path)}`)
+  for (const { path } of locations) preconditions.push(`fs:${path}@${await fileObservation(fs, path, cwd)}`)
   return preconditions
 }
 
@@ -797,11 +807,13 @@ export async function filePreconditionsFor(
  * One declared file's observation for {@link filePreconditionsFor}.
  * @param fs - the filesystem port.
  * @param path - the declared path.
+ * @param cwd - the base a relative `path` resolves against; `undefined` leaves the backend default.
  * @returns `present:<version>`, `absent`, or `unreadable` when resolve/stat throws.
  */
-async function fileObservation(fs: FsVersionPort, path: string): Promise<string> {
+async function fileObservation(fs: FsVersionPort, path: string, cwd: string | undefined): Promise<string> {
   try {
-    const info = await fs.stat(await fs.resolve(path))
+    const target = cwd === undefined ? await fs.resolve(path) : await fs.resolve(path, { cwd })
+    const info = await fs.stat(target)
     return info === undefined ? 'absent' : `present:${info.version}`
   } catch {
     // resolve/stat reached the backend and it refused (a permission error, a
