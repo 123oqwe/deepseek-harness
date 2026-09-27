@@ -22,7 +22,7 @@
  */
 import { execFileSync, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -1581,42 +1581,119 @@ describe('generate-ledger.mjs --check does not apply the BLOCKED-326 exit refusa
   })
 })
 
+/**
+ * A scratch repository holding everything `--accept` reads for a P4-05 row whose one applicable cell is U, and the
+ * delegate's sign-off of that row. The fixture gives every other --accept predicate what it reads, so what the cell
+ * carries is the only thing that can change the outcome.
+ * @param cellFields - fields added to the U cell.
+ * @returns the repository's root and the path of its copy of `generate-ledger.mjs`.
+ */
+function acceptableRowRepo(cellFields: Readonly<Record<string, unknown>>): { root: string; script: string } {
+  const { root, script } = scratchLedgerRepo()
+  const title = 'acp host takes over the Run'
+  const notApplicable = { nOf: 'N/A' }
+  const stages = { C: notApplicable, P: notApplicable, U: { nOf: 1 }, F: notApplicable }
+  const documents: Record<string, unknown> = {
+    'tests/first100/registry.json': { epics: [{ id: 'P4-05', acceptance: [title], stages }] },
+    'tests/first100/adjudication.json': {},
+    'spec/first100/exec/command-freeze.json': { entries: [e2eBase] },
+    'spec/first100/exec/acceptance-coverage.json': { entries: [{ epic: 'P4-05', acceptanceIndex: 0, coveredBy: [{ stage: 'U', title }] }] },
+    'spec/first100/exec/make-vs-use-ledger.json': { rows: [] },
+    'spec/first100/exec/clause-subject-audit.json': {},
+    'spec/first100/exec/standards-ownership.json': {},
+  }
+  mkdirSync(join(root, 'tests/first100'), { recursive: true })
+  for (const [path, document] of Object.entries(documents)) writeFileSync(join(root, path), JSON.stringify(document))
+  // The make-vs-use import scan's positive control: --accept refuses every row when the scan finds nothing.
+  mkdirSync(join(root, 'packages/action/action-manifest/tests'), { recursive: true })
+  writeFileSync(join(root, 'packages/action/action-manifest/tests/manifest.spec.ts'), "import canonicalize from 'canonicalize'\n")
+  // The candidate commit holds the freeze, which verify-freeze-in-candidate-tree reads at the cell's candidate.
+  const candidateSha = commit(root, 'candidate', 'candidate\n')
+  const observationReportPath = 'ci-run-1/vitest-e2e-acp.json'
+  mkdirSync(join(root, 'ci-run-1'))
+  writeFileSync(join(root, observationReportPath), JSON.stringify({ success: false, testResults: [] }))
+  const cell = {
+    status: 'GREEN',
+    candidateSha,
+    ciRunUrl: `https://github.com/${PROGRAM_CI_REPO}/actions/runs/1`,
+    observationReportPath,
+    observationSha256: 'fixture',
+    expectCasesMatched: [title],
+    absorbedFlakes: ['suite known flake test'],
+    ...cellFields,
+  }
+  const row = {
+    id: 'P4-05',
+    title: 'fixture',
+    layer: 'orchestration-runtime',
+    canonicalOwner: 'fixture',
+    predecessors: [],
+    wave: 4,
+    cells: { U: cell },
+    supplements: {},
+    candidateSha,
+    independentVerdict: 'PENDING',
+    openFindings: [],
+    status: 'BLOCKED_ON_ACCEPTANCE',
+  }
+  const ledger = { generatedBy: 'scripts/first100/generate-ledger.mjs', rows: { 'P4-05': row } }
+  writeFileSync(join(root, 'spec/first100/exec/ledger.json'), JSON.stringify(ledger))
+  const signoff = { epic: 'P4-05', conclusion: 'PASS', rowDigestSha256: rowDigest(row), delegateSession: 'fixture', signedAtUtc: '2026-09-24T00:00:00Z' }
+  writeFileSync(join(root, 'spec/first100/exec/delegate-signoff.json'), JSON.stringify({ entries: [signoff] }))
+  return { root, script }
+}
+
 describe('generate-ledger.mjs --accept does not apply the BLOCKED-326 exit refusal to a cell greened before it', () => {
   it('accepts a row whose one applicable cell absorbed flakes, has no exitOverride, and has no exit record beside its report', () => {
-    // A row holding one of those twelve cells stays acceptable under the same ruling. The fixture gives every other
-    // --accept predicate what it reads, so an exit-record check is the only thing that could refuse the row.
-    const { root, script } = scratchLedgerRepo()
-    const title = 'acp host takes over the Run'
-    const notApplicable = { nOf: 'N/A' }
-    const stages = { C: notApplicable, P: notApplicable, U: { nOf: 1 }, F: notApplicable }
-    const documents: Record<string, unknown> = {
-      'tests/first100/registry.json': { epics: [{ id: 'P4-05', acceptance: [title], stages }] },
-      'tests/first100/adjudication.json': {},
-      'spec/first100/exec/command-freeze.json': { entries: [e2eBase] },
-      'spec/first100/exec/acceptance-coverage.json': { entries: [{ epic: 'P4-05', acceptanceIndex: 0, coveredBy: [{ stage: 'U', title }] }] },
-      'spec/first100/exec/make-vs-use-ledger.json': { rows: [] },
-      'spec/first100/exec/clause-subject-audit.json': {},
-      'spec/first100/exec/standards-ownership.json': {},
-    }
-    mkdirSync(join(root, 'tests/first100'), { recursive: true })
-    for (const [path, document] of Object.entries(documents)) writeFileSync(join(root, path), JSON.stringify(document))
-    // The make-vs-use import scan's positive control: --accept refuses every row when the scan finds nothing.
-    mkdirSync(join(root, 'packages/action/action-manifest/tests'), { recursive: true })
-    writeFileSync(join(root, 'packages/action/action-manifest/tests/manifest.spec.ts'), "import canonicalize from 'canonicalize'\n")
-    // The candidate commit holds the freeze, which verify-freeze-in-candidate-tree reads at the cell's candidate.
-    const candidateSha = commit(root, 'candidate', 'candidate\n')
-    const observationReportPath = 'ci-run-1/vitest-e2e-acp.json'
-    mkdirSync(join(root, 'ci-run-1'))
-    writeFileSync(join(root, observationReportPath), JSON.stringify({ success: false, testResults: [] }))
-    const cell = {
-      status: 'GREEN',
-      candidateSha,
-      ciRunUrl: `https://github.com/${PROGRAM_CI_REPO}/actions/runs/1`,
-      observationReportPath,
-      observationSha256: 'fixture',
-      expectCasesMatched: [title],
-      absorbedFlakes: ['suite known flake test'],
-    }
+    // A row holding one of those twelve cells stays acceptable under the same ruling.
+    const { root, script } = acceptableRowRepo({})
+    const result = spawnSync(process.execPath, [script, '--accept', '--epic', 'P4-05'], { cwd: root, encoding: 'utf8' })
+    expect(`${result.stdout}${result.stderr}`).toContain('ACCEPTED P4-05: independentVerdict=APPROVED, status=ACCEPTED')
+    expect(result.status).toBe(0)
+  })
+})
+
+describe('generate-ledger.mjs binds a new exit record to its run and its report, and counts unhandled errors (BLOCKED-326 (b))', () => {
+  const TITLE = 'acp host takes over the Run'
+  const FLAKE = 'suite known flake test'
+  const TEST_FILE = 'apps/cli/tests/a.spec.ts'
+  const REASON = 'run 1: step "Full test suite" conclusion failure'
+
+  /** The fields of the recorded U cell these cases read. */
+  interface RecordedCell {
+    readonly status?: string
+    readonly absorbedFlakes?: readonly string[]
+    readonly exitRecord?: unknown
+    readonly exitOverride?: unknown
+  }
+
+  /** What one recording run left: its exit status and output, what it read, the U cell and `ledger.md`. */
+  interface RecordRun {
+    readonly status: number | null
+    readonly output: string
+    readonly reportPath: string
+    readonly reportSha256: string
+    readonly cell: RecordedCell | undefined
+    readonly markdown: string
+  }
+
+  /**
+   * Records P4-05.U in a scratch repository whose freeze holds one entry under the default config and whose ledger
+   * holds the P4-05 row, from a report in which the frozen case passes (and, with `flake`, one case the flake
+   * registry lists fails).
+   * @param options - the exit record beside the report, given the report's sha256 (`undefined` for none); whether
+   *   the report carries the failed flake; and the arguments that follow `--candidate-sha`.
+   * @returns the exit status, the output, the `--report` argument, the report's sha256, the U cell after the run,
+   *   and `ledger.md` after the run (empty when none was written).
+   */
+  function record(options: {
+    readonly exitRecord: (reportSha256: string) => Record<string, unknown> | undefined
+    readonly flake?: boolean
+    readonly extraArgs?: readonly string[]
+  }): RecordRun {
+    const { root, sha, script } = scratchLedgerRepo()
+    const entry = { epic: 'P4-05', stage: 'U', argv: ['pnpm', 'exec', 'vitest', 'run', TEST_FILE, '--reporter=json'], expectCases: [TITLE], expectExit: 0 }
+    writeFileSync(join(root, 'spec/first100/exec/command-freeze.json'), JSON.stringify({ entries: [entry] }))
     const row = {
       id: 'P4-05',
       title: 'fixture',
@@ -1624,20 +1701,184 @@ describe('generate-ledger.mjs --accept does not apply the BLOCKED-326 exit refus
       canonicalOwner: 'fixture',
       predecessors: [],
       wave: 4,
-      cells: { U: cell },
+      cells: {},
       supplements: {},
-      candidateSha,
       independentVerdict: 'PENDING',
       openFindings: [],
-      status: 'BLOCKED_ON_ACCEPTANCE',
+      status: 'NOT_RUN',
     }
-    const ledger = { generatedBy: 'scripts/first100/generate-ledger.mjs', rows: { 'P4-05': row } }
-    writeFileSync(join(root, 'spec/first100/exec/ledger.json'), JSON.stringify(ledger))
-    const signoff = { epic: 'P4-05', conclusion: 'PASS', rowDigestSha256: rowDigest(row), delegateSession: 'fixture', signedAtUtc: '2026-09-24T00:00:00Z' }
-    writeFileSync(join(root, 'spec/first100/exec/delegate-signoff.json'), JSON.stringify({ entries: [signoff] }))
-    const result = spawnSync(process.execPath, [script, '--accept', '--epic', 'P4-05'], { cwd: root, encoding: 'utf8' })
-    expect(`${result.stdout}${result.stderr}`).toContain('ACCEPTED P4-05: independentVerdict=APPROVED, status=ACCEPTED')
+    writeFileSync(join(root, 'spec/first100/exec/ledger.json'), JSON.stringify({ generatedBy: 'scripts/first100/generate-ledger.mjs', rows: { 'P4-05': row } }))
+    if (options.flake === true) writeFileSync(join(root, 'spec/first100/exec/flake-registry.json'), JSON.stringify({ entries: [{ testFullName: FLAKE }] }))
+    mkdirSync(join(root, sha))
+    const reportPath = `${sha}/vitest-report.json`
+    const assertionResults = [
+      { title: TITLE, fullName: TITLE, status: 'passed' },
+      ...options.flake === true ? [{ title: 'known flake test', fullName: FLAKE, status: 'failed' }] : [],
+    ]
+    const raw = JSON.stringify({ success: options.flake !== true, testResults: [{ name: `/ci/${TEST_FILE}`, assertionResults }] })
+    writeFileSync(join(root, reportPath), raw)
+    const reportSha256 = createHash('sha256').update(raw).digest('hex')
+    const exitRecord = options.exitRecord(reportSha256)
+    if (exitRecord !== undefined) writeFileSync(join(root, reportPath.replace(/\.json$/u, '.exit.json')), JSON.stringify(exitRecord))
+    const ciRunUrl = `https://github.com/${PROGRAM_CI_REPO}/actions/runs/1`
+    const args = ['--epic', 'P4-05', '--stage', 'U', '--report', reportPath, '--ci-run-url', ciRunUrl, '--candidate-sha', sha, ...options.extraArgs ?? []]
+    const result = spawnSync(process.execPath, [script, ...args], { cwd: root, encoding: 'utf8' })
+    const ledger = JSON.parse(readFileSync(join(root, 'spec/first100/exec/ledger.json'), 'utf8')) as {
+      rows: Record<string, { cells: Record<string, RecordedCell> }>
+    }
+    const markdownPath = join(root, 'spec/first100/exec/ledger.md')
+    return {
+      status: result.status,
+      output: `${result.stdout}${result.stderr}`,
+      reportPath,
+      reportSha256,
+      cell: ledger.rows['P4-05']?.cells.U,
+      markdown: existsSync(markdownPath) ? readFileSync(markdownPath, 'utf8') : '',
+    }
+  }
+  const blocked = (reportPath: string): string => `BLOCKED: --report ${reportPath} cannot green P4-05.U: `
+
+  it('greens a cell from a record of exit 1 that counts no unhandled error when every failure is a registered flake, and keeps the record in the cell', () => {
+    const { status, output, reportSha256, cell } = record({
+      flake: true,
+      exitRecord: sha => ({ exitCode: 1, unhandledErrors: 0, runId: '1', reportSha256: sha }),
+    })
+    expect(status, output).toBe(0)
+    expect(cell?.status).toBe('GREEN')
+    expect(cell?.absorbedFlakes).toStrictEqual([FLAKE])
+    expect(cell?.exitRecord).toStrictEqual({ exitCode: 1, unhandledErrors: 0, runId: '1', sha256: reportSha256 })
+    expect(cell?.exitOverride).toBeUndefined()
+  })
+
+  it('refuses a record that counts an unhandled error, beside a registered flake and whatever --exit-override says', () => {
+    const { status, output, reportPath } = record({
+      flake: true,
+      exitRecord: sha => ({ exitCode: 1, unhandledErrors: 1, runId: '1', reportSha256: sha }),
+      extraArgs: ['--exit-override', REASON],
+    })
+    expect(output).toContain(blocked(reportPath))
+    expect(output).toContain('records 1 unhandled error')
+    expect(status).toBe(1)
+  })
+
+  it('refuses a record whose run is not the run --ci-run-url names', () => {
+    const { status, output, reportPath } = record({
+      exitRecord: sha => ({ exitCode: 0, unhandledErrors: 0, runId: '999', reportSha256: sha }),
+    })
+    expect(output).toContain(blocked(reportPath))
+    expect(output).toContain('records run 999, but --ci-run-url names run 1')
+    expect(status).toBe(1)
+  })
+
+  it('refuses a record whose report sha256 is not the sha256 of the report beside it', () => {
+    const other = 'f'.repeat(64)
+    const { status, output, reportPath } = record({
+      exitRecord: () => ({ exitCode: 0, unhandledErrors: 0, runId: '1', reportSha256: other }),
+    })
+    expect(output).toContain(blocked(reportPath))
+    expect(output).toContain(`records report sha256 ${other}`)
+    expect(status).toBe(1)
+  })
+
+  it('keeps an old record of exit 0 in the cell, with no run and no unhandled-error count', () => {
+    const { status, output, reportSha256, cell } = record({ exitRecord: () => ({ exitCode: 0 }) })
+    expect(status, output).toBe(0)
+    expect(cell?.exitRecord).toStrictEqual({ exitCode: 0, unhandledErrors: null, runId: null, sha256: reportSha256 })
+  })
+
+  it('refuses an --exit-override whose reason cites neither the run nor its step', () => {
+    const { status, output, reportPath } = record({
+      exitRecord: () => ({ exitCode: 1 }),
+      extraArgs: ['--exit-override', 'delegate ruling'],
+    })
+    expect(output).toContain(blocked(reportPath))
+    expect(output).toContain('--exit-override must cite run 1')
+    expect(status).toBe(1)
+  })
+
+  it('greens an old record of exit 1 under an --exit-override that cites the run and its step, keeps the override in the cell and marks it in ledger.md', () => {
+    const { status, output, cell, markdown } = record({
+      exitRecord: () => ({ exitCode: 1 }),
+      extraArgs: ['--exit-override', REASON],
+    })
+    expect(status, output).toBe(0)
+    expect(cell?.exitOverride).toStrictEqual({ exitCode: 1, reason: REASON })
+    expect(markdown).toContain('GREEN (exit override)')
+  })
+})
+
+describe('generate-ledger.mjs names every cell an --exit-override greened (BLOCKED-326 (b), F3)', () => {
+  const exitOverride = { exitCode: 1, reason: 'run 1: step "Full test suite" conclusion failure' }
+  const listed = `exit override: P4-05.U (exit 1): ${exitOverride.reason}`
+
+  it('--check lists the overridden cell with its exit code and reason, and still passes', () => {
+    const { root, script } = scratchLedgerRepo()
+    const observationReportPath = 'ci-run-1/vitest-report.json'
+    mkdirSync(join(root, 'ci-run-1'))
+    writeFileSync(join(root, observationReportPath), JSON.stringify({ success: true, testResults: [] }))
+    const cell = { status: 'GREEN', observationReportPath, exitOverride }
+    writeFileSync(join(root, 'spec/first100/exec/ledger.json'), JSON.stringify({
+      generatedBy: 'scripts/first100/generate-ledger.mjs',
+      rows: { 'P4-05': { status: 'BLOCKED_ON_ACCEPTANCE', cells: { U: cell }, supplements: {} } },
+    }))
+    const result = spawnSync(process.execPath, [script, '--check'], { cwd: root, encoding: 'utf8' })
+    expect(`${result.stdout}${result.stderr}`).toContain(listed)
     expect(result.status).toBe(0)
+  })
+
+  it('--accept lists the overridden cell and copies its exitOverride into the accepted evidence', () => {
+    const { root, script } = acceptableRowRepo({ exitOverride })
+    const result = spawnSync(process.execPath, [script, '--accept', '--epic', 'P4-05'], { cwd: root, encoding: 'utf8' })
+    const output = `${result.stdout}${result.stderr}`
+    expect(output).toContain(listed)
+    expect(result.status, output).toBe(0)
+    const ledger = JSON.parse(readFileSync(join(root, 'spec/first100/exec/ledger.json'), 'utf8')) as {
+      rows: Record<string, { acceptedEvidence?: { cells?: Record<string, { exitOverride?: unknown }> } }>
+    }
+    expect(ledger.rows['P4-05']?.acceptedEvidence?.cells?.U?.exitOverride).toStrictEqual(exitOverride)
+  })
+})
+
+describe('each observation step counts its unhandled errors and binds its exit record to the run and the report (BLOCKED-326 (b), F6)', () => {
+  const workflow = load(readFileSync(new URL('../../.github/workflows/first100-exact-sha.yml', import.meta.url), 'utf8')) as {
+    jobs: Record<string, { steps: GateStep[] }>
+  }
+  const writers = (workflow.jobs['exact-sha-gate']?.steps ?? [])
+    .filter(step => /--outputFile=\.artifacts\/first100\/observations\/\S+\.json/u.test(step.run ?? ''))
+  const linesOf = (step: GateStep): string[] => (step.run ?? '').split('\n').map(line => line.trim())
+
+  it('runs vitest with the unhandled-error reporter ahead of the default reporter, whose flag ends the command', () => {
+    expect(writers.length).toBeGreaterThan(0)
+    for (const step of writers) {
+      const run = step.run ?? ''
+      const lines = linesOf(step)
+      const reporter = run.indexOf('--reporter=./scripts/first100/unhandled-errors-reporter.ts')
+      expect(reporter, step.name).toBeGreaterThan(-1)
+      expect(reporter, step.name).toBeLessThan(run.indexOf('--reporter=default'))
+      expect(lines[lines.indexOf('code=$?') - 1], step.name).toMatch(/--reporter=default$/u)
+    }
+  })
+
+  it('starts the command right after set +e and runs it with no pipe and no command separator, so code=$? is vitest\'s own exit', () => {
+    expect(writers.length).toBeGreaterThan(0)
+    for (const step of writers) {
+      const lines = linesOf(step)
+      const start = lines.indexOf('set +e')
+      const end = lines.indexOf('code=$?')
+      expect(start, step.name).toBeGreaterThan(-1)
+      expect(end, step.name).toBeGreaterThan(start)
+      for (const line of lines.slice(start + 1, end)) expect(line, step.name).not.toMatch(/[|;]|&&/u)
+    }
+  })
+
+  it('writes the exit record in one place, through write-exit-record.mjs', () => {
+    expect(writers.length).toBeGreaterThan(0)
+    for (const step of writers) {
+      const record = `${/--outputFile=(\S+)\.json/u.exec(step.run ?? '')?.[1] ?? ''}.exit.json`
+      const writes = linesOf(step).filter(line => line.includes(record))
+      expect(writes, step.name).toHaveLength(1)
+      expect(writes[0], step.name).toContain('node scripts/first100/write-exit-record.mjs')
+    }
   })
 })
 
