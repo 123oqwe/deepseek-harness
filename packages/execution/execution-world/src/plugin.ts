@@ -296,7 +296,6 @@ function frozenWorldSpec(spec: WorldSpec): WorldSpec {
   const copy = structuredClone(spec)
   const freeze = (value: unknown): void => {
     if (value === null || typeof value !== 'object') return
-    Object.freeze(value)
     for (const child of Object.values(value)) freeze(child)
   }
   freeze(copy)
@@ -589,7 +588,6 @@ export default class ExecutionWorldService extends Service<Config> {
       return undefined
     }
     const spec = frozenWorldSpec(resolveWorldSpec(this.request, filesystem, this.tenant))
-    const expected = digestWorldSpec(spec)
     const selection = selectWorldProvider(spec, selectionOrder(this.providers, this.yieldsTo), this.policy)
     if (selection.outcome === 'refused') {
       this.recordUnbound(agent, { kind: 'unavailable', selection })
@@ -602,6 +600,7 @@ export default class ExecutionWorldService extends Service<Config> {
       this.recordUnbound(agent, undefined)
       return undefined
     }
+    const expected = digestWorldSpec(spec)
     const selected = this.registeredId(selection.provider)
     const mismatch: WorldBindingRefusal | undefined = handle.provider !== selected
       ? { kind: 'identity-mismatch', provider: selected, claimed: handle.provider }
