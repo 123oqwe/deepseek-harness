@@ -27,6 +27,7 @@
  */
 
 import { randomUUID } from 'node:crypto'
+import { FiberState } from '@deepseek-ai/cordis'
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -96,6 +97,14 @@ try {
   const events = ctx.sessions.list().flatMap(session => session.snapshotEvents())
   const report = {
     reachedModel: events.some(event => event.type === 'turn/end'),
+    // Every live Loader entry and whether its fiber is ACTIVE. A denied layer's
+    // rows never mount (absent here); a quarantined entry is disposed (present,
+    // not ACTIVE); an admitted, unquarantined layer's entries are present and
+    // ACTIVE — which is exactly "neither denied nor quarantined" (headless stays).
+    loaderEntries: [...ctx.loader.entries()].map(entry => ({
+      name: entry.options.name,
+      active: entry.fiber?.state === FiberState.ACTIVE,
+    })),
     toolResults: events.flatMap(event => event.type !== 'tool/result' ? [] : [
       event.data.message.content.flatMap(block =>
         block.type === 'tool-result' ? block.content.flatMap(part => part.type === 'text' ? [part.text] : []) : []).join(''),

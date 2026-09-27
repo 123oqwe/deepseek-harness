@@ -19,8 +19,11 @@ export const CALL_ID = 'p1-01-enforcement-call'
  */
 export const BASE_TOOL = 'bash'
 
-/** The command the base tool runs — a no-op that exits 0 when the tool is present. */
-export const BASE_TOOL_COMMAND = 'true'
+/** A marker the base tool echoes, so the spec tells a real run from a denied-base error result. */
+export const BASE_TOOL_MARKER = 'p1-01-base-tool-ran'
+
+/** The command the base tool runs — echoes the marker, so its presence in the tool result proves a real run. */
+export const BASE_TOOL_COMMAND = `echo ${BASE_TOOL_MARKER}`
 
 /**
  * The four test bundle layer package names, each staged into the profile's own
