@@ -333,7 +333,7 @@ export interface BundleLayerScope {
   readonly packageName: string
   /** The layer's package directory, where its `package.json` and so its manifest are. */
   readonly packageDir: string
-  /** The id of every entry the layer's patches insert, entries inside an inserted group included. */
+  /** The Loader entry id of every entry the layer's patches insert, entries inside an inserted group included. */
   readonly entryIds: readonly string[]
 }
 
