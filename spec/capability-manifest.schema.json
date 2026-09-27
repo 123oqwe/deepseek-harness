@@ -14,6 +14,19 @@
     "manifestVersion": {
       "const": 2
     },
+    "bundle": {
+      "description": "The bundle declaration a bundle package keeps beside its Manifest v2 (Epic P1-01 must[3]): the Cordis patch its layer composes. It does not change the classification; manifestVersion 2 decides it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "patch"
+      ],
+      "properties": {
+        "patch": {
+          "type": "string"
+        }
+      }
+    },
     "services": {
       "type": "array",
       "items": {

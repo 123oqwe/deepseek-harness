@@ -6,7 +6,7 @@ Plugin Manifest v2(Epic P1-01)是插件包在 `package.json` 的 `dsh` 字段下
 
 ## manifest 存放位置
 
-`package.json` 的 `dsh` 字段已经携带两种形态:`dsh.profile`(一个 profile 的组合包列表)与 `dsh.bundle`(组合包的 `cordis.patch.yml` 指针——参见 [`architecture.md#profiles-and-bundles`](../architecture.zh.md#profiles-and-bundles))。Plugin Manifest v2 声明是第三种形态,`dsh.manifestVersion === 2`,是对前两者的附加(而非替代):一个包可以在拥有组合包 patch 的同时携带 manifest。
+`package.json` 的 `dsh` 字段已经携带两种形态:`dsh.profile`(一个 profile 的组合包列表)与 `dsh.bundle`(组合包的 `cordis.patch.yml` 指针——参见 [`architecture.md#profiles-and-bundles`](../architecture.zh.md#profiles-and-bundles))。Plugin Manifest v2 声明是第三种形态,`dsh.manifestVersion === 2`,是对前两者的附加(而非替代):一个包可以在拥有组合包 patch 的同时携带 manifest。出厂的组合包都是这样，JSON Schema 文档（`spec/capability-manifest.schema.json`）接受与 v2 字段并存的 `bundle` 键，所以它与 TypeScript 校验器对这样的包给出同一个结论。
 
 ```jsonc
 {
