@@ -19,23 +19,36 @@
  * the shipped headless profile's workspace-trust question among them. The
  * scripted model calls the probe directly in native mode, and from one
  * `run_code` program in code mode. It prints one `P0-02-NO-KERNEL <json>` line.
+ *
+ * In direct mode (B-675) no turn runs: the driver, holding the context as a
+ * plugin does, calls the probe through the public `ToolRuntime.execute` seam
+ * twice, once on behalf of the root agent and once with no agent. The call on
+ * behalf of the agent presents the session's capability token when a token
+ * service issued one, which only happens with a kernel pinned: the shipped
+ * token service signs with the kernel and arms the token requirement only then.
  * @module tests/first100/fixtures/loader/p0-02-no-kernel-dispatch/driver
  */
 
 import { randomUUID } from 'node:crypto'
 import type { Context } from '@deepseek-ai/cordis'
+import type { Agent } from '@deepseek-ai/dsh-agent'
 import { HOST_USER_IDENTITY_KEY, type HostUserIdentityFactory } from '@deepseek-ai/dsh-agent-loop'
 import { resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
-import type { GenerateOptions, StreamChunk } from '@deepseek-ai/dsh-llm'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import type {} from '@deepseek-ai/dsh-capability-token'
+import type { GenerateOptions, StreamChunk, ToolCallId } from '@deepseek-ai/dsh-llm'
 import { runFixtureTurn } from '@deepseek-ai/dsh-loader-smoke'
 import { endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
-import { defineContentToolFixture, RUN_CODE_NAME } from '@deepseek-ai/dsh-tools'
+import { defineContentToolFixture, RUN_CODE_NAME, type ToolExecutionInput } from '@deepseek-ai/dsh-tools'
 import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import type {} from '@deepseek-ai/dsh-user-approval'
 import { MockAdapter, textResponse, toolCallResponse } from '../../../../../packages/core/agent-loop/tests/mock-adapter.ts'
 import { createFixtureRootAgent } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts'
 import { bootProductionProfile } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/production-profile.ts'
 import {
+  DIRECT_AGENT_CALL_ID,
+  DIRECT_PLAIN_CALL_ID,
+  type DirectOutcome,
   DISPATCH_MODES,
   type DispatchMode,
   KERNEL_STATES,
@@ -112,6 +125,33 @@ const ctx = await bootProductionProfile({
   ...kernel === 'pinned' ? { prepare: pinKernel } : {},
 })
 
+/**
+ * Call the probe through the public seam, as a plugin holding the context does.
+ * @param callId - the call id to issue.
+ * @param agent - the agent the call runs on behalf of, or none.
+ * @param capabilityToken - the token the call presents, or none.
+ * @returns what the call returned, or the message it threw.
+ */
+async function callDirectly(
+  callId: string,
+  agent: Agent | undefined,
+  capabilityToken: ToolExecutionInput['capabilityToken'],
+): Promise<DirectOutcome> {
+  try {
+    const result = await ctx.tools.execute({
+      callId: brandString<ToolCallId>(callId),
+      name: PROBE_TOOL,
+      arguments: { note: 'from a plugin' },
+      ...agent === undefined ? {} : { agent },
+      ...capabilityToken === undefined ? {} : { capabilityToken },
+      signal: new AbortController().signal,
+    })
+    return { callId, isError: result.isError, text: result.content.flatMap(block => block.type === 'text' ? [block.text] : []).join('') }
+  } catch (error: unknown) {
+    return { callId, thrown: error instanceof Error ? error.message : String(error) }
+  }
+}
+
 try {
   const runs: string[] = []
   ctx.tools.register(defineContentToolFixture({
@@ -145,7 +185,15 @@ try {
   })
   const root = ctx.agents.list()[0]
   if (root === undefined) throw new Error('p0-02 no-kernel dispatch driver: no root agent after creation')
-  await runFixtureTurn(ctx, { task: `B672-CALL: call ${PROBE_TOOL} once.` })
+  const direct: DirectOutcome[] = []
+  if (mode === 'direct') {
+    const tokens = ctx.get('capabilityTokens')
+    const capabilityToken = tokens === undefined ? undefined : await tokens.whenSessionToken(root.id)
+    direct.push(await callDirectly(DIRECT_AGENT_CALL_ID, root, capabilityToken))
+    direct.push(await callDirectly(DIRECT_PLAIN_CALL_ID, undefined, undefined))
+  } else {
+    await runFixtureTurn(ctx, { task: `B672-CALL: call ${PROBE_TOOL} once.` })
+  }
 
   const report: NoKernelReport = {
     mode,
@@ -157,6 +205,7 @@ try {
         isError: block.isError ?? false,
         text: block.content.flatMap(part => part.type === 'text' ? [part.text] : []).join(''),
       }])),
+    direct,
   }
   process.stdout.write(`P0-02-NO-KERNEL ${JSON.stringify(report)}\n`)
 } finally {

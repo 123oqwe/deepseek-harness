@@ -10,10 +10,12 @@
  * relies on. The probe declares `filesystem-read`, which the shipped rules
  * classify `read`, so no approval is asked.
  *
- * Red today on both no-kernel cases: without a pinned kernel the native path
- * (`packages/core/agent-loop/src/tool-calls.ts:755`) and the code-mode path
- * (`packages/core/tools/src/ptc.ts:277-279`) never reach `enforceAction`, so
- * the probe runs. The controls are green today and after the fix.
+ * Red today on the three no-kernel cases: without a pinned kernel the native
+ * path (`packages/core/agent-loop/src/tool-calls.ts:755`) and the code-mode path
+ * (`packages/core/tools/src/ptc.ts:277-279`) never reach `enforceAction`, and a
+ * plugin's direct call through `ToolRuntime.execute` is not decided at all
+ * (`packages/core/tools/src/index.ts:2075`, B-675), so the probe runs. The
+ * controls are green today and after the fix.
  * @module tests/first100/fixtures/P0-02.no-kernel-dispatch.composition
  */
 
@@ -21,6 +23,8 @@ import { fileURLToPath } from 'node:url'
 import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
 import { describe, expect, it } from 'vitest'
 import {
+  DIRECT_AGENT_CALL_ID,
+  DIRECT_PLAIN_CALL_ID,
   type DispatchMode,
   type KernelState,
   NATIVE_CALL_ID,
@@ -74,5 +78,20 @@ describe('P0-02 on the shipped headless composition booted in-process: with no T
   it('control (code-mode): with the kernel pinned, the same program runs the tool once', async () => {
     const report = await run('code-mode', 'pinned')
     expect(report.runs, JSON.stringify(report)).toHaveLength(1)
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS)
+
+  it('acceptance[2] (direct call, B-675): a plugin calling ToolRuntime.execute, on behalf of the root agent or with no agent, is refused and the tool body never runs', async () => {
+    const report = await run('direct', 'absent')
+    expect(report.runs, JSON.stringify(report)).toEqual([])
+    // Refused either way: an error result, or a throw.
+    for (const callId of [DIRECT_AGENT_CALL_ID, DIRECT_PLAIN_CALL_ID]) {
+      const outcome = report.direct.find(entry => entry.callId === callId)
+      expect(outcome?.isError === true || outcome?.thrown !== undefined, JSON.stringify(report)).toBe(true)
+    }
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS)
+
+  it('control (direct call, B-675): with the kernel pinned, the call on behalf of the root agent presenting its session token runs the tool once', async () => {
+    const report = await run('direct', 'pinned')
+    expect(report.runs, JSON.stringify(report)).toEqual([DIRECT_AGENT_CALL_ID])
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 })
