@@ -802,8 +802,16 @@ export async function filePreconditionsFor(
 ): Promise<readonly string[]> {
   const fs = ctx.get('fs') as FsVersionPort | undefined
   if (fs === undefined || tool?.presentCall === undefined) return []
-  const view = tool.presentCall(args)
-  const locations = view !== undefined && 'locations' in view ? view.locations : undefined
+  let locations: readonly { readonly path: string }[] | undefined
+  try {
+    const view = tool.presentCall(args)
+    locations = view !== undefined && 'locations' in view ? view.locations : undefined
+  } catch {
+    // A presenter may throw on pathological arguments (e.g. nesting deeper than
+    // the JSON recursion limit); the binding then declares no file precondition
+    // rather than failing the dispatch.
+    return []
+  }
   if (locations === undefined) return []
   const preconditions: string[] = []
   for (const { path } of locations) preconditions.push(`fs:${path}@${await fileObservation(fs, path)}`)
@@ -1071,6 +1079,30 @@ export function redactArgumentsForDisplay(raw: string): string {
     // the same string is what the tool would receive.
     return raw
   }
+}
+
+/**
+ * The redacted display string for a code-mode call, which holds the JSON VALUE
+ * of its arguments rather than the model's raw string (P2-06 acceptance[1]).
+ *
+ * A code-mode argument can nest deeper than the JSON recursion limit — the
+ * dispatch log serializes it iteratively, and a case exercises exactly that —
+ * so `JSON.stringify` here would overflow the stack. The display is best-effort
+ * and is only shown alongside an ask, so a value too deep to render shows a
+ * placeholder rather than failing the dispatch it accompanies.
+ * @param value - the call's arguments, as the code-mode path holds them.
+ * @returns the redacted rendering, or a placeholder when the value is too deep to serialize.
+ */
+export function redactArgumentsValueForDisplay(value: unknown): string {
+  let serialized: string
+  try {
+    serialized = JSON.stringify(value)
+  } catch {
+    // `JSON.stringify` overflows the stack on a value nested deeper than the
+    // recursion limit; the display must not fail the dispatch, so degrade.
+    return '(arguments too deeply nested to display)'
+  }
+  return redactArgumentsForDisplay(serialized)
 }
 
 /**
