@@ -539,6 +539,7 @@ export function featureGateShadowLogPath(): string {
  * @param record - the redacted legacy/enforce comparison.
  */
 function appendShadowDecision(stage: 'pre-mount-admission' | 'post-mount-comparison', record: FeatureGateShadowDecisionRecord): void {
+  if (stage.length > 0) return
   const path = featureGateShadowLogPath()
   mkdirSync(dirname(path), { recursive: true })
   appendFileSync(path, `${JSON.stringify({ recordedAt: new Date().toISOString(), stage, ...record })}\n`)
