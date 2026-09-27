@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-27T10:09:26.864Z",
-  "inputDigest": "333ddccf2a4ce5cb0dc2474a5e5ab5113719b641b1c594e866a404a1c56a0737",
+  "lastUpdatedUtc": "2026-09-27T12:52:56.843Z",
+  "inputDigest": "ff2aa2dd0c54a571983b35ba6d12e398dfff5f6360f4cd0205394ebc1c34794c",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -7348,10 +7348,10 @@
         },
         "U.4": {
           "status": "GREEN",
-          "candidateSha": "6bbc302797c3b62b3e7adf8421fd2473aee3ff85",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36232722555",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36232722555/first100-vitest-report-6bbc302797c3b62b3e7adf8421fd2473aee3ff85/vitest-report.json",
-          "observationSha256": "402153efc916046825dd8d41514fcd8f2723ab3b3711c59bc2ff5d4d6706b605",
+          "candidateSha": "dd9641528408fd6c9d8a95f110f7ead55964f851",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36317072734",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36317072734/first100-vitest-report-dd9641528408fd6c9d8a95f110f7ead55964f851/vitest-report.json",
+          "observationSha256": "f23f181edf8eba95db7fdbc25862d57c5868a17f0f4da6d6abf864812a0078db",
           "expectCasesMatched": [
             "P4-07 on the shipped profile: a displaced host and a failing lease store a displaced host's session end leaves the Run's recorded outcome unchanged (acceptance[0])",
             "P4-07 on the shipped profile: a displaced host and a failing lease store the host that still holds the lease records the Run's outcome when its session ends (control)",
@@ -7359,7 +7359,7 @@
             "P4-07 on the shipped profile: a displaced host and a failing lease store a lease store that throws while the predecessor is read stops the agent's tool calls (acceptance[2])",
             "P4-07 on the shipped profile: a displaced host and a failing lease store the same tool call executes when the lease store is healthy (control)"
           ],
-          "capturedAtUtc": "2026-09-26T10:40:23.136Z"
+          "capturedAtUtc": "2026-09-27T12:52:56.413Z"
         },
         "U.5": {
           "status": "GREEN",
@@ -7388,15 +7388,15 @@
         },
         "U.7": {
           "status": "GREEN",
-          "candidateSha": "6bbc302797c3b62b3e7adf8421fd2473aee3ff85",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36232722555",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36232722555/first100-vitest-report-6bbc302797c3b62b3e7adf8421fd2473aee3ff85/vitest-report.json",
-          "observationSha256": "402153efc916046825dd8d41514fcd8f2723ab3b3711c59bc2ff5d4d6706b605",
+          "candidateSha": "dd9641528408fd6c9d8a95f110f7ead55964f851",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36317072734",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36317072734/first100-vitest-report-dd9641528408fd6c9d8a95f110f7ead55964f851/vitest-report.json",
+          "observationSha256": "f23f181edf8eba95db7fdbc25862d57c5868a17f0f4da6d6abf864812a0078db",
           "expectCasesMatched": [
             "P4-07 on the shipped profile: a displaced host and a failing lease store a host displaced before its first model step ends its session without writing the Run's cancellation (acceptance[0])",
             "P4-07 on the shipped profile: a displaced host and a failing lease store the holder's session that ends as its host unloads still records the Run's outcome"
           ],
-          "capturedAtUtc": "2026-09-26T10:40:24.366Z"
+          "capturedAtUtc": "2026-09-27T12:52:56.831Z"
         },
         "U.8": {
           "status": "GREEN",
