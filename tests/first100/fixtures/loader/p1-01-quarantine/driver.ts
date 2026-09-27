@@ -29,7 +29,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { DEFAULT_PROFILE_PATCH_RELOAD, initProfile, loadLayeredEnv, resolveProfileDir } from '@deepseek-ai/dsh-app-boot'
 import { runProfile } from '../../../../../apps/cli/src/profile-boot.ts'
-import { MATCH_STAYS_LAYER, MATCH_TOOL, MISSING_MANIFEST_LAYER } from './shared.ts'
+import { DECLARES_UNREGISTERED_LAYER, MATCH_STAYS_LAYER, MATCH_TOOL, MISMATCH_NAME, MISSING_MANIFEST_LAYER } from './shared.ts'
 
 /** A manifest-v2 `dsh` field declaring one tool by name. */
 function manifestDeclaring(toolName: string): Record<string, unknown> {
@@ -75,7 +75,7 @@ process.env.DSH_FEATURE_GATE_PLUGIN_MANIFEST_ENFORCEMENT = 'enforce'
 
 const profileName = 'p1-01-quarantine'
 const profileDir = resolveProfileDir(profileName, home)
-initProfile(profileDir, [MATCH_STAYS_LAYER, MISSING_MANIFEST_LAYER], DEFAULT_PROFILE_PATCH_RELOAD)
+initProfile(profileDir, [MATCH_STAYS_LAYER, MISSING_MANIFEST_LAYER, DECLARES_UNREGISTERED_LAYER], DEFAULT_PROFILE_PATCH_RELOAD)
 
 // match-stays: manifest-v2 declares MATCH_TOOL, and its entry labels a
 // tools.register(MATCH_TOOL) effect — declared == observed → admitted, not
@@ -89,6 +89,16 @@ stageBundlePackage(
 stageBundlePackage(
   profileDir, MISSING_MANIFEST_LAYER, undefined,
   `- id: ${MISSING_MANIFEST_LAYER}-row\n  name: cordis:noop\n`,
+)
+// declares-unregistered: manifest-v2 declares MATCH_TOOL, but its entry labels a
+// DIFFERENT tool (MISMATCH_NAME) — declared-not-observed and observed-not-declared,
+// so it must be QUARANTINED. RED today: staged in the profile's node_modules, the
+// package is not resolvable from plugin-inventory's own location, so the comparison
+// skips it and it is never quarantined (stays present + ACTIVE). Green after 甲.
+stageBundlePackage(
+  profileDir, DECLARES_UNREGISTERED_LAYER, manifestDeclaring(MATCH_TOOL),
+  `- insert:\n    - id: ${DECLARES_UNREGISTERED_LAYER}-entry\n      name: ${DECLARES_UNREGISTERED_LAYER}\n`,
+  labeledToolEntry(MISMATCH_NAME),
 )
 
 let ctx: Context | undefined

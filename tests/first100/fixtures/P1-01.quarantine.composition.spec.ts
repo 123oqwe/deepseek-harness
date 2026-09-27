@@ -17,7 +17,7 @@
 import { fileURLToPath } from 'node:url'
 import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
 import { beforeAll, describe, expect, it } from 'vitest'
-import { MATCH_STAYS_LAYER, MISSING_MANIFEST_LAYER } from './loader/p1-01-quarantine/shared.ts'
+import { DECLARES_UNREGISTERED_LAYER, MATCH_STAYS_LAYER, MISSING_MANIFEST_LAYER } from './loader/p1-01-quarantine/shared.ts'
 
 const driver = fileURLToPath(new URL('./loader/p1-01-quarantine/driver.ts', import.meta.url))
 const tsconfigPath = fileURLToPath(new URL('../../../tsconfig.json', import.meta.url))
@@ -56,5 +56,10 @@ describe('A-558b P1-01 must[3]/acceptance[0]: admission and quarantine on a base
 
   it('the missing-manifest layer is DENIED at admission: stderr names it excluded (legacy-untrusted)', () => {
     expect(stderr, `stderr must name ${MISSING_MANIFEST_LAYER} as an excluded bundle`).toContain(MISSING_MANIFEST_LAYER)
+  })
+
+  it('a declares-unregistered ENTRY layer is QUARANTINED: post-mount enforcement disposes it, naming it (RED today — staged in the profile\'s node_modules it is not found by plugin-inventory\'s own-location resolution, so the comparison skips it and it is never quarantined; green after 甲)', () => {
+    expect(stderr, `stderr must show ${DECLARES_UNREGISTERED_LAYER} quarantined/disposed`)
+      .toMatch(new RegExp(`disposing[^\\n]*${DECLARES_UNREGISTERED_LAYER}`, 'u'))
   })
 })
