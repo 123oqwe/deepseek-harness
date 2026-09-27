@@ -577,6 +577,7 @@ export default class ExecutionWorldService extends Service<Config> {
    * @returns the binding, or `undefined` when the attempt bound no world.
    */
   private async attemptBinding(agent: BindableAgent): Promise<ExecutionWorldBinding | undefined> {
+    this.refusals.delete(agent.id)
     const sandbox = this.ctx.get('sandboxPolicy') as SandboxPolicyPort | undefined
     if (sandbox === undefined) {
       this.recordUnbound(agent, undefined)
