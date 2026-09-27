@@ -13,7 +13,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { randomUUID } from 'node:crypto'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { FiberState } from '@deepseek-ai/cordis'
 import { boot, DEFAULT_PROFILE_PATCH_RELOAD, initProfile, resolveProfileDir } from '@deepseek-ai/dsh-app-boot'
 import { applyPostMountPluginEnforcement, composeProfile, resolvePluginEnforcementMode } from '../src/profile-boot.ts'
@@ -201,6 +201,60 @@ describe('applyPostMountPluginEnforcement: real post-mount quarantine (must[3]/a
     } finally {
       rmSync(goodDir, { recursive: true, force: true })
       rmSync(badDir, { recursive: true, force: true })
+      rmSync(treeParent, { recursive: true, force: true })
+    }
+  })
+
+  it('judges the manifest-less packages a bundle layer mounts with the layer, finding its rows in the root include and inside nested groups', async () => {
+    const layer = `dsh-post-mount-layer-${randomUUID()}`
+    const mounted = `dsh-post-mount-mounted-${randomUUID()}`
+    const nested = `dsh-post-mount-nested-${randomUUID()}`
+    const layerDir = stageRealResolvablePackage(layer, BENIGN_MANIFEST, 'export function apply() {}\n')
+    const mountedDir = stageRealResolvablePackage(mounted, undefined, [
+      'export function apply(ctx) {',
+      '  ctx.effect(function* () { yield () => {} }, `tools.register("example-tool")`)',
+      '}',
+      '',
+    ].join('\n'))
+    const nestedDir = stageRealResolvablePackage(nested, undefined, [
+      'export function apply(ctx) {',
+      '  ctx.effect(function* () { yield () => {} }, `tools.register("undeclared-tool")`)',
+      '}',
+      '',
+    ].join('\n'))
+    const treeParent = join(REPOSITORY_ROOT, 'node_modules', '.dsh-post-mount-test')
+    mkdirSync(treeParent, { recursive: true })
+    const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true)
+    try {
+      const dir = mkdtempSync(join(treeParent, 'tree-'))
+      writeFileSync(
+        join(dir, 'cordis.yml'),
+        `- id: mounted\n  name: ${JSON.stringify(mounted)}\n`
+        + '- id: outer\n  name: cordis:group\n  group: true\n  config:\n'
+        + '    - id: inner\n      name: cordis:group\n      group: true\n      config:\n'
+        + `        - id: nested\n          name: ${JSON.stringify(nested)}\n`,
+      )
+      const ctx = await boot('post-mount-test', join(dir, 'cordis.yml'), undefined, () => {})
+      try {
+        const entries = () => [...ctx.loader.entries()]
+        // The layer's rows reach the Loader under the root include's id, which the layer's own row ids do not carry.
+        expect(entries().find(entry => entry.options.name === nested)?.id).toBe('include:nested')
+
+        await applyPostMountPluginEnforcement(ctx, true, [layer], [{ packageName: layer, packageDir: layerDir, entryIds: ['mounted', 'nested'] }])
+
+        for (const name of [mounted, nested]) {
+          const fiber = entries().find(entry => entry.options.name === name)?.fiber
+          expect(fiber === undefined || fiber.state === FiberState.DISPOSED, name).toBe(true)
+        }
+        expect(stderr.mock.calls.map(([chunk]) => String(chunk)).join('')).toContain(`disposing ${JSON.stringify(layer)}`)
+      } finally {
+        await ctx.fiber.dispose()
+      }
+    } finally {
+      stderr.mockRestore()
+      rmSync(layerDir, { recursive: true, force: true })
+      rmSync(mountedDir, { recursive: true, force: true })
+      rmSync(nestedDir, { recursive: true, force: true })
       rmSync(treeParent, { recursive: true, force: true })
     }
   })

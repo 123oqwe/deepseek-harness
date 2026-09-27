@@ -224,9 +224,9 @@ interface ComposedProfile {
    */
   admittedLayerNames: readonly string[]
   /**
-   * The same admitted layers with each one's package directory and the
-   * entries its patches insert, which post-mount enforcement judges each
-   * layer by (P1-01 acceptance[0]).
+   * The same admitted layers with each one's package directory and the row
+   * ids its patches insert, which post-mount enforcement matches to Loader
+   * entries and judges each layer by (P1-01 acceptance[0]).
    */
   bundleLayers: readonly BundleLayerScope[]
   /** Every bundle layer a production boot refused to compose, and why; empty outside production. */
@@ -516,6 +516,26 @@ export function resolvePluginEnforcementMode(raw: string | undefined): boolean {
 }
 
 /**
+ * The layers with each row id replaced by the Loader entry id that row
+ * received. A profile's patches land in the tree of the include `boot()`
+ * mounts at the root, and an entry in a nested tree is identified by its
+ * tree's entry id followed by its own (`include:<row id>`), so the rows of
+ * that tree, groups included, are matched by the id they were configured with.
+ * @param ctx - the settled root context.
+ * @param layers - the admitted layers with the row ids their patches insert.
+ * @returns the same layers with Loader entry ids; a row with no entry is dropped.
+ */
+function withLoaderEntryIds(ctx: Context, layers: readonly BundleLayerScope[]): BundleLayerScope[] {
+  const entryIdOf = new Map<string, string>()
+  for (const entry of ctx.loader.entries()) {
+    const include = entry.parent.tree.ctx.fiber.entry
+    if (include === undefined || include.parent.tree.ctx.fiber.entry !== undefined) continue
+    entryIdOf.set(entry.options.id, entry.id)
+  }
+  return layers.map(layer => ({ ...layer, entryIds: layer.entryIds.flatMap(rowId => entryIdOf.get(rowId) ?? []) }))
+}
+
+/**
  * Post-mount plugin quarantine (Epic P1-01.U's must[3]/acceptance[0] second
  * half): after `boot()` settles, build every live Loader entry's real
  * declared-vs-observed permission state (`@deepseek-ai/dsh-plugin-inventory`'s
@@ -534,7 +554,7 @@ export function resolvePluginEnforcementMode(raw: string | undefined): boolean {
  * @param ctx - the settled, active root context.
  * @param production - whether this boot enforces production plugin admission.
  * @param admittedLayerNames - the composed profile's admitted bundle layer names, for provenance.
- * @param bundleLayers - the same layers with the entries each one's patches insert.
+ * @param bundleLayers - the same layers with the row ids each one's patches insert, as {@link composeProfile} records them.
  */
 export async function applyPostMountPluginEnforcement(
   ctx: Context,
@@ -543,7 +563,8 @@ export async function applyPostMountPluginEnforcement(
   bundleLayers: readonly BundleLayerScope[] = [],
 ): Promise<void> {
   if (!production) return
-  const states = buildPluginPermissionStates(ctx, { bundlePackageNames: admittedLayerNames, bundleLayers })
+  const layers = withLoaderEntryIds(ctx, bundleLayers)
+  const states = buildPluginPermissionStates(ctx, { bundlePackageNames: admittedLayerNames, bundleLayers: layers })
   const quarantined = new Map<string, (typeof states)[number]>()
   for (const state of states) {
     if (state.trustDecision === 'quarantined' && state.judgedBy !== undefined && !quarantined.has(state.judgedBy)) {
@@ -559,7 +580,7 @@ export async function applyPostMountPluginEnforcement(
       other.judgedBy !== undefined && other.judgedBy !== judgedBy ? [other.entryId] : []))
     const disposing = new Set<string>([
       ...states.flatMap(other => other.judgedBy === judgedBy ? [other.entryId] : []),
-      ...(bundleLayers.find(layer => layer.packageName === judgedBy)?.entryIds ?? []).filter(id => !judgedElsewhere.has(id)),
+      ...(layers.find(layer => layer.packageName === judgedBy)?.entryIds ?? []).filter(id => !judgedElsewhere.has(id)),
     ])
     for (const entry of ctx.loader.entries()) {
       if (disposing.has(entry.id)) await entry.fiber?.dispose()

@@ -11,7 +11,7 @@ P1-01 acceptance[0] quarantines a plugin whose registrations disagree with its d
 ## Decision
 
 - Every registration answers to exactly one manifest. An entry an admitted bundle layer inserted, entries inside an inserted group included, is judged with that layer unless its own package declares a Manifest v2 of its own. The layer's own entries and the packages it mounts that declare none (missing or legacy) are compared together against the layer's manifest; a mounted package with its own Manifest v2 is still compared against that one.
-- `composeProfile` records each admitted layer's package directory and the ids its patches insert; `buildPluginPermissionStates` takes them as `bundleLayers`, and each state's `judgedBy` names the package whose manifest judged it.
+- `composeProfile` records each admitted layer's package directory and the row ids its patches insert. After boot, `applyPostMountPluginEnforcement` maps them to the Loader entry ids those rows received: a profile's patches land in the tree of the include `boot()` mounts at the root, whose entries are identified as `include:<row id>`. `buildPluginPermissionStates` takes the mapped layers as `bundleLayers`, and each state's `judgedBy` names the package whose manifest judged it.
 - `applyPostMountPluginEnforcement` disposes every entry judged with a quarantined manifest, plus the entries a quarantined layer inserted that no other manifest judged, and its stderr line names the judging package, which for a layer is the layer.
 
 ## Alternatives considered

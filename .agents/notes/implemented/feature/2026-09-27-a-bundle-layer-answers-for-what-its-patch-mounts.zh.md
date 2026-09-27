@@ -11,7 +11,7 @@ P1-01 acceptance[0] 要隔离注册与声明不符的插件。启动后的比对
 ## 决策
 
 - 每一个注册恰好对一份 manifest 负责。准入的组合包层插入的条目（含插入的组里的条目），随这一层一起判，除非它自己的包带有自己的 Manifest v2。这一层自己的入口，与它挂进来的、不带 manifest（缺失或 legacy）的包，合在一起与这一层的 manifest 比对；自带 Manifest v2 的包仍按它自己的那份比对。
-- `composeProfile` 记下每个准入层的包目录与它的 patch 插入的条目 id；`buildPluginPermissionStates` 以 `bundleLayers` 接收，每个状态的 `judgedBy` 写明是哪个包的 manifest 判的它。
+- `composeProfile` 记下每个准入层的包目录与它的 patch 插入的行 id。启动后，`applyPostMountPluginEnforcement` 把它们换成这些行在 Loader 里的 entry id：profile 的补丁落在 `boot()` 在根上挂的那个 include 的树里，那里的条目 id 是 `include:<行 id>`。`buildPluginPermissionStates` 以 `bundleLayers` 接收换好的层，每个状态的 `judgedBy` 写明是哪个包的 manifest 判的它。
 - `applyPostMountPluginEnforcement` 处置随被隔离的 manifest 判的每个条目，以及被隔离的层插入、没有别的 manifest 判的条目；stderr 那一行写判它的包，对层来说就是这一层。
 
 ## 已考虑的替代方案
