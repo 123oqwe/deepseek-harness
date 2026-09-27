@@ -1,0 +1,13 @@
+# Layered over the temp P1-01 enforcement profile: mount the keyless scripted
+# model and let the driver create the one agent it needs, so no profile agent
+# renews or competes. A test overlay's rows are composed without going through
+# bundle-layer admission (composeProfile admits LAYERS; patchFiles compose
+# separately), and the mock's relative-path insert is unresolvable as a package
+# so post-mount enforcement skips it — the mock survives `enforce`.
+- id: agent-loop
+  config:
+    agents: []
+
+- insert:
+    - id: p1-01-enforcement-mock-llm
+      name: './mock-llm.ts'
