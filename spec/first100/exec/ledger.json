@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-27T12:52:56.843Z",
-  "inputDigest": "ff2aa2dd0c54a571983b35ba6d12e398dfff5f6360f4cd0205394ebc1c34794c",
+  "lastUpdatedUtc": "2026-09-27T14:05:01.846Z",
+  "inputDigest": "5873f3b125390d045db4c0f561fba6560e107901c77c98e21f49446b5e620224",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -23,10 +23,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
+          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
           "expectCasesMatched": [
             "captures .dsh/baseline.json with the canonical field set the MUST clause requires",
             "canonicalizes the captured output: sorted keys, LF-only, UTF-8 NFC, POSIX-relative paths, and no nondeterministic fields",
@@ -35,18 +35,18 @@
             "verify fails and names the minimal diff after a tracked bundle-row file drifts, and writes a rebase report",
             "verify passes again once the drifted file is restored"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:21.306Z"
+          "capturedAtUtc": "2026-09-27T14:05:00.858Z"
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
+          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
           "expectCasesMatched": [
             "wires baseline:capture/baseline:verify in package.json to the real script, and pnpm run actually executes it"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:21.679Z"
+          "capturedAtUtc": "2026-09-27T14:05:01.189Z"
         },
         "U": {
           "status": "GREEN",
@@ -65,36 +65,30 @@
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
-          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
+          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
+          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
           "expectCasesMatched": [
             "verify fails and names the tampered SDK protocol types file",
             "verify fails and names the tampered known-event-types file",
             "verify fails and names the tampered pnpm-lock.yaml",
             "captures a fingerprint that never leaks the fixture checkout's absolute path or backslash-spelled paths anywhere in its content"
           ],
-          "reattested": {
-            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
-            "atUtc": "2026-09-07T06:50:36.071Z"
-          },
-          "capturedAtUtc": "2026-09-07T06:50:36.072Z"
+          "capturedAtUtc": "2026-09-27T14:05:01.516Z"
         }
       },
       "supplements": {
         "F.1": {
           "status": "GREEN",
-          "candidateSha": "af01a06bc96041757cc5ac58c6f0cd5ba6708092",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33473101218",
-          "observationReportPath": "/tmp/first100-ledger-inputs/supplement-vitest-report.json",
-          "observationSha256": "f7ec8159487f68b8a45bd7c377a51a3a84369fb06737a037708098e0fa857102",
+          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
+          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
           "expectCasesMatched": [
             "verify fails and names the drifted workspace package manifest"
           ],
-          "capturedAtUtc": "2026-09-01T05:50:37.084Z"
+          "capturedAtUtc": "2026-09-27T14:05:01.835Z"
         },
         "F.2": {
           "status": "GREEN",
@@ -111,7 +105,7 @@
           "capturedAtUtc": "2026-09-27T05:33:54.941Z"
         }
       },
-      "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
+      "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",
