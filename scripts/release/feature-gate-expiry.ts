@@ -22,18 +22,23 @@
  * @module scripts/release/feature-gate-expiry
  */
 
+import { brandString } from '@deepseek-ai/dsh-brand'
 import { checkFeatureGateExpiry } from '@deepseek-ai/dsh-feature-gates'
-import type { FeatureGateDeclaration } from '@deepseek-ai/dsh-feature-gates'
+import type { FeatureGateDeclaration, FeatureGateId } from '@deepseek-ai/dsh-feature-gates'
 
 /**
- * The release gate's own declared feature gates. Empty: no major capability
- * in this repository has migrated behind a gate yet (matching
- * `apps/cli/src/profile-boot.ts`'s own `FEATURE_GATE_DECLARATIONS` and
- * `@deepseek-ai/dsh-feature-gates`'s Known Limitations) -- so this check
- * runs for real on every `dsh` family release but has nothing to fail
- * against today.
+ * The release gate's own declared feature gates: the same declarations as
+ * `apps/cli/src/profile-boot.ts`'s `FEATURE_GATE_DECLARATIONS`, which a
+ * script cannot import from the bin-only `apps/cli`. Today that is Epic
+ * P1-01's plugin-manifest enforcement gate (BLOCKED-322).
  */
-export const RELEASE_GATE_FEATURE_GATES: readonly FeatureGateDeclaration[] = []
+export const RELEASE_GATE_FEATURE_GATES: readonly FeatureGateDeclaration[] = [{
+  id: brandString<FeatureGateId>('plugin-manifest-enforcement'),
+  owner: '@deepseek-ai/dsh-plugin-manifest',
+  introducedVersion: '0.1.5-rc.2',
+  defaultByProfile: { default: 'enforce' },
+  removalVersion: '0.2.0',
+}]
 
 /**
  * Fail the release gate when any declared feature gate has passed its

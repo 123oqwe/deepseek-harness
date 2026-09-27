@@ -31,3 +31,5 @@ The headless runner also registered its two listeners inside the run it starts a
 - `dsh-base` and `dsh-sdk-minimal` are not Loader entries, so no post-mount comparison covers them. The comparison's scope for such layers is being measured before a decision.
 - Subpath entries now appear in the Plugin Inventory, with their package's bundle provenance.
 - This note supersedes in part [Plugin Manifest v2 real enforcement at profile boot](2026-09-02-plugin-manifest-real-enforcement-at-profile-boot.md): its per-entry comparison, and its statement that no shipped bundle declares a Manifest v2.
+
+Superseded in part by [Plugin-manifest enforcement is a feature gate that defaults to enforce](2026-09-27-plugin-manifest-enforcement-is-a-feature-gate.md): enforcement no longer stays off by default.

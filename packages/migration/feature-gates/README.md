@@ -11,7 +11,7 @@ English | [中文](README.zh.md)
 
 `dsh-feature-gates` fixes the type surface AND the Provider-stage runtime for Epic P0-05 (Shadow/Enforce feature gates for major capabilities): the unified `off | shadow | enforce` {@link FeatureGateState}, the fixed lifecycle metadata every gate records (`owner`, `introducedVersion`, `defaultByProfile`, `removalVersion`), the JSON-safe settings-namespace value shape a `feature-gates` registration would carry, the `--dump-config` override-chain shape, the sanitized shadow/legacy decision-diff record, and the release-gate expiry check signature — plus real, pure functions that compute all of it: {@link resolveFeatureGate} (must[3]'s override chain), {@link evaluateFeatureGate} (must[1]/acceptance[0]/acceptance[1]'s shadow-vs-legacy decision harness), {@link redactDecisionSummary} (acceptance[1]'s real redaction call site), and {@link checkFeatureGateExpiry} (acceptance[2]'s SemVer-precedence expiry check).
 
-Gate registration for a real capability (the policy/plugin-trust/run-journal shadow fixtures this epic's own `validation` clause calls for) and CLI/profile wiring (`--dump-config`, `defaultByProfile` in the bundle/profile-boot layer) stay later slices' deliverables — see [Known Limitations and Deferred Work](#known-limitations-and-deferred-work).
+The first real gate, `plugin-manifest-enforcement`, is declared by `apps/cli/src/profile-boot.ts` (Epic P1-01, BLOCKED-322); the policy and run-journal shadow fixtures this epic's own `validation` clause calls for stay later slices' deliverables — see [Known Limitations and Deferred Work](#known-limitations-and-deferred-work).
 
 ## Table of Contents
 
@@ -76,7 +76,7 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 ## Known Limitations and Deferred Work
 
-- **No gate is declared for a real capability yet** -- this package computes override resolution, shadow-vs-legacy evaluation, and expiry against any `FeatureGateDeclaration` a caller supplies, but declares none itself. The policy/plugin-trust/run-journal shadow fixtures this epic's own `validation` clause calls for, and registering the `feature-gates` settings namespace (`packages/settings/settings/src/index.ts`'s `SettingsProvider.register`) for a real capability, are Composition-stage deliverables.
+- **This package declares no gate itself** -- it computes override resolution, shadow-vs-legacy evaluation, and expiry against any `FeatureGateDeclaration` a caller supplies. The one real gate, `plugin-manifest-enforcement`, is declared in `apps/cli/src/profile-boot.ts` and `scripts/release/feature-gate-expiry.ts`. The policy and run-journal shadow fixtures this epic's own `validation` clause calls for, and registering the `feature-gates` settings namespace (`packages/settings/settings/src/index.ts`'s `SettingsProvider.register`), are Composition-stage deliverables.
 - **No `--dump-config`/profile wiring yet** -- `resolveFeatureGate` computes the exact `FeatureGateResolution` must[3] requires, but a Usage-stage slice must still wire `apps/cli/src/dump-config.ts` to call it and render the result, and `apps/cli/src/profile-boot.ts`/`packages/bundle/base/cordis.patch.yml` to carry a real `defaultByProfile`/env override into it.
 - **No repository release-gate wiring yet** -- `checkFeatureGateExpiry` is a real, tested SemVer-precedence check, but nothing in the repository's release pipeline calls it yet (Epic P0-05 acceptance[2]'s "fails the release gate" half).
 

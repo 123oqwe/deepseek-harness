@@ -210,9 +210,9 @@ export type PreMountDenialReason = 'missing-manifest' | 'legacy-untrusted' | 'wi
  * against one fixture file for the same decision with no profile involved.
  * @param declaration - a value {@link classifyPluginDeclaration} returned.
  * @param production - whether the target profile enforces production
- * admission (`packages/boot/app-boot/src/profile.ts`'s `resolvePluginEnforcementMode`);
- * `false` admits every declaration unconditionally — every profile boots
- * exactly as it did before this policy existed.
+ * admission (`apps/cli/src/profile-boot.ts` evaluates both values under its
+ * `plugin-manifest-enforcement` feature gate); `false` admits every
+ * declaration unconditionally.
  * @returns `{ admitted: true }`, or `{ admitted: false, reason, wildcardFindings }`
  * naming why a production boot refuses this plugin.
  */

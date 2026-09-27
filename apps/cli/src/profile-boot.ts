@@ -11,7 +11,7 @@
  * @module @deepseek-ai/dsh/profile-boot
  */
 
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { FiberState, type Context } from '@deepseek-ai/cordis'
@@ -47,9 +47,16 @@ import { DSH_LAUNCH_ENVIRONMENT_KEY, type LaunchEnvironmentSnapshot } from '@dee
 import { provideCmdline, type AppReady } from '@deepseek-ai/dsh-cmdline'
 import { createTrustKernel, pinTrustKernel, type TrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import { endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
-import { resolveFeatureGate } from '@deepseek-ai/dsh-feature-gates'
-import type { FeatureGateDeclaration, FeatureGateResolution, FeatureGateState } from '@deepseek-ai/dsh-feature-gates'
-import { buildPluginPermissionStates } from '@deepseek-ai/dsh-host-plugin-inventory'
+import { evaluateFeatureGate, resolveFeatureGate } from '@deepseek-ai/dsh-feature-gates'
+import type {
+  FeatureGateDecisionOutcome,
+  FeatureGateDeclaration,
+  FeatureGateId,
+  FeatureGateResolution,
+  FeatureGateShadowDecisionRecord,
+  FeatureGateState,
+} from '@deepseek-ai/dsh-feature-gates'
+import { buildPluginPermissionStates, type PluginPermissionState } from '@deepseek-ai/dsh-host-plugin-inventory'
 import { createProcessShutdown, type ProcessShutdown } from './process-shutdown.ts'
 import { readProfileTrustAnchors } from './trust-anchors.ts'
 
@@ -217,12 +224,12 @@ interface ComposedProfile {
   overlays: PatchOptions[]
   /**
    * Bundle layer package names actually composed into `bundlePatches` (Epic
-   * P1-01.U must[3]/acceptance[0]) — a production boot's pre-mount admission
+   * P1-01.U must[3]/acceptance[0]) — an enforcing boot's pre-mount admission
    * already excluded any denied layer's patches, so every name here is
    * admitted, in `profile.layers` order.
    */
   admittedLayerNames: readonly string[]
-  /** Every bundle layer a production boot refused to compose, and why; empty outside production. */
+  /** Every bundle layer an enforcing boot refused to compose, and why; empty unless the gate is `'enforce'`. */
   deniedLayers: readonly DeniedProfileLayer[]
   /**
    * Every bundle layer Epic P1-08's compatibility negotiation blocked, with
@@ -242,6 +249,23 @@ function allPatches(composed: ComposedProfile): PatchOptions[] {
   ]
 }
 
+/** An admission partition as a gate decision; its summary keeps layer names, denial reasons, and wildcard field paths. */
+function admissionOutcome(
+  partition: ReturnType<typeof partitionProfileLayersByAdmission>,
+): FeatureGateDecisionOutcome<ReturnType<typeof partitionProfileLayersByAdmission>> {
+  return {
+    value: partition,
+    summary: {
+      admitted: partition.admitted.map(layer => layer.packageName),
+      denied: partition.denied.map(({ layer, reason, wildcardFindings }) => ({
+        layer: layer.packageName,
+        reason,
+        wildcardPaths: wildcardFindings.map(finding => finding.path),
+      })),
+    },
+  }
+}
+
 /**
  * Load `name` and compose its effective patch stack: bundle layers in
  * `dsh.profile.bundles` order (a base-backed profile gets the base bundle's
@@ -254,10 +278,10 @@ function allPatches(composed: ComposedProfile): PatchOptions[] {
  * happens here, before any patch reaches `boot()`: {@link partitionProfileLayersByAdmission}
  * judges every bundle layer's own `package.json` `dsh` field, and only an
  * admitted layer's patches are composed — a denied layer's plugin code never
- * mounts at all. `production: false` (the default outside an explicit
- * `DSH_PLUGIN_MANIFEST_ENFORCEMENT=enforce` opt-in) admits every layer
- * unconditionally, so an existing profile boots exactly as it did before
- * this policy existed.
+ * mounts at all. The decision goes through {@link PLUGIN_MANIFEST_ENFORCEMENT_GATE}:
+ * `'enforce'` composes only the admitted layers, `'off'` composes every
+ * layer, and `'shadow'` composes every layer and appends which layers
+ * `'enforce'` would have denied to {@link featureGateShadowLogPath}.
  *
  * Epic P1-08's compatibility negotiation (must[1]/acceptance[1]) runs on the
  * admitted layers immediately after, and likewise before any patch reaches
@@ -271,7 +295,7 @@ function allPatches(composed: ComposedProfile): PatchOptions[] {
  * silently picking a side.
  * @param name - the profile name.
  * @param patchFiles - `--patch` overlay paths, in argv order.
- * @param production - whether this boot enforces production plugin admission.
+ * @param enforcement - this boot's resolved {@link PLUGIN_MANIFEST_ENFORCEMENT_GATE} state.
  * @param fromDefaultProfile - shipped template used once to initialize a missing profile.
  * @returns the profile, its patch layers, and the admission and compatibility outcomes.
  * @throws Error when compatibility negotiation reports a graph-level contradiction.
@@ -279,12 +303,20 @@ function allPatches(composed: ComposedProfile): PatchOptions[] {
 export async function composeProfile(
   name: string,
   patchFiles: readonly string[],
-  production: boolean,
+  enforcement: FeatureGateState,
   fromDefaultProfile?: string,
 ): Promise<ComposedProfile> {
   const profile = prepareProfile(name, true, fromDefaultProfile)
   await healProfilesModuleFallback({ installAnchor: INSTALL_ANCHOR, profile })
-  const { admitted, denied } = partitionProfileLayersByAdmission(profile, production)
+  const admission = evaluateFeatureGate(
+    PLUGIN_MANIFEST_ENFORCEMENT_GATE.id,
+    enforcement,
+    () => admissionOutcome(partitionProfileLayersByAdmission(profile, false)),
+    () => admissionOutcome(partitionProfileLayersByAdmission(profile, true)),
+    ['admitted', 'denied'],
+  )
+  if (admission.shadowRecord !== undefined) appendShadowDecision('pre-mount-admission', admission.shadowRecord)
+  const { admitted, denied } = admission.value
   for (const { layer, reason, wildcardFindings } of denied) {
     const detail = wildcardFindings.length > 0 ? `: ${wildcardFindings.map(finding => finding.path).join(', ')}` : ''
     process.stderr.write(
@@ -393,16 +425,29 @@ export function enforceTrustKernelPosture(
 }
 
 /**
- * Declared feature gates for this installation (Epic P0-05 must[2]/must[3]).
- * Empty: no major capability in this repository has migrated behind a gate
- * yet -- {@link resolveProfileFeatureGates} and its `--dump-config` and
- * boot-time wiring below are the real, tested mechanism a future epic
- * appends its {@link FeatureGateDeclaration} to; declaring an illustrative
- * production gate here would be vertical business logic unrelated to this
- * epic (Epic P0-05 nonGoals). See `@deepseek-ai/dsh-feature-gates`'s own
- * Known Limitations for the same deferral.
+ * Epic P1-01's plugin admission and post-mount quarantine as a feature gate
+ * (BLOCKED-322). Every profile defaults to `'enforce'`: must[3] makes a
+ * production profile deny a missing or legacy declaration by default.
+ * `'shadow'` composes and keeps every plugin exactly as `'off'` does, and
+ * appends what `'enforce'` would have denied or quarantined to
+ * {@link featureGateShadowLogPath}; `'off'` warns on stderr at every boot.
+ * `scripts/release/feature-gate-expiry.ts` declares the same gate for the
+ * release expiry check.
  */
-export const FEATURE_GATE_DECLARATIONS: readonly FeatureGateDeclaration[] = []
+export const PLUGIN_MANIFEST_ENFORCEMENT_GATE: FeatureGateDeclaration = {
+  id: brandString<FeatureGateId>('plugin-manifest-enforcement'),
+  owner: '@deepseek-ai/dsh-plugin-manifest',
+  introducedVersion: '0.1.5-rc.2',
+  defaultByProfile: { default: 'enforce' },
+  removalVersion: '0.2.0',
+}
+
+/**
+ * Declared feature gates for this installation (Epic P0-05 must[2]/must[3]),
+ * which {@link resolveProfileFeatureGates} resolves for `--dump-config` and
+ * for every boot.
+ */
+export const FEATURE_GATE_DECLARATIONS: readonly FeatureGateDeclaration[] = [PLUGIN_MANIFEST_ENFORCEMENT_GATE]
 
 const FEATURE_GATE_STATES: readonly FeatureGateState[] = ['off', 'shadow', 'enforce']
 
@@ -439,9 +484,13 @@ export function resolveFeatureGateEnvOverride(raw: string | undefined): FeatureG
  * the same computation `--dump-config` renders and boot provides on
  * `ctx.get('featureGates')`, so both surfaces agree for an identical
  * profile/environment. No `settings` chain layer is supplied: this
- * repository registers no `feature-gates` settings namespace yet (a later
- * Composition-stage slice's deliverable, once a real gate exists), so that
+ * repository registers no `feature-gates` settings namespace yet, so that
  * layer's absence is correct today, not a gap in this function.
+ *
+ * The `env` layer may lower an `'enforce'` floor (user decision G1b): it is
+ * the launch environment, set by whoever starts this process, who can already
+ * edit the profile's `package.json` and patch files. A `settings` layer,
+ * which a running process can change, must not share that authority.
  * @param profile - the active `dsh --profile` name.
  * @param declarations - the declared gates to resolve; defaults to {@link FEATURE_GATE_DECLARATIONS}.
  * @param env - the environment to read each gate's override from; defaults to `process.env`.
@@ -454,35 +503,62 @@ export function resolveProfileFeatureGates(
 ): readonly FeatureGateResolution[] {
   return declarations.map((declaration) => {
     const envOverride = resolveFeatureGateEnvOverride(env[featureGateEnvVarName(declaration.id)])
-    return resolveFeatureGate(declaration, profile, envOverride === undefined ? {} : { env: envOverride })
+    return resolveFeatureGate(declaration, profile, envOverride === undefined
+      ? {}
+      : { env: envOverride, hasKernelAdministrativeAuthority: true })
   })
 }
 
-/** Env var whose value switches Epic P1-01.U's real plugin-admission/quarantine enforcement on. */
-const PLUGIN_ENFORCEMENT_ENV = 'DSH_PLUGIN_MANIFEST_ENFORCEMENT'
+/**
+ * This boot's state for one declared gate.
+ * @param resolutions - {@link resolveProfileFeatureGates}'s result for this boot.
+ * @param declaration - a gate {@link FEATURE_GATE_DECLARATIONS} lists.
+ * @returns the gate's resolved state.
+ * @throws when `resolutions` holds no resolution for `declaration`.
+ */
+function resolvedGateState(resolutions: readonly FeatureGateResolution[], declaration: FeatureGateDeclaration): FeatureGateState {
+  const resolution = resolutions.find(candidate => candidate.gateId === declaration.id)
+  if (resolution === undefined) throw new Error(`${NAME}: feature gate ${JSON.stringify(declaration.id)} was not resolved for this boot`)
+  return resolution.resolved.value
+}
 
 /**
- * Resolve must[3]/acceptance[0]'s production plugin-admission enforcement
- * switch, mirroring {@link resolveFeatureGateEnvOverride}'s fail-loud
- * validation (unlike {@link resolveTrustKernelInsecureOptIn}'s any-non-empty-value
- * convention: a two-state on/off switch has exactly one non-default spelling,
- * so anything else is a typo worth failing on, not a second meaning). Unset
- * or empty means off — every existing profile boots exactly as it did before
- * this policy existed. This default is a real, disclosed migration gap, not
- * a formality: no bundle package shipped in this installation declares a
- * Manifest v2 yet, so turning this on for a real shipped profile
- * (`dsh-base` and every profile built on it) currently denies every one of
- * its bundles — enforcement is real and tested against fixtures, but a
- * production profile does not yet opt in by default because there is
- * nothing shipped today that would pass it.
- * @param raw - the raw `DSH_PLUGIN_MANIFEST_ENFORCEMENT` value.
- * @returns whether this boot enforces production plugin admission/quarantine.
- * @throws {TypeError} when `raw` is non-empty and not exactly `'enforce'`.
+ * The JSONL file every shadow-mode gate decision is appended to: one line
+ * per decision, a {@link FeatureGateShadowDecisionRecord} with the boot stage
+ * that made it and when. It is the only boot-decision record under
+ * `$DSH_HOME`.
+ * @returns the absolute file path under the Harness home.
  */
-export function resolvePluginEnforcementMode(raw: string | undefined): boolean {
-  if (raw === undefined || raw === '') return false
-  if (raw === 'enforce') return true
-  throw new TypeError(`${NAME}: ${PLUGIN_ENFORCEMENT_ENV} must be "enforce" or unset, got ${JSON.stringify(raw)}`)
+export function featureGateShadowLogPath(): string {
+  return join(resolveDshHome(), 'feature-gates', 'shadow-decisions.jsonl')
+}
+
+/**
+ * Append one shadow decision to {@link featureGateShadowLogPath}.
+ * @param stage - the boot stage that made the decision.
+ * @param record - the redacted legacy/enforce comparison.
+ */
+function appendShadowDecision(stage: 'pre-mount-admission' | 'post-mount-comparison', record: FeatureGateShadowDecisionRecord): void {
+  const path = featureGateShadowLogPath()
+  mkdirSync(dirname(path), { recursive: true })
+  appendFileSync(path, `${JSON.stringify({ recordedAt: new Date().toISOString(), stage, ...record })}\n`)
+}
+
+/** Quarantined permission states as a gate decision; its summary keeps package names, entry ids, and the mismatched names. */
+function quarantineOutcome(
+  states: readonly PluginPermissionState[],
+): FeatureGateDecisionOutcome<readonly PluginPermissionState[]> {
+  return {
+    value: states,
+    summary: {
+      quarantined: states.map(state => ({
+        package: state.packageIdentity.name,
+        entry: state.entryId,
+        mismatches: (state.comparison?.mismatches ?? []).map(({ kind, category, name }) => ({ kind, category, name })),
+        wildcardPaths: (state.comparison?.wildcardFindings ?? []).map(finding => finding.path),
+      })),
+    },
+  }
 }
 
 /**
@@ -493,25 +569,29 @@ export function resolvePluginEnforcementMode(raw: string | undefined): boolean {
  * dispose the fiber of any entry `decidePluginTrust` marked `'quarantined'` —
  * a plugin that registered a capability its manifest never declared loses
  * every registration it made, for real, not just a returned decision value.
- * A no-op outside production (`production: false`): every profile keeps
- * running exactly as before. Pre-mount admission ({@link partitionProfileLayersByAdmission},
- * called from {@link composeProfile}) already excluded a denied bundle
- * layer's patches before this ever runs, so this only ever sees a
- * `'manifest-v2'`-declared entry (or one with no resolvable package, which
- * `buildPluginPermissionStates` already skips).
+ * The decision goes through {@link PLUGIN_MANIFEST_ENFORCEMENT_GATE}:
+ * `'enforce'` disposes every quarantined entry, `'off'` builds no state and
+ * disposes nothing, and `'shadow'` disposes nothing and appends which entries
+ * `'enforce'` would have disposed to {@link featureGateShadowLogPath}.
  * @param ctx - the settled, active root context.
- * @param production - whether this boot enforces production plugin admission.
+ * @param enforcement - this boot's resolved {@link PLUGIN_MANIFEST_ENFORCEMENT_GATE} state.
  * @param admittedLayerNames - the composed profile's admitted bundle layer names, for provenance.
  */
 export async function applyPostMountPluginEnforcement(
   ctx: Context,
-  production: boolean,
+  enforcement: FeatureGateState,
   admittedLayerNames: readonly string[],
 ): Promise<void> {
-  if (!production) return
-  const states = buildPluginPermissionStates(ctx, { bundlePackageNames: admittedLayerNames })
-  for (const state of states) {
-    if (state.trustDecision !== 'quarantined') continue
+  const quarantine = evaluateFeatureGate(
+    PLUGIN_MANIFEST_ENFORCEMENT_GATE.id,
+    enforcement,
+    () => quarantineOutcome([]),
+    () => quarantineOutcome(buildPluginPermissionStates(ctx, { bundlePackageNames: admittedLayerNames })
+      .filter(state => state.trustDecision === 'quarantined')),
+    ['quarantined'],
+  )
+  if (quarantine.shadowRecord !== undefined) appendShadowDecision('post-mount-comparison', quarantine.shadowRecord)
+  for (const state of quarantine.value) {
     process.stderr.write(
       `${NAME}: plugin quarantine: disposing ${JSON.stringify(state.packageIdentity.name)} `
       + `(declared/observed mismatch: ${JSON.stringify(state.comparison?.mismatches)})\n`,
@@ -554,7 +634,14 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
     (message) => { process.stderr.write(`${NAME}: ${message}\n`) },
   )
 
-  const pluginEnforcement = resolvePluginEnforcementMode(process.env[PLUGIN_ENFORCEMENT_ENV])
+  const featureGates = resolveProfileFeatureGates(options.profile)
+  const pluginEnforcement = resolvedGateState(featureGates, PLUGIN_MANIFEST_ENFORCEMENT_GATE)
+  if (pluginEnforcement === 'off') {
+    process.stderr.write(
+      `${NAME}: WARNING: plugin manifest enforcement is off -- every bundle layer is composed without admission and `
+      + `no plugin is quarantined; set ${featureGateEnvVarName(PLUGIN_MANIFEST_ENFORCEMENT_GATE.id)}=enforce to enforce it.\n`,
+    )
+  }
   const composed = await composeProfile(options.profile, options.patchFiles, pluginEnforcement, options.fromDefaultProfile)
   const trustKernelInsecure = resolveTrustKernelInsecureOptIn(process.env[TRUST_KERNEL_INSECURE_ENV])
   // Constructed before boot() creates the Cordis Context at all (must[1]):
@@ -641,14 +728,14 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
     // guard (must[3]; @deepseek-ai/dsh-trust-kernel's own doc comment).
     if (kernel !== undefined) pinTrustKernel(hostCtx, kernel)
     enforceTrustKernelPosture(hostCtx.get('trustKernel') !== undefined, trustKernelInsecure)
-    // Feature gates (Epic P0-05 must[3]): resolved once per boot, before any
-    // config-tree entry mounts, so a future gated plugin reads exactly the
-    // resolution `--dump-config` shows for this same profile/environment.
-    // Provided under a bare service name -- no capability yet injects
-    // `featureGates`, so the typed `declare module '@deepseek-ai/cordis'`
-    // augmentation belongs with `@deepseek-ai/dsh-feature-gates` once a real
-    // consumer exists, matching that package's own Known Limitations.
-    hostCtx.provide('featureGates', resolveProfileFeatureGates(options.profile))
+    // Feature gates (Epic P0-05 must[3]): the resolution composeProfile
+    // already used, provided before any config-tree entry mounts, so a gated
+    // plugin reads exactly what `--dump-config` shows for this same
+    // profile/environment. Provided under a bare service name -- no plugin
+    // injects `featureGates`, so the typed `declare module '@deepseek-ai/cordis'`
+    // augmentation belongs with `@deepseek-ai/dsh-feature-gates` once a plugin
+    // consumes it, matching that package's own Known Limitations.
+    hostCtx.provide('featureGates', featureGates)
   })
   app.current = ctx
   // Post-mount quarantine (must[3]/acceptance[0]): after every bundle's
