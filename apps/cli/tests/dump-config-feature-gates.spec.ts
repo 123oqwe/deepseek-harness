@@ -28,7 +28,7 @@ const second: FeatureGateDeclaration = {
 }
 
 describe('renderFeatureGateDump', () => {
-  it('prints nothing when no gate is declared -- this repository\'s real state today', () => {
+  it('prints nothing given an empty resolution list', () => {
     expect(renderFeatureGateDump([])).toBe('')
   })
 
