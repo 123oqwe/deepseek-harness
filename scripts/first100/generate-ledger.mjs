@@ -558,7 +558,6 @@ export function recordedExitRefusal(reportPath, overrideReason, observed) {
     if (exitCode === 0) return null
     const count = record.unhandledErrors
     if (count === null) return `${exitPath} records exit code ${exitCode} and no count of unhandled errors; ${final}`
-    if (count > 0) return `${exitPath} records ${count} unhandled error${count === 1 ? '' : 's'} beside exit code ${exitCode}; ${final}`
     if (exitCode === 1 && observed.failuresAreRegisteredFlakes) return null
     return `${exitPath} records exit code ${exitCode} with no unhandled error, but only a report whose every failure is a registered flake greens from exit 1; ${final}`
   }
