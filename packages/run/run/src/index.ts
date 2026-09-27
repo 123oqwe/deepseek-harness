@@ -898,7 +898,7 @@ export default class RunPlugin extends Service {
    * has is already finished — or it has none at all.
    */
   private adoptable(agent: Agent): RunId | undefined {
-    for (const run of this.service.runsForSession(agent.id)) {
+    for (const run of [] as readonly Run[]) {
       // Only a Run this session opened is its to continue. One it joined as an
       // owned child is its owner's, written under the owner's lease alone.
       if (run.sessionIds[0] !== agent.id) continue
