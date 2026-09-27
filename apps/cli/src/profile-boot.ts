@@ -568,9 +568,8 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
   // opt-in set refuses to start before any config-tree entry mounts.
   const profileManifest = readProfileManifest(NAME, composed.profile.dir)
   const developmentProfile = (profileManifest.dsh?.profile as { readonly development?: unknown } | undefined)?.development === true
-  if (trustKernelInsecure && !developmentProfile) {
-    throw new Error(`${NAME}: ${TRUST_KERNEL_INSECURE_ENV} is set but profile ${JSON.stringify(options.profile)} is not a development profile -- refusing to boot (only a profile declaring dsh.profile.development may boot without a Trust Kernel)`)
-  }
+  // MUTATION M1 (A-551 sensitivity): the development-profile boot gate removed,
+  // so a shipped profile with the insecure opt-in set boots kernel-less.
   // Constructed before boot() creates the Cordis Context at all (must[1]):
   // createTrustKernel is pure and synchronous, so it cannot itself fail --
   // the insecure opt-in is the only way this boot proceeds without one.
