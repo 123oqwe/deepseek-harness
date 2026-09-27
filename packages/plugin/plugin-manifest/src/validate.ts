@@ -444,7 +444,7 @@ export function parseLegacyBundleDeclaration(dshField: unknown): LegacyBundleDec
  * @returns the classified {@link PluginDeclaration}.
  */
 export function classifyPluginDeclaration(dshField: unknown): PluginDeclaration {
-  if (isRecord(dshField) && dshField.manifestVersion === 2) {
+  if (isRecord(dshField) && dshField.manifestVersion === 2 && dshField.bundle === undefined) {
     const result = validatePluginManifestV2(dshField)
     if (result.valid) return { kind: 'manifest-v2', manifest: result.manifest }
     return { kind: 'missing' }
