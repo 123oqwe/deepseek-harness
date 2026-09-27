@@ -256,3 +256,84 @@ describe('BLOCKED-344: the public seam passes the risk gate', () => {
     await ctx.fiber.dispose()
   })
 })
+
+/** A file the seam's `fs` reports a version for, or reports absent. */
+const PROBE_PATH = '/workspace/a549b.txt'
+
+/**
+ * Mount the seam gated (kernel + permit policy + ask preset) with an `fs`
+ * service whose version for {@link PROBE_PATH} the operator flips at the ask
+ * when `mutateAtAsk`, and a probe that declares that path in its
+ * `presentCall().locations`.
+ * @param mutateAtAsk - whether the operator rewrites the declared file after the ask and before the run.
+ * @returns the composition and a holder set true when the probe body runs.
+ */
+async function composeFileGated(
+  mutateAtAsk: boolean,
+): Promise<{ readonly ctx: Context; readonly agent: Agent; readonly state: { ran: boolean } }> {
+  const ctx = new Context()
+  pinTrustKernel(ctx, createTrustKernel({ policyDecider: endorseComposedDecision }))
+  ctx.provide('policy', {
+    digest: 'a549b-policy',
+    evaluate: () => ({ decision: { effect: 'permit' as const, policySet: 'a549b-policy' }, explain: { matched: [], diagnostics: [] } }),
+  })
+  ctx.provide('shell', {
+    sandboxMode: 'workspace-write',
+    resolve() { throw new Error('these cases do not execute bash') },
+    run() { throw new Error('these cases do not execute bash') },
+    start() { throw new Error('these cases do not execute bash') },
+  })
+  const versions = new Map<string, string>([[PROBE_PATH, 'v1']])
+  ctx.provide('fs', {
+    resolve: (path: string) => Promise.resolve({ targetKey: path, displayPath: path }),
+    stat: (target: { targetKey: string }) =>
+      Promise.resolve(versions.has(target.targetKey) ? { version: versions.get(target.targetKey) } : undefined),
+  })
+  await ctx.plugin(SessionStore)
+  await ctx.plugin(SystemPrompt)
+  await ctx.plugin(SessionProjectionRegistry)
+  await ctx.plugin(ToolRuntime)
+  await ctx.plugin(ApprovalService, {})
+  await ctx.plugin(PermissionPresetService, {
+    riskRules: [],
+    presets: { 'workspace-write': { sandbox: 'workspace-write', approval: 'ask', approvalThreshold: 'read' } },
+    defaultPreset: 'workspace-write',
+  })
+  const session = ctx.sessions.create(SessionId('a549b'))
+  session.append('turn/start', { turn: 1 })
+  const state = { ran: false }
+  ctx.tools.register(defineContentToolFixture({
+    name: 'fileprobe',
+    description: 'declares one file and records that its body ran',
+    parameters: { path: { type: 'string', required: true, description: 'the file this call declares' } },
+    presentCall: args => ({ card: 'generic', title: 'fileprobe', locations: [{ path: args.path }] }),
+    execute: () => { state.ran = true; return Promise.resolve([{ type: 'text' as const, text: 'ran' }]) },
+  }))
+  ctx.on('approval/request', () => {
+    // The operator's own rewrite of the declared file, made after the ask and
+    // before the answer, so the execution that follows the approval meets it.
+    if (mutateAtAsk) versions.set(PROBE_PATH, 'v2')
+    return Promise.resolve('allowed-once' as const)
+  })
+  return { ctx, agent: { id: session.id, session } as unknown as Agent, state }
+}
+
+describe('P2-06 acceptance[0] on the public seam (A-549b): an approval bound to its declared file (BLOCKED-350 sibling)', () => {
+  it('refuses an approved direct call whose declared file changed between the ask and the run, and does not run it', async () => {
+    const { ctx, agent, state } = await composeFileGated(true)
+    const result = await ctx.tools.execute({ callId: ToolCallId('a549b-changed'), name: 'fileprobe', arguments: { path: PROBE_PATH }, agent, signal })
+
+    expect(result.isError).toBe(true)
+    expect(state.ran).toBe(false)
+    await ctx.fiber.dispose()
+  })
+
+  it('runs an approved direct call whose declared file is unchanged between the ask and the run', async () => {
+    const { ctx, agent, state } = await composeFileGated(false)
+    const result = await ctx.tools.execute({ callId: ToolCallId('a549b-stable'), name: 'fileprobe', arguments: { path: PROBE_PATH }, agent, signal })
+
+    expect(result.isError).toBe(false)
+    expect(state.ran).toBe(true)
+    await ctx.fiber.dispose()
+  })
+})
