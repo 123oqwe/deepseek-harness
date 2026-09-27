@@ -31,6 +31,15 @@
     },
     {
       "epic": "P0-02",
+      "path": "apps/cli/src/bin.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "The shipped launcher entry the U.2 cases start as a real `dsh --profile` process; it hands the launch to `runProfile`, where A-551 (1/2) refuses DSH_TRUST_KERNEL_INSECURE outside an explicit development profile."
+    },
+    {
+      "epic": "P0-02",
       "path": "apps/cli/tests/fixtures/in-process-launch.ts",
       "kind": "test",
       "stages": [
@@ -42,7 +51,8 @@
       "path": "apps/cli/tests/fixtures/kernel-pinned-headless.ts",
       "kind": "test",
       "stages": [
-        "U.1"
+        "U.1",
+        "U.2"
       ]
     },
     {
@@ -50,7 +60,8 @@
       "path": "apps/cli/tests/fixtures/mount-sentinel.ts",
       "kind": "test",
       "stages": [
-        "U.1"
+        "U.1",
+        "U.2"
       ]
     },
     {
@@ -58,7 +69,8 @@
       "path": "apps/cli/tests/fixtures/recording-llm.ts",
       "kind": "test",
       "stages": [
-        "U.1"
+        "U.1",
+        "U.2"
       ]
     },
     {
@@ -95,6 +107,42 @@
     },
     {
       "epic": "P0-02",
+      "path": "packages/core/agent-loop/src/tool-calls.ts",
+      "kind": "source",
+      "stages": [
+        "U.3"
+      ],
+      "reason": "The native dispatch entry, one of the three that act on `dispatchDecisionWithoutKernel`'s refusal when a policy engine is mounted and no kernel is pinned (A-551 (2/2)); U.3's native case observes it."
+    },
+    {
+      "epic": "P0-02",
+      "path": "packages/core/system-prompt/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "Orders the INSECURE_MODE section a development profile launched with the opt-in adds, which tells the model it runs without a Trust Kernel (A-551 (1/2)); U.2's acceptance[3] case reads it from the recorded model input."
+    },
+    {
+      "epic": "P0-02",
+      "path": "packages/core/tools/src/external-effect.ts",
+      "kind": "source",
+      "stages": [
+        "U.3"
+      ],
+      "reason": "The code-mode sub-dispatch's decision point, which acts on `dispatchDecisionWithoutKernel`'s refusal for a run_code sub-call (A-551 (2/2)); U.3's code-mode case observes it."
+    },
+    {
+      "epic": "P0-02",
+      "path": "packages/core/tools/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.3"
+      ],
+      "reason": "The public `ToolRuntime.execute` seam, the third dispatch entry BLOCKED-306's addendum names, which refuses a kernel-less direct call through the same shared decision (A-551 (2/2)); U.3's direct-call case (B-675) observes it."
+    },
+    {
+      "epic": "P0-02",
       "path": "packages/kernel/trust-kernel/tests/boot.spec.ts",
       "kind": "test",
       "stages": [
@@ -115,6 +163,55 @@
       "kind": "test",
       "stages": [
         "U.1"
+      ]
+    },
+    {
+      "epic": "P0-02",
+      "path": "packages/policy/policy-enforcement/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.3"
+      ],
+      "reason": "`dispatchDecisionWithoutKernel`, the one decision all three dispatch entries act on: a mounted policy engine with no pinned kernel, outside an explicit development profile, refuses every dispatch (A-551 (2/2)). M2′ removes it and turns U.3's three kernel-less cases red."
+    },
+    {
+      "epic": "P0-02",
+      "path": "tests/first100/fixtures/loader/p0-02-no-kernel-dispatch/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P0-02",
+      "path": "tests/first100/fixtures/loader/p0-02-no-kernel-dispatch/shared.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P0-02",
+      "path": "tests/first100/fixtures/loader/p2-05-originators/base.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P0-02",
+      "path": "tests/first100/fixtures/P0-02.insecure-opt-in.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P0-02",
+      "path": "tests/first100/fixtures/P0-02.no-kernel-dispatch.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
       ]
     },
     {

@@ -20462,6 +20462,103 @@
         "failureSummary": "Read from the round's own narrow report, run 36305524229 over B-674's 14 files, 259 cases: 258 passed, 1 failed, «P4-05 acceptance[2] on the shipped profile: an orphaned Run whose session is gone fails safely rather than dangling (A-560, red first for B-674) a durable Run left with no recoverable session after a crash is recorded FAILED on the next boot, not left forever in a non-terminal state» (the Run stayed accepted). The reclaim case in the same spec stayed green."
       },
       "note": "P4-05 U-stage supplement 11, on the shipped profile: acceptance[2]'s fail-safe branch. A durable Run left with no recoverable session after a crash is recorded FAILED on the next boot, not left non-terminal (A-560 red first; B-674, which also makes accepted and paused → failed legal). Supplement 10 covers the reclaim branch from the same spec. files add the reclaim fixture's driver, overlay and mock model, packages/run/run/src/index.ts, where the restored Runs are failed, and packages/run/run/src/state-machine.ts, whose transition table the sensitivity mutation changes. expectCases are the full names in the full run 36307835499 at 29d8024c12f4d5a75c0141fe0254a9a3491dd5b9, where tests/first100/fixtures/P4-05.reclaim-after-restart.composition.spec.ts ran 2 cases and each frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. The observing tree is pinned at refs/dsh/freeze/P4-05.U.11/2026-09-27T10-17-22.000Z -> 29d8024c12f4d5a75c0141fe0254a9a3491dd5b9, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P0-02",
+      "stage": "U",
+      "supplements": {
+        "epic": "P0-02",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P0-02.insecure-opt-in.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) acceptance[2]: the shipped acp profile launched with DSH_TRUST_KERNEL_INSECURE set refuses to start before any config-tree entry mounts",
+        "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) acceptance[2]: the shipped web profile launched with DSH_TRUST_KERNEL_INSECURE set refuses to start before any config-tree entry mounts",
+        "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) acceptance[2]: the shipped headless profile launched with DSH_TRUST_KERNEL_INSECURE set refuses to start before any config-tree entry mounts",
+        "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) acceptance[2]: the shipped sdk profile launched with DSH_TRUST_KERNEL_INSECURE set refuses to start before any config-tree entry mounts",
+        "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) acceptance[2]: the shipped sdk-minimal profile launched with DSH_TRUST_KERNEL_INSECURE set refuses to start before any config-tree entry mounts",
+        "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) control: the shipped acp profile launched with DSH_TRUST_KERNEL_INSECURE empty pins its kernel and mounts the sentinel entry",
+        "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) control: the shipped web profile launched with DSH_TRUST_KERNEL_INSECURE empty pins its kernel and mounts the sentinel entry",
+        "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) control: the shipped headless profile launched with DSH_TRUST_KERNEL_INSECURE empty pins its kernel and mounts the sentinel entry",
+        "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) control: the shipped sdk profile launched with DSH_TRUST_KERNEL_INSECURE empty pins its kernel and mounts the sentinel entry",
+        "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) control: the shipped sdk-minimal profile launched with DSH_TRUST_KERNEL_INSECURE empty pins its kernel and mounts the sentinel entry",
+        "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) acceptance[3]: an explicit development profile launched with DSH_TRUST_KERNEL_INSECURE set starts without a kernel, warns on stderr, and tells the model it runs insecure",
+        "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) control: the same development profile launched with DSH_TRUST_KERNEL_INSECURE empty pins its kernel, prints no warning, and tells the model nothing of the kind"
+      ],
+      "files": [
+        "tests/first100/fixtures/P0-02.insecure-opt-in.composition.spec.ts",
+        "apps/cli/tests/fixtures/kernel-pinned-headless.ts",
+        "apps/cli/tests/fixtures/recording-llm.ts",
+        "apps/cli/tests/fixtures/mount-sentinel.ts",
+        "apps/cli/src/bin.ts",
+        "apps/cli/src/profile-boot.ts",
+        "packages/core/system-prompt/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-27T12:50:43.000Z",
+      "dryRunProof": {
+        "treeSha": "d1a3d72d3624d4c959506a29eda3b3729a2a63e2",
+        "testsDiscovered": 12
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M1 (`f8c739f80b12415a230240ac4e5addcca9d9f946`, lane A, parent A-551 `3262bb4638f49c4c986909c23ba952d54603c3c1`): the development-profile check on the insecure opt-in is removed from runProfile (apps/cli/src/profile-boot.ts), so every profile, shipped ones included, accepts DSH_TRUST_KERNEL_INSECURE. profile-boot.ts, bin.ts, the spec and the three fixtures it uses are byte-identical at the mutation's parent and at the observed candidate.",
+        "failureSummary": "Read from the round's own narrow report, run 36305775692 over the spec: 7 passed, 5 failed, the five «P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) acceptance[2]: the shipped <profile> profile launched with DSH_TRUST_KERNEL_INSECURE set refuses to start before any config-tree entry mounts» cases (acp, web, headless, sdk, sdk-minimal); the five empty-switch controls, the development-profile case and its control stayed green. The development-profile case is outside M1's reach (M1 lets every profile accept the opt-in, so the development profile still starts); it was red in the red-first run 36274797071 at B-672 `70537a2305f7a345616b7dc2a4607b0650248655`, before A-551 added the warning and the model-visible text: 6 failed there, the five refusals and that case, 6 controls passed."
+      },
+      "note": "P0-02 U-stage supplement 2, B-672's red first on real `dsh --profile` launches through the shipped launcher (bin.ts -> runProfile): each shipped profile template (acp, web, headless, sdk, sdk-minimal) launched with DSH_TRUST_KERNEL_INSECURE set refuses to start before any config-tree entry mounts, and with the switch empty pins its kernel and mounts the sentinel entry; an explicit development profile with the switch set starts without a kernel, warns on stderr and tells the model it runs without one, and with the switch empty pins its kernel and says nothing. A-551 (1/2) is the fix. expectCases are the full names in the full run 36317072734 at dd9641528408fd6c9d8a95f110f7ead55964f851, where tests/first100/fixtures/P0-02.insecure-opt-in.composition.spec.ts ran 12 cases and each frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. The observing tree is pinned at refs/dsh/freeze/P0-02.U.2/2026-09-27T12-50-43.000Z -> dd9641528408fd6c9d8a95f110f7ead55964f851, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P0-02",
+      "stage": "U",
+      "supplements": {
+        "epic": "P0-02",
+        "stage": "U"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P0-02.no-kernel-dispatch.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) acceptance[2] (native): a tool call is refused and its body never runs",
+        "P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) acceptance[2] (code-mode): a tool called from a run_code program never runs",
+        "P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) control (native): with the kernel pinned, the same tool call runs once",
+        "P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) control (code-mode): with the kernel pinned, the same program runs the tool once",
+        "P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) acceptance[2] (direct call, B-675): a plugin calling ToolRuntime.execute, on behalf of the root agent or with no agent, is refused and the tool body never runs",
+        "P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) control (direct call, B-675): with the kernel pinned, the call on behalf of the root agent presenting its session token runs the tool once"
+      ],
+      "files": [
+        "tests/first100/fixtures/P0-02.no-kernel-dispatch.composition.spec.ts",
+        "tests/first100/fixtures/loader/p0-02-no-kernel-dispatch/driver.ts",
+        "tests/first100/fixtures/loader/p0-02-no-kernel-dispatch/shared.ts",
+        "tests/first100/fixtures/loader/p2-05-originators/base.patch.yml",
+        "packages/policy/policy-enforcement/src/index.ts",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/core/tools/src/external-effect.ts",
+        "packages/core/tools/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-27T12:50:43.000Z",
+      "dryRunProof": {
+        "treeSha": "d1a3d72d3624d4c959506a29eda3b3729a2a63e2",
+        "testsDiscovered": 6
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M2′ (`fa5311150135fc68e7112c0e3a7a2bba09b56894`, lane B, parent batch 22's candidate `833ae318f91dc4c057ec61c0604ffa4b5f72e4ed`): the same one-line change as lane A's M2 (eb9fbb4d16): dispatchDecisionWithoutKernel (packages/policy/policy-enforcement/src/index.ts) returns no decision when a policy engine is mounted with no Trust Kernel, so a kernel-less dispatch runs unenforced on all three entries. Rehung because B-675 changed the spec, driver and shared files after M2's parent. policy-enforcement/src/index.ts, the spec, its driver, shared and overlay files are byte-identical at M2′'s parent and at the observed candidate.",
+        "failureSummary": "Read from the round's own narrow report, run 36315234175 over the spec: 3 passed, 3 failed, the three kernel-less cases «P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) acceptance[2] (native): …», «… (code-mode): …» and «… (direct call, B-675): …» (the probe ran); the three pinned-kernel controls stayed green."
+      },
+      "note": "P0-02 U-stage supplement 3, B-672's and B-675's red first on the shipped headless composition booted in-process with no Trust Kernel pinned and no opt-in: a native tool call, a tool called from a run_code program, and a plugin's direct ToolRuntime.execute call (on behalf of the root agent, and with no agent) are refused and the tool body never runs; with the kernel pinned the same three run once. A-551 (2/2) is the fix, one shared decision (dispatchDecisionWithoutKernel) read by all three entries (BLOCKED-306's addendum). expectCases are the full names in the full run 36317072734 at dd9641528408fd6c9d8a95f110f7ead55964f851, where tests/first100/fixtures/P0-02.no-kernel-dispatch.composition.spec.ts ran 6 cases and each frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. The observing tree is pinned at refs/dsh/freeze/P0-02.U.3/2026-09-27T12-50-43.000Z -> dd9641528408fd6c9d8a95f110f7ead55964f851, whose tree is dryRunProof.treeSha."
     }
   ]
 }
