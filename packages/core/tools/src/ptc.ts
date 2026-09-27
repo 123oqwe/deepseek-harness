@@ -28,7 +28,7 @@ import {
   manifestClassificationOf,
   readExecutionWorldFact,
   readPolicyContextFacts,
-  redactArgumentsForDisplay,
+  redactArgumentsValueForDisplay,
   refuseNewAction,
   refusedApprovalResult,
   refusedDispatchResult,
@@ -766,7 +766,7 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
                     : approvalDisplayFor(
                       manifested.manifest,
                       judged?.classification.riskClass ?? 'security-sensitive',
-                      redactArgumentsForDisplay(JSON.stringify(normalized.logged)),
+                      redactArgumentsValueForDisplay(normalized.logged),
                       Date.now() + APPROVAL_DISPLAY_VALIDITY_MS,
                     ),
                 )
