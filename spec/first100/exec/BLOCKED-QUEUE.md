@@ -3725,6 +3725,17 @@ P4-06 must[2] requires a consumer to deduplicate by message id and epoch. The ag
 
 **What survives unaffected:** `packages/run/message-bus` is self-contained, and its inbox/outbox dedup is keyed on explicit receipt and effect application rather than on a claim. The confusion was specific to reusing the agent inbox's existing "claimed" vocabulary for a different event.
 
+**BLOCKED-088 addendum (2026-09-27): lock (a)'s predicate is still not implemented after B-619.**
+
+- The lock row's predicate for (a) is "the turn that claimed this message committed". B-619 (`d13787a864` in batch 21) marks every claimed key consumed at any `turn/end` (`packages/core/agent-loop/src/inbox.ts:95-100`, `:121`).
+- A claim is taken when `preStep` starts (`packages/core/agent-loop/src/agent.ts:272`). The claimed messages reach the transcript as `user/message` only after three awaits: the system-prompt assembly, the pre-step waterfall and the request preparation (`:431-435`).
+- A turn that ends in between consumes the key. So does a crash whose claim splice reached disk, when resume appends an interrupted `turn/end`. The ways it can end are an abort, a hook's refusal, an `enter` rewritten to empty, or an error.
+- After that, the message is neither pending nor in the transcript, and a redelivery is refused as a duplicate.
+- **The delegate's ruling of 2026-09-26T00:27:01Z caused this.** It told B-619 to mark keys consumed "at turn/end". That was a code shape, not the lock's predicate, and B-619 implemented it as written.
+- **Corrected (A-class, gate3 2026-09-27T09:3xZ).** A claimed key is consumed only once its message is recorded in the transcript. A turn that ends before recording it, by any path above, releases the claim, and the message is redelivered.
+- Red first: lane A's A-567. Fix: lane B's B-677. Lock (a) stays NOT lifted.
+- The same review's Tier-2 findings are registered and do not block: F3, a redelivery inside one turn claimed twice; F4, an uncaught `DuplicateArrivalError` stalling the drain; F5, lock (a)'s cases unfrozen, with the frozen U.3 green under the old semantics.
+
 ### BLOCKED-089 — "Same batch" is not "same transaction", and must[0] only reaches the first
 
 **Status: RESOLVED 2026-09-08 by removal, not by repair.** `commitWithOutbox` and `AtomicBatchSink` were deleted in `cfb996713e` (§12.35-2(a)), and must[0] — reworded on 2026-09-06 to one SQLite `BEGIN IMMEDIATE` transaction — is delivered by `commitIntake` (freezes P.3, P.4, P.6). The measured fact below still holds for any session-log batch: a crash mid-batch can keep a prefix of the batch, so a batch is not a transaction. That is why the batch path was not kept, and why D1 of BASE-ALIGN-v3 must not record `SessionHandle.append` as a group-atomic substitute.
@@ -10187,3 +10198,23 @@ P1-10 is not ACCEPTED, so nothing is withdrawn. This entry blocks P1-10 acceptan
 5. **Then** P1-06's acceptance lock for this entry lifts.
 
 **Owner.** Lane B (fix, P1-06 second slice, after B-635; placed by the main queue); lane A (red first).
+
+### BLOCKED-350 — a subagent settlement is acked before the parent has recorded it, so a kill in between loses it (product defect, open)
+
+**Status:** OPEN (2026-09-27). Owner: lane A writes the red-first case (A-566); lane B fixes in place (B-676). Found by the P4-06 blind review at `29d8024c12` (F1). Recorded by the delegate (first100-delegate-1a), who re-read the cited lines.
+
+**What was read (not run).**
+- `drainSettlements` acks each settlement as soon as `deliver()` returns true (`packages/subagent/subagent/src/settlement-outbox.ts:164-170`). The ack is a synchronous SQLite write of the receipt.
+- `deliver()` hands the settlement to the parent agent's inbox, and the parent session's append takes the live path. `enqueueLive` buffers it for up to `LIVE_WRITE_BATCH_MAX_DELAY_MS = 200` before writing (`packages/session/session-persistence-jsonl/src/storage.ts:36`, `:274-281`). Nothing flushes the parent session before the ack.
+- A kill inside that window leaves the bus row acked, and `pendingSettlementsFor` reads only pending rows, so the settlement is never redelivered. The parent's log has no splice for it. The reviewer found no reconciliation in `message-bus/src` or `subagent/src`.
+- The shipped base bundle mounts the jsonl persistence, the message bus, the subagent package and the agent loop together.
+
+**Clause.** P4-06 acceptance[0]: 「在 commit 前后、发送前后、ack 前后 kill，消息最终只产生一次业务 effect，由 consumer 按 (source, messageId, epoch) 幂等保证」. A kill after the ack and before the consumer's record produces zero effects.
+
+**Closing conditions (each red first, each with its own mutation).**
+1. A case on a shipped composition kills the host after a settlement's ack and before the parent's record of it is written. After the restart, the parent receives the settlement, and it takes effect once (A-566).
+2. The fix (B-676) either acks only after the parent inbox's record of the delivery is on disk, or reconciles acked rows that no parent record matches when the host starts. The fix chooses one and says why.
+3. A kill before the ack still yields exactly one effect: the settlement is redelivered, and the consumer's (source, messageId, epoch) dedup absorbs the repeat.
+4. Then, with P4-06's other conditions, a fresh 4.4a–d before its sign-off.
+
+**What this does NOT claim.** It does not claim the bus's own outbox transaction is wrong: must[0]'s `BEGIN IMMEDIATE` is evidenced (lock (b) LIFTED). Nothing was run for this entry.
