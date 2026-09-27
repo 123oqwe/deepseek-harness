@@ -3416,6 +3416,14 @@
     },
     {
       "epic": "P3-01",
+      "path": "tests/first100/fixtures/loader/p3-01-world-identity/mutate-spec.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P3-01",
       "path": "tests/first100/fixtures/loader/p3-01-world-identity/network-none.patch.yml",
       "kind": "test",
       "stages": [
@@ -3425,6 +3433,14 @@
     {
       "epic": "P3-01",
       "path": "tests/first100/fixtures/loader/p3-01-world-identity/shared.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P3-01",
+      "path": "tests/first100/fixtures/loader/p3-01-world-identity/swap-id-to-local.patch.yml",
       "kind": "test",
       "stages": [
         "U.2"
@@ -4039,6 +4055,15 @@
       "stages": [
         "U.3"
       ]
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/core/agent/src/arrival.ts",
+      "kind": "source",
+      "stages": [
+        "U.3"
+      ],
+      "reason": "Where `arrivalKey` builds the (source, id, epoch) key the parent inbox refuses a consumed redelivery by (P4-06 must[2]); its epoch component is what admits a later activation of the same child. U.3's ADMITS-later-epoch case turns on it, and U.3's sensitivity round (ii) (d08d2ebae0) fixes that component to 0. NOT labelled HOT ZONE: B-619 changes only its module comment, which now says the key is consumed when the claiming turn ends."
     },
     {
       "epic": "P4-06",

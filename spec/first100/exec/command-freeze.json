@@ -1990,7 +1990,8 @@
         "treeSha": "d3108717d3165afa51deb46086e3a68c209d8576",
         "testsDiscovered": 111
       },
-      "note": "C-stage RED scaffold for P4-01 (first-class Run Service + Run event log), attempt/P4-01-C @ 80d14f552a. 111 cases (an exhaustive 10x10=100 state-pair sweep for must[0]/acceptance[1], derived programmatically from the real exported LEGAL_RUN_TRANSITIONS table so it cannot drift out of sync -- all 21 legal edges get a passing-direction case with exact toStrictEqual event checks, all 79 illegal pairs get a rejected-direction case with exact reason/from/to checks, plus 11 further cases for must[1]/must[2]/acceptance[0]/acceptance[2], all using exact toStrictEqual/toBe assertions, never loose toMatchObject). 111/111 genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor (both the vitest run and a direct read of the test file -- spot-checked, not delegated to a review subagent this time). Reviewed and ACCEPTED with no MUST-FIX. expectExit=0 is the GREEN target per the P0-01.C precedent."
+      "note": "C-stage RED scaffold for P4-01 (first-class Run Service + Run event log), attempt/P4-01-C @ 80d14f552a. 111 cases (an exhaustive 10x10=100 state-pair sweep for must[0]/acceptance[1], derived programmatically from the real exported LEGAL_RUN_TRANSITIONS table so it cannot drift out of sync -- all 21 legal edges get a passing-direction case with exact toStrictEqual event checks, all 79 illegal pairs get a rejected-direction case with exact reason/from/to checks, plus 11 further cases for must[1]/must[2]/acceptance[0]/acceptance[2], all using exact toStrictEqual/toBe assertions, never loose toMatchObject). 111/111 genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor (both the vitest run and a direct read of the test file -- spot-checked, not delegated to a review subagent this time). Reviewed and ACCEPTED with no MUST-FIX. expectExit=0 is the GREEN target per the P0-01.C precedent.",
+      "supersededBy": "2026-09-27T08:52:53.000Z"
     },
     {
       "epic": "P6-07",
@@ -14404,7 +14405,8 @@
         "mutationDescription": "Locally (never committed) at candidate tip 58beb6c497: in packages/core/agent/src/arrival.ts, replaced arrivalKey's epoch component `epoch: source.senderEpoch` with `epoch: 0`, leaving source/id components and the consumed-set machinery unchanged (the dedup key lives in arrival.ts on this tree, not inbox.ts).",
         "failureSummary": "Under the frozen argv (arrival-dedup.spec + continuation.spec): 1 failed | 149 passed (150). The one red is exactly 'ADMITS a settlement from the same child in a LATER epoch, so a second activation is not suppressed' -- DuplicateArrivalError 'inbox arrival ... repeats a consumed key' (agent-loop/src/inbox.ts:319 append, spec:150)."
       },
-      "dryRunProof": "Ran locally at candidate tip 58beb6c497 (tree d6ad39122784), BASE-ALIGN-v3 re-anchor: arrival-dedup.spec + continuation.spec, 150 passed. Cases path-remapped core/agent -> core/agent-loop/tests; expectCases set-identical to superseded parent 2026-09-07T23:10:00.000Z."
+      "dryRunProof": "Ran locally at candidate tip 58beb6c497 (tree d6ad39122784), BASE-ALIGN-v3 re-anchor: arrival-dedup.spec + continuation.spec, 150 passed. Cases path-remapped core/agent -> core/agent-loop/tests; expectCases set-identical to superseded parent 2026-09-07T23:10:00.000Z.",
+      "supersededBy": "2026-09-27T08:52:53.000Z"
     },
     {
       "epic": "P5-10",
@@ -19999,7 +20001,8 @@
         "mutationDescription": "Three rounds, never merged, each one line in the world registry, each on a commit where the execution-world sources, the spec and its loader files are byte-identical to the dry-run commit 4019f9147b. M-666-1′ rebased (`1e0ee4db35`, parent 4019f9147b), run 36277715496: bindingFor acts on a computed mismatch only when its provider is undefined, which it never is, so a handle naming another provider or carrying a digest the registry did not compute is bound as it claims (dae726c5f2 applied unchanged; its first round 36268924628 ran on 6c81ad253e, whose plugin.ts and spec differ, so it is not cited). M-666-2″ (`6d89e4c354`, parent 4019f9147b), run 36277723556: register()'s reservation skips the id local, so a provider createLocalWorldProvider did not build registers under it while fenced stays reserved (it replaces M-666-2, 29d670b1d7, whose line 83a73d4f94 rewrote). M-666-3 (`06cd5bd9b9`, parent 83a73d4f94), run 36269865624: isFencedWorldProvider answers yes for any provider carrying the id fenced, so register admits a provider built elsewhere under it. Rulings: gate3 2026-09-26T22:48:45Z and 22:5xZ.",
         "failureSummary": "Read from each round's own narrow report; each ran the same 13 files, 175 cases, with the spec's 7. M-666-1′ rebased, run 36277715496: 5 red, in the spec only «… P3-01 acceptance[2] / BLOCKED-316 condition 3: a plugin provider whose handle claims local with a digest it did not compute is refused at binding — the tool does not run, the result names the mismatch, and nothing binds under the claim» (the call bound under provider local with the forged all-zero digest and the tool ran), and in packages/execution/execution-world/tests/registry.spec.ts the four binding checks «P3-01 acceptance[2] (BLOCKED-316): the registry checks who built a world instead of taking its handle's word binds nothing when the handle names a provider other than the one selected, and says which», «… binds nothing when the handle carries a digest other than that of the spec it was asked to create» and the two «… where a tool runtime is composed, a call in a session whose handle failed the check does not run» cases (identity and digest mismatch). M-666-2″, run 36277723556: 2 red, in the spec only «… P3-01 BLOCKED-316 condition 3: registering a world provider under the reserved id local is refused, with an error naming the identity» (registering under local did not throw, and the call bound under local), and in registry.spec.ts «P3-01 acceptance[2] (BLOCKED-316): the registry checks who built a world instead of taking its handle's word refuses to register a provider it did not build under the reserved id local, naming the id» (expected [Function] to throw an error). M-666-3, run 36269865624: 2 red, in the spec only «… P3-01 BLOCKED-316 condition 3: registering a world provider (not the shipped fenced provider) under the reserved id fenced is refused, with an error naming the identity» (registering under fenced did not throw), and in registry.spec.ts «P3-01 acceptance[2] (BLOCKED-316): the registry checks who built a world instead of taking its handle's word refuses to register a provider it did not build under the reserved id fenced, naming the id» (expected [Function] to throw an error). Every other case passed in each round."
       },
-      "note": "P3-01 U-stage supplement 2: BLOCKED-316 conditions 2a and 3, acceptance[1] and [2], on the shipped headless profile. A plugin provider that reports its own identity binds the call's world under its id and the digest it computed; a handle claiming local with a digest its provider did not compute is refused at binding, the tool does not run and nothing binds under the claim; registering a provider built elsewhere under the reserved id local or fenced is refused with an error naming the id; a requested world no provider can hold refuses the call or records that it ran without that world; and a deployment rule forbidding an absent world refuses the call while the same policy set minus that rule runs it. Red firsts A-432 (4626c85201), A-531 (6541038185, ec8acefb76) and A-541 (d4d89ba107); fix B-666 (f3cb8b6369, cd57a7e8f2). Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T21:48:45Z: stage U, as every composition spec) from lane A's A-548 draft (artifacts/laneA/a-548-p3-01-world-identity-freeze.md, sha256 0b2c53cd…). expectCases are the full names in the full run 36272740256 at 4019f9147b, where tests/first100/fixtures/P3-01.world-identity.composition.spec.ts ran 7 cases and each frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the harness the driver uses (the mock model and the loader-smoke fixtures and entry) and the sources the verdict passes through: the registry's reservation and binding check, the two providers' own-build tests, provider selection, the Cedar engine that evaluates the forbid rule, and the external-effect path that records the bound world. The observing tree is pinned at refs/dsh/freeze/P3-01.U.2/2026-09-26T23-00-32.000Z -> 4019f9147ba3f49279803c96c957df16ddeae4e9, whose tree is dryRunProof.treeSha."
+      "note": "P3-01 U-stage supplement 2: BLOCKED-316 conditions 2a and 3, acceptance[1] and [2], on the shipped headless profile. A plugin provider that reports its own identity binds the call's world under its id and the digest it computed; a handle claiming local with a digest its provider did not compute is refused at binding, the tool does not run and nothing binds under the claim; registering a provider built elsewhere under the reserved id local or fenced is refused with an error naming the id; a requested world no provider can hold refuses the call or records that it ran without that world; and a deployment rule forbidding an absent world refuses the call while the same policy set minus that rule runs it. Red firsts A-432 (4626c85201), A-531 (6541038185, ec8acefb76) and A-541 (d4d89ba107); fix B-666 (f3cb8b6369, cd57a7e8f2). Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T21:48:45Z: stage U, as every composition spec) from lane A's A-548 draft (artifacts/laneA/a-548-p3-01-world-identity-freeze.md, sha256 0b2c53cd…). expectCases are the full names in the full run 36272740256 at 4019f9147b, where tests/first100/fixtures/P3-01.world-identity.composition.spec.ts ran 7 cases and each frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the harness the driver uses (the mock model and the loader-smoke fixtures and entry) and the sources the verdict passes through: the registry's reservation and binding check, the two providers' own-build tests, provider selection, the Cedar engine that evaluates the forbid rule, and the external-effect path that records the bound world. The observing tree is pinned at refs/dsh/freeze/P3-01.U.2/2026-09-26T23-00-32.000Z -> 4019f9147ba3f49279803c96c957df16ddeae4e9, whose tree is dryRunProof.treeSha.",
+      "supersededBy": "2026-09-27T08:52:53.000Z"
     },
     {
       "epic": "P2-01",
@@ -20127,6 +20130,259 @@
         "failureSummary": "Run 36274520296: the child-scope case red — AssertionError, mode child-scope: the host list shows «No external effect is waiting for reconciliation.» and the resolve «No external effect is recorded under p4-12-effect.», because the cross-scope listing was dropped; two cross-scope resolve-effect command cases also red."
       },
       "note": "P4-12 F-stage supplement 4, post-sign-off- acceptance[1]'s reconciliation half across scopes. On the shipped headless profile the host user lists and resolves an ambiguous entry recorded under a child agent's scope, and the resolution keeps that child scope (B-515 v2, red first A-546). Frozen after P4-12's sign-off and accept in this same 20r batch, from the delegate's P4-12 sign-off ruling (first100-delegate-1a, gate3 2026-09-27T02-14-34Z); its cell is observed by the next full run. expectCases is the full name in the full run 36284563089 at 4418e311253df568452146710c0f57e584d39b1f, where tests/first100/fixtures/P4-12.reconciliation.composition.spec.ts ran 7 cases (F.3's six plus this one) and this title passed once. files match F.3's, the reconciliation fixture and the action-ledger sources the resolve path runs through. The observing tree is pinned at refs/dsh/freeze/P4-12.F.4/2026-09-27T06-02-34.000Z -> 4418e311253df568452146710c0f57e584d39b1f, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P4-06",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-06",
+        "stage": "U"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/core/agent-loop/tests/arrival-dedup.spec.ts",
+        "packages/subagent/subagent/tests/continuation.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-06 must[2]: an inbox consumes one (source, id, epoch) once REFUSES a settlement redelivered after the parent already ran it",
+        "P4-06 must[2]: an inbox consumes one (source, id, epoch) once SURVIVES a restart, which is the only reason the rule means anything",
+        "P4-06 must[2]: an inbox consumes one (source, id, epoch) once ADMITS a settlement from the same child in a LATER epoch, so a second activation is not suppressed",
+        "continuable settlement delivery carries the child run's LEASE EPOCH, and a redelivery of that notice is refused (P4-06 must[2])"
+      ],
+      "files": [
+        "packages/core/agent-loop/src/inbox.ts",
+        "packages/core/agent/src/arrival.ts",
+        "packages/core/agent/src/index.ts",
+        "packages/subagent/subagent/src/continuation.ts",
+        "packages/core/agent-loop/tests/arrival-dedup.spec.ts",
+        "packages/subagent/subagent/tests/continuation.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-27T08:52:53.000Z",
+      "supersedes": "2026-09-14T10:00:00.000Z",
+      "supersessionReason": "B-619 (70cdb44aa7) makes an inbox consume an arrival key when the turn that claimed it ends, not at the claim (P4-06 (a), BLOCKED-088). A-556 (b) (97c176878c) and (b2) (9eac255b3b), lane A, move the four frozen cases to that timing: REFUSES and SURVIVES end the claiming turn (SURVIVES replays the turn boundary on restart), ADMITS-later-epoch ends the first claiming turn so its key is consumed, and the LEASE-EPOCH case waits for the parent's turn/end. Titles, argv and the nature of each assertion are unchanged. The entry's sensitivityProof, a local epoch mutation at 58beb6c497, runs green after B-619, because a key that is only claimed is never consumed; two committed rounds replace it, and files add packages/core/agent/src/arrival.ts, where round (ii) changes arrivalKey. Rulings: gate3 2026-09-27T00:22:48Z, 00:36:32Z, 08:14:17Z.",
+      "dryRunProof": {
+        "treeSha": "2a11f8dd08deed448c60e6a814a7aafc9bde8cbb",
+        "testsDiscovered": 151
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two rounds, never merged, each one line, both on A-556 (b2)'s commit 9eac255b3b, where packages/core/agent-loop/src/inbox.ts, packages/core/agent/src/arrival.ts, packages/core/agent/src/index.ts, packages/subagent/subagent/src/continuation.ts and both argv specs are byte-identical to the dry-run commit cb75e5f6dd. Mutation (i) `9203ee83920fa922e7de9ff717c4a1ea0eeeb15d`: `ReactLoopInbox.mutate()` starts from an empty consumed set, so no redelivery of an already-consumed key is refused. Mutation (ii) `d08d2ebae02a7bfa7e6a97dfc9f2b364d4be2f91`: `arrivalKey`'s epoch component is fixed to 0 after the `senderEpoch` guard, so a later-epoch settlement collapses onto the first activation's consumed key.",
+        "failureSummary": "Read from each round's own narrow report over the two argv files, 151 cases. Mutation (i), run 36282069916: 145 passed, 6 failed, the six cases that expect DuplicateArrivalError: «P4-06 must[2]: an inbox consumes one (source, id, epoch) once REFUSES a settlement redelivered after the parent already ran it», «P4-06 must[2]: an inbox consumes one (source, id, epoch) once SURVIVES a restart, which is the only reason the rule means anything», «continuable settlement delivery carries the child run's LEASE EPOCH, and a redelivery of that notice is refused (P4-06 must[2])», and three this entry does not freeze (the two forked-child cases and the case of a turn its process stopped in). Mutation (ii), run 36282080283: 150 passed, 1 failed, «P4-06 must[2]: an inbox consumes one (source, id, epoch) once ADMITS a settlement from the same child in a LATER epoch, so a second activation is not suppressed»; the different-child case stays green, since an id, not an epoch, tells that settlement apart."
+      },
+      "note": "P4-06 U-stage supplement 3, replaced for B-619's turn-end consumption: an inbox consumes one (source, id, epoch) once, so a redelivery of a consumed key is refused, also after a restart and on the continuation path, and a later epoch of the same child is admitted (P4-06 must[2]). expectCases are the full names in the narrow run 36306741182 at cb75e5f6dd (batch 21 before this record), which ran the entry's two argv files, 13 and 138 cases, each frozen title passing once; the entry is frozen after that run, so its cell is observed by the next full run. The observing tree is pinned at refs/dsh/freeze/P4-06.U.3/2026-09-27T08-52-53.000Z -> cb75e5f6dd9621ad3b4174d84cda389563640fb9, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P3-01",
+      "stage": "U",
+      "supplements": {
+        "epic": "P3-01",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P3-01.world-identity.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile control: a plugin provider that reports its own identity binds the call's world under its id and the digest it computed",
+        "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[2] / BLOCKED-316 condition 3: a plugin provider whose handle claims local with a digest it did not compute is refused at binding — the tool does not run, the result names the mismatch, and nothing binds under the claim",
+        "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[2] / BLOCKED-316 condition 3: a provider that registers under a non-reserved id and then becomes local is refused at binding — nothing binds under local and the tool does not run (B-666 finding 1, red first for B-673)",
+        "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[2] / BLOCKED-316 condition 3: a provider that clears the deployment ceilings on the spec it is handed and reports the mutated digest binds no world (B-666 finding 2, red first for B-673)",
+        "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 BLOCKED-316 condition 3: registering a world provider under the reserved id local is refused, with an error naming the identity",
+        "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 BLOCKED-316 condition 3: registering a world provider (not the shipped fenced provider) under the reserved id fenced is refused, with an error naming the identity",
+        "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile control: under the shipped request the local provider binds the call's world and the tool runs",
+        "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[1] / BLOCKED-316 condition 2b: a requested world no provider can hold records exactly one visible action/world-unbound, kind unavailable, naming the unmet network dimension, and the tool runs under the absent fact a deployment rule can then refuse",
+        "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[1] / BLOCKED-316 condition 2a: a deployment rule forbidding an absent world refuses the call (the tool does not run), and the same request with the same policy set MINUS that one rule runs the tool — so the rule is what denies, not the absence of a world"
+      ],
+      "files": [
+        "tests/first100/fixtures/P3-01.world-identity.composition.spec.ts",
+        "tests/first100/fixtures/loader/p3-01-world-identity/driver.ts",
+        "tests/first100/fixtures/loader/p3-01-world-identity/shared.ts",
+        "tests/first100/fixtures/loader/p3-01-world-identity/world-provider.ts",
+        "tests/first100/fixtures/loader/p3-01-world-identity/honest.patch.yml",
+        "tests/first100/fixtures/loader/p3-01-world-identity/forging.patch.yml",
+        "tests/first100/fixtures/loader/p3-01-world-identity/network-none.patch.yml",
+        "tests/first100/fixtures/loader/p3-01-world-identity/forbid-absent.patch.yml",
+        "tests/first100/fixtures/loader/p3-01-world-identity/forbid-absent-control.patch.yml",
+        "tests/first100/fixtures/loader/p3-01-world-identity/swap-id-to-local.patch.yml",
+        "tests/first100/fixtures/loader/p3-01-world-identity/mutate-spec.patch.yml",
+        "tests/first100/fixtures/loader/p3-01-world-swap/base.patch.yml",
+        "tests/first100/fixtures/loader/p3-01-world-swap/shared.ts",
+        "tests/first100/fixtures/loader/p3-01-world-swap/mock-llm.ts",
+        "packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts",
+        "packages/test-support/loader-smoke/tests/fixtures/production-profile.ts",
+        "packages/test-support/loader-smoke/src/index.ts",
+        "packages/test-support/loader-smoke/src/agent-turn.ts",
+        "packages/execution/execution-world/src/plugin.ts",
+        "packages/execution/execution-world/src/local-provider.ts",
+        "packages/execution/execution-world/src/fenced-provider.ts",
+        "packages/execution/execution-world/src/lifecycle.ts",
+        "packages/policy/policy-engine-cedar/src/index.ts",
+        "packages/core/tools/src/external-effect.ts"
+      ],
+      "frozenAtUtc": "2026-09-27T08:52:53.000Z",
+      "supersedes": "2026-09-26T23:00:32.000Z",
+      "supersessionReason": "A-559 (43d06492b8, lane A) tightens the condition-2b case, so its frozen title «… P3-01 acceptance[1]: a requested world no provider can hold refuses the call or records that it ran without that world» no longer exists: the case now pins exactly one visible action/world-unbound of kind unavailable naming the network dimension, with the tool running under the absent fact. It also adds two condition-3 red firsts for what the B-666 blind review found the registry did not enforce: a provider that becomes local after registering under another id (finding 1), and a provider that rewrites the spec it is handed and reports the rewritten digest (finding 2). B-673 (4128ef62d1) checks a handle against the id recorded at registration, hands the provider a frozen copy of the spec and computes the expected digest before selection. argv is unchanged; files add the two patches the new cases load. Rulings: gate3 2026-09-27T01:38:57Z, 06:19:19Z, 08:14:17Z, 08:39:29Z.",
+      "dryRunProof": {
+        "treeSha": "2a11f8dd08deed448c60e6a814a7aafc9bde8cbb",
+        "testsDiscovered": 9
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Five rounds, never merged, each one line or two, each on a commit where the execution-world sources, the spec, its loader files and the loader-smoke harness are byte-identical to the dry-run commit cb75e5f6dd. M-666-1‴ (`9f4b99c25bb90a2a5d9c4a264ff5d579566bff32`, parent cb75e5f6dd): attemptBinding acts on a computed mismatch only when its provider is undefined, which it never is, so a handle naming another provider or carrying a digest the registry did not compute binds as it claims. M-666-2‴ (`80502bd4b052ea05828daee6406d5d995a58a984`, parent cb75e5f6dd): register()'s reservation skips the id local, so a provider createLocalWorldProvider did not build registers under it. M-666-3′ (`f92440cde9247646bd3072d124eab7a72788b521`, parent cb75e5f6dd): isFencedWorldProvider answers yes for any provider carrying the id fenced. These three repeat, line for line, the rounds index 428 cited (1e0ee4db35, 6d89e4c354, 06cd5bd9b9), remade because B-673 and A-559 changed the files those ran against (A-416; ruling gate3 2026-09-27T08:39:29Z). M-673-1 (`a3ba633efbbf89abed070fa2c5432a63d2836b0b`, parent 4128ef62d1): the identity check reads the id the provider reports at binding instead of the one recorded at registration. M-673-5 (`e5431e416cc2d88e411e0bd48c66b42ac4564c17`, parent 4128ef62d1): the copy handed to the provider is not frozen, and the expected digest is computed after create from that same object.",
+        "failureSummary": "Read from each round's own narrow report; each ran the same 13 files, 196 cases, with the spec's 9. M-666-1‴, run 36307174625: 8 red, in the spec «… P3-01 acceptance[2] / BLOCKED-316 condition 3: a plugin provider whose handle claims local with a digest it did not compute is refused at binding — the tool does not run, the result names the mismatch, and nothing binds under the claim» (the call bound under provider local with the forged all-zero digest) and «… P3-01 acceptance[2] / BLOCKED-316 condition 3: a provider that registers under a non-reserved id and then becomes local is refused at binding — nothing binds under local and the tool does not run (B-666 finding 1, red first for B-673)» (the call bound under local), and in packages/execution/execution-world/tests/registry.spec.ts the four binding checks «P3-01 acceptance[2] (BLOCKED-316): the registry checks who built a world instead of taking its handle's word binds nothing when the handle names a provider other than the one selected, and says which», «… binds nothing when the handle carries a digest other than that of the spec it was asked to create» and the two «… where a tool runtime is composed, a call in a session whose handle failed the check does not run» cases (identity and digest mismatch), and B-673's «P3-01 acceptance[2] (BLOCKED-316, B-673): a provider cannot change what the registry checks once it is registered checks a handle against the id its provider registered under, so a provider that renames itself to local afterwards binds nothing» and «… keeps a recorded mismatch when a later attempt's create fails, so the session stays refused until a world binds» (each bound a world). M-666-2‴, run 36307186974: 2 red, in the spec only «… P3-01 BLOCKED-316 condition 3: registering a world provider under the reserved id local is refused, with an error naming the identity» (registering under local did not throw, and the call bound under local), and in registry.spec.ts «P3-01 acceptance[2] (BLOCKED-316): the registry checks who built a world instead of taking its handle's word refuses to register a provider it did not build under the reserved id local, naming the id» (expected [Function] to throw an error). M-666-3′, run 36307201763: 2 red, in the spec only «… P3-01 BLOCKED-316 condition 3: registering a world provider (not the shipped fenced provider) under the reserved id fenced is refused, with an error naming the identity» (registering under fenced did not throw), and in registry.spec.ts «P3-01 acceptance[2] (BLOCKED-316): the registry checks who built a world instead of taking its handle's word refuses to register a provider it did not build under the reserved id fenced, naming the id» (expected [Function] to throw an error). M-673-1, run 36285865021: 2 red, in the spec only «… P3-01 acceptance[2] / BLOCKED-316 condition 3: a provider that registers under a non-reserved id and then becomes local is refused at binding — nothing binds under local and the tool does not run (B-666 finding 1, red first for B-673)», and in packages/execution/execution-world/tests/registry.spec.ts «P3-01 acceptance[2] (BLOCKED-316, B-673): a provider cannot change what the registry checks once it is registered checks a handle against the id its provider registered under, so a provider that renames itself to local afterwards binds nothing». M-673-5, run 36305536080: 2 red, in the spec only «… P3-01 acceptance[2] / BLOCKED-316 condition 3: a provider that clears the deployment ceilings on the spec it is handed and reports the mutated digest binds no world (B-666 finding 2, red first for B-673)» (the world bound with the ceilings gone), and in registry.spec.ts «P3-01 acceptance[2] (BLOCKED-316, B-673): a provider cannot change what the registry checks once it is registered hands a provider a frozen copy of the spec, so a create that writes to it binds nothing and the request keeps its ceilings». Every other case passed in each round."
+      },
+      "note": "P3-01 U-stage supplement 2, replaced for A-559 and B-673: BLOCKED-316 conditions 2a, 2b and 3, acceptance[1] and [2], on the shipped headless profile. A plugin provider that reports its own identity binds the call's world under its id and the digest it computed; a handle claiming local with a digest its provider did not compute is refused at binding, the tool does not run and nothing binds under the claim; a provider that becomes local after registering under another id, and one that rewrites the spec it is handed and reports the rewritten digest, bind nothing; registering a provider built elsewhere under the reserved id local or fenced is refused with an error naming the id; a requested world no provider can hold records exactly one visible action/world-unbound naming the unmet dimension; and a deployment rule forbidding an absent world refuses the call while the same policy set minus that rule runs it. Red firsts A-432 (4626c85201), A-531 (6541038185, ec8acefb76), A-541 (d4d89ba107) and A-559 (43d06492b8); fixes B-666 (f3cb8b6369, cd57a7e8f2) and B-673 (4128ef62d1). expectCases are the full names in the narrow run 36306741182 at cb75e5f6dd (batch 21 before this record), where tests/first100/fixtures/P3-01.world-identity.composition.spec.ts ran 9 cases and each frozen title passed once; the entry is frozen after that run, so its cell is observed by the next full run. files are index 428's plus the two patches the new cases load. The observing tree is pinned at refs/dsh/freeze/P3-01.U.2/2026-09-27T08-52-53.000Z -> cb75e5f6dd9621ad3b4174d84cda389563640fb9, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P4-01",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/run/tests/state-machine.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "accepted -> accepted is rejected",
+        "accepted -> planning is accepted",
+        "accepted -> waiting is rejected",
+        "accepted -> running is rejected",
+        "accepted -> paused is rejected",
+        "accepted -> verifying is rejected",
+        "accepted -> reconciling is rejected",
+        "accepted -> succeeded is rejected",
+        "accepted -> failed is accepted",
+        "accepted -> cancelled is accepted",
+        "planning -> accepted is rejected",
+        "planning -> planning is rejected",
+        "planning -> waiting is accepted",
+        "planning -> running is accepted",
+        "planning -> paused is rejected",
+        "planning -> verifying is rejected",
+        "planning -> reconciling is rejected",
+        "planning -> succeeded is rejected",
+        "planning -> failed is accepted",
+        "planning -> cancelled is accepted",
+        "waiting -> accepted is rejected",
+        "waiting -> planning is rejected",
+        "waiting -> waiting is rejected",
+        "waiting -> running is accepted",
+        "waiting -> paused is rejected",
+        "waiting -> verifying is rejected",
+        "waiting -> reconciling is rejected",
+        "waiting -> succeeded is rejected",
+        "waiting -> failed is accepted",
+        "waiting -> cancelled is accepted",
+        "running -> accepted is rejected",
+        "running -> planning is rejected",
+        "running -> waiting is rejected",
+        "running -> running is rejected",
+        "running -> paused is accepted",
+        "running -> verifying is accepted",
+        "running -> reconciling is rejected",
+        "running -> succeeded is rejected",
+        "running -> failed is accepted",
+        "running -> cancelled is accepted",
+        "paused -> accepted is rejected",
+        "paused -> planning is rejected",
+        "paused -> waiting is rejected",
+        "paused -> running is accepted",
+        "paused -> paused is rejected",
+        "paused -> verifying is rejected",
+        "paused -> reconciling is rejected",
+        "paused -> succeeded is rejected",
+        "paused -> failed is accepted",
+        "paused -> cancelled is accepted",
+        "verifying -> accepted is rejected",
+        "verifying -> planning is rejected",
+        "verifying -> waiting is rejected",
+        "verifying -> running is rejected",
+        "verifying -> paused is rejected",
+        "verifying -> verifying is rejected",
+        "verifying -> reconciling is accepted",
+        "verifying -> succeeded is accepted",
+        "verifying -> failed is accepted",
+        "verifying -> cancelled is rejected",
+        "reconciling -> accepted is rejected",
+        "reconciling -> planning is rejected",
+        "reconciling -> waiting is rejected",
+        "reconciling -> running is accepted",
+        "reconciling -> paused is rejected",
+        "reconciling -> verifying is rejected",
+        "reconciling -> reconciling is rejected",
+        "reconciling -> succeeded is accepted",
+        "reconciling -> failed is accepted",
+        "reconciling -> cancelled is rejected",
+        "succeeded -> accepted is rejected",
+        "succeeded -> planning is rejected",
+        "succeeded -> waiting is rejected",
+        "succeeded -> running is rejected",
+        "succeeded -> paused is rejected",
+        "succeeded -> verifying is rejected",
+        "succeeded -> reconciling is rejected",
+        "succeeded -> succeeded is rejected",
+        "succeeded -> failed is rejected",
+        "succeeded -> cancelled is rejected",
+        "failed -> accepted is rejected",
+        "failed -> planning is rejected",
+        "failed -> waiting is rejected",
+        "failed -> running is rejected",
+        "failed -> paused is rejected",
+        "failed -> verifying is rejected",
+        "failed -> reconciling is rejected",
+        "failed -> succeeded is rejected",
+        "failed -> failed is rejected",
+        "failed -> cancelled is rejected",
+        "cancelled -> accepted is rejected",
+        "cancelled -> planning is rejected",
+        "cancelled -> waiting is rejected",
+        "cancelled -> running is rejected",
+        "cancelled -> paused is rejected",
+        "cancelled -> verifying is rejected",
+        "cancelled -> reconciling is rejected",
+        "cancelled -> succeeded is rejected",
+        "cancelled -> failed is rejected",
+        "cancelled -> cancelled is rejected",
+        "genesisRunEvent mints the Run's first log entry with no prior state",
+        "appendRunEvent appends exactly one new entry at the next seq, leaving every prior entry unchanged",
+        "a single event carries references to all six must[1] entity kinds at once, in exact order",
+        "referencesByKind extracts only the references of the requested kind, across the whole log, in log order",
+        "createRun always stamps RUN_SERVICE_OWNER_ID regardless of which Session initiates it, and that id is distinct from any Session id",
+        "listNonTerminalRuns returns exactly the Runs in a non-terminal state, excluding every terminal Run",
+        "a non-terminal Run resumes with its state and service ownership intact",
+        "a terminal Run cannot be resumed",
+        "the same Session id seeds two independently created Runs",
+        "attachSessionToRun appends an additional Session/Agent, so one Run spans multiple Sessions",
+        "attachSessionToRun is idempotent: re-attaching an already-present Session does not duplicate it"
+      ],
+      "files": [
+        "packages/run/run/tests/state-machine.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-27T08:52:53.000Z",
+      "supersedes": "2026-09-03T13:51:50.560Z",
+      "supersessionReason": "B-674 (ff74db6b4b) adds accepted → failed and paused → failed to LEGAL_RUN_TRANSITIONS, so a restored Run whose sessions are all gone can fail (P4-05 acceptance[2]); P4-01 requires illegal transitions to be refused, which transitions are legal is design, and the state set does not change (gate3 2026-09-27T01:36:15Z). The sweep derives each pair's title and expected outcome from that table, so the frozen titles «accepted -> failed is rejected» and «paused -> failed is rejected» become «… is accepted» and pass; A-562 (4a95fe063d, lane A) updates the spec's header count of legal edges from 21 to 23. Only those two titles change; argv and files are unchanged. P4-01 stays ACCEPTED: the replacement lands in the same observation batch as the change (WORKING-MODEL §21.11). Rulings: gate3 2026-09-27T01:36:15Z, 04:26:39Z, 08:14:17Z, 08:19:22Z.",
+      "dryRunProof": {
+        "treeSha": "2a11f8dd08deed448c60e6a814a7aafc9bde8cbb",
+        "testsDiscovered": 112
+      },
+      "sensitivityProof": {
+        "mutationDescription": "The entry it replaces was frozen before the sensitivity rule and carried none; its 111 cases were a red scaffold, each failing on a not-implemented error at attempt/P4-01-C (80d14f552a), until P4-01's implementation turned them green. For the two replaced titles, M-674-2 (`47dccc2a61c4456cc0b3162972a605110874a4e1`, parent A-562 4a95fe063d, whose packages/run/run/src/state-machine.ts and the spec are byte-identical to the dry-run commit cb75e5f6dd): LEGAL_RUN_TRANSITIONS drops the two edges B-674 added.",
+        "failureSummary": "Read from the round's own narrow report, run 36305524229 over B-674's 14 files, 259 cases: 258 passed, 1 failed, A-560's «P4-05 acceptance[2] on the shipped profile: an orphaned Run whose session is gone fails safely rather than dangling (A-560, red first for B-674) a durable Run left with no recoverable session after a crash is recorded FAILED on the next boot, not left forever in a non-terminal state» (the Run stays accepted). packages/run/run/tests/state-machine.spec.ts ran its 112 cases and all passed, but the sweep takes its titles from the table, so it produced «accepted -> failed is rejected» and «paused -> failed is rejected»; the two titles this entry freezes are absent from the report, so its cell reads red for missing cases (ruling gate3 2026-09-27T08:19:22Z)."
+      },
+      "note": "P4-01 C stage, replaced for B-674: the exhaustive 10x10 state-pair sweep derived from LEGAL_RUN_TRANSITIONS, now 23 legal edges, plus the cases for must[1], must[2], acceptance[0] and acceptance[2], unchanged. expectCases are the 111 titles of the entry it replaces with the accepted and paused → failed titles now «… is accepted», as in the narrow run 36306741182 at cb75e5f6dd (batch 21 before this record), where packages/run/run/tests/state-machine.spec.ts ran 112 cases and each frozen title passed once; the one case not frozen here is a P4-02 case added later. The entry is frozen after that run, so its cell is observed by the next full run. The observing tree is pinned at refs/dsh/freeze/P4-01.C/2026-09-27T08-52-53.000Z -> cb75e5f6dd9621ad3b4174d84cda389563640fb9, whose tree is dryRunProof.treeSha."
     }
   ]
 }
