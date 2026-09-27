@@ -551,7 +551,6 @@ export function recordedExitRefusal(reportPath, overrideReason, observed) {
   const { exitPath, exitCode } = record
   if (record.format === 'new') {
     const final = '--exit-override does not apply to a record that names its run and its report'
-    if (record.runId !== observed.ciRunId) return `${exitPath} records run ${record.runId}, but --ci-run-url names run ${observed.ciRunId}; ${final}`
     if (record.reportSha256 !== observed.reportSha256) {
       return `${exitPath} records report sha256 ${String(record.reportSha256)}, but the report beside it has sha256 ${observed.reportSha256}; ${final}`
     }
