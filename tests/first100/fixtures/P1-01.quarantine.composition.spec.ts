@@ -17,7 +17,7 @@
 import { fileURLToPath } from 'node:url'
 import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
 import { beforeAll, describe, expect, it } from 'vitest'
-import { DECLARES_UNREGISTERED_LAYER, MATCH_STAYS_LAYER, MISSING_MANIFEST_LAYER } from './loader/p1-01-quarantine/shared.ts'
+import { DECLARES_UNREGISTERED_LAYER, MATCH_STAYS_LAYER, MISSING_MANIFEST_LAYER, SUBPATH_UNDECLARED_LAYER } from './loader/p1-01-quarantine/shared.ts'
 
 const driver = fileURLToPath(new URL('./loader/p1-01-quarantine/driver.ts', import.meta.url))
 const tsconfigPath = fileURLToPath(new URL('../../../tsconfig.json', import.meta.url))
@@ -61,5 +61,10 @@ describe('A-558b P1-01 must[3]/acceptance[0]: admission and quarantine on a base
   it('a declares-unregistered ENTRY layer is QUARANTINED: post-mount enforcement disposes it, naming it (RED today — staged in the profile\'s node_modules it is not found by plugin-inventory\'s own-location resolution, so the comparison skips it and it is never quarantined; green after 甲)', () => {
     expect(stderr, `stderr must show ${DECLARES_UNREGISTERED_LAYER} quarantined/disposed`)
       .toMatch(new RegExp(`disposing[^\\n]*${DECLARES_UNREGISTERED_LAYER}`, 'u'))
+  })
+
+  it('a SUBPATH-entry layer registering an undeclared name is QUARANTINED: its manifest resolves to the package root and the observed name is not declared, so it is disposed by name (RED today — not found/resolved by plugin-inventory; green after 甲)', () => {
+    expect(stderr, `stderr must show ${SUBPATH_UNDECLARED_LAYER} quarantined/disposed`)
+      .toMatch(new RegExp(`disposing[^\\n]*${SUBPATH_UNDECLARED_LAYER}`, 'u'))
   })
 })
