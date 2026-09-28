@@ -100,7 +100,7 @@ export function runDeterministicLane(lane: ManifestLane, seed: number, manifest:
       seed: trialSeed(seed, name, index),
       launch: { argv: run.argv },
       exitCode: run.exitCode,
-      sessionLogs: run.logs.map((raw, log) => ({ digest: sha256(actual[log] ?? ''), rawSha256: sha256(raw) })),
+      sessionLogs: run.logs.map(raw => ({ digest: sha256(raw), rawSha256: sha256(raw) })),
       failure: null,
       toolResults,
       taskSucceeded: toolResults.mismatches.length === 0 && outcomeOf(actual[0]) === outcomeOf(expected),
