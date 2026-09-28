@@ -18,6 +18,14 @@
  * longest kernel literal, after a marker, into the task, a tool description
  * and a tool result, and the same search must find it in each of those places.
  *
+ * A hit is let through only by {@link ALLOWED} (delegate ruling, gate3
+ * 2026-09-28T02:02:29Z): text outside the kernel that happens to contain a
+ * kernel literal, such as the shipped bash tool's description with the word
+ * `deny`. Each entry proves its provenance on every run: its sentence is in
+ * its source file verbatim, the file does not import the kernel, and the hit's
+ * literal falls inside that sentence. Every other hit stays red, and the
+ * control is not filtered.
+ *
  * `apps/cli/tests/trust-kernel-model-input.spec.ts` reads a real launch with
  * one permitted call for the literals that contain whitespace; this file adds
  * the denied dispatch, every literal, the control and the static case. Green
@@ -25,7 +33,8 @@
  * @module tests/first100/fixtures/P0-02.kernel-model-text.composition.spec
  */
 
-import { resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
 import ts from 'typescript'
@@ -43,6 +52,28 @@ import {
 const driver = fileURLToPath(new URL('./loader/p0-02-kernel-model-text/driver.ts', import.meta.url))
 const overlay = fileURLToPath(new URL('./loader/p4-11-policy-deny/deny.patch.yml', import.meta.url))
 const repoTsconfig = fileURLToPath(new URL('../../../tsconfig.json', import.meta.url))
+const repoRoot = fileURLToPath(new URL('../../../', import.meta.url))
+
+/** One passage of model-visible text outside the kernel that contains a kernel literal. */
+interface AllowedText {
+  readonly literal: string
+  /** The non-kernel source file that writes the sentence, from the repository root. */
+  readonly file: string
+  /** Where the sentence is written, for the reader. */
+  readonly line: number
+  /** The sentence, verbatim, with the literal inside it. */
+  readonly sentence: string
+}
+
+/**
+ * The passages a hit may fall inside (delegate ruling, gate3 2026-09-28T02:02:29Z).
+ * The shipped bash and pwsh tools describe a confining sandbox with the word
+ * `deny`, which is also a kernel literal (`index.ts`'s default verdict).
+ */
+const ALLOWED: readonly AllowedText[] = [
+  { literal: 'deny', file: 'packages/shell/tool-bash/src/index.ts', line: 84, sentence: 'Attempting a command the sandbox may deny is safe and expected' },
+  { literal: 'deny', file: 'packages/shell/tool-pwsh/src/index.ts', line: 133, sentence: 'Attempting a command the sandbox may deny is safe and expected' },
+]
 
 /** The kernel's type module, which declares the `TrustKernel` interface. */
 const KERNEL_TYPES_MODULE = resolve(KERNEL_SRC_DIR, 'types.ts')
@@ -70,6 +101,8 @@ interface Hit {
   readonly channel: Channel
   /** Whether the string it was found in holds the control's marker directly before it. */
   readonly marked: boolean
+  /** Whether every occurrence of the literal in the string falls inside a sentence the allowlist passed in names. */
+  readonly allowed: boolean
   /** The text around the first occurrence, up to 160 characters on each side. */
   readonly excerpt: string
 }
@@ -146,18 +179,47 @@ function excerptAround(text: string, found: string): string {
 }
 
 /**
+ * Every start position of a string in a text.
+ * @param text - the text.
+ * @param found - the string.
+ * @returns the positions, in order.
+ */
+function positionsOf(text: string, found: string): number[] {
+  const positions: number[] = []
+  for (let at = text.indexOf(found); at !== -1; at = text.indexOf(found, at + 1)) positions.push(at)
+  return positions
+}
+
+/**
+ * Whether every occurrence of a literal in a text falls inside an occurrence
+ * of one of the sentences an allowlist names for that literal.
+ * @param text - the text the literal was found in.
+ * @param literal - the literal.
+ * @param allowed - the allowlist.
+ * @returns true when no occurrence lies outside every such sentence.
+ */
+function insideAllowedSentences(text: string, literal: string, allowed: readonly AllowedText[]): boolean {
+  const spans = allowed
+    .filter(entry => entry.literal === literal)
+    .flatMap(entry => positionsOf(text, entry.sentence).map(start => ({ start, end: start + entry.sentence.length })))
+  return positionsOf(text, literal).every(at => spans.some(span => span.start <= at && at + literal.length <= span.end))
+}
+
+/**
  * Every place any of the searched strings occurs in the recorded requests.
  * @param requests - the recorded requests.
  * @param literals - the strings to search for, each verbatim.
+ * @param allowed - the passages a hit may fall inside; the control passes none.
  * @returns one hit per literal, request, channel and string it occurs in.
  */
-function hitsOf(requests: readonly RecordedRequest[], literals: readonly string[]): Hit[] {
+function hitsOf(requests: readonly RecordedRequest[], literals: readonly string[], allowed: readonly AllowedText[]): Hit[] {
   return requests.flatMap((request, index) => Object.entries(channelsOf(request)).flatMap(([channel, texts]) =>
     texts.flatMap(text => literals.filter(literal => text.includes(literal)).map(literal => ({
       literal,
       request: index,
       channel: channel as Channel,
       marked: text.includes(`${CONTROL_MARKER}${literal}`),
+      allowed: insideAllowedSentences(text, literal, allowed),
       excerpt: excerptAround(text, literal),
     })))))
 }
@@ -171,7 +233,7 @@ function kernelLiterals(): string[] {
 }
 
 describe('P0-02 acceptance[1] on the shipped headless composition with the Trust Kernel pinned: the kernel writes no model-visible text (B-682)', () => {
-  it('acceptance[1]: across a dispatch the kernel allows and one it denies, no string literal of the kernel runtime module reaches any model request', async () => {
+  it('acceptance[1]: across a dispatch the kernel allows and one it denies, no model request carries a string literal of the kernel runtime module except inside a proven non-kernel sentence', async () => {
     // A template with substitutions computes its text, which no literal list covers.
     expect(readRuntimeModuleSyntax().templateExpressions).toBe(0)
     const literals = kernelLiterals()
@@ -192,9 +254,17 @@ describe('P0-02 acceptance[1] on the shipped headless composition with the Trust
     expect(refusal, shown).not.toBe('')
     expect(report.requests.some(request => channelsOf(request)['tool-results'].some(text => text.includes(refusal))), shown).toBe(true)
 
-    // Each hit in full: vitest's diff truncates the objects.
-    const hits = hitsOf(report.requests, literals)
-    expect(hits, JSON.stringify(hits)).toEqual([])
+    // Each allowlist entry proves its provenance: the sentence is in its file
+    // verbatim, holds the literal, and the file does not import the kernel.
+    for (const entry of ALLOWED) {
+      const source = readFileSync(join(repoRoot, entry.file), 'utf8')
+      expect(source.includes(entry.sentence), `${entry.file}:${String(entry.line)} no longer writes «${entry.sentence}»`).toBe(true)
+      expect(entry.sentence.includes(entry.literal), `${entry.file}:${String(entry.line)}`).toBe(true)
+      expect(source.includes('@deepseek-ai/dsh-trust-kernel'), `${entry.file} imports the Trust Kernel`).toBe(false)
+    }
+    // Each hit that is not inside an allowlisted sentence, in full: vitest's diff truncates the objects.
+    const unexplained = hitsOf(report.requests, literals, ALLOWED).filter(hit => !hit.allowed)
+    expect(unexplained, JSON.stringify(unexplained)).toEqual([])
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 
   it('control: the longest kernel literal, placed after a marker in the task, a tool description and a tool result, is found in each of those places', async () => {
@@ -202,7 +272,7 @@ describe('P0-02 acceptance[1] on the shipped headless composition with the Trust
     expect(longest).not.toBe('')
 
     const report = await run('control', longest)
-    const hits = hitsOf(report.requests, [longest])
+    const hits = hitsOf(report.requests, [longest], [])
     expect([...new Set(hits.map(hit => hit.channel))], JSON.stringify(hits)).toEqual(expect.arrayContaining(['messages', 'tool-results', 'tools']))
     expect(hits.every(hit => hit.marked), JSON.stringify(hits)).toBe(true)
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
