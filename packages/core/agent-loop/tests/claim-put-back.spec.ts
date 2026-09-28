@@ -1,11 +1,11 @@
 /**
  * Epic P4-06 must[2] and the ACCEPTANCE LOCK's clause (a), BLOCKED-088, on the
  * agent loop (B-677): a message a step claimed and the conversation never
- * recorded is not lost. A pre-step refusal or a failure before the record puts
- * it back in the inbox, where a later turn records it once; a refusal that
- * drops it on purpose names it in `dropped`, and the turn's `blocked` end
- * records who dropped it and why; a cancel that clears the inbox cancels it
- * with a `canceled` splice.
+ * recorded is not lost. A pre-step refusal before the record puts it back in
+ * the inbox, where a later turn records it once; a refusal that drops it on
+ * purpose names it in `dropped`, and the turn's `blocked` end records who
+ * dropped it and why; a failure before the record, or a cancel that clears the
+ * inbox or sets `cancelClaim`, cancels it with a `canceled` splice.
  */
 import { Context } from '@deepseek-ai/cordis'
 import LlmRuntime, { createUserMessage } from '@deepseek-ai/dsh-llm'
@@ -140,7 +140,7 @@ describe('P4-06 must[2] (agent loop): a claimed message the turn never recorded 
     expect(adapter.requests).toHaveLength(0)
   })
 
-  it('a pre-step that fails before the record puts the claimed prompt back, and the next turn records it once', async () => {
+  it('a pre-step that fails before the record cancels the claimed prompt with a record instead of putting it back', async () => {
     const adapter = new MockAdapter([textResponse('ok')])
     const ctx = await loopContext(adapter)
     const agent = await ctx.agentLoop.create(SessionId('failed'), { provider: 'mock', model: 'mock' })
@@ -153,9 +153,12 @@ describe('P4-06 must[2] (agent loop): a claimed message the turn never recorded 
     await prompt(agent, 'first')
     expect(recordedTexts(agent)).toEqual([])
     expect(turnEnds(agent).map(reason => reason.kind)).toEqual(['error'])
+    expect([...agent.inbox.nextTurn, ...agent.inbox.nextStep]).toEqual([])
+    expect(agent.session.snapshotEvents().filter((event: SessionEvent) =>
+      event.type === 'agent/inbox/spliced' && event.data.outcome === 'canceled')).toHaveLength(1)
 
     await prompt(agent, 'second')
-    expect(recordedTexts(agent)).toEqual(['first', 'second'])
+    expect(recordedTexts(agent)).toEqual(['second'])
     expect(adapter.requests).toHaveLength(1)
   })
 })

@@ -2658,7 +2658,7 @@ describe('continuable settlement delivery', () => {
     )
   })
 
-  it('keeps a task whose turn failed before its first step in the child inbox, so the child stays resident without a settlement (a registered limitation)', async () => {
+  it('reports a turn that failed before reaching its first step', async () => {
     const releaseFirst = Promise.withResolvers<undefined>()
     const adapter = new GatedAdapter([
       { chunks: textResponse('the answer'), gate: releaseFirst.promise },
@@ -2674,26 +2674,19 @@ describe('continuable settlement delivery', () => {
     })
 
     const started = await ctx.subagents.startContinuable(startSpec(parent))
-    const child = await vi.waitFor(() => {
-      const live = ctx.agents.get(started.childId)
-      expect(live).toBeDefined()
-      return live!
-    })
     await queuePrompt(ctx, parent, started.childId, message('second task'))
     releaseFirst.resolve(undefined)
+    await waitNoActivation(ctx, started.childId)
 
-    // The failed turn never recorded the task, so it went back to the child's
-    // inbox (Epic P4-06, BLOCKED-088). The Activation settles only once the
-    // inbox is empty, so the child stays resident and the parent is told
-    // nothing: a registered limitation that P4-06 does not cover.
-    await vi.waitFor(() => {
-      expect(child.inbox.nextStep.flatMap(pending => pending.content)).toContainEqual({ type: 'text', text: 'second task' })
-    })
-    await child.whenIdle()
-    await passSettlementCheck(ctx, started.childId)
-    expect(ctx.agents.get(started.childId)).toBe(child)
-    expect(settlementNotices(parent)).toEqual([])
-    expect(hasUserText(child.session.snapshotEvents(), 'second task')).toBe(false)
+    await vi.waitFor(() => { expect(settlementNotices(parent)).toHaveLength(1) })
+    // The parent must not be told the child finished: the delivery it is still
+    // waiting on was claimed out of the inbox and then swallowed by the failure.
+    const child = await loadStoredSession(ctx.sessionPersistence, started.childId)
+    expect(hasUserText(child.events, 'second task')).toBe(false)
+    expect(settlementNotices(parent)[0]!.text).toBe(
+      `Background subagent ${started.childId} failed before it finished.`
+      + '\nIts closing message:\nthe answer',
+    )
   })
 
   it('reports accepted work cut short before its first step as stopped', async () => {
