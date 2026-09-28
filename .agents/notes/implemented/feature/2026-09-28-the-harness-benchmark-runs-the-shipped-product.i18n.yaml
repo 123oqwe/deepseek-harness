@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-09-28-the-harness-benchmark-runs-the-shipped-product.md
-2026-09-28-the-harness-benchmark-runs-the-shipped-product.md: 2dba03cfa8c898ead24a5496a3e24cf1148af56e
-2026-09-28-the-harness-benchmark-runs-the-shipped-product.zh.md: 6e70e720ccd8c1c6acb5b36b080b7c7162d3f8e8
+2026-09-28-the-harness-benchmark-runs-the-shipped-product.md: f166b50e9ff6d1b91ab0002e29551e1d7d211d50
+2026-09-28-the-harness-benchmark-runs-the-shipped-product.zh.md: 42c116d123479aab938dcb7490c341938ae2591e

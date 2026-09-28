@@ -186,6 +186,16 @@ export interface FailurePosition {
   readonly eventIndex: number
 }
 
+/** The failure a fault trial injected. */
+export interface InjectedFault {
+  /** `model`: a retryable provider error before one recorded answer; `process`: a SIGKILL while the replay stalls at one model call, then a resume. */
+  readonly kind: 'model' | 'process'
+  /** The model call the failure hit, by its index among the recording's calls. */
+  readonly call: number
+  /** After a process fault: the call the resumed replay started at, and the resumed launch's argv and exit code; absent when no resume ran. */
+  readonly resumed?: { readonly fromCall: number; readonly argv: readonly string[]; readonly exitCode: number | null }
+}
+
 /** One tool result of a trial that does not match the recording. */
 export interface ToolResultMismatch {
   /** The result's position among the recording's tool results. */
@@ -205,16 +215,18 @@ export interface Trial {
   /** The product's exit code, or `null` when it was killed. */
   readonly exitCode: number | null
   readonly sessionLogs: readonly SessionLogDigest[]
-  /** Where an injected failure landed; `null` when the trial injected none. */
+  /** Where an injected failure landed; `null` when the trial injected none or its session log does not show it. */
   readonly failure: FailurePosition | null
+  /** In a fault lane: the failure the trial injected. */
+  readonly fault?: InjectedFault
   /** How the trial's tool results compare with the recording, in a replaying lane. */
   readonly toolResults?: { readonly compared: number; readonly mismatches: readonly ToolResultMismatch[] }
   readonly taskSucceeded: boolean
   /** In an attacking lane: whether the attack took effect in the world or its call reported success. */
   readonly bypassed?: boolean
-  /** In an attacking lane: what the attack call's result said, or why no result was read. */
+  /** In an attacking lane, what the attack call's result said or why no result was read; in a fault lane, how the failure and the recovery went. */
   readonly observation?: string
-  /** Idempotency keys whose action manifest the trial appended more than once. */
+  /** Idempotency keys whose call the trial applied more than once; a re-issue the action ledger refused is not an application. */
   readonly duplicateSideEffects: number
   /** Estimated model cost of the trial, from its recorded token usage and the manifest's price table. */
   readonly tokenCost: number
