@@ -6,16 +6,9 @@
  * against what is actually installed. `./signature.ts`'s
  * `PackageProvenanceClaim.sbomDigest` is this module's {@link SbomDigest};
  * `./index.ts`'s `verifyPluginProvenance` combines this module's
- * {@link verifySbomCoverage} check with `./signature.ts`'s
- * digest/source-commit/builder-identity checks into the complete must[1]
- * verification. {@link computeSbomDigest} is not currently part of that
- * combined gate: no fixture in this stage's frozen test pairs a claimed
- * `sbomDigest` with a genuine recomputed digest of the same `SbomDocument`
- * (`sbomDigest` fixtures are opaque placeholder strings), so wiring a strict
- * equality check here would reject every case the frozen test expects
- * `trust: 'trusted'`. `computeSbomDigest` stays a correct, independent
- * content digest for a later stage to gate on once a real signer computes
- * `sbomDigest` from an actual `SbomDocument`.
+ * {@link computeSbomDigest} integrity check and {@link verifySbomCoverage}
+ * coverage check with `./signature.ts`'s digest/source-commit/builder-identity
+ * checks into the complete must[1] verification.
  *
  * **Grounding.** {@link SbomFormat} fixes the two formats validation[]
  * names verbatim ("生成 CycloneDX/SPDX SBOM" / generate a CycloneDX or SPDX
