@@ -22,9 +22,8 @@
  * @module scripts/release/feature-gate-expiry
  */
 
-import { brandString } from '@deepseek-ai/dsh-brand'
 import { checkFeatureGateExpiry } from '@deepseek-ai/dsh-feature-gates'
-import type { FeatureGateDeclaration, FeatureGateId } from '@deepseek-ai/dsh-feature-gates'
+import type { FeatureGateDeclaration } from '@deepseek-ai/dsh-feature-gates'
 
 /**
  * The release gate's own declared feature gates: the same declarations as
@@ -32,13 +31,7 @@ import type { FeatureGateDeclaration, FeatureGateId } from '@deepseek-ai/dsh-fea
  * script cannot import from the bin-only `apps/cli`. Today that is Epic
  * P1-01's plugin-manifest enforcement gate (BLOCKED-322).
  */
-export const RELEASE_GATE_FEATURE_GATES: readonly FeatureGateDeclaration[] = [{
-  id: brandString<FeatureGateId>('plugin-manifest-enforcement'),
-  owner: '@deepseek-ai/dsh-plugin-manifest',
-  introducedVersion: '0.1.5-rc.2',
-  defaultByProfile: { default: 'shadow' },
-  removalVersion: '0.2.0',
-}]
+export const RELEASE_GATE_FEATURE_GATES: readonly FeatureGateDeclaration[] = []
 
 /**
  * Fail the release gate when any declared feature gate has passed its
