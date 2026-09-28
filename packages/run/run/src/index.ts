@@ -1625,11 +1625,15 @@ export default class RunPlugin extends Service {
         if (!TERMINAL_STATES.includes(lifecycle.state)) return Promise.resolve({ kind: 'reject' as const })
         // BLOCKED-332: a step refused because the Run has ended names the
         // terminal state and the reason given for reaching it, so the turn
-        // records why it stopped rather than a bare `blocked`.
+        // records why it stopped rather than a bare `blocked`. An ended Run
+        // runs nothing again, so the claimed messages are dropped with a
+        // record rather than put back (Epic P4-06, BLOCKED-088); a refusal
+        // above for a Run that may resume puts them back.
         const reason = this.endReasons.get(agent)
         return Promise.resolve({
           kind: 'reject' as const,
           runEnded: { state: lifecycle.state, ...reason === undefined ? {} : { reason } },
+          dropped: [{ messageIds: messages.map(message => message.id), by: '@deepseek-ai/dsh-run', reason: 'the run has ended' }],
         })
       }
       // Cleared only once the step is actually admitted: a refused step means

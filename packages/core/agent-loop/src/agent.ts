@@ -87,6 +87,19 @@ export class ReactLoopAgent implements Agent {
    * can rely on today.
    */
   private spentUsd = 0
+  /**
+   * The messages the current step claimed from the inbox and the conversation
+   * has not recorded yet (Epic P4-06, BLOCKED-088); empty once the step's first
+   * attempt appends its `user/message` events.
+   */
+  private unrecordedClaim: readonly UserMessage[] = []
+  /**
+   * Whether a cancel that clears the inbox, or that sets `cancelClaim`, ran
+   * since the current step began its claim, including from the claim's own
+   * `agent/inbox/claimed` notifications, before {@link unrecordedClaim} holds
+   * the batch.
+   */
+  private claimCancelled = false
   private activityDone: Promise<void> = Promise.resolve()
 
   /** The agent-scoped registration boundary; the lifecycle owner unwinds it after the driver exits. */
@@ -175,6 +188,7 @@ export class ReactLoopAgent implements Agent {
   }
 
   cancel(cause: AgentCancelCause, options: CancelOptions = {}): void {
+    if (!options.keepInbox || options.cancelClaim) this.claimCancelled = true
     if (!options.keepInbox) {
       this.inbox.clear()
       if (this.phase.kind !== 'idle') this.phase.wakeRequested = false
@@ -269,7 +283,9 @@ export class ReactLoopAgent implements Agent {
     /* v8 ignore next -- private callers establish the running phase before proposing a step */
     if (this.phase.kind !== 'running') throw new Error(`agent "${this.id}": pre-step outside running phase`)
     const signal = this.phase.abort.signal
+    this.claimCancelled = false
     const claimed = this.inbox.claim(target, position.turn)
+    this.unrecordedClaim = claimed
     const assembly = await this.loopCtx.systemPrompt.assemble(assembleContextFor(this, signal))
     signal.throwIfAborted()
     const sections = renderContextSections(assembly)
@@ -343,7 +359,11 @@ export class ReactLoopAgent implements Agent {
         const step = phase.step + 1
         const decision = await this.preStep(target, { turn, step })
         if (decision.kind === 'reject') {
-          turnEnds = decision.runEnded === undefined ? { kind: 'blocked' } : { kind: 'blocked', runEnded: decision.runEnded }
+          turnEnds = {
+            kind: 'blocked',
+            ...decision.runEnded === undefined ? {} : { runEnded: decision.runEnded },
+            ...decision.dropped === undefined ? {} : { dropped: decision.dropped },
+          }
           return false
         }
         if (turnEnds && decision.messages.length === 0) break
@@ -398,6 +418,11 @@ export class ReactLoopAgent implements Agent {
       } catch (error: unknown) {
         this.throwError(error)
       }
+      try {
+        this.putBackUnrecordedClaim(turnEnds)
+      } catch (error: unknown) {
+        this.throwError(error)
+      }
     }
     if (!this.inbox.hasPending) return false
     phase.abort = new AbortController()
@@ -405,6 +430,36 @@ export class ReactLoopAgent implements Agent {
     phase.wakeRequested = false
     phase.step = 0
     return true
+  }
+
+  /**
+   * Put back the messages the last step claimed and the conversation never
+   * recorded, when its turn ended before recording them because a pre-step
+   * refused the step, the turn was aborted, or it failed (Epic P4-06,
+   * BLOCKED-088). They return, in claim order, to the front of `next-step`,
+   * where the next claim takes them as one batch, and nothing wakes the driver
+   * for them. A message the refusal names in `dropped` stays out, and the
+   * turn's `blocked` end records who dropped it and why. A turn that ended
+   * because a pre-step emptied its batch puts nothing back: that listener
+   * removed the input. A message already pending again is not inserted twice.
+   * When a cancel that cleared the inbox or set `cancelClaim` ran while the
+   * claim was out, the claim is cancelled instead: it is put back and removed
+   * again by a `canceled` splice, so the log records the cancellation.
+   * @param reason - how the turn ended.
+   */
+  private putBackUnrecordedClaim(reason: TurnEndReason | null): void {
+    const claimed = this.unrecordedClaim
+    const cancelled = this.claimCancelled
+    this.unrecordedClaim = []
+    this.claimCancelled = false
+    if (reason === null || (reason.kind !== 'blocked' && reason.kind !== 'aborted' && reason.kind !== 'error')) return
+    const dropped = new Set<string>(reason.kind === 'blocked' ? (reason.dropped ?? []).flatMap(drop => drop.messageIds) : [])
+    const pending = new Set([...this.inbox.nextTurn, ...this.inbox.nextStep].map(message => message.id))
+    const back = claimed.filter(message => !pending.has(message.id) && !dropped.has(message.id))
+    if (back.length === 0) return
+    this.inbox.splice('next-step', 0, 0, [...back])
+    // By identity: an `agent/inbox/inserted` listener may already have moved or removed one.
+    if (cancelled) for (const message of back) this.inbox.remove(message.id)
   }
 
   private async step(decision: Extract<PreparedStep, { kind: 'enter' }>): Promise<StepEndReason | null> {
@@ -432,6 +487,7 @@ export class ReactLoopAgent implements Agent {
         for (const message of decision.messages) {
           this.session.append('user/message', message, { surfaceOp: 'append' })
         }
+        this.unrecordedClaim = []
       }
       firstAttempt = false
       const request = this.buildRequest(config, preparedCall, assembly.tools, startsRequestSeries, signal)

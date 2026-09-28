@@ -175,6 +175,7 @@ You are a delegated subagent: your permission scope was fixed when you were star
 - **中断只在有记录时跨越重启**——浏览器对驻留 child 的中断会在取消信号发出之前提交到持久消息总线，以 child 的 lease epoch 为键，所以无论优雅关停还是崩溃，重启之后发给这个 child 的浏览器提示词都会被拒绝（`subagent/not-resumable`）。以下情形不留记录：child 没有驻留的 Activation（此时中断是被接受的空操作，不核对 parent 地址，只在进程结束之前拒绝提示词）；这次驻留没有 lease epoch（没有挂载 Run Service，或它的 lease 被拒）；profile 挂的是内存总线。优雅关停之后，parent 会在下次启动时得知 child 已被停止；崩溃之后没有任何记录，parent 永远不会得知这次停止。
 - **没有 child 等待点**——只有运行时根可以进行人工交互：child 的提问会被拒绝，拒绝信息让它把未决的问题或决定写进最终结果。因此，把人工回答路由到提问等待点的机制，在出厂组合上无法到达。
 - **待处理的注入上下文会保留 Activation**——settlement 会保守地把每个 Inbox occurrence 都视为未完成。Agent 进入 idle 后停放的上下文会让 child 及其在线祖先继续驻留，直到唤醒投递将其 claim、queue 变更将其移除，或 manager teardown 将其丢弃。
+- **回合没记下的领取会保留 Activation**——child 的回合在记录所领取的消息之前结束时（pre-step 监听者拒绝而不带 `dropped`，或回合出错），这些消息放回 Inbox（Epic P4-06，BLOCKED-088）；中断会带记录地取消这样的领取，所以被中断的 child 照旧结算。它们让 child 及其在线祖先继续驻留、parent 收不到 settlement，直到唤醒投递将其 claim、queue 变更将其移除，或 manager teardown 将其丢弃。
 - **驻留仅限进程内**——Activation inbox 与所有权图不会在两个 harness 进程之间协调；对单个持久化存储的并发访问需要持久化邮箱与跨进程租约协议。
 - **不回放已接受但未记录的消息**——崩溃可能丢失从未写入子会话日志、已被接受的提示词；丢失的消息不会自动回放。
 - **没有持久化 parent mailbox**——child 到 parent 的消息要求驻留的可继续 child 与在线直接 parent，提供的是接受标识，不保证恰好一次投递。

@@ -1,16 +1,18 @@
 /**
  * P4-06 must[2]'s agent-inbox half (the ACCEPTANCE LOCK's clause (a),
- * BLOCKED-088): a message a turn claimed is consumed when that turn ends, not
- * when it is claimed. A claim whose turn never ran — a goal driver's stale
- * reservation, restored into the inbox by `restoreOtherClaimed` — leaves the
- * message deliverable, and only a consumed `(source, id, epoch)` is refused.
+ * BLOCKED-088): a message a turn claimed is consumed when the conversation
+ * records it as a `user/message`, not when it is claimed, and a turn that ends
+ * before recording it releases the claim (B-677). A claim whose turn never
+ * ran — a goal driver's stale reservation, restored into the inbox by
+ * `restoreOtherClaimed` — leaves the message deliverable, and only a consumed
+ * `(source, id, epoch)` is refused.
  *
  * Mounted the way `arrival-dedup.spec.ts` mounts it: one session store, one
  * projection registry, one `ReactLoopInbox`. A turn's bounds are the session's
- * own `turn/start` and `turn/end` events, as the agent loop records them. The
- * keyed message is a subagent settlement, the one source that carries an
- * arrival key today; the control message carries none, as a goal driver's own
- * messages do.
+ * own `turn/start` and `turn/end` events, and a recorded message is its own
+ * `user/message`, as the agent loop records them. The keyed message is a
+ * subagent settlement, the one source that carries an arrival key today; the
+ * control message carries none, as a goal driver's own messages do.
  */
 import { Context } from '@deepseek-ai/cordis'
 import { DuplicateArrivalError, type AgentEventDispatch } from '@deepseek-ai/dsh-agent'
@@ -56,7 +58,7 @@ function settlement(child: string, epoch: number) {
   })
 }
 
-describe('P4-06 must[2] (agent inbox): a claimed message is consumed when its turn ends, not when it is claimed', () => {
+describe('P4-06 must[2] (agent inbox): a claimed message is consumed when the conversation records it, not when it is claimed', () => {
   it('control: a message with no arrival key, claimed by a turn that never ran, is restored as a goal driver restores it', async () => {
     const { session, inbox } = await mountInbox('agent')
     session.append('turn/start', { turn: 1 })
@@ -78,20 +80,36 @@ describe('P4-06 must[2] (agent inbox): a claimed message is consumed when its tu
     expect(inbox.nextStep.map(pending => pending.id)).toEqual([claimed.id])
   })
 
-  it('control: once the claiming turn has ended, the same settlement redelivered is refused', async () => {
+  it('control: once the conversation recorded the claimed settlement, the same settlement redelivered is refused', async () => {
     const { session, inbox } = await mountInbox('agent')
     session.append('turn/start', { turn: 1 })
     inbox.append('next-step', settlement('child-a', 3))
-    expect(inbox.claim('next-step', 1)).toHaveLength(1)
+    const claimed = inbox.claim('next-step', 1)
+    expect(claimed).toHaveLength(1)
+    for (const message of claimed) session.append('user/message', message, { surfaceOp: 'append' })
     session.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
     expect(() => { inbox.append('next-step', settlement('child-a', 3)) }).toThrow(DuplicateArrivalError)
   })
 
-  it('a settlement claimed by a live turn, redelivered before that turn ends, is never given to a later turn', async () => {
+  it('a settlement claimed by a turn that ended before recording it is released, so the same settlement redelivered is admitted', async () => {
+    // A refused, aborted or failed turn ends before the conversation records
+    // its claim: the message never ran, so its key stays deliverable (B-677).
     const { session, inbox } = await mountInbox('agent')
     session.append('turn/start', { turn: 1 })
     inbox.append('next-step', settlement('child-a', 3))
     expect(inbox.claim('next-step', 1)).toHaveLength(1)
+    session.append('turn/end', { turn: 1, reason: { kind: 'blocked' } })
+    inbox.append('next-step', settlement('child-a', 3))
+    expect(inbox.nextStep).toHaveLength(1)
+  })
+
+  it('a settlement a live turn claimed and recorded, redelivered before that turn ends, is never given to a later turn', async () => {
+    const { session, inbox } = await mountInbox('agent')
+    session.append('turn/start', { turn: 1 })
+    inbox.append('next-step', settlement('child-a', 3))
+    const claimed = inbox.claim('next-step', 1)
+    expect(claimed).toHaveLength(1)
+    for (const message of claimed) session.append('user/message', message, { surfaceOp: 'append' })
     // The same arrival key redelivered (a fresh message id) while turn 1 has NOT
     // ended: refused at arrival today, admitted and dropped at the next claim
     // after B-619. The case asserts only the result — the redelivery reaches no

@@ -195,9 +195,9 @@ export interface InboxWireState {
 }
 
 /**
- * Host-only arrival bookkeeping reconstructed from durable inbox splices and
- * turn boundaries (Epic P4-06 must[2]). It never leaves the host, so it has no
- * wire view.
+ * Host-only arrival bookkeeping reconstructed from durable inbox splices,
+ * recorded user messages and turn boundaries (Epic P4-06 must[2]). It never
+ * leaves the host, so it has no wire view.
  */
 export interface InboxArrivalsState {
   /**
@@ -209,11 +209,12 @@ export interface InboxArrivalsState {
     readonly 'next-step': readonly ({ readonly id: UserMessage['id']; readonly key: string } | null)[]
   }
   /**
-   * Keyed messages claimed since the last `turn/end`, which consumes them.
-   * Putting one of these messages back into the inbox releases it instead.
+   * Keyed messages claimed and not yet recorded. Recording one as a
+   * `user/message` consumes it; putting it back into the inbox, or the claiming
+   * turn's `turn/end`, releases it.
    */
   readonly claimed: readonly { readonly id: UserMessage['id']; readonly key: string }[]
-  /** Keys of messages whose claiming turn ended; a later arrival repeating one is refused. */
+  /** Keys of messages the conversation recorded; a later arrival repeating one is refused. */
   readonly consumed: readonly string[]
 }
 

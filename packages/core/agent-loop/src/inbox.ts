@@ -88,37 +88,55 @@ export const inboxArrivalsProjectionSchema = z.object({
 type KeyedArrival = InboxArrivalsState['claimed'][number]
 
 /**
- * Consume every claim still held, at the end of the turn that made them.
- * @param state - the fold state at a `turn/end`.
- * @returns the state with its claimed keys added to `consumed`.
+ * Consume the claim of one message once the conversation records it.
+ * @param state - the fold state at a `user/message`.
+ * @param id - the recorded message's id.
+ * @returns the state with that message's key moved from `claimed` to `consumed`; unchanged when no claim holds the id.
  */
-function consumeClaimed(state: InboxArrivalsState): InboxArrivalsState {
-  if (state.claimed.length === 0) return state
-  const consumed = [...state.consumed]
-  for (const { key } of state.claimed) if (!consumed.includes(key)) consumed.push(key)
-  return { pending: state.pending, claimed: [], consumed }
+function consumeRecorded(state: InboxArrivalsState, id: UserMessage['id']): InboxArrivalsState {
+  const recorded = state.claimed.find(arrival => arrival.id === id)
+  if (recorded === undefined) return state
+  return {
+    pending: state.pending,
+    claimed: state.claimed.filter(arrival => arrival !== recorded),
+    consumed: state.consumed.includes(recorded.key) ? state.consumed : [...state.consumed, recorded.key],
+  }
+}
+
+/**
+ * Release every claim still held when the turn that made them ends: those
+ * messages never reached the conversation, so their keys stay deliverable.
+ * @param state - the fold state at a `turn/end`.
+ * @returns the state with no claims.
+ */
+function releaseClaimed(state: InboxArrivalsState): InboxArrivalsState {
+  return state.claimed.length === 0 ? state : { pending: state.pending, claimed: [], consumed: state.consumed }
 }
 
 /**
  * Host-only fold of the `(source, id, epoch)` keys of inbox messages, and of
- * the keys a finished turn consumed (Epic P4-06 must[2], BLOCKED-088). A claim
+ * the keys the conversation consumed (Epic P4-06 must[2], BLOCKED-088). A claim
  * is a splice that removes messages, inserts none, and is not `canceled`; it
- * holds the keyed messages it removed as claimed, and the claiming turn's
- * `turn/end` consumes them, including the interrupted `turn/end` a resume
- * appends for a turn its process stopped in. Inserting a claimed message
- * again, by the same message id, releases it, as when a goal driver puts back
- * a claim its stale reservation made; a redelivery is a new message and
- * releases nothing. A cancellation removes messages that never ran, so it
- * claims nothing. The fold runs over the whole log, fork-inherited prefix
- * included, so a restarted or forked agent still refuses a redelivery. The
- * `inbox` fold validates splice coordinates for the same events.
+ * holds the keyed messages it removed as claimed. A claimed message's key is
+ * consumed when its `user/message` records it in the conversation, and a
+ * `turn/end` releases every claim still held, whichever way the turn ended
+ * before recording, including the interrupted `turn/end` a resume appends for
+ * a turn its process stopped in. Inserting a claimed message again, by the
+ * same message id, releases it, as when the loop puts back a claim its turn
+ * never recorded or a goal driver puts back a claim its stale reservation
+ * made; a redelivery is a new message and releases nothing. A cancellation
+ * removes messages that never ran, so it claims nothing. The fold runs over
+ * the whole log, fork-inherited prefix included, so a restarted or forked
+ * agent still refuses a redelivery. The `inbox` fold validates splice
+ * coordinates for the same events.
  */
 export const inboxArrivalsProjectionDefinition = {
   key: 'inboxArrivals',
   stateSchema: inboxArrivalsProjectionSchema,
   init: (): InboxArrivalsState => ({ pending: { 'next-turn': [], 'next-step': [] }, claimed: [], consumed: [] }),
   apply(state: InboxArrivalsState, event) {
-    if (event.type === 'turn/end') return consumeClaimed(state)
+    if (event.type === 'user/message') return consumeRecorded(state, event.data.id)
+    if (event.type === 'turn/end') return releaseClaimed(state)
     if (event.type !== 'agent/inbox/spliced') return state
     const splice = event.data
     const removedCount = splice.removedCount ?? 0
@@ -139,7 +157,7 @@ export const inboxArrivalsProjectionDefinition = {
       : [...held, ...removed.filter((arrival): arrival is KeyedArrival => arrival !== null)]
     return { pending, claimed, consumed: state.consumed }
   },
-  stateVersion: 2,
+  stateVersion: 3,
 } satisfies ProjectionDefinition<'inboxArrivals', InboxArrivalsState>
 
 /**
@@ -195,7 +213,7 @@ export class ReactLoopInbox implements InboxContract {
 
   /**
    * Remove and return the complete batch proposed for one step, ordered by
-   * control priority. A pending message whose arrival key a finished turn
+   * control priority. A pending message whose arrival key the conversation
    * already consumed is cancelled first and never returned.
    * @param target - whether this boundary also consumes one queued turn.
    * @param turn - turn that will own the claimed batch.
@@ -225,7 +243,7 @@ export class ReactLoopInbox implements InboxContract {
    * @param controlKind - the control kind this insertion carries, used to order
    *   the batch it is claimed in; absent for ordinary input, which is not a
    *   control message and keeps its arrival position.
-   * @throws {DuplicateArrivalError} when the message repeats an arrival key a finished turn already consumed.
+   * @throws {DuplicateArrivalError} when the message repeats an arrival key the conversation already consumed.
    */
   append(target: InboxTarget, message: UserMessage, controlKind?: ControlKind): void {
     this.splice(target, this.current()[target].length, 0, [message], controlKind)
@@ -237,7 +255,7 @@ export class ReactLoopInbox implements InboxContract {
    * @param message - message to prepend.
    * @param controlKind - the control kind this insertion carries, used to order
    *   the batch it is claimed in; absent for ordinary input.
-   * @throws {DuplicateArrivalError} when the message repeats an arrival key a finished turn already consumed.
+   * @throws {DuplicateArrivalError} when the message repeats an arrival key the conversation already consumed.
    */
   prepend(target: InboxTarget, message: UserMessage, controlKind?: ControlKind): void {
     this.splice(target, 0, 0, [message], controlKind)
@@ -278,7 +296,7 @@ export class ReactLoopInbox implements InboxContract {
    *   which decides its rank in the batch a turn claims; absent leaves the
    *   messages unranked.
    * @returns messages removed by the splice.
-   * @throws {DuplicateArrivalError} when an inserted message repeats an arrival key a finished turn already consumed.
+   * @throws {DuplicateArrivalError} when an inserted message repeats an arrival key the conversation already consumed.
    */
   splice(
     target: InboxTarget,
@@ -295,10 +313,9 @@ export class ReactLoopInbox implements InboxContract {
 
   /**
    * Cancel, each as its own `canceled` splice, every pending message whose
-   * arrival key a finished turn already consumed (Epic P4-06 must[2]). Such a
+   * arrival key the conversation already consumed (Epic P4-06 must[2]). Such a
    * message is a redelivery admitted while the delivery it repeats was claimed
-   * by a turn that had not ended, and running it would repeat that delivery's
-   * effect.
+   * and not yet recorded, and running it would repeat that delivery's effect.
    */
   private discardConsumed(): void {
     const consumed = new Set(this.arrivals().consumed)
@@ -369,10 +386,10 @@ export class ReactLoopInbox implements InboxContract {
     )
     if (actualDeleteCount === 0 && inserted.length === 0) return []
     // Epic P4-06 must[2]: refuse only a consumed key, and before the durable
-    // append, so a redelivery of what a finished turn ran leaves no splice in
-    // the log and no live notification. A key still claimed is admitted: its
-    // own message coming back is a release, and a redelivery is cancelled at
-    // the next claim once the claiming turn has ended.
+    // append, so a redelivery of what the conversation recorded leaves no
+    // splice in the log and no live notification. A key still claimed is
+    // admitted: its own message coming back is a release, and a redelivery is
+    // cancelled at the next claim once the claimed message was recorded.
     const consumed = new Set(this.arrivals().consumed)
     for (const message of inserted) {
       const key = arrivalKey(message)

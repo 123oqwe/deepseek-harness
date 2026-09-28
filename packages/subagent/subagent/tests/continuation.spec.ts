@@ -234,12 +234,14 @@ async function holdChildLock(
 /**
  * Keep the top-level test parent out of a scripted model corpus. Every child
  * settlement wakes its parent, so a suite that scripts only child responses
- * would otherwise spend them on the parent's own turns.
+ * would otherwise spend them on the parent's own turns. Each refusal drops
+ * what the step claimed on purpose, so the refused messages do not collect in
+ * the parent's inbox.
  */
 function parkParent(ctx: Context, parent: Agent): void {
-  ctx.on('agent/pre-step', async ({ agent: subject }, next) => {
+  ctx.on('agent/pre-step', async ({ agent: subject, messages }, next) => {
     if (subject !== parent) return next()
-    return { kind: 'reject' as const }
+    return { kind: 'reject' as const, dropped: [{ messageIds: messages.map(message => message.id), by: 'test-park-parent', reason: 'the parked parent runs no turn' }] }
   })
 }
 
@@ -2031,10 +2033,11 @@ describe('continuable review regressions', () => {
 
     const ends: SubagentRunEndInfo[] = []
     ctx.on('subagent/end', (info) => { ends.push(info) })
-    // Block the resumed prompt so this epoch produces nothing of its own.
-    ctx.on('agent/pre-step', async ({ agent: subject }, next) => {
+    // Block the resumed prompt so this epoch produces nothing of its own; the
+    // refusal drops the prompt on purpose.
+    ctx.on('agent/pre-step', async ({ agent: subject, messages }, next) => {
       if (subject === parent) return next()
-      return { kind: 'reject' }
+      return { kind: 'reject', dropped: [{ messageIds: messages.map(message => message.id), by: 'test-policy', reason: 'the policy refuses the prompt' }] }
     })
     await queuePrompt(ctx, parent, started.childId, message('again'))
     await waitNoActivation(ctx, started.childId)
@@ -2360,10 +2363,10 @@ describe('continuable review regressions', () => {
     const ends: SubagentRunEndInfo[] = []
     ctx.on('subagent/end', (info) => { ends.push(info) })
     // A UserPromptSubmit deny or a policy plugin: the child claims its prompt,
-    // the rejection discards it, and no step ever runs.
-    ctx.on('agent/pre-step', async ({ agent: subject }, next) => {
+    // the rejection drops it on purpose, and no step ever runs.
+    ctx.on('agent/pre-step', async ({ agent: subject, messages }, next) => {
       if (subject === parent) return next()
-      return { kind: 'reject' }
+      return { kind: 'reject', dropped: [{ messageIds: messages.map(message => message.id), by: 'test-policy', reason: 'the policy refuses the prompt' }] }
     })
 
     const started = await ctx.subagents.startContinuable(startSpec(parent))
@@ -2639,10 +2642,10 @@ describe('continuable settlement delivery', () => {
   it('tells the parent a policy-rejected delivery was declined, not finished', async () => {
     const { ctx, parent } = await setup([textResponse('parent ack')])
     // A pre-step rejection on the child — a UserPromptSubmit deny, a policy
-    // plugin — discards the claimed prompt without running it.
-    ctx.on('agent/pre-step', async ({ agent: subject }, next) => {
+    // plugin — drops the claimed prompt on purpose without running it.
+    ctx.on('agent/pre-step', async ({ agent: subject, messages }, next) => {
       if (subject === parent) return next()
-      return { kind: 'reject' }
+      return { kind: 'reject', dropped: [{ messageIds: messages.map(message => message.id), by: 'test-policy', reason: 'the policy refuses the prompt' }] }
     })
 
     const started = await ctx.subagents.startContinuable(startSpec(parent))
@@ -2655,7 +2658,7 @@ describe('continuable settlement delivery', () => {
     )
   })
 
-  it('reports a turn that failed before reaching its first step', async () => {
+  it('keeps a task whose turn failed before its first step in the child inbox, so the child stays resident without a settlement (a registered limitation)', async () => {
     const releaseFirst = Promise.withResolvers<undefined>()
     const adapter = new GatedAdapter([
       { chunks: textResponse('the answer'), gate: releaseFirst.promise },
@@ -2671,19 +2674,26 @@ describe('continuable settlement delivery', () => {
     })
 
     const started = await ctx.subagents.startContinuable(startSpec(parent))
+    const child = await vi.waitFor(() => {
+      const live = ctx.agents.get(started.childId)
+      expect(live).toBeDefined()
+      return live!
+    })
     await queuePrompt(ctx, parent, started.childId, message('second task'))
     releaseFirst.resolve(undefined)
-    await waitNoActivation(ctx, started.childId)
 
-    await vi.waitFor(() => { expect(settlementNotices(parent)).toHaveLength(1) })
-    // The parent must not be told the child finished: the delivery it is still
-    // waiting on was claimed out of the inbox and then swallowed by the failure.
-    const child = await loadStoredSession(ctx.sessionPersistence, started.childId)
-    expect(hasUserText(child.events, 'second task')).toBe(false)
-    expect(settlementNotices(parent)[0]!.text).toBe(
-      `Background subagent ${started.childId} failed before it finished.`
-      + '\nIts closing message:\nthe answer',
-    )
+    // The failed turn never recorded the task, so it went back to the child's
+    // inbox (Epic P4-06, BLOCKED-088). The Activation settles only once the
+    // inbox is empty, so the child stays resident and the parent is told
+    // nothing: a registered limitation that P4-06 does not cover.
+    await vi.waitFor(() => {
+      expect(child.inbox.nextStep.flatMap(pending => pending.content)).toContainEqual({ type: 'text', text: 'second task' })
+    })
+    await child.whenIdle()
+    await passSettlementCheck(ctx, started.childId)
+    expect(ctx.agents.get(started.childId)).toBe(child)
+    expect(settlementNotices(parent)).toEqual([])
+    expect(hasUserText(child.session.snapshotEvents(), 'second task')).toBe(false)
   })
 
   it('reports accepted work cut short before its first step as stopped', async () => {

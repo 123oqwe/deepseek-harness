@@ -1,7 +1,8 @@
 /**
  * BLOCKED-332 at the Run plugin (P4-05 acceptance[0]): a step refused because
  * the agent's Run has ended names the terminal state and the reason the
- * transition was given, so the turn records why it stopped.
+ * transition was given, so the turn records why it stopped. The refused prompt
+ * is dropped with a record rather than put back (P4-06, BLOCKED-088).
  */
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -22,6 +23,9 @@ import RunPlugin from '../src/index.ts'
 
 /** The reason the test gives for ending the Run. */
 const REASON = 'the run was ended from a test'
+
+/** The drop an ended Run's refusal records for the one prompt each case sends. */
+const ENDED_RUN_DROP = { messageIds: [expect.any(String)], by: '@deepseek-ai/dsh-run', reason: 'the run has ended' }
 
 const roots: string[] = []
 const mounted: Context[] = []
@@ -73,8 +77,10 @@ describe('BLOCKED-332: a step refused because the Run has ended names its state 
     // A later proposal is refused, and does not replace the reason the Run ended with.
     expect(ctx.runs.advance(agent, 'completed', 'a later proposal')).toBe('illegal-transition')
 
-    expect(await promptedTurnEnds(agent)).toEqual([{ kind: 'blocked', runEnded: { state: 'failed', reason: REASON } }])
+    expect(await promptedTurnEnds(agent)).toEqual([{ kind: 'blocked', runEnded: { state: 'failed', reason: REASON }, dropped: [ENDED_RUN_DROP] }])
     expect(adapter.requests).toHaveLength(0)
+    // An ended Run runs nothing again: the refused prompt is dropped with that record, not put back.
+    expect(agent.inbox.hasPending).toBe(false)
   })
 
   it('names the state alone for a Run that ended without a reason given through runs.advance', async () => {
@@ -84,6 +90,6 @@ describe('BLOCKED-332: a step refused because the Run has ended names its state 
     if (lifecycle === undefined) throw new Error('the Run plugin opened no Run for the agent')
     agent.lifecycle = { ...lifecycle, state: 'completed' }
 
-    expect(await promptedTurnEnds(agent)).toEqual([{ kind: 'blocked', runEnded: { state: 'completed' } }])
+    expect(await promptedTurnEnds(agent)).toEqual([{ kind: 'blocked', runEnded: { state: 'completed' }, dropped: [ENDED_RUN_DROP] }])
   })
 })

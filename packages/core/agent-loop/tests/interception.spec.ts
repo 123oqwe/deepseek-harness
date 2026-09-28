@@ -347,8 +347,11 @@ describe('agent/pre-step', () => {
     decision.resolve({ kind: 'reject' })
     await blockedIdle
 
+    // The refusal named no drop, so the claimed prompt went back ahead of the
+    // input staged after the claim (Epic P4-06, BLOCKED-088).
     expect(agent.inbox.nextStep.map(message => message.content[0]))
       .toEqual([
+        { type: 'text', text: 'blocked prompt' },
         { type: 'text', text: 'staged context' },
         { type: 'text', text: 'staged steering' },
       ])
@@ -360,14 +363,13 @@ describe('agent/pre-step', () => {
     send(agent, 'resume')
     await waitForIdle(ctx, agent)
 
-    const staged = events(agent).filter(event =>
-      event.type === 'user/message')
-    expect(staged.map(event => event.type)).toEqual([
-      'user/message',
-      'user/message',
-      'user/message',
+    expect(events(agent).flatMap(event => event.type === 'user/message' ? [event.data.content[0]] : [])).toEqual([
+      { type: 'text', text: 'blocked prompt' },
+      { type: 'text', text: 'staged context' },
+      { type: 'text', text: 'staged steering' },
+      { type: 'text', text: 'resume' },
     ])
-    expect(JSON.stringify(adapter.requests[0]?.messages)).not.toContain('blocked prompt')
+    expect(JSON.stringify(adapter.requests[0]?.messages)).toContain('blocked prompt')
     expect(JSON.stringify(adapter.requests[0]?.messages)).toContain('staged context')
     expect(JSON.stringify(adapter.requests[0]?.messages)).toContain('staged steering')
   })
@@ -382,11 +384,12 @@ describe('agent/pre-step', () => {
       provider: 'mock',
       model: 'mock',
     })
+    // A content filter drops the blocked prompt on purpose, so it is not put back.
     ctx.on('agent/pre-step', async ({ messages }, next) => {
       const decision = await next()
       return messages.some(message =>
         message.content.some(block => block.type === 'text' && block.text === 'blocked prompt'))
-        ? { kind: 'reject' as const }
+        ? { kind: 'reject' as const, dropped: [{ messageIds: messages.map(message => message.id), by: 'test-filter', reason: 'the prompt is blocked' }] }
         : decision
     })
     ctx.on('agent/pre-step', async ({ agent: subject, messages }, next) => {
@@ -453,8 +456,10 @@ describe('agent/pre-step', () => {
 
     const log = events(agent)
     expect(log.some(event => event.type === 'user/message')).toBe(false)
+    // The refusal named no drop, so the claimed prompt went back ahead of the
+    // context injected after the claim (Epic P4-06, BLOCKED-088).
     expect(agent.inbox.nextStep.map(message => message.content[0]))
-      .toEqual([{ type: 'text', text: 'independent context' }])
+      .toEqual([{ type: 'text', text: 'blocked prompt' }, { type: 'text', text: 'independent context' }])
     expect(adapter.requests).toEqual([])
 
     disposeBlock()
@@ -462,7 +467,7 @@ describe('agent/pre-step', () => {
     send(agent, 'wake')
     await resumed
     expect(JSON.stringify(adapter.requests[0]?.messages)).toContain('independent context')
-    expect(JSON.stringify(adapter.requests[0]?.messages)).not.toContain('blocked prompt')
+    expect(JSON.stringify(adapter.requests[0]?.messages)).toContain('blocked prompt')
   })
 
   it('leaves inbox state unchanged when its durable append fails', async () => {
@@ -493,12 +498,14 @@ describe('agent/pre-step', () => {
     const ctx = await harness(adapter)
     const agent = await ctx.agentLoop.create(SessionId('a1'), { provider: 'mock', model: 'mock' })
 
+    // A content filter drops the secret prompt on purpose, so it is not put back.
+    const droppedIds: string[] = []
     ctx.on('agent/pre-step', async ({ messages }, next): Promise<PreStepDecision> => {
       const text = messages.flatMap(message => message.content)
         .map(b => (b.type === 'text' ? b.text : '')).join('')
-      return text === 'secret'
-        ? { kind: 'reject' }
-        : next()
+      if (text !== 'secret') return next()
+      droppedIds.push(...messages.map(message => message.id))
+      return { kind: 'reject', dropped: [{ messageIds: messages.map(message => message.id), by: 'test-filter', reason: 'the prompt is secret' }] }
     })
 
     const reasons: TurnEndReason[] = []
@@ -513,7 +520,8 @@ describe('agent/pre-step', () => {
     expect(adapter.requests).toHaveLength(0)
     expect(log.filter(e => e.type === 'turn/start')).toHaveLength(1)
     expect(log.filter(e => e.type === 'turn/end')).toHaveLength(1)
-    expect(reasons).toEqual([{ kind: 'blocked' }])
+    expect(droppedIds).toHaveLength(1)
+    expect(reasons).toEqual([{ kind: 'blocked', dropped: [{ messageIds: droppedIds, by: 'test-filter', reason: 'the prompt is secret' }] }])
     expect(agent.inbox.nextTurn.map(message => message.content[0]))
       .toEqual([{ type: 'text', text: 'safe' }])
 

@@ -373,6 +373,13 @@ interface CancelOptions {
    * later turn and no canceled inbox splice is logged.
    */
   keepInbox?: boolean | undefined
+  /**
+   * With `keepInbox`, still cancel the messages the active step claimed and the
+   * conversation has not recorded, instead of putting them back (Epic P4-06,
+   * BLOCKED-088): each is removed by a logged `canceled` splice after the
+   * turn's `aborted` end. Without `keepInbox` they are always cancelled.
+   */
+  cancelClaim?: boolean | undefined
 }
 ```
 
@@ -414,6 +421,15 @@ type PreStepDecision =
      * given for reaching it. The loop records it on the turn's `blocked` end.
      */
     runEnded?: { readonly state: AgentLifecycleState; readonly reason?: string }
+    /**
+     * The claimed messages removed on purpose, one record per listener that
+     * removed some: their ids, who removed them and why. A listener that passes
+     * a refusal on and removes messages of its own appends its record. The loop
+     * records the list on the turn's `blocked` end and puts every other claimed
+     * message the turn did not record back into the inbox, so a refusal that
+     * names none loses no input (Epic P4-06, BLOCKED-088).
+     */
+    dropped?: readonly { readonly messageIds: readonly MessageId[]; readonly by: string; readonly reason: string }[]
   }
   | {
     kind: 'enter'

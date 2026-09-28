@@ -207,7 +207,11 @@ export function apply(ctx: Context, config: Config): void {
     })
     /* jscpd:ignore-start */
     if (merged.decision === 'deny') {
-      return { kind: 'reject' }
+      // The denied prompt is dropped on purpose; the loop records who and why.
+      return {
+        kind: 'reject',
+        dropped: [{ messageIds: messages.map(message => message.id), by: '@deepseek-ai/dsh-hooks-codex', reason: 'a UserPromptSubmit hook denied the prompt' }],
+      }
     }
     // Context alone is not a veto: DELEGATE so a later pre-step listener can
     // still reject/rewrite, then fold our context onto its decision.
