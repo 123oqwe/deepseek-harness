@@ -97,7 +97,7 @@ describe('P4-06 must[2] (agent loop): a claimed message the turn never recorded 
     await prompt(agent, 'refused')
     expect(claimedIds).toHaveLength(1)
     expect(turnEnds(agent)).toEqual([{ kind: 'blocked', dropped: [{ messageIds: claimedIds, by: 'test-refuser', reason: 'the test drops it' }] }])
-    expect(agent.inbox.hasPending).toBe(false)
+    expect([...agent.inbox.nextTurn, ...agent.inbox.nextStep]).toEqual([])
     expect(recordedTexts(agent)).toEqual([])
     expect(adapter.requests).toHaveLength(0)
   })
@@ -114,7 +114,7 @@ describe('P4-06 must[2] (agent loop): a claimed message the turn never recorded 
     })
 
     await prompt(agent, 'cancelled')
-    expect(agent.inbox.hasPending).toBe(false)
+    expect([...agent.inbox.nextTurn, ...agent.inbox.nextStep]).toEqual([])
     expect(recordedTexts(agent)).toEqual([])
     expect(turnEnds(agent).map(reason => reason.kind)).toEqual(['aborted'])
     expect(agent.session.snapshotEvents().filter((event: SessionEvent) =>
@@ -132,7 +132,7 @@ describe('P4-06 must[2] (agent loop): a claimed message the turn never recorded 
     })
 
     await prompt(agent, 'interrupted')
-    expect(agent.inbox.hasPending).toBe(false)
+    expect([...agent.inbox.nextTurn, ...agent.inbox.nextStep]).toEqual([])
     expect(recordedTexts(agent)).toEqual([])
     expect(turnEnds(agent)).toEqual([{ kind: 'aborted', reason: { kind: 'parent' } }])
     expect(agent.session.snapshotEvents().filter((event: SessionEvent) =>

@@ -3478,7 +3478,7 @@ describe('SubagentRuntime.interrupt', () => {
     ctx.subagents.interrupt(started.childId, { kind: 'user', parentSessionId: parent.id })
 
     expect(cancelSpy).toHaveBeenCalledTimes(1)
-    expect(cancelSpy).toHaveBeenCalledWith({ kind: 'user' }, { keepInbox: true })
+    expect(cancelSpy).toHaveBeenCalledWith({ kind: 'user' }, { keepInbox: true, cancelClaim: true })
     // Cancellation is cooperative: the held model call observes it on release.
     releaseFirst.resolve(undefined)
     await child.whenIdle()
@@ -3556,7 +3556,7 @@ describe('SubagentRuntime.interrupt', () => {
     expect(cancelSpy).not.toHaveBeenCalled()
 
     ctx.subagents.interrupt(started.childId, { kind: 'user', parentSessionId: parent.id })
-    expect(cancelSpy).toHaveBeenCalledWith({ kind: 'user' }, { keepInbox: true })
+    expect(cancelSpy).toHaveBeenCalledWith({ kind: 'user' }, { keepInbox: true, cancelClaim: true })
     hold.resolve(undefined)
     await waitNoActivation(ctx, started.childId)
   })
@@ -3580,10 +3580,10 @@ describe('SubagentRuntime.interrupt', () => {
 
     // Deep ancestor: the top-level parent interrupts the grandchild.
     ctx.subagents.interrupt(grandchild.childId, { kind: 'ancestor', agent: parent })
-    expect(grandchildCancel).toHaveBeenCalledWith({ kind: 'parent' }, { keepInbox: true })
+    expect(grandchildCancel).toHaveBeenCalledWith({ kind: 'parent' }, { keepInbox: true, cancelClaim: true })
     // Direct ancestor: the same authority kind covers the immediate parent.
     ctx.subagents.interrupt(started.childId, { kind: 'ancestor', agent: parent })
-    expect(childCancel).toHaveBeenCalledWith({ kind: 'parent' }, { keepInbox: true })
+    expect(childCancel).toHaveBeenCalledWith({ kind: 'parent' }, { keepInbox: true, cancelClaim: true })
 
     releaseChild.resolve(undefined)
     releaseGrandchild.resolve(undefined)
