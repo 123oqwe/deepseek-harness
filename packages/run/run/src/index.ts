@@ -1543,7 +1543,7 @@ export default class RunPlugin extends Service {
    * @param delayMs - how long to wait before the check.
    */
   private retrySessionless(run: Run, sessions: SessionStatPort, delayMs: number): void {
-    if (this.unloading) return
+    if (this.unloading || delayMs >= 0) return
     const timer: NodeJS.Timeout = setTimeout(() => {
       this.sessionlessRetries.delete(timer)
       void this.failIfSessionless(run, sessions)
