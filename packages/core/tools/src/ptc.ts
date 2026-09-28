@@ -15,10 +15,8 @@ import type { ExecutionWorldFact, PolicyContextFacts } from '@deepseek-ai/dsh-po
 import type { ClosedDecision } from '@deepseek-ai/dsh-policy-engine'
 import type { Context } from '@deepseek-ai/cordis'
 import {
-  APPROVAL_DISPLAY_VALIDITY_MS,
   appendManifestAndDecide,
   approvalBindingFor,
-  approvalDisplayFor,
   confirmExternalEffect,
   FAIL_CLOSED_FACTS,
   FAIL_CLOSED_WORLD,
@@ -28,7 +26,6 @@ import {
   manifestClassificationOf,
   readExecutionWorldFact,
   readPolicyContextFacts,
-  redactArgumentsValueForDisplay,
   refuseNewAction,
   refusedApprovalResult,
   refusedDispatchResult,
@@ -756,21 +753,11 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               const binding = exec.agent === undefined
                 ? undefined
                 : approvalBindingFor(exec.agent, subCallId, name, normalized.logged as JsonValue, Date.now(), preconditions)
-              // must[0], as the native path passes it: the sub-call's approval
-              // request shows the six display fields, its arguments redacted.
               const riskRefusal = exec.agent === undefined || binding === undefined
                 ? undefined
                 : await gateActionRisk(
                   options.ledgerContext(), exec.agent, name, registry.get(name, exec.agent)?.riskDomainTags ?? [], judged,
                   binding,
-                  manifested.manifest === undefined
-                    ? undefined
-                    : approvalDisplayFor(
-                      manifested.manifest,
-                      judged?.classification.riskClass ?? 'security-sensitive',
-                      redactArgumentsValueForDisplay(normalized.logged),
-                      Date.now() + APPROVAL_DISPLAY_VALIDITY_MS,
-                    ),
                 )
               if (riskRefusal !== undefined) {
                 reservation = undefined
