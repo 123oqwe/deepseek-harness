@@ -34,7 +34,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent/types'
 import { createSessionManifestAppender } from '@deepseek-ai/dsh-tools/manifest-log'
 // The reserve/confirm pair lives in `dsh-tools` so the code-mode dispatch can
 // reach it too: a second copy here is what left code-mode unreserved (§12.35-2).
-import { APPROVAL_DISPLAY_VALIDITY_MS, approvalBindingFor, approvalDisplayFor, confirmExternalEffect, filePreconditionsFor, gateActionRisk, judgeActionRisk, manifestClassificationOf, readExecutionWorldFact, readPolicyContextFacts, redactArgumentsForDisplay, refuseNewAction, refusedApprovalResult, refusedDispatchResult, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect, verifyRecordedApproval } from '@deepseek-ai/dsh-tools/external-effect'
+import { approvalBindingFor, confirmExternalEffect, filePreconditionsFor, gateActionRisk, judgeActionRisk, manifestClassificationOf, readExecutionWorldFact, readPolicyContextFacts, refuseNewAction, refusedApprovalResult, refusedDispatchResult, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect, verifyRecordedApproval } from '@deepseek-ai/dsh-tools/external-effect'
 import type { ActionRiskVerdict } from '@deepseek-ai/dsh-tools/external-effect'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import { brandString } from '@deepseek-ai/dsh-brand'
@@ -329,12 +329,6 @@ async function runGroup(
     const riskRefusal = await gateActionRisk(
       ctx, agent, call.block.name, ctx.tools.get(call.block.name, agent)?.riskDomainTags ?? [], judged,
       binding,
-      approvalDisplayFor(
-        appended.record.manifest,
-        judged?.classification.riskClass ?? 'security-sensitive',
-        redactArgumentsForDisplay(call.block.arguments),
-        Date.now() + APPROVAL_DISPLAY_VALIDITY_MS,
-      ),
     )
     if (riskRefusal !== undefined) {
       slots[index] = {
