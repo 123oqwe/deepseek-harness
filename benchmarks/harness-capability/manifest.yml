@@ -21,13 +21,15 @@ pricing:
   source: https://api-docs.deepseek.com/quick_start/pricing
   retrievedAt: '2026-09-28'
   currency: USD
-  # The page gives a peak and an off-peak price per model; this table holds the
-  # off-peak ones. It names deepseek-flash and deepseek-v4-pro, and the recordings
-  # request deepseek-v4-flash, which is priced here at the deepseek-flash row.
-  rate: off-peak
+  # The page gives a standard (peak) and a discounted off-peak price per model;
+  # the table holds the standard ones.
+  rate: standard (peak)
+  # The page names deepseek-flash and deepseek-v4-pro; the recordings request
+  # deepseek-v4-flash. README.md lists this as a known limitation.
+  assumption: deepseek-v4-flash is priced at the page's deepseek-flash row
   models:
-    deepseek-v4-flash: { inputCacheHit: 0.003, inputCacheMiss: 0.15, output: 0.6 }
-    deepseek-v4-pro: { inputCacheHit: 0.022, inputCacheMiss: 0.66, output: 1.98 }
+    deepseek-v4-flash: { inputCacheHit: 0.006, inputCacheMiss: 0.3, output: 1.2 }
+    deepseek-v4-pro: { inputCacheHit: 0.044, inputCacheMiss: 1.32, output: 3.96 }
 
 lanes:
   - name: deterministic
