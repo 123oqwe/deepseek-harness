@@ -63,7 +63,7 @@ import type {
 } from '@deepseek-ai/dsh-feature-gates'
 import { buildPluginPermissionStates, type BundleLayerScope, type PluginPermissionState } from '@deepseek-ai/dsh-host-plugin-inventory'
 import { admitUnsignedDevMode, type ProvenanceAuditRecord } from '@deepseek-ai/dsh-plugin-provenance'
-import { verifyBootProvenance } from './install-provenance.ts'
+import { appendProvenanceAudit, verifyBootProvenance } from './install-provenance.ts'
 import { createProcessShutdown, type ProcessShutdown } from './process-shutdown.ts'
 import { readProfileTrustAnchors } from './trust-anchors.ts'
 
@@ -771,12 +771,6 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
     composed.profile.dir,
     readLockedProvenance(composed.profile.dir),
   )
-  if (provenance.refused.length > 0) {
-    throw new Error(
-      `${NAME}: plugin provenance: refusing to boot profile ${JSON.stringify(options.profile)} -- `
-      + provenance.refused.map(({ name, reason }) => `${name}: provenance claim refused (${reason})`).join('; '),
-    )
-  }
   // Constructed before boot() creates the Cordis Context at all (must[1]):
   // createTrustKernel is pure and synchronous, so it cannot itself fail --
   // the insecure opt-in is the only way this boot proceeds without one.
@@ -799,6 +793,15 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
   const kernel: TrustKernel | undefined = trustKernelInsecure
     ? undefined
     : createTrustKernel({ policyDecider: endorseComposedDecision, trustAnchors: readProfileTrustAnchors(composed.profile.dir) })
+  // Epic P1-02 acceptance[2]: the boot's provenance decisions, refusals
+  // included, go to the kernel's audit chain before a refusal stops the boot.
+  if (kernel !== undefined) appendProvenanceAudit(kernel.auditAppend, 'boot', provenance)
+  if (provenance.refused.length > 0) {
+    throw new Error(
+      `${NAME}: plugin provenance: refusing to boot profile ${JSON.stringify(options.profile)} -- `
+      + provenance.refused.map(({ name, reason }) => `${name}: provenance claim refused (${reason})`).join('; '),
+    )
+  }
   const app: { current?: Context } = {}
   const appReady = createAppReady()
   const shutdown = createProcessShutdown(async () => {
