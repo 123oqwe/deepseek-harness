@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-28T02:03:03.656Z",
-  "inputDigest": "7b625867a420ec81bc8f7b32ad62e2a8d2a37b10efb20c385adc77c37e658843",
+  "lastUpdatedUtc": "2026-09-28T03:10:42.288Z",
+  "inputDigest": "26d96478ebc3f57916752568130194fbca7131ad7cda150d94da01b17fb78ce6",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4918,7 +4918,37 @@
           "capturedAtUtc": "2026-09-28T02:03:01.601Z"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "e48dc149015bc797e611082c4798afe4d4e6449d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36368763496",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36368763496/first100-vitest-report-e48dc149015bc797e611082c4798afe4d4e6449d/vitest-report.json",
+          "observationSha256": "87f941d7b14e82389f2031511e437d1f5dd5caaa32d68b1df16d87a71b1c4bb8",
+          "expectCasesMatched": [
+            "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) control (native): an approved call whose declared file is unchanged runs once, and its approval is found by the call's action id (acceptance[2])",
+            "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (native): an approved call whose declared file changed after the ask does not run",
+            "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (native): an approved call whose declared file did not exist at the ask and exists at execution does not run",
+            "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[1] (native): the approval request shows the call's arguments redacted, without the secret value",
+            "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) control (code-mode): an approved sub-call whose declared file is unchanged runs once, and its approval is found by the sub-call's action id (acceptance[2])",
+            "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (code-mode): an approved sub-call whose declared file changed after the ask does not run",
+            "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) control (direct): an approved call a plugin makes through ToolRuntime.execute whose declared file is unchanged runs once, and its approval is found by the call's action id (acceptance[2])",
+            "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (direct): an approved call a plugin makes through ToolRuntime.execute whose declared file changed after the ask does not run",
+            "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (direct): an approved call a plugin makes through ToolRuntime.execute whose declared file did not exist at the ask and exists at execution does not run",
+            "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) control (native, relative): an approved call whose relative declared path names an unchanged file in the session's working directory, not the process's, runs once, and its approval is found by the call's action id (acceptance[2])",
+            "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (native, relative): an approved call whose relative declared path names a file in the session's working directory, not the process's, that changed after the ask does not run",
+            "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (native, relative): an approved call whose relative declared path names a file that did not exist in the session's working directory, not the process's, at the ask and exists there at execution does not run",
+            "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) control (code-mode, relative): an approved sub-call whose relative declared path names an unchanged file in the session's working directory, not the process's, runs once, and its approval is found by the sub-call's action id (acceptance[2])",
+            "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (code-mode, relative): an approved sub-call whose relative declared path names a file in the session's working directory, not the process's, that changed after the ask does not run",
+            "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) control (direct, relative): an approved call a plugin makes through ToolRuntime.execute whose relative declared path names an unchanged file in the session's working directory, not the process's, runs once, and its approval is found by the call's action id (acceptance[2])",
+            "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (direct, relative): an approved call a plugin makes through ToolRuntime.execute whose relative declared path names a file in the session's working directory, not the process's, that changed after the ask does not run",
+            "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (direct, relative): an approved call a plugin makes through ToolRuntime.execute whose relative declared path names a file that did not exist in the session's working directory, not the process's, at the ask and exists there at execution does not run",
+            "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) control (native): a call's approval request shows the six display fields must[0] names",
+            "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) must[0] and acceptance[1] (code-mode): a sub-call's approval request shows the same six display fields, its arguments redacted and without the secret value"
+          ],
+          "capturedAtUtc": "2026-09-28T03:10:42.270Z"
+        }
+      },
       "candidateSha": "a510723a1926f44aad7c9884970a89bcd7aabadb",
       "independentVerdict": "PENDING",
       "openFindings": null,
