@@ -758,7 +758,7 @@ export function approvalBindingFor(
       preconditions: [...preconditions],
     },
     askedAtMs: nowMs,
-    actionId,
+    actionId: `${actionId}-not-recorded`,
   }
 }
 
