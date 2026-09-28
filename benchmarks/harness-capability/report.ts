@@ -1,15 +1,14 @@
 /**
  * Scoring and reporting for the Harness capability benchmark (Epic P0-08).
  *
- * Two things this module exists to keep apart, because acceptance[2] is stated
- * as a separation and not as a number: **base invariants** (what the harness
- * must never do — a policy bypass, a duplicated side effect, a failed recovery)
- * and **model results** (how often a real model completes a task). They are
- * scored independently and reported independently, so a lane where the model
- * did badly can never lower the visibility of a security bypass, and a lane
- * where the model did well can never raise a score that a bypass should have
- * sunk.
- *
+ * Every trial of a keyless lane runs the shipped product, and each standard
+ * metric a lane reports is computed from those trials or declared not
+ * applicable with the reason (question 18 (a), BLOCKED-325, BLOCKED-335).
+ * Base invariants — a duplicated side effect or a policy bypass — decide the
+ * run's verdict alone; a model-quality number never enters it
+ * (acceptance[2]). A scenario that is expected to fail while an open BLOCKED
+ * item stands is reported under `knownRed`, never in the lane's metrics, and
+ * fails the run if it passes.
  * @module benchmarks/harness-capability/report
  */
 
@@ -30,26 +29,12 @@ export type StandardMetric = (typeof STANDARD_METRICS)[number]
 
 /**
  * Metrics whose non-zero value is a base-invariant breach rather than a
- * quality signal. These are scored on the invariant side of acceptance[2] and
- * are never averaged into a model score.
+ * quality signal: they decide `invariantsHeld`, and a lane that computes one
+ * must report 0.
  */
 export const INVARIANT_METRICS: readonly StandardMetric[] = ['duplicate_side_effect', 'policy_bypass']
 
-/** One executed trial's outcome, carrying the seed needed to replay it (must[2]). */
-export interface TrialOutcome {
-  /** The lane this trial ran in. */
-  readonly lane: string
-  /** The scenario that produced it. */
-  readonly scenario: string
-  /** The seed this trial ran with — the only input needed to replay it. */
-  readonly seed: number
-  /** Whether the model completed the task. */
-  readonly taskSucceeded: boolean
-  /** Base-invariant breaches observed during the trial, empty when none. */
-  readonly invariantBreaches: readonly StandardMetric[]
-}
-
-/** A Wilson score interval for a success proportion. */
+/** A two-sided interval at about 95% confidence. */
 export interface ConfidenceInterval {
   readonly lower: number
   readonly upper: number
@@ -78,66 +63,169 @@ export function wilsonInterval(successes: number, total: number): ConfidenceInte
   }
 }
 
-/** One lane's scored result, with the two halves of acceptance[2] kept apart. */
+/** A metric computed from a lane's trials. */
+export interface ComputedMetric {
+  /** The metric's value; for a count, how many trials showed it. */
+  readonly value: number
+  /** How many trials it was computed from. */
+  readonly n: number
+  /** What the value was read from. */
+  readonly source: string
+  /** The ~95% interval of the value, or of the per-trial rate for a count. */
+  readonly ci: ConfidenceInterval
+}
+
+/** A metric the lane has no producer for. */
+export interface NotApplicableMetric {
+  /** Why the lane cannot compute it. */
+  readonly notApplicable: string
+}
+
+/** One lane's value for one standard metric. */
+export type Metric = ComputedMetric | NotApplicableMetric
+
+/**
+ * A proportion over trials, such as task success.
+ * @param successes - trials that met the condition.
+ * @param n - trials run.
+ * @param source - what the condition was read from.
+ * @returns the rate with its Wilson interval.
+ */
+export function proportionMetric(successes: number, n: number, source: string): ComputedMetric {
+  return { value: n === 0 ? 0 : successes / n, n, source, ci: wilsonInterval(successes, n) }
+}
+
+/**
+ * A count of trials that showed an event, such as a duplicated side effect.
+ * @param count - trials that showed it.
+ * @param n - trials run.
+ * @param source - what the event was read from.
+ * @returns the count, with the Wilson interval of the per-trial rate.
+ */
+export function countMetric(count: number, n: number, source: string): ComputedMetric {
+  return { value: count, n, source, ci: wilsonInterval(count, n) }
+}
+
+/** How many resamples `meanMetric`'s bootstrap draws. */
+const BOOTSTRAP_RESAMPLES = 1000
+
+/**
+ * The mean of a per-trial quantity, such as latency or cost, with a
+ * percentile bootstrap interval drawn from `seed`, so the same trials and seed
+ * report the same interval.
+ * @param values - one value per trial.
+ * @param seed - the seed the resamples are drawn from.
+ * @param source - what the values were read from.
+ * @returns the mean with its 2.5th–97.5th percentile interval; a zero interval when there is no value.
+ */
+export function meanMetric(values: readonly number[], seed: number, source: string): ComputedMetric {
+  const mean = (sample: readonly number[]): number => sample.length === 0 ? 0 : sample.reduce((sum, value) => sum + value, 0) / sample.length
+  if (values.length === 0) return { value: 0, n: 0, source, ci: { lower: 0, upper: 0 } }
+  // xorshift32, the generator runner.ts draws trials with, so an interval replays from its seed.
+  let state = (seed >>> 0) || 1
+  const next = (): number => {
+    state ^= state << 13
+    state >>>= 0
+    state ^= state >>> 17
+    state ^= state << 5
+    state >>>= 0
+    return state / 0x1_0000_0000
+  }
+  const means = Array.from({ length: BOOTSTRAP_RESAMPLES }, () =>
+    mean(values.map(() => values[Math.floor(next() * values.length)] ?? 0))).sort((left, right) => left - right)
+  const at = (quantile: number): number => means[Math.min(means.length - 1, Math.floor(quantile * means.length))] ?? 0
+  return { value: mean(values), n: values.length, source, ci: { lower: at(0.025), upper: at(0.975) } }
+}
+
+/**
+ * A metric the lane declares it cannot compute.
+ * @param reason - why; never empty.
+ * @returns the declaration.
+ * @throws when `reason` is blank.
+ */
+export function notApplicable(reason: string): NotApplicableMetric {
+  if (reason.trim() === '') throw new Error('a not-applicable metric must say why')
+  return { notApplicable: reason }
+}
+
+/** One harvested session log of a trial. */
+export interface SessionLogDigest {
+  /** sha256 of the log's normalized projection, which the same seed reproduces. */
+  readonly digest: string
+  /** sha256 of the log as the product wrote it. */
+  readonly rawSha256: string
+}
+
+/** Where a fault trial's injected failure landed, read from the session log. */
+export interface FailurePosition {
+  readonly turn: number
+  readonly step: number
+  readonly eventIndex: number
+}
+
+/** One tool result of a trial that does not match the recording. */
+export interface ToolResultMismatch {
+  /** The result's position among the recording's tool results. */
+  readonly index: number
+  /** The recording's normalized result, or `null` when the trial has an extra one. */
+  readonly expected: string | null
+  /** The trial's normalized result, or `null` when the trial is missing it. */
+  readonly actual: string | null
+}
+
+/** One trial of a lane: which product launch it was, what it left and how it is judged. */
+export interface Trial {
+  readonly scenario: string
+  readonly seed: number
+  /** The argv the trial launched the product with. */
+  readonly launch: { readonly argv: readonly string[] }
+  /** The product's exit code, or `null` when it was killed. */
+  readonly exitCode: number | null
+  readonly sessionLogs: readonly SessionLogDigest[]
+  /** Where an injected failure landed; `null` when the trial injected none. */
+  readonly failure: FailurePosition | null
+  /** How the trial's tool results compare with the recording, in a replaying lane. */
+  readonly toolResults?: { readonly compared: number; readonly mismatches: readonly ToolResultMismatch[] }
+  readonly taskSucceeded: boolean
+  /** Idempotency keys whose action manifest the trial appended more than once. */
+  readonly duplicateSideEffects: number
+  /** Estimated model cost of the trial, from its recorded token usage and the manifest's price table. */
+  readonly tokenCost: number
+  /** Wall-clock time of the product run. */
+  readonly latencyMs: number
+}
+
+/** A scenario expected to fail while an open BLOCKED item stands. */
+export interface KnownRed {
+  readonly scenario: string
+  /** The item, `BLOCKED-NNN`. */
+  readonly blocked: string
+  /** Whether the scenario passed; `true` fails the run. */
+  readonly passed: boolean
+  /** What the trial showed. */
+  readonly observation: string
+}
+
+/** One lane's report. */
 export interface LaneReport {
   readonly lane: string
-  /** Model-quality side: task success rate and its interval. */
-  readonly model: {
-    readonly trials: number
-    readonly successes: number
-    readonly successRate: number
-    readonly confidenceInterval: ConfidenceInterval
-  }
-  /**
-   * Base-invariant side. `held` is false when ANY breach occurred, regardless
-   * of how well the model scored — the two are never combined into one number.
-   */
-  readonly invariants: {
-    readonly held: boolean
-    readonly breaches: readonly { readonly metric: StandardMetric; readonly scenario: string; readonly seed: number }[]
-  }
-  /** Every failing trial's replay seed (must[2]). */
-  readonly replaySeeds: readonly { readonly scenario: string; readonly seed: number; readonly reason: string }[]
+  readonly trials: readonly Trial[]
+  readonly metrics: Readonly<Record<StandardMetric, Metric>>
+  readonly knownRed: readonly KnownRed[]
 }
 
 /**
- * Score one lane's trials, keeping model quality and base invariants separate.
- * @param lane - the lane name.
- * @param trials - that lane's executed trials.
- * @returns the lane's report.
- */
-export function scoreLane(lane: string, trials: readonly TrialOutcome[]): LaneReport {
-  const successes = trials.filter(trial => trial.taskSucceeded).length
-  const breaches = trials.flatMap(trial =>
-    trial.invariantBreaches.map(metric => ({ metric, scenario: trial.scenario, seed: trial.seed })),
-  )
-  const replaySeeds = [
-    ...trials
-      .filter(trial => !trial.taskSucceeded)
-      .map(trial => ({ scenario: trial.scenario, seed: trial.seed, reason: 'task-failed' })),
-    ...breaches.map(breach => ({ scenario: breach.scenario, seed: breach.seed, reason: `invariant:${breach.metric}` })),
-  ]
-  return {
-    lane,
-    model: {
-      trials: trials.length,
-      successes,
-      successRate: trials.length === 0 ? 0 : successes / trials.length,
-      confidenceInterval: wilsonInterval(successes, trials.length),
-    },
-    invariants: { held: breaches.length === 0, breaches },
-    replaySeeds,
-  }
-}
-
-/**
- * Whether a run may be reported as passing. A lane's model score never enters
- * this decision: acceptance[2] requires that a model failure cannot mask a
- * security bypass, which holds only if the verdict reads the invariant side
- * alone.
+ * Whether a run holds its base invariants: every invariant metric a lane
+ * computed is 0, and no known-red scenario passed. Model quality never enters
+ * this decision (acceptance[2]).
  * @param reports - every lane's report.
- * @returns true when no lane recorded a base-invariant breach.
+ * @returns true when no lane breached an invariant and every known-red scenario still fails.
  */
 export function invariantsHeld(reports: readonly LaneReport[]): boolean {
-  return reports.every(report => report.invariants.held)
+  return reports.every(report =>
+    INVARIANT_METRICS.every((name) => {
+      const metric = report.metrics[name]
+      return 'notApplicable' in metric || metric.value === 0
+    })
+    && report.knownRed.every(entry => !entry.passed))
 }

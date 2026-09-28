@@ -4,39 +4,41 @@ A model-independent benchmark for the Harness's own capabilities -- recovery, sa
 
 ## Running the lanes
 
-[`manifest.yml`](manifest.yml) holds the frozen structural schema documented below, enforced by [`tests/benchmark/runner.spec.ts`](../../tests/benchmark/runner.spec.ts). [`runner.ts`](runner.ts) runs the lanes that the scenarios in [`scenarios/index.ts`](scenarios/index.ts) cover and scores each lane with [`report.ts`](report.ts). `pnpm benchmark:harness [--lane <name>]... [--seed <n>] [--out <dir>]` runs the requested lanes, or every lane a scenario covers, from one run seed (a fixed default when `--seed` is absent), and writes `report.json` and `report.md` to `--out` (default `.artifacts/benchmark`, which git ignores). It exits 0 once the lanes ran and both reports are written; the invariant verdict is in the reports, not in the exit code.
+`pnpm benchmark:harness [--lane <name>]... [--seed <n>] [--out <dir>]` runs the requested lanes, or every lane that has scenarios, from one run seed (a fixed default when `--seed` is absent), and writes `report.json` and `report.md` to `--out` (default `.artifacts/benchmark`, which git ignores). [`runner.ts`](runner.ts) reads [`manifest.yml`](manifest.yml) through [`manifest.ts`](manifest.ts). Every trial launches the shipped product: [`product.ts`](product.ts) runs `dsh --profile headless` from source over the recorded-session snapshots' patch layers, in a fresh working directory and `$DSH_HOME`, with no model API configured, and harvests the session logs the run persisted.
 
-The scenarios cover the `deterministic`, `fault` and `security` lanes, which run with no model API key configured. `real-model` and `scale` have no scenario yet, and a run that names either exits 2 without writing a report. A reported breach names its trial seed and the command that replays it, `--seed <run seed> --lane <lane>`: each trial's seed is derived from the run seed, the scenario and the trial index.
+The run exits 0 when its base invariants held, 1 when a lane reported a duplicated side effect or a policy bypass or a known-red scenario passed, and 2 when a requested lane has no scenario or `--seed` is not an integer in [0, 2^32).
 
 ## The 5 lanes
 
-Every lane entry in `manifest.yml` names one of exactly these 5 lanes:
-
-- `deterministic` -- scripted, seed-driven task fixtures with no external API dependency.
-- `fault` -- seeded fault injection (provider failure, crash, network partition) against the same fixtures.
-- `security` -- policy-bypass and privilege-escalation attempts against the harness's own guards.
-- `real-model` -- the same task fixtures run against a live model provider.
-- `scale` -- concurrency and long-run load (many agents, extended duration).
+- `deterministic` -- each trial replays one recorded headless session from `snapshots/session/` through the shipped product and is judged against the recording ([`lanes/deterministic.ts`](lanes/deterministic.ts)). `manifest.yml` lists the recordings it draws from and why the others are left out.
+- `security` -- policy-bypass and privilege-escalation attempts against the harness's own guards; no scenario yet.
+- `fault` -- injected model and process failures against recorded sessions; no scenario yet.
+- `real-model` -- task fixtures against a live model provider; it needs a model API, so the keyless benchmark does not run it.
+- `scale` -- concurrency and long-run load; no scenario yet.
 
 ## The 8 standard metrics
 
-Every lane declares exactly these 8 metric names in its `metrics` list:
+Every lane report carries all 8 names. A computed metric is `{ value, n, source, ci }`: the value, the number of trials, what it was read from, and a ~95% interval. A metric the lane has no producer for is `{ notApplicable }`, with the reason `manifest.yml` gives, and carries no value.
 
-- `task_success` -- whether the scripted task fixture reached its declared goal state.
-- `duplicate_side_effect` -- whether a retried or replayed action produced the effect more than once.
-- `policy_bypass` -- whether a guarded action executed without its required policy check.
-- `recovery_success` -- whether the harness resumed correctly after an injected fault.
-- `verification_precision` -- false-positive/false-negative rate of the harness's own completion verification.
-- `router_regret` -- cost/quality delta between the router's chosen model and the best available choice.
-- `token_cost` -- tokens and dollar cost consumed by the run.
-- `latency` -- wall-clock time from task start to verified completion.
+- `task_success` -- the share of trials whose last turn ended for the same reason with the same final assistant text as the recording, with every tool result matching it once both are normalized; Wilson interval.
+- `duplicate_side_effect` -- how many trials appended one idempotency key's action manifest more than once; Wilson interval of that per-trial rate.
+- `policy_bypass` -- how many trials ran something the policy should have refused.
+- `recovery_success` -- the share of fault trials that resumed and completed.
+- `verification_precision` -- not applicable: the shipped product has no verifier whose verdicts could be scored (BLOCKED-335).
+- `router_regret` -- not applicable: the shipped product has no model router (BLOCKED-335).
+- `token_cost` -- the mean estimated cost per trial: each assistant message's recorded usage priced from the table in `manifest.yml`, which names its source and the date it was read; seeded bootstrap interval.
+- `latency` -- the mean wall-clock time of a product run; seeded bootstrap interval.
 
-## Confidence intervals and seed replay
+`duplicate_side_effect` and `policy_bypass` are the base invariants: a lane that computes one must report 0, and neither ever combines with a model-quality number.
 
-Each lane's `reporting` block declares `confidenceInterval: true` and `seedReplay: true`: this lane's report must record a confidence interval per metric and, for every failure, the seed that reproduces it.
+## Trials, known-red scenarios and seed replay
+
+Each lane report lists its `trials`: the scenario, the trial seed, the launch argv, the exit code, each harvested session log's `digest` (the sha256 of its normalized projection) and `rawSha256` (of the log as written), where an injected failure landed, and, for a replaying lane, `toolResults` with how many tool results were compared and every mismatch. The run seed decides which recordings a lane draws and every trial seed, so the same seed reproduces the same trials and the same digests.
+
+A lane's `knownRed` lists scenarios expected to fail while an open BLOCKED item stands, each with the item, whether it passed and what the trial showed. They are left out of the lane's metrics, and one that passes fails the run.
 
 ## Related documentation
 
 - [BENCHMARK.md](../../BENCHMARK.md) -- the SDK-focused benchmark instructions this framework extends.
-- [`tests/benchmark/runner.spec.ts`](../../tests/benchmark/runner.spec.ts) -- the structural contract this manifest must satisfy.
-- [`packages/test-support/README.md`](../../packages/test-support/README.md) -- keyless test harnesses (Loader smoke boot, LLM mock/replay) relevant to lanes that must run without external API configuration.
+- [`tests/first100/fixtures/P0-08.benchmark-product.spec.ts`](../../tests/first100/fixtures/P0-08.benchmark-product.spec.ts) -- the report fields this runner must write.
+- [`snapshots/session/headless.snapshot.ts`](../../snapshots/session/headless.snapshot.ts) -- the recorded-session replay a deterministic trial repeats without its assertions.

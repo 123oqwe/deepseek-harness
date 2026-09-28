@@ -781,6 +781,9 @@ importers:
       '@deepseek-ai/dsh-llm-replay':
         specifier: workspace:^
         version: link:../packages/test-support/llm-replay
+      '@deepseek-ai/dsh-loader-smoke':
+        specifier: workspace:^
+        version: link:../packages/test-support/loader-smoke
       '@deepseek-ai/dsh-sdk-client':
         specifier: workspace:^
         version: link:../packages/sdk/client
@@ -799,6 +802,9 @@ importers:
       '@deepseek-ai/dsh-session-query':
         specifier: workspace:^
         version: link:../packages/session-query/session-query
+      '@deepseek-ai/dsh-session-snapshot':
+        specifier: workspace:^
+        version: link:../packages/test-support/session-snapshot
       '@deepseek-ai/dsh-session-stats':
         specifier: workspace:^
         version: link:../packages/session/session-stats

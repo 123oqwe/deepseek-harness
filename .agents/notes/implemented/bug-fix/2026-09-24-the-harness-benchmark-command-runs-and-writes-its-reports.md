@@ -23,3 +23,5 @@ The registry types P0-08's verify command as `pnpm benchmark:harness`, but the r
 
 - A run whose invariants breach still exits 0; the reports carry the verdict.
 - The CI step checks what the command wrote rather than trusting its exit status alone.
+
+Superseded in part by [The harness capability benchmark runs the shipped product](../feature/2026-09-28-the-harness-benchmark-runs-the-shipped-product.md): every trial launches the shipped product, and a run whose invariants breach exits 1.
