@@ -42,6 +42,16 @@ on:
         required: false
         type: boolean
         default: false
+      narrow_macos_baseline:
+        description: 'With narrow_test: capture the baseline on macOS first and hand it to the narrow run through FIRST100_MACOS_BASELINE, as the gate job does. Only for paths that compare against it (P0-01 acceptance[0]).'
+        required: false
+        type: boolean
+        default: false
+      node_version_probe:
+        description: 'Run ONLY the one-off Node version probes (P0-01, BLOCKED-305): on Node 22.19.0 and 24.0.0, baseline-fingerprint verify against a baseline altered on purpose, printing its exit code. A measurement, not a gate; skips everything else.'
+        required: false
+        type: boolean
+        default: false
   push:
     branches: [first100-exec]
 
@@ -52,14 +62,77 @@ env:
   PRIMARY_NODE_VERSION: '24'
 
 jobs:
+  baseline-capture-macos:
+    name: P0-01 baseline capture on macOS @ exact SHA
+    runs-on: macos-latest
+    # P0-01 acceptance[0] compares the same commit's baseline captured on Linux
+    # and on macOS. This job is the macOS half: it captures on the candidate SHA
+    # and uploads `.dsh/baseline.json`. The gate job needs it, so a red capture
+    # here means the gate never runs. A narrow run asks for it only through
+    # `narrow_macos_baseline`, so an ordinary narrow run waits for no macOS
+    # runner. The SHA is resolved here as the gate resolves it, and the artifact
+    # is named after it: a gate that resolved a different SHA fails to download it.
+    if: ${{ !inputs.narrow_python && !inputs.narrow_python_runtime && !inputs.node_version_probe && (!inputs.narrow_test || inputs.narrow_macos_baseline) }}
+    permissions:
+      contents: read
+    steps:
+      - name: Resolve candidate SHA
+        id: resolve-sha
+        env:
+          REQUESTED_SHA: ${{ github.event.inputs.sha }}
+          TRIGGER_SHA: ${{ github.sha }}
+        run: |
+          sha="$REQUESTED_SHA"
+          if [ -z "$sha" ]; then sha="$TRIGGER_SHA"; fi
+          if [[ ! "$sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "resolve-sha: cannot decide — the candidate SHA must be 40 lowercase hex characters (got \"$sha\")" >&2
+            exit 2
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.resolve-sha.outputs.sha }}
+          persist-credentials: false
+
+      - name: Verify checkout landed on the requested SHA
+        run: |
+          actual=$(git rev-parse HEAD)
+          if [ "$actual" != "${{ steps.resolve-sha.outputs.sha }}" ]; then
+            echo "::error::checked out $actual, requested ${{ steps.resolve-sha.outputs.sha }}"
+            exit 1
+          fi
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.PRIMARY_NODE_VERSION }}
+          cache: pnpm
+
+      # The capture script imports js-yaml.
+      - name: Install (immutable)
+        run: pnpm install --frozen-lockfile
+
+      - name: Capture the baseline
+        run: pnpm baseline:capture
+
+      - name: Upload the macOS baseline
+        uses: actions/upload-artifact@v4
+        with:
+          name: first100-baseline-macos-${{ steps.resolve-sha.outputs.sha }}
+          path: .dsh/baseline.json
+          if-no-files-found: error
+
   exact-sha-gate:
     name: install / typecheck / test @ exact SHA
     runs-on: ubuntu-latest
+    needs: baseline-capture-macos
     # A narrow run answers ONE question about one path; paying 35 minutes for
     # the whole gate to answer it is what this input exists to avoid. Empty --
     # which is what every `push` and every ordinary dispatch carries -- leaves
     # this job byte-for-byte as it was.
-    if: ${{ !inputs.narrow_test && !inputs.narrow_python && !inputs.narrow_python_runtime }}
+    if: ${{ !inputs.narrow_test && !inputs.narrow_python && !inputs.narrow_python_runtime && !inputs.node_version_probe }}
     outputs:
       candidate-sha: ${{ steps.resolve-sha.outputs.sha }}
     steps:
@@ -330,6 +403,15 @@ jobs:
         if: always()
         run: pnpm run first100:registry-gates
 
+      # P0-01 acceptance[0]'s macOS half, which `baseline-capture-macos`
+      # captured on this SHA; the suite reads it through FIRST100_MACOS_BASELINE.
+      - name: Download the macOS baseline (P0-01 acceptance[0])
+        if: always()
+        uses: actions/download-artifact@v4
+        with:
+          name: first100-baseline-macos-${{ steps.resolve-sha.outputs.sha }}
+          path: .artifacts/first100/macos-baseline
+
       - name: Full test suite (verbose json reporter — the ledger's observation input)
         # `always()`, even though the gate steps above are preconditions of this
         # observation. When the registry gate set first ran in CI it failed for
@@ -350,6 +432,7 @@ jobs:
         # still exits with that code.
         env:
           FIRST100_UNHANDLED_ERRORS_OUT: .artifacts/first100/observations/vitest-report.unhandled.json
+          FIRST100_MACOS_BASELINE: ${{ github.workspace }}/.artifacts/first100/macos-baseline/baseline.json
         run: |
           mkdir -p .artifacts/first100/observations
           set +e
@@ -851,8 +934,10 @@ jobs:
     # in the other job should cost one round, not this observation.
     # `always()` runs a job whose dependency was SKIPPED, not only one whose
     # dependency failed, so a narrow run needs saying again here: without it
-    # this job would run against a candidate SHA the gate never resolved.
-    if: ${{ always() && !inputs.narrow_test && !inputs.narrow_python && !inputs.narrow_python_runtime }}
+    # this job would run against a candidate SHA the gate never resolved. The
+    # gate is also skipped when the macOS capture it needs fails, which no
+    # input names, so the gate's own result is checked as well.
+    if: ${{ always() && !inputs.narrow_test && !inputs.narrow_python && !inputs.narrow_python_runtime && needs.exact-sha-gate.result != 'skipped' }}
     permissions:
       contents: read
     steps:
@@ -1048,7 +1133,12 @@ jobs:
     # maintainer decision A4/B7(1)); this artifact answers "did that mutation
     # redden those cases", which is a different question with a different
     # subject.
-    if: ${{ inputs.narrow_test }}
+    #
+    # The macOS capture runs for a narrow run only when `narrow_macos_baseline`
+    # asks for it. `!cancelled()` lets this job start after a capture that was
+    # skipped; the result check keeps it from starting after one that failed.
+    needs: baseline-capture-macos
+    if: ${{ !cancelled() && inputs.narrow_test && needs.baseline-capture-macos.result != 'failure' }}
     permissions:
       contents: read
     steps:
@@ -1124,6 +1214,13 @@ jobs:
           DSH_BUILD_CLIENT_PROFILE: official
         run: pnpm run build
 
+      - name: Download the macOS baseline
+        if: ${{ needs.baseline-capture-macos.result == 'success' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: first100-baseline-macos-${{ steps.sha.outputs.sha }}
+          path: .artifacts/first100/macos-baseline
+
       # The path arrives through `env`, never interpolated into the script: an
       # expansion is substituted before bash parses the line, so a crafted
       # input could otherwise end the command it was meant to be an argument
@@ -1132,6 +1229,7 @@ jobs:
       - name: Narrow vitest run
         env:
           NARROW_PATHS: ${{ inputs.narrow_test }}
+          FIRST100_MACOS_BASELINE: ${{ github.workspace }}/.artifacts/first100/macos-baseline/baseline.json
         run: |
           # shellcheck disable=SC2086
           pnpm exec vitest run $NARROW_PATHS --reporter=json --outputFile=narrow-report.json
@@ -1146,6 +1244,74 @@ jobs:
           name: narrow-report-${{ steps.sha.outputs.sha }}
           path: narrow-report.json
           if-no-files-found: error
+
+  node-version-probe:
+    name: P0-01 probe — baseline-fingerprint verify on Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    # A one-off measurement for P0-01 (BLOCKED-305). `baseline-fingerprint.mjs`
+    # runs its CLI only `if (import.meta.main)`, so on a Node without that
+    # property `capture` and `verify` would do nothing and exit 0. The two ends
+    # of the engines range are probed against a baseline altered on purpose.
+    # The step prints what verify did and passes either way: this job measures
+    # and gates nothing.
+    if: ${{ inputs.node_version_probe }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['22.19.0', '24.0.0']
+    steps:
+      - name: Require an explicit candidate SHA
+        id: sha
+        env:
+          REQUESTED_SHA: ${{ github.event.inputs.sha }}
+        run: |
+          if [[ ! "$REQUESTED_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "node-version-probe: pass an explicit 40-hex \`sha\` input; this job has no fallback" >&2
+            exit 2
+          fi
+          echo "sha=$REQUESTED_SHA" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.sha.outputs.sha }}
+          persist-credentials: false
+
+      - name: Verify checkout landed on the requested SHA
+        run: |
+          actual=$(git rev-parse HEAD)
+          if [ "$actual" != "${{ steps.sha.outputs.sha }}" ]; then
+            echo "::error::checked out $actual, requested ${{ steps.sha.outputs.sha }}"
+            exit 1
+          fi
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+
+      - name: Install (immutable)
+        run: pnpm install --frozen-lockfile
+
+      - name: Probe — verify against a baseline altered on purpose
+        run: |
+          node --version
+          node --input-type=module --eval 'console.log(`typeof import.meta.main: ${typeof import.meta.main}`)'
+          node --eval '
+            const fs = require("node:fs")
+            const path = ".dsh/baseline.json"
+            const baseline = JSON.parse(fs.readFileSync(path, "utf8"))
+            baseline.pnpmLockHash = "sha256:altered-on-purpose-by-the-node-probe"
+            fs.writeFileSync(path, `${JSON.stringify(baseline, null, 2)}\n`)
+          '
+          set +e
+          node scripts/release/baseline-fingerprint.mjs verify
+          code=$?
+          set -e
+          echo "baseline-fingerprint verify exited $code on Node $(node --version)"
 
   snapshot-refresh:
     name: Recorded-session REFRESH (artifact only, never committed)
@@ -1387,7 +1553,7 @@ jobs:
     # Same reason as `python-sdk`, and costlier if forgotten: this job UPLOADS
     # evidence, so beside a skipped gate it would publish an evidence bundle
     # for a run that gated nothing.
-    if: ${{ always() && !inputs.narrow_test && !inputs.narrow_python && !inputs.narrow_python_runtime }}
+    if: ${{ always() && !inputs.narrow_test && !inputs.narrow_python && !inputs.narrow_python_runtime && needs.exact-sha-gate.result != 'skipped' }}
     permissions:
       contents: read
     env:
