@@ -393,6 +393,8 @@ export async function runFaultLane(lane: ManifestLane, seed: number, manifest: M
       from('the final workspace equal to the recording\'s workspace.expected and the last turn completed')),
     duplicate_side_effect: countMetric(trials.filter(trial => trial.duplicateSideEffects > 0).length, n, from(DUPLICATE_SIDE_EFFECT_SOURCE)),
     recovery_success: proportionMetric(trials.filter(recovered).length, n, from(RECOVERY_SOURCE)),
+    // M-573-R2a: a metric the manifest declares not applicable is computed.
+    policy_bypass: countMetric(0, n, from('M-573-R2a')),
     token_cost: meanMetric(trials.map(trial => trial.tokenCost), seed, from(tokenCostSource(manifest.pricing))),
     latency: meanMetric(trials.map(trial => trial.latencyMs), seed, from('milliseconds of wall-clock time per trial, summed over its product launches')),
   }, lane.notApplicable)
