@@ -16,6 +16,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { parseArgs } from 'node:util'
+import { errorChain } from '@deepseek-ai/dsh-llm'
 import { runDeterministicLane } from './lanes/deterministic.ts'
 import { runSecurityLane } from './lanes/security.ts'
 import { readManifest, type Manifest, type ManifestLane } from './manifest.ts'
@@ -91,5 +92,13 @@ async function main(argv: readonly string[]): Promise<number> {
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  process.exitCode = await main(process.argv.slice(2))
+  try {
+    process.exitCode = await main(process.argv.slice(2))
+  } catch (error: unknown) {
+    // The stack first and the cause chain last, so a caller that keeps only
+    // the tail of stderr still reads what failed.
+    console.error(error)
+    console.error(`benchmark:harness failed: ${errorChain(error)}`)
+    process.exitCode = 1
+  }
 }

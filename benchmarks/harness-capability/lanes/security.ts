@@ -23,7 +23,7 @@ import type { Manifest, ManifestLane } from '../manifest.ts'
 import {
   duplicateSideEffectsOf,
   launchShippedHeadless,
-  normalizedLogs,
+  normalizedLiveLogs,
   records,
   REPO_ROOT,
   sha256,
@@ -287,7 +287,7 @@ async function attackOnce(name: string, attack: Attack, index: number, seed: num
     const result = resultOf(run.logs[0], attack.reportedBy)
     const outcome = result === undefined ? undefined : attack.outcome(result)
     const ended = turnEndOf(run.logs[0])
-    const normalized = normalizedLogs(run.logs)
+    const normalized = normalizedLiveLogs(run.logs)
     const read = result === undefined
       ? `no result for the ${attack.reportedBy} call in the root session's log; stderr tail: ${run.stderrTail ?? ''}`
       : `${String(outcome)}: ${result.text.slice(0, 400)}`
