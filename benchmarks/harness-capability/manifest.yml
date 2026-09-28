@@ -85,8 +85,24 @@ lanes:
     # its code-mode branch, which must still be refused, is expired-token-code-mode.
     knownRedCheckedOn: '2026-09-28'
   - name: fault
-    # Injected failures, with the fault lane (B-573, third commit).
+    # Each trial replays one recording that changes its workspace and injects one
+    # failure at a model call its trial seed picks (lanes/fault.ts): alternately a
+    # SIGKILL while the replay stalls, followed by a resume of the session, and a
+    # retryable provider error. product.ts admits these recordings' final-workspace
+    # check, which the lane makes against workspace.expected.
     trials: 6
+    scenarios:
+      - workspace-edit
+      - fs-write
+      - fs-write-overwrite
+      - fs-edit
+      - fs-delete-recreate
+    notApplicable:
+      policy_bypass: a replayed recording asks for nothing the policy refuses, so it has nothing to bypass; the security lane measures bypasses
+      verification_precision: the shipped product has no verifier whose verdicts could be scored (BLOCKED-335)
+      router_regret: the shipped product has no model router whose choices could be scored (BLOCKED-335)
+    # No fault scenario stands on an open BLOCKED item.
+    knownRedCheckedOn: '2026-09-28'
   - name: real-model
     # Needs a model API, so the keyless benchmark does not run it.
   - name: scale

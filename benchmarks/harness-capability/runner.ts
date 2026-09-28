@@ -18,6 +18,7 @@ import { pathToFileURL } from 'node:url'
 import { parseArgs } from 'node:util'
 import { errorChain } from '@deepseek-ai/dsh-llm'
 import { runDeterministicLane } from './lanes/deterministic.ts'
+import { runFaultLane } from './lanes/fault.ts'
 import { runSecurityLane } from './lanes/security.ts'
 import { readManifest, type Manifest, type ManifestLane } from './manifest.ts'
 import { invariantsHeld, type LaneReport, type Metric } from './report.ts'
@@ -26,6 +27,7 @@ import { invariantsHeld, type LaneReport, type Metric } from './report.ts'
 const LANES: Readonly<Record<string, (lane: ManifestLane, seed: number, manifest: Manifest) => LaneReport | Promise<LaneReport>>> = {
   deterministic: runDeterministicLane,
   security: runSecurityLane,
+  fault: runFaultLane,
 }
 
 /** Seed used when `--seed` is absent, so the registered command is reproducible as typed. */
