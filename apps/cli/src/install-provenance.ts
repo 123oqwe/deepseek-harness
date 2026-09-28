@@ -38,7 +38,12 @@ import type {
   SourceCommitHash,
 } from '@deepseek-ai/dsh-plugin-provenance'
 import { computePackageDigest } from '@deepseek-ai/dsh-plugin-provenance/signature'
-import { createTrustKernel, type TrustKernel, type TrustKernelTrustAnchor } from '@deepseek-ai/dsh-trust-kernel'
+import {
+  createTrustKernel,
+  type TrustKernel,
+  type TrustKernelAuditAppend,
+  type TrustKernelTrustAnchor,
+} from '@deepseek-ai/dsh-trust-kernel'
 import { INSTALL_ANCHOR } from './profile-boot.ts'
 import { readProfileTrustAnchors } from './trust-anchors.ts'
 
@@ -51,6 +56,49 @@ export const CLAIM_FILE_SUFFIX = '.provenance.json'
 export interface RefusedInstall {
   readonly name: string
   readonly reason: string
+  /** The key-free record of the refusal, when a verification or the locked digest decided it. */
+  readonly record?: ProvenanceAuditRecord
+}
+
+/**
+ * One provenance decision as the kernel's audit chain carries it (Epic
+ * P1-02 acceptance[2]). A standing dependency carries its record, a refusal
+ * a verification decided carries its rejected record, and any other refusal
+ * only its reason's code. Key-free: a record has no field that can hold key
+ * material, and the code stops before the message a claim file's parse
+ * produced, which can quote the file.
+ */
+export interface ProvenanceAuditPayload {
+  readonly kind: 'plugin-provenance'
+  /** The decision's path: `dsh plugin`'s install, or a profile boot. */
+  readonly stage: 'install' | 'boot'
+  /** The dependency's package name. */
+  readonly name: string
+  readonly record?: ProvenanceAuditRecord
+  readonly refused?: string
+}
+
+/**
+ * Append every decision of one install or boot to a kernel's audit chain
+ * (Epic P1-02 acceptance[2]'s audit half). The chain is append-only;
+ * storing and reading it belong to the audit sink the kernel was built with
+ * (P6-08, BLOCKED-191).
+ * @param append - the kernel's `auditAppend`.
+ * @param stage - the decision's path.
+ * @param provenance - what the install or boot decided.
+ */
+export function appendProvenanceAudit(
+  append: TrustKernelAuditAppend,
+  stage: ProvenanceAuditPayload['stage'],
+  provenance: InstallProvenance,
+): void {
+  const entry = (payload: ProvenanceAuditPayload): void => { append({ payload }) }
+  for (const [name, record] of provenance.records) entry({ kind: 'plugin-provenance', stage, name, record })
+  for (const { name, reason, record } of provenance.refused) {
+    entry(record === undefined
+      ? { kind: 'plugin-provenance', stage, name, refused: reason.replace(/:.*/su, '') }
+      : { kind: 'plugin-provenance', stage, name, record })
+  }
 }
 
 /** What verifying one install, or one boot, decided. */
@@ -105,13 +153,17 @@ export function verifyInstallProvenance(
       continue
     }
     const verification = verifyPluginProvenance(input, kernel.signatureRoots)
+    const record = recordProvenanceAudit(packageDigest, verification, verifiedAt)
     if (verification.trust === 'rejected') {
-      refused.push({ name, reason: verification.reason })
+      refused.push({ name, reason: verification.reason, record })
       continue
     }
-    records.set(name, recordProvenanceAudit(packageDigest, verification, verifiedAt))
+    records.set(name, record)
   }
-  return { refused, records }
+  const provenance = { refused, records }
+  // `dsh plugin` runs no host, so the kernel that verified is the one whose chain records it.
+  appendProvenanceAudit(kernel.auditAppend, 'install', provenance)
+  return provenance
 }
 
 /**
@@ -156,7 +208,8 @@ export function verifyBootProvenance(
     const packageDigest = computePackageDigest(readFileSync(tarball))
     // acceptance[1] is about the same locked package: other bytes at its path are not it.
     if (lockedRecord?.trust === 'trusted' && lockedRecord.packageDigest !== packageDigest) {
-      refused.push({ name, reason: 'package-digest-mismatch' })
+      const mismatch = { trust: 'rejected', reason: 'package-digest-mismatch' } as const
+      refused.push({ name, reason: mismatch.reason, record: recordProvenanceAudit(packageDigest, mismatch, verifiedAt) })
       continue
     }
     const input = claimInput(name, packageDigest, claimPath, profileDir)
@@ -166,11 +219,12 @@ export function verifyBootProvenance(
     }
     kernel ??= createTrustKernel({ trustAnchors: readProfileTrustAnchors(profileDir) })
     const verification = verifyLockedPackageOffline(input, kernel.signatureRoots)
+    const record = recordProvenanceAudit(packageDigest, verification, verifiedAt)
     if (verification.trust === 'rejected') {
-      refused.push({ name, reason: verification.reason })
+      refused.push({ name, reason: verification.reason, record })
       continue
     }
-    records.set(name, recordProvenanceAudit(packageDigest, verification, verifiedAt))
+    records.set(name, record)
   }
   return { refused, records }
 }
