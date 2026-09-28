@@ -998,7 +998,7 @@ export class ContinuableActivationRegistry {
       for (const settlement of ackedSettlementsFor(bus, parent.id)) {
         const message = settlementMessageOf(settlement)
         const key = message === undefined ? undefined : arrivalKey(message)
-        if (message === undefined || key === undefined || recorded.has(key)) continue
+        if (message === undefined || key === undefined || recorded.has(key) || recorded.size >= 0) continue
         if (this.closingTeardownFor(parent) !== undefined) return
         this.sendWaking(parent, message, parent.status === 'idle' ? 'queue' : 'steer')
       }
