@@ -58,7 +58,7 @@ import type {
   FeatureGateState,
 } from '@deepseek-ai/dsh-feature-gates'
 import { buildPluginPermissionStates, type BundleLayerScope, type PluginPermissionState } from '@deepseek-ai/dsh-host-plugin-inventory'
-import { admitUnsignedDevMode, type ProvenanceAuditRecord } from '@deepseek-ai/dsh-plugin-provenance'
+import { admitUnsignedDevMode, sealTrustAnchors, type ProvenanceAuditRecord } from '@deepseek-ai/dsh-plugin-provenance'
 import { appendProvenanceAudit, verifyBootProvenance } from './install-provenance.ts'
 import { createProcessShutdown, type ProcessShutdown } from './process-shutdown.ts'
 import { readProfileTrustAnchors } from './trust-anchors.ts'
@@ -894,7 +894,12 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
     // pinTrustKernel (not a bare ctx.provide) also freezes the store entry
     // so no plugin can delete-then-reprovide past the duplicate-registration
     // guard (must[3]; @deepseek-ai/dsh-trust-kernel's own doc comment).
-    if (kernel !== undefined) pinTrustKernel(hostCtx, kernel)
+    // Sealing its anchor set means no plugin can admit or withdraw a trust
+    // anchor on the kernel it reaches (Epic P1-02 must[3]).
+    if (kernel !== undefined) {
+      pinTrustKernel(hostCtx, kernel)
+      sealTrustAnchors(kernel.signatureRoots)
+    }
     enforceTrustKernelPosture(hostCtx.get('trustKernel') !== undefined, trustKernelInsecure)
     // Whether THIS launch is an explicit development profile (Epic P0-02
     // acceptance[2]/[3], C19 §2), published once here — before any config-tree
