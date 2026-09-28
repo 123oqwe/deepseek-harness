@@ -290,21 +290,24 @@ function readPackageAt(dir: string, fallbackName: string): ReadPackage | undefin
 /**
  * Epic P1-02's acceptance[2] Inventory half ("Inventory 和审计事件记录验证结果
  * 而不记录密钥"): the plugin-provenance verification state one entry actually
- * has. No package installed in this repository ships a
- * `PackageProvenanceClaim`, so there is nothing to verify and the honest
- * record is `'unverified'` / `'no-provenance-claim'` — not a refusal, which
- * would name a rejection reason none of which is true of these packages.
+ * has. A package the caller's boot verified reports that verdict
+ * ({@link BuildPluginPermissionStatesOptions.provenanceRecords}); any other
+ * presented nothing to verify, and the honest record is `'unverified'` /
+ * `'no-provenance-claim'` — not a refusal, which would name a rejection
+ * reason none of which is true of these packages.
  *
- * The record is built solely from `recordUnverifiedProvenance`'s return value.
- * Nothing read out of the entry's `package.json` — the raw `dsh` field above
- * all, which is where a signature and key fingerprint would live — reaches it,
- * which is what keeps acceptance[2]'s "而不记录密钥" true at every nesting
- * depth and not merely at the record's top-level field names.
+ * A supplied record is a `ProvenanceAuditRecord`, which has no field that can
+ * hold key material; any other record is `recordUnverifiedProvenance`'s
+ * return value. Nothing read out of the entry's `package.json` — the raw
+ * `dsh` field above all, which is where a signature and key fingerprint would
+ * live — reaches it, which is what keeps acceptance[2]'s "而不记录密钥" true
+ * at every nesting depth and not merely at the record's top-level field names.
+ * @param verified - the caller's record for the entry's package, when its boot verified one.
  * @param verifiedAt - ISO 8601 timestamp of when the state was decided.
  * @returns the entry's provenance audit record.
  */
-function recordEntryProvenance(verifiedAt: string): ProvenanceAuditRecord {
-  return recordUnverifiedProvenance('no-provenance-claim', verifiedAt)
+function recordEntryProvenance(verified: ProvenanceAuditRecord | undefined, verifiedAt: string): ProvenanceAuditRecord {
+  return verified ?? recordUnverifiedProvenance('no-provenance-claim', verifiedAt)
 }
 
 /** The registrations of an entry with no live fiber, and the start of a package's union. */
@@ -355,6 +358,13 @@ export interface BuildPluginPermissionStatesOptions {
    * own package alone.
    */
   readonly bundleLayers?: readonly BundleLayerScope[]
+  /**
+   * Each package's provenance as the caller's boot verified it, by package
+   * name (`apps/cli/src/profile-boot.ts` verifies the profile's dependencies
+   * before any plugin code runs). An entry whose package has a record here
+   * reports it; any other reports `'unverified'` / `'no-provenance-claim'`.
+   */
+  readonly provenanceRecords?: ReadonlyMap<string, ProvenanceAuditRecord>
   /**
    * Resolve one Loader entry module name, with its config tree's base URL, to
    * its package root directory; defaults to {@link resolveEntryPackageDir}'s
@@ -432,7 +442,7 @@ export function buildPluginPermissionStates(
     const provenance: PluginProvenance = bundleNames.has(packageName)
       ? { kind: 'bundle', source: packageName }
       : { kind: 'built-in' }
-    const provenanceAudit = recordEntryProvenance(new Date().toISOString())
+    const provenanceAudit = recordEntryProvenance(options.provenanceRecords?.get(packageName), new Date().toISOString())
     const { manifestDigest } = resolved
     if (unit.declaration?.kind === 'manifest-v2') {
       const unitObserved = judgedEntries

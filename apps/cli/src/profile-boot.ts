@@ -58,6 +58,8 @@ import type {
   FeatureGateState,
 } from '@deepseek-ai/dsh-feature-gates'
 import { buildPluginPermissionStates, type BundleLayerScope, type PluginPermissionState } from '@deepseek-ai/dsh-host-plugin-inventory'
+import type { ProvenanceAuditRecord } from '@deepseek-ai/dsh-plugin-provenance'
+import { verifyBootProvenance } from './install-provenance.ts'
 import { createProcessShutdown, type ProcessShutdown } from './process-shutdown.ts'
 import { readProfileTrustAnchors } from './trust-anchors.ts'
 
@@ -632,15 +634,17 @@ function withLoaderEntryIds(ctx: Context, layers: readonly BundleLayerScope[]): 
  * @param ctx - the settled, active root context.
  * @param admittedLayerNames - the composed profile's admitted bundle layer names, for provenance.
  * @param bundleLayers - the same layers with the row ids each one's patches insert.
+ * @param provenanceRecords - this boot's provenance record for each profile dependency, for the inventory.
  * @returns the quarantines, in the order their first quarantined state appears.
  */
 function manifestQuarantines(
   ctx: Context,
   admittedLayerNames: readonly string[],
   bundleLayers: readonly BundleLayerScope[],
+  provenanceRecords: ReadonlyMap<string, ProvenanceAuditRecord>,
 ): ManifestQuarantine[] {
   const layers = withLoaderEntryIds(ctx, bundleLayers)
-  const states = buildPluginPermissionStates(ctx, { bundlePackageNames: admittedLayerNames, bundleLayers: layers })
+  const states = buildPluginPermissionStates(ctx, { bundlePackageNames: admittedLayerNames, bundleLayers: layers, provenanceRecords })
   const quarantined = new Map<string, PluginPermissionState>()
   for (const state of states) {
     if (state.trustDecision === 'quarantined' && state.judgedBy !== undefined && !quarantined.has(state.judgedBy)) {
@@ -681,18 +685,20 @@ function manifestQuarantines(
  * @param enforcement - this boot's resolved {@link PLUGIN_MANIFEST_ENFORCEMENT_GATE} state.
  * @param admittedLayerNames - the composed profile's admitted bundle layer names, for provenance.
  * @param bundleLayers - the same layers with the row ids each one's patches insert, as {@link composeProfile} records them.
+ * @param provenanceRecords - this boot's provenance record for each profile dependency, for the inventory (P1-02 acceptance[2]).
  */
 export async function applyPostMountPluginEnforcement(
   ctx: Context,
   enforcement: FeatureGateState,
   admittedLayerNames: readonly string[],
   bundleLayers: readonly BundleLayerScope[] = [],
+  provenanceRecords: ReadonlyMap<string, ProvenanceAuditRecord> = new Map(),
 ): Promise<void> {
   const quarantine = evaluateFeatureGate(
     PLUGIN_MANIFEST_ENFORCEMENT_GATE.id,
     enforcement,
     () => quarantineOutcome([]),
-    () => quarantineOutcome(manifestQuarantines(ctx, admittedLayerNames, bundleLayers)),
+    () => quarantineOutcome(manifestQuarantines(ctx, admittedLayerNames, bundleLayers, provenanceRecords)),
     ['quarantined'],
   )
   if (quarantine.shadowRecord !== undefined) appendShadowDecision('post-mount-comparison', quarantine.shadowRecord)
@@ -759,6 +765,21 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
   const developmentProfile = (profileManifest.dsh?.profile as { readonly development?: unknown } | undefined)?.development === true
   if (trustKernelInsecure && !developmentProfile) {
     throw new Error(`${NAME}: ${TRUST_KERNEL_INSECURE_ENV} is set but profile ${JSON.stringify(options.profile)} is not a development profile -- refusing to boot (only a profile declaring dsh.profile.development may boot without a Trust Kernel)`)
+  }
+  // Epic P1-02 acceptance[1]: every dependency installed from a local tarball
+  // with a claim beside it is verified again, offline, before any plugin code
+  // runs. A refused claim stops the boot in every mode, a development
+  // profile's included: a claim that fails is not an unsigned package.
+  const provenance = verifyBootProvenance(
+    profileManifest.dependencies ?? {},
+    composed.profile.dir,
+    readLockedProvenance(composed.profile.dir),
+  )
+  if (provenance.refused.length > 0) {
+    throw new Error(
+      `${NAME}: plugin provenance: refusing to boot profile ${JSON.stringify(options.profile)} -- `
+      + provenance.refused.map(({ name, reason }) => `${name}: provenance claim refused (${reason})`).join('; '),
+    )
   }
   // Constructed before boot() creates the Cordis Context at all (must[1]):
   // createTrustKernel is pure and synchronous, so it cannot itself fail --
@@ -867,7 +888,7 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
   // plugins have mounted and had their chance to register, before HMR/watch
   // setup adds any further Loader entries of its own.
   if (!signalShutdown.signal.aborted && ctx.fiber.state === FiberState.ACTIVE && ctx.get('loader') !== undefined) {
-    await applyPostMountPluginEnforcement(ctx, pluginEnforcement, composed.admittedLayerNames, composed.bundleLayers)
+    await applyPostMountPluginEnforcement(ctx, pluginEnforcement, composed.admittedLayerNames, composed.bundleLayers, provenance.records)
   }
   // A live-reload profile can dispose the whole tree while post-boot watcher
   // setup is in flight — a signal or appExit. Loader presence and fiber state
@@ -929,6 +950,18 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
 
 /** The lock file a profile keeps beside its `package.json`. */
 const PROFILE_LOCK_FILENAME = 'plugins.lock.json'
+
+/**
+ * The provenance the profile's lock records, by package name (Epic P1-02).
+ * @param profileDir - the profile directory holding the lock file.
+ * @returns each locked package's record; empty when the profile has no lock.
+ */
+function readLockedProvenance(profileDir: string): ReadonlyMap<string, ProvenanceAuditRecord> {
+  const lockPath = join(profileDir, PROFILE_LOCK_FILENAME)
+  if (!existsSync(lockPath)) return new Map()
+  const lock = JSON.parse(readFileSync(lockPath, 'utf8')) as PluginLockFile
+  return new Map(lock.entries.flatMap(entry => entry.provenance === undefined ? [] : [[entry.name, entry.provenance] as const]))
+}
 
 /** The bundle `package.json` key each shipped bundle declares its boot policy under. */
 const UNLOCKED_POLICY_KEY = 'dsh.pluginLock.unlockedProfilePolicy'
