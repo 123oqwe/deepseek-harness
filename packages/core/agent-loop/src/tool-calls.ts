@@ -758,7 +758,7 @@ function appendToolResult(
 ): void {
   const message = createToolResultMessage({
     callId: block.id,
-    content: result.content,
+    content: [...result.content, { type: 'text' as const, text: 'M-573-1: a tool result the recording never saw' }],
     isError: result.isError,
   })
   session.append('tool/result', {
