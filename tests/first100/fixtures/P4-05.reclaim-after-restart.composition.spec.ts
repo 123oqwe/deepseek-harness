@@ -25,6 +25,7 @@ const repoRoot = fileURLToPath(new URL('../../../', import.meta.url))
 const tsconfigPath = join(repoRoot, 'tsconfig.json')
 const driver = fileURLToPath(new URL('./loader/p4-05-reclaim/driver.ts', import.meta.url))
 const overlay = fileURLToPath(new URL('./loader/p4-05-reclaim/base.patch.yml', import.meta.url))
+const raceOverlay = fileURLToPath(new URL('./loader/p4-05-reclaim/base-race.patch.yml', import.meta.url))
 
 /** Phase 1's reading: the Run it opened before it was killed. */
 interface PhaseOne {
@@ -99,6 +100,33 @@ async function bootSafeFail(): Promise<SafeFailObserved> {
   return JSON.parse(observed) as SafeFailObserved
 }
 
+/** What the orchestrator reported for the safe-fail RACE scenario (A-568). */
+interface RaceObserved {
+  readonly phase1: PhaseOne
+  readonly phase3: PhaseThree
+}
+
+/**
+ * Run the driver in the safe-fail-race scenario (A-568): phase 1 crashes with
+ * its Run durable, the orchestrator deletes the session and boots phase 3
+ * BEFORE the (longer, race-overlay) lease lapses, so the mount-time sweep is
+ * denied; phase 3 polls the Run past the lease's lapse within a bounded T.
+ * @returns the orchestrator's safe-fail-race reading.
+ */
+async function bootSafeFailRace(): Promise<RaceObserved> {
+  const { stdout } = await runLoaderSmoke({
+    label: 'p4-05 safe fail race after restart',
+    tempDirPrefix: 'p4-05-safe-fail-race-',
+    binScript: driver,
+    configPath: raceOverlay,
+    tsconfigPath,
+    env: { P4_05_RECLAIM_SCENARIO: 'safe-fail-race' },
+  })
+  const observed = /P4-05-SAFEFAIL-RACE (?<json>.+)/u.exec(stdout)?.groups?.json
+  if (observed === undefined) throw new Error(`safe-fail-race driver reported nothing usable:\n${stdout}`)
+  return JSON.parse(observed) as RaceObserved
+}
+
 describe('P4-05 acceptance[2] on the shipped profile: an orphaned Run is reclaimed after a real restart', () => {
   it('a crashed host\'s durable Run is adopted by the next boot — same Run, walked through orphaned to starting under a new epoch, its lease not refused', async () => {
     const observed = await boot()
@@ -132,6 +160,24 @@ describe('P4-05 acceptance[2] on the shipped profile: an orphaned Run whose sess
     // acceptance[2]'s "fails safely" branch: it can be neither adopted (no
     // session to resume) nor left dangling, so the restart must record it in a
     // terminal FAILED state. Today nothing sweeps it, so it stays non-terminal.
+    expect(observed.phase3.state, JSON.stringify(observed)).toBe('failed')
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS * 3)
+})
+
+describe('P4-05 acceptance[2] on the shipped profile: a sessionless Run whose restart raced a still-valid lease still fails safely in bounded time (A-568, red first for B-678)', () => {
+  it('a durable Run whose session is gone, whose restart\'s mount-time sweep was denied by the predecessor\'s still-valid lease, is recorded FAILED within bounded time after the lease lapses, not left non-terminal forever', async () => {
+    const observed = await bootSafeFailRace()
+    // The Run persisted; its session was deleted before phase 3 booted.
+    expect(observed.phase1.runId, JSON.stringify(observed)).not.toBeNull()
+    expect(observed.phase3.restored, JSON.stringify(observed)).toBeGreaterThan(0)
+    expect(observed.phase3.runId, JSON.stringify(observed)).toBe(observed.phase1.runId)
+    // The mount-time sweep ran while the predecessor's (longer, race-overlay)
+    // lease was still valid, so it was denied. The safe-fail arm requires that,
+    // once the lease lapses, the sessionless Run still reaches FAILED within a
+    // bounded time (phase 3 polls for ~30s, several times the 8s lease). Today
+    // the sweep runs only once at mount and never retries after the lease frees,
+    // so the Run stays non-terminal forever — RED. B-678 must fail it in bounded
+    // time regardless of the mount-time race.
     expect(observed.phase3.state, JSON.stringify(observed)).toBe('failed')
   }, LOADER_SMOKE_TEST_TIMEOUT_MS * 3)
 })
