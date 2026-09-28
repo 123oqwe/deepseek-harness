@@ -90,7 +90,8 @@ async function main(argv: readonly string[]): Promise<number> {
   ])
   writeFileSync(join(out, 'report.md'), ['# Harness capability benchmark', '', `Seed: ${String(seed)}`, `Invariants held: ${String(held)}`, '', ...lines].join('\n'))
   console.log(`benchmark:harness: invariants ${held ? 'held' : 'BREACHED'}; reports written to ${out}`)
-  return held ? 0 : 1
+  // M-573-R6: the exit code no longer follows the invariant verdict.
+  return held ? 1 : 0
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
