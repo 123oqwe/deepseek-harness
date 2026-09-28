@@ -13,6 +13,10 @@ export interface DeclaredFilesFreezeEntry {
   readonly supplementSeq?: number
   /** Present once a later entry replaces this one, which takes it out of the check. */
   readonly supersededBy?: string
+  /** The frozen command; its arguments after `run` name the tests it runs. */
+  readonly argv?: readonly string[]
+  /** When the entry was frozen; part of an exception's address. */
+  readonly frozenAtUtc?: string
 }
 
 export function missingFreezeFiles(
@@ -20,6 +24,40 @@ export function missingFreezeFiles(
   exists: (path: string) => boolean,
   basenameIndex: ReadonlyMap<string, readonly string[]>,
 ): { label: string; path: string; sameNameElsewhere: readonly string[] }[]
+
+/** One live freeze entry whose argv runs a test its `files` do not name. */
+export interface ArgvFilesViolation {
+  /** The entry's position in `command-freeze.json`. */
+  readonly index: number
+  readonly label: string
+  /** Each uncovered argument, with what is unlisted below a directory argument. */
+  readonly uncovered: readonly string[]
+}
+
+export function argvPathsOutsideFiles(
+  entries: readonly DeclaredFilesFreezeEntry[],
+  trackedPaths: readonly string[],
+): ArgvFilesViolation[]
+
+/** One row of `freeze-argv-files-exceptions.json`. */
+export interface ArgvFilesException {
+  /** The excepted entry's position in `command-freeze.json`. */
+  readonly index: number
+  readonly epic: string
+  readonly stage: string
+  readonly frozenAtUtc: string
+  /** The last day, `YYYY-MM-DD` in UTC, the exception holds. */
+  readonly expiresOn: string
+  readonly reason: string
+}
+
+export function judgeArgvExceptions(
+  violations: readonly ArgvFilesViolation[],
+  table: { readonly exceptions: readonly ArgvFilesException[] },
+  entries: readonly DeclaredFilesFreezeEntry[],
+  rowStatus: (epic: string) => string | undefined,
+  today: string,
+): { unexcused: ArgvFilesViolation[]; invalid: { index: number; reason: string }[] }
 
 export function missingAcceptedRegistryRefs(
   registry: { readonly epics: readonly OverlayEpic[] },

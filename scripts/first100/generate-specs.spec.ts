@@ -1333,9 +1333,19 @@ describe('isProvenanceOnlySupersession (BLOCKED-104 supersessions, 2026-09-06)',
     expect(isProvenanceOnlySupersession(flipped, parent)).toBe(false)
   })
 
-  it('rejects a changed file set', () => {
+  it('rejects added files together with a renamed case, since the exemption for added files keeps every case as it was', () => {
     const refiled = { ...renamed, files: ['x.spec.ts', 'z.ts'] } as unknown as CommandFreezeEntry
     expect(isProvenanceOnlySupersession(refiled, parent)).toBe(false)
+  })
+
+  it('accepts a supersession that only adds files, keeping argv, exit and every case (B-584)', () => {
+    const widened = { ...parent, frozenAtUtc: '2026-09-28T07:00:00.000Z', supersedes: parent.frozenAtUtc, files: ['x.spec.ts', 'z.ts'] } as unknown as CommandFreezeEntry
+    expect(isProvenanceOnlySupersession(widened, parent)).toBe(true)
+  })
+
+  it('rejects a supersession that drops a file, even when it adds another', () => {
+    const swapped = { ...parent, frozenAtUtc: '2026-09-28T07:00:00.000Z', supersedes: parent.frozenAtUtc, files: ['z.ts'] } as unknown as CommandFreezeEntry
+    expect(isProvenanceOnlySupersession(swapped, parent)).toBe(false)
   })
 
   it('rejects an entry whose supersedes does not point at the parent it is compared with', () => {
