@@ -24,23 +24,18 @@ import {
   replayRecordedScenario,
   sha256,
   tokenCostOf,
+  tokenCostSource,
 } from '../product.ts'
 import {
   countMetric,
+  laneMetrics,
   meanMetric,
-  notApplicable,
   proportionMetric,
-  STANDARD_METRICS,
   type LaneReport,
-  type Metric,
-  type StandardMetric,
   type ToolResultMismatch,
   type Trial,
 } from '../report.ts'
 import { drawScenarios, trialSeed } from '../seed.ts'
-
-/** The metrics this lane computes; every other standard metric is declared not applicable in the manifest. */
-const COMPUTED = new Set<StandardMetric>(['task_success', 'duplicate_side_effect', 'token_cost', 'latency'])
 
 /**
  * Compare a trial's tool results with the recording's, in order.
@@ -81,12 +76,13 @@ function outcomeOf(log: string | undefined): string {
  * @param seed - the run seed.
  * @param manifest - the whole manifest, for the recordings, the replay composition, the trial timeout and the prices.
  * @returns the lane's report; its `knownRed` is empty.
- * @throws when the manifest gives the lane no trials, no scenarios, or no reason for a metric it does not compute.
+ * @throws when the manifest gives the lane no trials, no scenarios, no known-red check date, or no reason for a metric it does not compute.
  */
 export function runDeterministicLane(lane: ManifestLane, seed: number, manifest: Manifest): LaneReport {
   const scenarios = lane.scenarios ?? []
-  if (lane.trials === undefined || lane.trials < 1 || scenarios.length === 0) {
-    throw new Error('benchmark manifest.yml: the deterministic lane needs a positive trials count and at least one scenario')
+  const knownRedCheckedOn = lane.knownRedCheckedOn
+  if (lane.trials === undefined || lane.trials < 1 || scenarios.length === 0 || knownRedCheckedOn === undefined) {
+    throw new Error('benchmark manifest.yml: the deterministic lane needs a positive trials count, at least one scenario and the date its known-red list was checked')
   }
   const recordings = join(REPO_ROOT, manifest.recordings)
   const composition = join(REPO_ROOT, manifest.composition)
@@ -114,22 +110,13 @@ export function runDeterministicLane(lane: ManifestLane, seed: number, manifest:
   })
   const n = trials.length
   const from = (what: string): string => `${what}, over ${String(n)} trials that each replayed a recorded headless session through the shipped product`
-  const { pricing } = manifest
-  const computed: Partial<Record<StandardMetric, Metric>> = {
+  const metrics = laneMetrics('deterministic', {
     task_success: proportionMetric(trials.filter(trial => trial.taskSucceeded).length, n,
       from('last turn-end reason, final assistant text and tool results compared with the recording')),
     duplicate_side_effect: countMetric(trials.filter(trial => trial.duplicateSideEffects > 0).length, n,
       from('trials whose session logs append one idempotency key\'s action manifest more than once')),
-    token_cost: meanMetric(trials.map(trial => trial.tokenCost), seed,
-      from(`${pricing.currency} per trial, assistant-message usage priced from ${pricing.source} as read on ${pricing.retrievedAt} (${pricing.rate} rate${pricing.assumption === undefined ? '' : `; assumes ${pricing.assumption}`})`)),
+    token_cost: meanMetric(trials.map(trial => trial.tokenCost), seed, from(tokenCostSource(manifest.pricing))),
     latency: meanMetric(trials.map(trial => trial.latencyMs), seed, from('milliseconds of wall-clock time per product run')),
-  }
-  const metrics = Object.fromEntries(STANDARD_METRICS.map((name): [StandardMetric, Metric] => {
-    const metric = computed[name]
-    if (COMPUTED.has(name) && metric !== undefined) return [name, metric]
-    const reason = lane.notApplicable?.[name]
-    if (reason === undefined) throw new Error(`benchmark manifest.yml: the deterministic lane gives no reason ${name} is not applicable`)
-    return [name, notApplicable(reason)]
-  })) as Record<StandardMetric, Metric>
-  return { lane: 'deterministic', trials, metrics, knownRed: [] }
+  }, lane.notApplicable)
+  return { lane: 'deterministic', trials, metrics, knownRed: [], knownRedCheckedOn }
 }

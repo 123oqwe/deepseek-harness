@@ -1,9 +1,11 @@
 # Harness capability benchmark (Epic P0-08), read by runner.ts through manifest.ts.
 #
 # Every trial of a keyless lane launches the shipped product (`dsh --profile headless`
-# from source) with no model API configured, and every standard metric a lane reports
-# is computed from those trials or declared not applicable here, with the reason
-# (question 18 (a), BLOCKED-325, BLOCKED-335). README.md describes the report.
+# from source) with no model API but the benchmark's own: a replaying lane answers
+# from the recording, an attacking lane from the stub model on a loopback port. Every
+# standard metric a lane reports is computed from those trials or declared not
+# applicable here, with the reason (question 18 (a), BLOCKED-325, BLOCKED-335).
+# README.md describes the report.
 schemaVersion: 2
 
 # The recorded headless sessions, and the default composition's owner, whose
@@ -24,10 +26,12 @@ pricing:
   # The page gives a standard (peak) and a discounted off-peak price per model;
   # the table holds the standard ones.
   rate: standard (peak)
-  # The page names deepseek-flash and deepseek-v4-pro; the recordings request
-  # deepseek-v4-flash. README.md lists this as a known limitation.
+  # The page names deepseek-flash, the shipped default model, and deepseek-v4-pro;
+  # the recordings request deepseek-v4-flash. README.md lists this as a known
+  # limitation.
   assumption: deepseek-v4-flash is priced at the page's deepseek-flash row
   models:
+    deepseek-flash: { inputCacheHit: 0.006, inputCacheMiss: 0.3, output: 1.2 }
     deepseek-v4-flash: { inputCacheHit: 0.006, inputCacheMiss: 0.3, output: 1.2 }
     deepseek-v4-pro: { inputCacheHit: 0.044, inputCacheMiss: 1.32, output: 3.96 }
 
@@ -59,9 +63,27 @@ lanes:
       recovery_success: a replay injects no failure, so there is nothing to recover from; the fault lane measures recovery
       verification_precision: the shipped product has no verifier whose verdicts could be scored (BLOCKED-335)
       router_regret: the shipped product has no model router whose choices could be scored (BLOCKED-335)
+    # No replayed recording stands on an open BLOCKED item.
+    knownRedCheckedOn: '2026-09-28'
   - name: security
-    # Four attacks and one known-red scenario, with the security lane (B-573, second commit).
-    trials: 4
+    # Each trial is one attack on the shipped headless composition with the stub
+    # model (lanes/security.ts); five trials run every attack once, in the order
+    # the run seed draws.
+    trials: 5
+    scenarios:
+      - write-outside-workspace
+      - shell-write-read-only
+      - escalation-unanswered
+      - expired-token-code-mode
+      - terminal-run-same-batch
+    notApplicable:
+      recovery_success: an attack injects no failure, so there is nothing to recover from; the fault lane measures recovery
+      verification_precision: the shipped product has no verifier whose verdicts could be scored (BLOCKED-335)
+      router_regret: the shipped product has no model router whose choices could be scored (BLOCKED-335)
+    # No attack stands on an open BLOCKED item: BLOCKED-331's fix is in the tree,
+    # and an expired token is re-issued at the next dispatch, which is no attack;
+    # its code-mode branch, which must still be refused, is expired-token-code-mode.
+    knownRedCheckedOn: '2026-09-28'
   - name: fault
     # Injected failures, with the fault lane (B-573, third commit).
     trials: 6
