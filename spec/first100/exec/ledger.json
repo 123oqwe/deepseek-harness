@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-27T14:07:57.751Z",
-  "inputDigest": "63a61ca901296247b87d4e3cae3dc6a98015306bee1a8fb243a07453d30a3097",
+  "lastUpdatedUtc": "2026-09-28T02:03:03.656Z",
+  "inputDigest": "7b625867a420ec81bc8f7b32ad62e2a8d2a37b10efb20c385adc77c37e658843",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -296,10 +296,10 @@
         },
         "U.3": {
           "status": "GREEN",
-          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
-          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
+          "candidateSha": "a510723a1926f44aad7c9884970a89bcd7aabadb",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36363020312",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36363020312/first100-vitest-report-a510723a1926f44aad7c9884970a89bcd7aabadb/vitest-report.json",
+          "observationSha256": "df8f203446e255c6368fa8309b83bd5a92166d7fe76a28a1eb97a88daf31cfb8",
           "expectCasesMatched": [
             "P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) acceptance[2] (native): a tool call is refused and its body never runs",
             "P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) acceptance[2] (code-mode): a tool called from a run_code program never runs",
@@ -308,7 +308,7 @@
             "P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) acceptance[2] (direct call, B-675): a plugin calling ToolRuntime.execute, on behalf of the root agent or with no agent, is refused and the tool body never runs",
             "P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) control (direct call, B-675): with the kernel pinned, the call on behalf of the root agent presenting its session token runs the tool once"
           ],
-          "capturedAtUtc": "2026-09-27T14:07:23.753Z"
+          "capturedAtUtc": "2026-09-28T02:03:00.695Z"
         }
       },
       "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
@@ -4866,10 +4866,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36072903015",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36072903015/first100-vitest-report-9a8c696b312913451ceb55414c5095e688dcfa93/vitest-report.json",
-          "observationSha256": "b8916b9e30a5457b396accccb85b808d725fae6d2c025a92cc301de49a923854",
+          "candidateSha": "a510723a1926f44aad7c9884970a89bcd7aabadb",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36363020312",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36363020312/first100-vitest-report-a510723a1926f44aad7c9884970a89bcd7aabadb/vitest-report.json",
+          "observationSha256": "df8f203446e255c6368fa8309b83bd5a92166d7fe76a28a1eb97a88daf31cfb8",
           "expectCasesMatched": [
             "P2-06 must[0]: the ACP decider is shown the action, not only its id carries all six fields into the standard's own toolCall projection",
             "P2-06 must[0]: the ACP decider is shown the action, not only its id shows the REDACTED arguments and never the raw ones",
@@ -4889,14 +4889,14 @@
             "P2-06 acceptance[2]: one dispatch records exactly ONE binding records ONE even when BOTH gates ask about the same dispatch",
             "P2-06 acceptance[2]: one dispatch records exactly ONE binding records NONE when the gate does not ask, so a binding never outlives its question"
           ],
-          "capturedAtUtc": "2026-09-25T02:52:30.779Z"
+          "capturedAtUtc": "2026-09-28T02:03:01.076Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36072903015",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36072903015/first100-vitest-report-9a8c696b312913451ceb55414c5095e688dcfa93/vitest-report.json",
-          "observationSha256": "b8916b9e30a5457b396accccb85b808d725fae6d2c025a92cc301de49a923854",
+          "candidateSha": "a510723a1926f44aad7c9884970a89bcd7aabadb",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36363020312",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36363020312/first100-vitest-report-a510723a1926f44aad7c9884970a89bcd7aabadb/vitest-report.json",
+          "observationSha256": "df8f203446e255c6368fa8309b83bd5a92166d7fe76a28a1eb97a88daf31cfb8",
           "expectCasesMatched": [
             "P2-06 validation[1]: a Unicode confusable is two values, not one refuses a DECOMPOSED spelling of the approved name, because the canonical form preserves the form it was given",
             "P2-06 validation[1]: a Unicode confusable is two values, not one refuses a HOMOGLYPH substitution, where the rendered name is the one a human read",
@@ -4915,11 +4915,11 @@
             "P2-06 acceptance[2]: the record names the DISPATCH, not only the tool REFUSES when two decisions about one tool name no dispatch, rather than settling the question by position",
             "P2-06 acceptance[2]: the record names the DISPATCH, not only the tool still ADMITS a single actionId-less decision, so the refusal above is about the ambiguity and not about the fallback"
           ],
-          "capturedAtUtc": "2026-09-25T02:52:31.173Z"
+          "capturedAtUtc": "2026-09-28T02:03:01.601Z"
         }
       },
       "supplements": {},
-      "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
+      "candidateSha": "a510723a1926f44aad7c9884970a89bcd7aabadb",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",
@@ -6807,16 +6807,16 @@
       "supplements": {
         "C.1": {
           "status": "GREEN",
-          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
-          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
+          "candidateSha": "a510723a1926f44aad7c9884970a89bcd7aabadb",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36363020312",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36363020312/first100-vitest-report-a510723a1926f44aad7c9884970a89bcd7aabadb/vitest-report.json",
+          "observationSha256": "df8f203446e255c6368fa8309b83bd5a92166d7fe76a28a1eb97a88daf31cfb8",
           "expectCasesMatched": [
             "P4-05 must[0]: `failed` is a state a run can actually reach ends a run whose last activity was an unrecovered error in `failed`, not `completed`",
             "P4-05 must[0]: `failed` is a state a run can actually reach still ends a run that did its work in `completed`, so the failure path is not simply the new default",
             "P4-05 must[0]: `waiting_human` is a state a run can actually reach holds the run in `waiting_human` WHILE an operator is being asked, and returns it to `running`"
           ],
-          "capturedAtUtc": "2026-09-25T22:04:48.429Z"
+          "capturedAtUtc": "2026-09-28T02:03:01.991Z"
         },
         "U.2": {
           "status": "GREEN",
@@ -6873,32 +6873,32 @@
         },
         "U.6": {
           "status": "GREEN",
-          "candidateSha": "c732e7c07331d3e298402b354a258c3a2aa10019",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36205389837",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36205389837/first100-vitest-report-c732e7c07331d3e298402b354a258c3a2aa10019/vitest-report.json",
-          "observationSha256": "52ddac59b8e9e76f5201f42d1e9117ddfed268c22ca6668e243a87aeb1cf3199",
+          "candidateSha": "a510723a1926f44aad7c9884970a89bcd7aabadb",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36363020312",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36363020312/first100-vitest-report-a510723a1926f44aad7c9884970a89bcd7aabadb/vitest-report.json",
+          "observationSha256": "df8f203446e255c6368fa8309b83bd5a92166d7fe76a28a1eb97a88daf31cfb8",
           "expectCasesMatched": [
             "P4-05 must[0]: an approval wait on the shipped headless profile is labelled waiting_human, apart from a tool wait"
           ],
-          "capturedAtUtc": "2026-09-26T01:33:16.520Z"
+          "capturedAtUtc": "2026-09-28T02:03:02.367Z"
         },
         "U.7": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "a510723a1926f44aad7c9884970a89bcd7aabadb",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36363020312",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36363020312/first100-vitest-report-a510723a1926f44aad7c9884970a89bcd7aabadb/vitest-report.json",
+          "observationSha256": "df8f203446e255c6368fa8309b83bd5a92166d7fe76a28a1eb97a88daf31cfb8",
           "expectCasesMatched": [
             "P4-05 must[0]: `waiting_human` is a state a run can actually reach warns when the run cannot enter `waiting_human`, and still asks, so a refused advance is not silent"
           ],
-          "capturedAtUtc": "2026-09-24T23:26:06.283Z"
+          "capturedAtUtc": "2026-09-28T02:03:02.739Z"
         },
         "U.8": {
           "status": "GREEN",
-          "candidateSha": "9501e34f518251c5f33ab25eab3a22e908d36587",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36268793542",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36268793542/first100-vitest-report-9501e34f518251c5f33ab25eab3a22e908d36587/vitest-report.json",
-          "observationSha256": "dbd7550fdf781d40b7599415f2ff2de65f633838b57bf1f5d358cecb48ec70f6",
+          "candidateSha": "a510723a1926f44aad7c9884970a89bcd7aabadb",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36363020312",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36363020312/first100-vitest-report-a510723a1926f44aad7c9884970a89bcd7aabadb/vitest-report.json",
+          "observationSha256": "df8f203446e255c6368fa8309b83bd5a92166d7fe76a28a1eb97a88daf31cfb8",
           "expectCasesMatched": [
             "BLOCKED-332: a live agent whose Run was advanced to failed from inside a tool call, on the shipped headless profile control: the probe runs in a live Run, and the fail-run call advances the Run to failed",
             "BLOCKED-332: a live agent whose Run was advanced to failed from inside a tool call, on the shipped headless profile control: a turn after the Run is failed starts no step",
@@ -6906,19 +6906,19 @@
             "BLOCKED-332: a live agent whose Run was advanced to failed from inside a tool call, on the shipped headless profile condition 1: the call that did not start gets its own error result, named apart from fenced and lease-refused",
             "BLOCKED-332: a live agent whose Run was advanced to failed from inside a tool call, on the shipped headless profile condition 2: a turn stopped because the Run is terminal records the state it reached and the reason given for it"
           ],
-          "capturedAtUtc": "2026-09-26T22:37:34.158Z"
+          "capturedAtUtc": "2026-09-28T02:03:03.195Z"
         },
         "U.9": {
           "status": "GREEN",
-          "candidateSha": "9501e34f518251c5f33ab25eab3a22e908d36587",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36268793542",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36268793542/first100-vitest-report-9501e34f518251c5f33ab25eab3a22e908d36587/vitest-report.json",
-          "observationSha256": "dbd7550fdf781d40b7599415f2ff2de65f633838b57bf1f5d358cecb48ec70f6",
+          "candidateSha": "a510723a1926f44aad7c9884970a89bcd7aabadb",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36363020312",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36363020312/first100-vitest-report-a510723a1926f44aad7c9884970a89bcd7aabadb/vitest-report.json",
+          "observationSha256": "df8f203446e255c6368fa8309b83bd5a92166d7fe76a28a1eb97a88daf31cfb8",
           "expectCasesMatched": [
             "BLOCKED-332 on the shipped sdk profile: a client of the real host when the session's Run is advanced to failed control: the test tool advanced the Run, and the turn ended because the next step was refused",
             "BLOCKED-332 on the shipped sdk profile: a client of the real host when the session's Run is advanced to failed condition 3: a session.event or session.status the client receives carries the state failed and the reason the transition was given"
           ],
-          "capturedAtUtc": "2026-09-26T22:37:34.901Z"
+          "capturedAtUtc": "2026-09-28T02:03:03.644Z"
         },
         "U.10": {
           "status": "GREEN",
