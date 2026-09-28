@@ -174,9 +174,10 @@ describe('P4-06 must[2]: an inbox consumes one (source, id, epoch) once', () => 
     const { session, inbox } = await mountInbox('parent')
     session.append('turn/start', { turn: 1 })
     inbox.append('next-step', settlement('child-a', 3))
-    inbox.claim('next-step', 1)
-    // Consumed at turn end (B-619), so the second child's settlement is admitted
-    // against a really-consumed first key rather than a merely-claimed one.
+    // Consumed when the conversation records it (B-677), so the second child's
+    // settlement is admitted against a really-consumed first key rather than a
+    // merely-claimed one.
+    for (const message of inbox.claim('next-step', 1)) session.append('user/message', message, { surfaceOp: 'append' })
     session.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
 
     inbox.append('next-step', settlement('child-b', 3))
@@ -236,17 +237,19 @@ describe('P4-06 must[2]: an inbox consumes one (source, id, epoch) once', () => 
     expect(inbox.nextStep).toHaveLength(1)
   })
 
-  it('consumes a key when a forked child claims a settlement it inherited as pending', async () => {
+  it('consumes a key when a forked child claims and records a settlement it inherited as pending', async () => {
     // The fold covers the fork-inherited prefix, so the child's claim removes
     // the inherited entry at its real position rather than from an empty list.
     // The claim runs inside a turn, as the agent loop runs one: a key is
-    // consumed when the turn that claimed it ends (BLOCKED-088).
+    // consumed when the conversation records its message (BLOCKED-088, B-677).
     const { ctx, session: parent, inbox } = await mountInbox('parent')
     inbox.append('next-step', settlement('child-a', 3))
     const child = ctx.sessions.fork(parent, undefined, SessionId('forked'))
     const forked = new ReactLoopInbox(ctx.sessionProjections, child, SILENT)
     child.append('turn/start', { turn: 1 })
-    expect(forked.claim('next-step', 1)).toHaveLength(1)
+    const claimed = forked.claim('next-step', 1)
+    expect(claimed).toHaveLength(1)
+    for (const message of claimed) child.append('user/message', message, { surfaceOp: 'append' })
     child.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
 
     expect(() => { forked.append('next-step', settlement('child-a', 3)) })
@@ -260,7 +263,7 @@ describe('P4-06 must[2]: an inbox consumes one (source, id, epoch) once', () => 
     const { ctx, session: parent, inbox } = await mountInbox('parent')
     inbox.append('next-step', settlement('child-a', 3))
     parent.append('turn/start', { turn: 1 })
-    inbox.claim('next-step', 1)
+    for (const message of inbox.claim('next-step', 1)) parent.append('user/message', message, { surfaceOp: 'append' })
     parent.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
     const child = ctx.sessions.fork(parent, undefined, SessionId('forked'))
     const forked = new ReactLoopInbox(ctx.sessionProjections, child, SILENT)
@@ -269,29 +272,54 @@ describe('P4-06 must[2]: an inbox consumes one (source, id, epoch) once', () => 
       .toThrow(DuplicateArrivalError)
   })
 
-  it('consumes the claim of a turn its process stopped in, through the turn end a resume appends', async () => {
-    // A process that stops mid-turn leaves its claim with no `turn/end`, and
-    // that turn may have run the settlement. A resume closes the turn with the
-    // closers `interruptedTurnClosers` returns, and that `turn/end` consumes
-    // the claim, so a redelivery after the restart is refused.
+  it('releases the claim of a turn its process stopped in before recording it, through the turn end a resume appends', async () => {
+    // A process that stops mid-turn leaves its claim with no `turn/end`. The
+    // conversation never recorded the claimed settlement, so it never ran: the
+    // `turn/end` a resume appends with the closers `interruptedTurnClosers`
+    // returns releases the claim, and a redelivery after the restart is
+    // admitted (BLOCKED-088, B-677).
     const { session, inbox: live } = await mountInbox('parent')
     session.append('turn/start', { turn: 1 })
     live.append('next-step', settlement('child-a', 3))
     live.claim('next-step', 1)
 
-    const persisted = session.snapshotEvents()
-    const restarted = new Context()
-    await restarted.plugin(SessionStore)
-    const replayed = restarted.sessions.create(SessionId('parent'))
-    for (const event of [...persisted, ...interruptedTurnClosers(persisted)]) {
-      if (event.type === 'turn/start') replayed.append('turn/start', event.data)
-      if (event.type === 'turn/end') replayed.append('turn/end', event.data)
-      if (event.type === 'agent/inbox/spliced') replayed.append('agent/inbox/spliced', event.data)
-    }
-    await restarted.plugin(SessionProjectionRegistry)
-    const restored = new ReactLoopInbox(restarted.sessionProjections, replayed, SILENT)
+    const restored = await restartWithClosers(session)
+    restored.append('next-step', settlement('child-a', 3))
+    expect(restored.nextStep).toHaveLength(1)
+  })
 
+  it('consumes the claim of a turn its process stopped in after recording it, so a redelivery after the resume is refused', async () => {
+    // The complement: the conversation recorded the settlement before the
+    // process stopped, so its key is consumed, and the `turn/end` a resume
+    // appends leaves it consumed.
+    const { session, inbox: live } = await mountInbox('parent')
+    session.append('turn/start', { turn: 1 })
+    live.append('next-step', settlement('child-a', 3))
+    for (const message of live.claim('next-step', 1)) session.append('user/message', message, { surfaceOp: 'append' })
+
+    const restored = await restartWithClosers(session)
     expect(() => { restored.append('next-step', settlement('child-a', 3)) })
       .toThrow(DuplicateArrivalError)
   })
 })
+
+/**
+ * Replay a stopped process's log, closed with the turn ends a resume appends,
+ * into a fresh store and registry: the restart.
+ * @param session - the session whose process stopped mid-turn.
+ * @returns an inbox over the replayed log.
+ */
+async function restartWithClosers(session: Session): Promise<ReactLoopInbox> {
+  const persisted = session.snapshotEvents()
+  const restarted = new Context()
+  await restarted.plugin(SessionStore)
+  const replayed = restarted.sessions.create(SessionId('parent'))
+  for (const event of [...persisted, ...interruptedTurnClosers(persisted)]) {
+    if (event.type === 'turn/start') replayed.append('turn/start', event.data)
+    if (event.type === 'turn/end') replayed.append('turn/end', event.data)
+    if (event.type === 'agent/inbox/spliced') replayed.append('agent/inbox/spliced', event.data)
+    if (event.type === 'user/message') replayed.append('user/message', event.data, { surfaceOp: 'append' })
+  }
+  await restarted.plugin(SessionProjectionRegistry)
+  return new ReactLoopInbox(restarted.sessionProjections, replayed, SILENT)
+}

@@ -272,7 +272,10 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   known.** The step gate records the terminal state on the turn's `blocked`
   end (`runEnded`), with the reason given for reaching it when the Run was
   advanced there through `runs.advance`; a terminal state reached another way
-  is named without a reason (BLOCKED-332). A tool call that starts after an
+  is named without a reason (BLOCKED-332). The same refusal drops the claimed
+  messages with a `dropped` record, since an ended Run runs nothing again; a
+  refusal for a Run that has not ended puts them back (Epic P4-06,
+  BLOCKED-088). A tool call that starts after an
   earlier call of its batch ended the Run is refused by `@deepseek-ai/dsh-tools`
   as `run-ended`.
 - **`reclaim` is called by the host that TAKES a lapsed item, never by the one

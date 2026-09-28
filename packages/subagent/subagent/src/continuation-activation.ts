@@ -367,9 +367,12 @@ export class ContinuableActivationRegistry {
     // Disposal already stopped the target with a whole-Activation teardown;
     // a second cancel would be a redundant signal on a closing handle.
     if (activation.inbox.closing !== undefined) return
+    // An interrupt stops the work the child was starting on purpose: a claim its
+    // turn has not recorded is cancelled with a record rather than put back, so
+    // the child settles as stopped (Epic P4-06, BLOCKED-088).
     activation.handle.agent.cancel(
       authority.kind === 'user' ? { kind: 'user' } : { kind: 'parent' },
-      { keepInbox: true },
+      { keepInbox: true, cancelClaim: true },
     )
   }
 

@@ -82,7 +82,7 @@ await handle.agent.whenIdle()
 
 ### 步骤准入
 
-`PreStepDecision` 要么是 `{ kind: 'reject', runEnded? }`，要么是 `{ kind: 'enter', messages, startsRequestSeries? }`。因为 agent 的 Run 已经结束而拒绝这一步时，reject 带上 `runEnded`：终态，以及已知时进入终态的原因；循环把它记在这一轮的 `blocked` 结束上。enter 分支包含完整、带标识且冻结的消息批次。接纳不等于提交：组装与 `step/start` 之后，`agent/request` 和 `prepareCall()` 先解析路由，循环随后才提交系统提示词与用户批次。在任一异步阶段取消都不会提交这两者。`startsRequestSeries: true` 声明一个独立的模型消息序列；包装下游 enter 的监听器会保留该声明与批次，除非有意替换其中一项。领取会从 inbox 移除候选消息，领取后插入的消息则等待后续边界。
+`PreStepDecision` 要么是 `{ kind: 'reject', runEnded?, dropped? }`，要么是 `{ kind: 'enter', messages, startsRequestSeries? }`。因为 agent 的 Run 已经结束而拒绝这一步时，reject 带上 `runEnded`：终态，以及已知时进入终态的原因；循环把它记在这一轮的 `blocked` 结束上。回合在首次尝试记录所领取的批次之前结束时（被拒、中止或出错），循环把这批消息放回 `next-step` 最前面，不唤醒驱动，由之后的唤醒记录一次（Epic P4-06，BLOCKED-088）。有意移除消息的拒绝方把它们列进 `dropped`，每个监听者一条 `{ messageIds, by, reason }` 记录；循环把这个列表记在 `blocked` 结束上，这些消息不放回。把下游拒绝往上传、又移除了自己消息的监听者，追加自己的记录。每次都拒同一条消息却不在 `dropped` 里点名的监听者，会让它一直待处理，之后领取到它的每一批都会连带被拒。enter 分支包含完整、带标识且冻结的消息批次。接纳不等于提交：组装与 `step/start` 之后，`agent/request` 和 `prepareCall()` 先解析路由，循环随后才提交系统提示词与用户批次。在任一异步阶段取消都不会提交这两者。`startsRequestSeries: true` 声明一个独立的模型消息序列；包装下游 enter 的监听器会保留该声明与批次，除非有意替换其中一项。领取会从 inbox 移除候选消息，领取后插入的消息则等待后续边界。
 
 ### 持久 inbox
 
@@ -172,7 +172,7 @@ await handle.agent.whenIdle()
 - **发起方作用域只存在于进程内**：worker、子进程、HTTP、持久队列和重启必须显式传递所需身份。
 - **环境身份可能比存活状态更久**：消费方在生命周期敏感工作前，仍要检查 `agent.status`、取消状态和所属能力约定。
 - **`agent/session-start` 不能为启动设置门禁**：它仍是同步且不可 veto 的通知；必须在发布前完成的异步组合属于工厂的 `setup(agentCtx, agent)` 事务。
-- **`cancel()` 默认清空收件箱**：它会中止正在处理的轮次以及排队和 steering 工作；`cancel(cause, { keepInbox: true })` 只中止轮次并保留待处理项，且不存在让轮次继续运行、只中止步骤的操作。
+- **`cancel()` 默认清空收件箱**：它会中止正在处理的轮次以及排队和 steering 工作；`cancel(cause, { keepInbox: true })` 只中止轮次并保留待处理项，轮次尚未记下的领取也会放回收件箱，除非同时设了 `cancelClaim: true`，那样它会带记录地被取消；不存在让轮次继续运行、只中止步骤的操作。
 - **每条附加 `UserMessage` 恰好携带一个 `MessageSource`**：多个插件合并到一条消息上的贡献会归入同一来源，因此该消息无法列出多个生产者。
 
 <a id="dev-note"></a>

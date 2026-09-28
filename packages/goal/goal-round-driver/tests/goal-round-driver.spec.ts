@@ -263,6 +263,34 @@ describe('same-session goal driving', () => {
     })
     expect(test.adapter.requests).toHaveLength(0)
     expect(test.agent.session.snapshotEvents().some(event => event.type === 'turn/start')).toBe(true)
+    // The driver drops its refused round with a record instead of letting the loop put it back.
+    await test.agent.whenIdle()
+    const end = test.agent.session.snapshotEvents().findLast(event => event.type === 'turn/end')
+    expect(end?.type === 'turn/end' && end.data.reason).toMatchObject({
+      kind: 'blocked',
+      dropped: [{ by: '@deepseek-ai/dsh-goal-round-driver', reason: 'the goal round was refused before entering its step' }],
+    })
+    expect(test.agent.inbox.hasPending).toBe(false)
+  })
+
+  it('cancels its round when the loop puts back a claim an aborted turn never recorded', async () => {
+    const test = await harness([])
+    test.ctx.on('agent/pre-step', async ({ agent, messages }, next) => {
+      if (messages.some(message => message.source.kind === 'goal' && message.source.round > 0)) {
+        agent.cancel({ kind: 'user' }, { keepInbox: true })
+      }
+      return next()
+    })
+    test.ctx.goals.create(test.agent, { objective: 'interrupt before the round is recorded' })
+
+    await waitForGoal(test.ctx, test.agent, current => current?.phase === 'paused')
+    await test.agent.whenIdle()
+
+    expect(test.adapter.requests).toHaveLength(0)
+    expect([...test.agent.inbox.nextStep, ...test.agent.inbox.nextTurn]
+      .some(message => message.source.kind === 'goal' && message.source.round > 0)).toBe(false)
+    expect(test.agent.session.snapshotEvents().some(event =>
+      event.type === 'agent/inbox/spliced' && event.data.outcome === 'canceled')).toBe(true)
   })
 
   it('does not reserve again when a stopped-goal observer queues cancel-scoped work', async () => {

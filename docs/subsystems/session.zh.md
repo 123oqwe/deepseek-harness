@@ -638,9 +638,17 @@ interface TurnEndReasonMap {
    * A pre-step listener refused the step. `runEnded` is present when the step
    * was refused because the agent's Run has ended: the terminal lifecycle state
    * it reached and, when the refusing listener knows it, the reason given for
-   * reaching it (P4-05 acceptance[0], BLOCKED-332).
+   * reaching it (P4-05 acceptance[0], BLOCKED-332). `dropped` is present when
+   * pre-step listeners removed claimed messages on purpose: one record per
+   * listener, with the message ids, who removed them and why. Every other
+   * claimed message the turn did not record went back into the inbox (P4-06,
+   * BLOCKED-088).
    */
-  blocked: { kind: 'blocked'; runEnded?: { readonly state: string; readonly reason?: string } }
+  blocked: {
+    kind: 'blocked'
+    runEnded?: { readonly state: string; readonly reason?: string }
+    dropped?: readonly { readonly messageIds: readonly string[]; readonly by: string; readonly reason: string }[]
+  }
   /**
    * The turn failed. `error` is always a structured failure: the `LlmError`
    * facts verbatim, or `{ message: errorChain(error), code: 'UNKNOWN' }`
