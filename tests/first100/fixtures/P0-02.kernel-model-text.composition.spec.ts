@@ -70,6 +70,7 @@ interface Hit {
   readonly channel: Channel
   /** Whether the string it was found in holds the control's marker directly before it. */
   readonly marked: boolean
+  /** The text around the first occurrence, up to 160 characters on each side. */
   readonly excerpt: string
 }
 
@@ -134,6 +135,17 @@ function channelsOf(request: RecordedRequest): Record<Channel, string[]> {
 }
 
 /**
+ * The text around the first occurrence of a string.
+ * @param text - the text.
+ * @param found - a string that occurs in `text`.
+ * @returns the occurrence with up to 160 characters on each side.
+ */
+function excerptAround(text: string, found: string): string {
+  const at = text.indexOf(found)
+  return text.slice(Math.max(0, at - 160), at + found.length + 160)
+}
+
+/**
  * Every place any of the searched strings occurs in the recorded requests.
  * @param requests - the recorded requests.
  * @param literals - the strings to search for, each verbatim.
@@ -146,7 +158,7 @@ function hitsOf(requests: readonly RecordedRequest[], literals: readonly string[
       request: index,
       channel: channel as Channel,
       marked: text.includes(`${CONTROL_MARKER}${literal}`),
-      excerpt: text.slice(0, 200),
+      excerpt: excerptAround(text, literal),
     })))))
 }
 
@@ -180,7 +192,9 @@ describe('P0-02 acceptance[1] on the shipped headless composition with the Trust
     expect(refusal, shown).not.toBe('')
     expect(report.requests.some(request => channelsOf(request)['tool-results'].some(text => text.includes(refusal))), shown).toBe(true)
 
-    expect(hitsOf(report.requests, literals)).toEqual([])
+    // Each hit in full: vitest's diff truncates the objects.
+    const hits = hitsOf(report.requests, literals)
+    expect(hits, JSON.stringify(hits)).toEqual([])
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 
   it('control: the longest kernel literal, placed after a marker in the task, a tool description and a tool result, is found in each of those places', async () => {
