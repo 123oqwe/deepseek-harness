@@ -129,14 +129,16 @@ export function verifySbomCoverage(
  * `sbomDigest` differing from this computation over the actual SBOM a
  * package ships means the SBOM was swapped after signing — must[1]'s
  * "验证...依赖 SBOM" covers this integrity check as well as
- * {@link verifySbomCoverage}'s completeness check.
+ * {@link verifySbomCoverage}'s completeness check. Entries are ordered by
+ * name in UTF-16 code-unit order, never by locale, so the same SBOM digests
+ * the same on every machine that verifies it.
  * @param sbom - the SBOM document to digest.
  * @returns the {@link SbomDigest} of `sbom`'s canonical serialization.
  */
 export function computeSbomDigest(sbom: SbomDocument): SbomDigest {
   const canonicalEntries = [...sbom.entries]
     .map(entry => ({ name: entry.name, version: entry.version, kind: entry.kind, digest: entry.digest }))
-    .sort((a, b) => a.name.localeCompare(b.name))
+    .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
   const canonical = JSON.stringify({
     format: sbom.format,
     subjectPackageDigest: sbom.subjectPackageDigest,
