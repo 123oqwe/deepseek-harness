@@ -1,0 +1,49 @@
+# Test-only overlay over the SHIPPED headless profile for P4-05 acceptance[2]'s
+# safe-fail RACE variant (A-568): identical to base.patch.yml except the Run
+# lease is LONGER. The safe-fail-race scenario boots phase 3 immediately after
+# phase 1 crashes, WITHOUT waiting for the lease to lapse, so the mount-time
+# sweep (failSessionlessRuns) runs while phase 1's lease is still valid and is
+# denied. A longer lease makes that reliable — phase 3's boot + sweep (about a
+# second) lands well inside the lease term rather than racing its lapse. The
+# shipped `run` and `lease-store` rows stay durable so a Run and its lease
+# survive the process boundary; the entry rows are off, no profile agent is
+# mounted, the durable stores sit under the shared `DSH_HOME`, and the model
+# is keyless.
+#
+# No profile agent: the driver creates the one agent each phase needs, so no
+# other agent renews the lease or opens a competing Run.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents: []
+
+# A patch replaces a row's whole `config`, so the base keys are restated. Both
+# phases share these under one `DSH_HOME`, so the durable Run and its lease that
+# phase 1 opens are what phase 2 restores and adopts.
+- id: session-persistence-jsonl
+  config:
+    root: !!js dshHomePath('sessions')
+    compression: none
+
+# `run` stays enabled and durable (base's storePath restated), but `leaseMs` is
+# shortened: a SIGKILLed phase-1 stops renewing, and its lease then lapses in
+# about `leaseMs`, which phase 2 polls for before it boots.
+- id: run
+  config:
+    storePath: !!js dshHomePath('runs', 'runs.json')
+    leaseMs: 8000
+
+- insert:
+    - id: p4-05-reclaim-mock-llm
+      name: './mock-llm.ts'
