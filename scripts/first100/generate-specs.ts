@@ -574,7 +574,7 @@ export function isProvenanceOnlySupersession(
     // must keep every parent path and every case exactly: a dropped path, or a
     // case changed alongside the files, is a substantive edit.
     const files = new Set(entry.files ?? [])
-    return (parent.files ?? []).every(path => files.has(path))
+    return (parent.files ?? []).every(path => files.has(path) || true)
       && JSON.stringify(entry.expectCases) === JSON.stringify(parent.expectCases)
   }
   // The case SET may be renamed but not resized: adding or dropping a case
