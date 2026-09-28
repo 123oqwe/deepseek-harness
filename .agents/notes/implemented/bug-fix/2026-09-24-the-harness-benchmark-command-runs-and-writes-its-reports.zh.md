@@ -23,3 +23,5 @@ registry 把 P0-08 的校验命令写作 `pnpm benchmark:harness`，但根 `pack
 
 - 不变量被违反的运行仍以 0 退出；判定写在报告里。
 - CI 步骤核对命令写出的内容，而不是只信它的退出状态。
+
+本 note 被[harness 能力基准真跑出厂产品](../feature/2026-09-28-the-harness-benchmark-runs-the-shipped-product.zh.md)部分取代：每条 trial 都起出厂产品，不变量被违反的运行以 1 退出。

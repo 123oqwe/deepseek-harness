@@ -1,88 +1,69 @@
-# Contract-stage manifest for the Harness capability benchmark framework (Epic P0-08).
+# Harness capability benchmark (Epic P0-08), read by runner.ts through manifest.ts.
 #
-# This file freezes the structural schema benchmarks/harness-capability/runner.ts (a later,
-# U-stage slice -- not yet implemented) must satisfy once it starts executing lanes for real.
-# tests/benchmark/runner.spec.ts is the source of truth for the frozen schema; see
-# benchmarks/harness-capability/README.md for the human-readable contract.
-#
-# Frozen schema:
-#   lanes: exactly 5 entries, name in {deterministic, fault, security, real-model, scale} (must[0])
-#   lanes[].metrics: exactly the 8 standard metric names, no more, no fewer (must[1])
-#   lanes[].reporting.confidenceInterval: true and lanes[].reporting.seedReplay: true (must[2])
-#
-# This file fully satisfies the frozen schema above -- tests/benchmark/runner.spec.ts's real
-# js-yaml parse of this file passes must[0]-[2]. See benchmarks/harness-capability/README.md
-# for the human-readable contract each lane and metric documents.
+# Every trial of a keyless lane launches the shipped product (`dsh --profile headless`
+# from source) with no model API configured, and every standard metric a lane reports
+# is computed from those trials or declared not applicable here, with the reason
+# (question 18 (a), BLOCKED-325, BLOCKED-335). README.md describes the report.
+schemaVersion: 2
 
-schemaVersion: 1
+# The recorded headless sessions, and the default composition's owner, whose
+# cordis.yml, cordis.snapshot.yml and model.cordis.yml compose every replay the way
+# snapshots/session/headless.snapshot.ts composes it.
+recordings: snapshots/session
+composition: snapshots/session/text-turn
+
+# A product run still going after this long is killed and judged failed.
+trialTimeoutMs: 60000
+
+# token_cost prices each assistant message's recorded usage per million tokens.
+# Prices change; a report states the source and the date they were read.
+pricing:
+  source: https://api-docs.deepseek.com/quick_start/pricing
+  retrievedAt: '2026-09-28'
+  currency: USD
+  # The page gives a peak and an off-peak price per model; this table holds the
+  # off-peak ones. It names deepseek-flash and deepseek-v4-pro, and the recordings
+  # request deepseek-v4-flash, which is priced here at the deepseek-flash row.
+  rate: off-peak
+  models:
+    deepseek-v4-flash: { inputCacheHit: 0.003, inputCacheMiss: 0.15, output: 0.6 }
+    deepseek-v4-pro: { inputCacheHit: 0.022, inputCacheMiss: 0.66, output: 1.98 }
 
 lanes:
   - name: deterministic
-    metrics:
-      - task_success
-      - duplicate_side_effect
-      - policy_bypass
-      - recovery_success
-      - verification_precision
-      - router_regret
-      - token_cost
-      - latency
-    reporting:
-      confidenceInterval: true
-      seedReplay: true
-
-  - name: fault
-    metrics:
-      - task_success
-      - duplicate_side_effect
-      - policy_bypass
-      - recovery_success
-      - verification_precision
-      - router_regret
-      - token_cost
-      - latency
-    reporting:
-      confidenceInterval: true
-      seedReplay: true
-
+    trials: 8
+    # Recordings that replay unchanged and hold at least one tool result, so T1 has
+    # something to compare. product.ts refuses a listed scenario that sets another
+    # profile or composition, a replay override, a platform, a workspace check or a
+    # pinned session format, or that has child sessions. Left out of the corpus as
+    # well: bash-startup-timeout, whose outcome depends on timing, and recordings
+    # with no tool result (pi-ai-replay-metadata, the invalid-matcher and
+    # prompt-submit hook scenarios).
+    scenarios:
+      - bash-tool-turn
+      - fs-read
+      - fs-read-window
+      - hook-cc-posttool-context
+      - hook-cc-pretool-ask
+      - hook-cc-pretool-deny
+      - hook-codex-posttool-block
+      - hook-codex-posttool-context
+      - hook-codex-pretool-block
+      - repeat-tool-reminder
+      - todo-write
+      - tool-call-turn
+    notApplicable:
+      policy_bypass: a replayed recording asks for nothing the policy refuses, so it has nothing to bypass; the security lane measures bypasses
+      recovery_success: a replay injects no failure, so there is nothing to recover from; the fault lane measures recovery
+      verification_precision: the shipped product has no verifier whose verdicts could be scored (BLOCKED-335)
+      router_regret: the shipped product has no model router whose choices could be scored (BLOCKED-335)
   - name: security
-    metrics:
-      - task_success
-      - duplicate_side_effect
-      - policy_bypass
-      - recovery_success
-      - verification_precision
-      - router_regret
-      - token_cost
-      - latency
-    reporting:
-      confidenceInterval: true
-      seedReplay: true
-
+    # Four attacks and one known-red scenario, with the security lane (B-573, second commit).
+    trials: 4
+  - name: fault
+    # Injected failures, with the fault lane (B-573, third commit).
+    trials: 6
   - name: real-model
-    metrics:
-      - task_success
-      - duplicate_side_effect
-      - policy_bypass
-      - recovery_success
-      - verification_precision
-      - router_regret
-      - token_cost
-      - latency
-    reporting:
-      confidenceInterval: true
-      seedReplay: true
-
+    # Needs a model API, so the keyless benchmark does not run it.
   - name: scale
-    metrics:
-      - task_success
-      - duplicate_side_effect
-      - policy_bypass
-      - recovery_success
-      - verification_precision
-      - router_regret
-      - token_cost
-      - latency
-    reporting:
-      confidenceInterval: true
-      seedReplay: true
+    # No scenario yet.
