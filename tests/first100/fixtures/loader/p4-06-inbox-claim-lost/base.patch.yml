@@ -1,0 +1,29 @@
+# Test-only overlay over the SHIPPED headless profile for P4-06 lock (a)'s
+# claim-before-record measurement (BLOCKED-088, blind review F2). The dsh-base
+# layer owns the agent loop, its inbox and the `agent/pre-step` waterfall; this
+# overlay mounts none of them. It supplies a keyless scripted model, an
+# uncompressed session log, a plugin that rejects one pre-step after the inbox
+# message is claimed, and turns off the rows that would run a task of their own.
+# The driver creates the agent after boot and delivers to it.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- insert:
+    - id: p4-06-inbox-claim-lost-mock-llm
+      name: './mock-llm.ts'
+    - id: p4-06-inbox-claim-lost-pre-step-reject
+      name: './pre-step-reject.ts'
