@@ -124,7 +124,12 @@ if (phase === '1' || phase === '2' || phase === '3') {
       const run = runs.service.runsForSession(SessionId(SESSION))[0]
       return run === undefined ? undefined : { id: run.id, state: run.state }
     }
-    const deadline = Date.now() + 10_000
+    // The race variant (A-568) polls PAST the lease's lapse within a bounded T,
+    // several times the (longer) lease term: today the Run never reaches a
+    // terminal state, because the mount-time sweep was denied and nothing
+    // retries once the lease frees. The after-lapse variant (A-560) needs only
+    // the short poll.
+    const deadline = Date.now() + (process.env.P4_05_RACE === '1' ? 30_000 : 10_000)
     while (Date.now() < deadline && !terminal.has(orphan()?.state ?? '')) await new Promise<void>(resolve => setTimeout(resolve, 50))
     const run = orphan()
     process.stdout.write(`P4-05-PHASE3 ${JSON.stringify({
@@ -139,11 +144,13 @@ if (phase === '1' || phase === '2' || phase === '3') {
   const home = mkdtempSync(join(tmpdir(), 'p4-05-reclaim-home-'))
   const self = fileURLToPath(import.meta.url)
   // 'reclaim' (default) adopts the orphan across the restart; 'safe-fail'
-  // (A-560) deletes the session after the crash so the Run has none to recover.
+  // (A-560) deletes the session after the crash so the Run has none to recover;
+  // 'safe-fail-race' (A-568) boots phase 3 BEFORE the lease lapses, so the
+  // mount-time sweep is denied and — today — never retried once it frees.
   const scenario = process.env.P4_05_RECLAIM_SCENARIO ?? 'reclaim'
-  const runPhase = (which: '1' | '2' | '3'): string => {
+  const runPhase = (which: '1' | '2' | '3', extraEnv: Record<string, string> = {}): string => {
     const result = spawnSync(process.execPath, [...process.execArgv, self, configPath], {
-      env: { ...process.env, DSH_HOME: home, P4_05_RECLAIM_PHASE: which },
+      env: { ...process.env, DSH_HOME: home, P4_05_RECLAIM_PHASE: which, ...extraEnv },
       encoding: 'utf8',
     })
     const line = new RegExp(`P4-05-PHASE${which} (?<json>.+)`, 'u').exec(result.stdout)?.groups?.json
@@ -152,29 +159,41 @@ if (phase === '1' || phase === '2' || phase === '3') {
   }
 
   const phase1 = runPhase('1')
-  // Poll the durable lease until phase 1's lease has lapsed (its holder is gone
-  // and no longer renewing), rather than sleeping a fixed span.
-  const leaseStore = openLeaseStore(join(home, 'leases'))
-  const workItem = brandString<WorkItemId>(SESSION)
-  const spinner = new Int32Array(new SharedArrayBuffer(4))
-  const deadline = Date.now() + LAPSE_DEADLINE_MS
-  let lapsed = false
-  while (Date.now() < deadline) {
-    const lease = leaseStore.get(workItem)
-    if (lease === undefined || lease.expiresAtMs < Date.now()) { lapsed = true; break }
-    Atomics.wait(spinner, 0, 0, POLL_PAUSE_MS)
-  }
 
-  if (scenario === 'safe-fail') {
-    // A-560: the crash landed so the Run persisted but the session did not —
-    // reproduced deterministically by deleting the session log now that the
-    // lease has lapsed. Phase 3 boots over the same DSH_HOME with the Run still
-    // durable and its session gone.
+  if (scenario === 'safe-fail-race') {
+    // A-568: do NOT wait for the lease to lapse. Delete the session now and boot
+    // phase 3 while phase 1's (longer, race-overlay) lease is still valid, so the
+    // mount-time sweep (failSessionlessRuns) is DENIED. Phase 3 then polls the
+    // Run past the lease's lapse, within a bounded T: today the Run never reaches
+    // FAILED, because nothing retries the sweep once the lease frees.
     rmSync(join(home, 'sessions'), { recursive: true, force: true })
-    const phase3 = runPhase('3')
-    process.stdout.write(`P4-05-SAFEFAIL ${JSON.stringify({ phase1: JSON.parse(phase1) as unknown, phase3: JSON.parse(phase3) as unknown, lapsed })}\n`)
+    const phase3 = runPhase('3', { P4_05_RACE: '1' })
+    process.stdout.write(`P4-05-SAFEFAIL-RACE ${JSON.stringify({ phase1: JSON.parse(phase1) as unknown, phase3: JSON.parse(phase3) as unknown })}\n`)
   } else {
-    const phase2 = runPhase('2')
-    process.stdout.write(`P4-05-ACC2 ${JSON.stringify({ phase1: JSON.parse(phase1) as unknown, phase2: JSON.parse(phase2) as unknown, lapsed })}\n`)
+    // Poll the durable lease until phase 1's lease has lapsed (its holder is gone
+    // and no longer renewing), rather than sleeping a fixed span.
+    const leaseStore = openLeaseStore(join(home, 'leases'))
+    const workItem = brandString<WorkItemId>(SESSION)
+    const spinner = new Int32Array(new SharedArrayBuffer(4))
+    const deadline = Date.now() + LAPSE_DEADLINE_MS
+    let lapsed = false
+    while (Date.now() < deadline) {
+      const lease = leaseStore.get(workItem)
+      if (lease === undefined || lease.expiresAtMs < Date.now()) { lapsed = true; break }
+      Atomics.wait(spinner, 0, 0, POLL_PAUSE_MS)
+    }
+
+    if (scenario === 'safe-fail') {
+      // A-560: the crash landed so the Run persisted but the session did not —
+      // reproduced deterministically by deleting the session log now that the
+      // lease has lapsed. Phase 3 boots over the same DSH_HOME with the Run still
+      // durable and its session gone.
+      rmSync(join(home, 'sessions'), { recursive: true, force: true })
+      const phase3 = runPhase('3')
+      process.stdout.write(`P4-05-SAFEFAIL ${JSON.stringify({ phase1: JSON.parse(phase1) as unknown, phase3: JSON.parse(phase3) as unknown, lapsed })}\n`)
+    } else {
+      const phase2 = runPhase('2')
+      process.stdout.write(`P4-05-ACC2 ${JSON.stringify({ phase1: JSON.parse(phase1) as unknown, phase2: JSON.parse(phase2) as unknown, lapsed })}\n`)
+    }
   }
 }
