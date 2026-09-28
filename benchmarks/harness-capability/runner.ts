@@ -36,8 +36,8 @@ const DEFAULT_SEED = 20260904
  */
 function metricLine(name: string, metric: Metric): string {
   if ('notApplicable' in metric) return `${name}: not applicable — ${metric.notApplicable}`
-  const { value, n, ci } = metric
-  return `${name}: ${String(value)} over ${String(n)} trials (95% CI ${String(ci.lower)}–${String(ci.upper)})`
+  const { value, n, source, ci } = metric
+  return `${name}: ${String(value)} over ${String(n)} trials (95% CI ${String(ci.lower)}–${String(ci.upper)}) — ${source}`
 }
 
 /**

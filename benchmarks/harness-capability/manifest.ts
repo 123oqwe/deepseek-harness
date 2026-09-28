@@ -27,6 +27,8 @@ export interface PriceTable {
   readonly currency: string
   /** Which of the source's rates the table holds. */
   readonly rate: string
+  /** How a model the source does not name is priced, when the table assumes it. */
+  readonly assumption?: string
   readonly models: Readonly<Record<string, ModelPrice>>
 }
 

@@ -37,6 +37,11 @@ Each lane report lists its `trials`: the scenario, the trial seed, the launch ar
 
 A lane's `knownRed` lists scenarios expected to fail while an open BLOCKED item stands, each with the item, whether it passed and what the trial showed. They are left out of the lane's metrics, and one that passes fails the run.
 
+## Known limitations
+
+- `token_cost` uses the pricing page's standard (peak) prices, not its off-peak discount, so a trial that runs in discounted hours costs less than the report states.
+- The pricing page names `deepseek-flash` and `deepseek-v4-pro`, and the recordings request `deepseek-v4-flash`; the price table in `manifest.yml` prices `deepseek-v4-flash` at the page's `deepseek-flash` row. Both reports state this assumption in the `token_cost` source, with the price source and the date the prices were read.
+
 ## Related documentation
 
 - [BENCHMARK.md](../../BENCHMARK.md) -- the SDK-focused benchmark instructions this framework extends.
