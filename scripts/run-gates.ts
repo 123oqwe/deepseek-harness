@@ -9,6 +9,7 @@ import { spawn, spawnSync } from 'node:child_process'
 import { readdirSync, readFileSync } from 'node:fs'
 import { availableParallelism } from 'node:os'
 import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { performance } from 'node:perf_hooks'
 import { CLIENT_BUILD_PROFILE_SELECTOR } from './client-build-environment.ts'
 import { COVERAGE_EXEMPT_ENV, coverageExemptHeavySuites } from './coverage-exempt.ts'
@@ -96,7 +97,8 @@ type GateExecutor = (gate: Gate, signal?: AbortSignal) => Promise<GateResult>
 type ResultObserver = (result: GateResult) => void
 
 const root = resolve(import.meta.dirname, '..')
-if (import.meta.main) {
+// Not `import.meta.main`, which Node 24.0 leaves undefined (BLOCKED-351).
+if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   process.exitCode = await main(process.argv.slice(2))
 }
 

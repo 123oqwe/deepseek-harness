@@ -16,6 +16,7 @@
 import { globSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { basename, dirname, join, posix, relative, resolve, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
 import * as yaml from 'js-yaml'
 import ts from 'typescript'
@@ -331,7 +332,8 @@ export async function verifyDeployClosurePeers(
   return { failures: [...new Set(failures)], packageCount: visitedSnapshots.size }
 }
 
-if (import.meta.main) {
+// Not `import.meta.main`, which Node 24.0 leaves undefined (BLOCKED-351).
+if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const root = resolve(import.meta.dirname, '..')
   const { values } = parseArgs({
     args: process.argv.slice(2),

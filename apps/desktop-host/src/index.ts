@@ -581,7 +581,10 @@ async function main(): Promise<void> {
   process.once('SIGINT', () => { void stop() })
 }
 
-if (import.meta.main) {
+// Not `import.meta.main`, which Node 24.0 leaves undefined (BLOCKED-351). The real path,
+// because this entry is started through a symlink; existence first, because a packaged
+// executable's argv[1] need not name a file.
+if (process.argv[1] !== undefined && existsSync(process.argv[1]) && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error)
     if (process.send !== undefined) process.send({ type: 'fatal', message } satisfies DesktopHostEvent)

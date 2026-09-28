@@ -5,6 +5,7 @@ import { globSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node
 import { createServer, type Server } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { performance } from 'node:perf_hooks'
 import { parseArgs } from 'node:util'
 
@@ -541,7 +542,8 @@ async function main(): Promise<void> {
   }
 }
 
-if (import.meta.main) {
+// Not `import.meta.main`, which Node 24.0 leaves undefined (BLOCKED-351).
+if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     await main()
   } catch (error) {

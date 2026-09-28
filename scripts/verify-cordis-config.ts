@@ -12,6 +12,7 @@
 
 import { globSync, readFileSync } from 'node:fs'
 import { dirname, relative, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { Script } from 'node:vm'
 import ts from 'typescript'
 import { cordisConfigFiles } from './cordis-config-files.ts'
@@ -57,7 +58,8 @@ const CHOOSER_BACKEND_PACKAGES = [
 const errors: string[] = []
 const pluginReferences: PluginReference[] = []
 
-if (import.meta.main) {
+// Not `import.meta.main`, which Node 24.0 leaves undefined (BLOCKED-351).
+if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const files = cordisConfigFiles(root)
 
   for (const file of files) {

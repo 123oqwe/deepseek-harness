@@ -1,5 +1,7 @@
 /** Thin executable/importable entry for the provider-private runner core. */
 
+import { existsSync, realpathSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { consumeRunnerSelection } from './runner-launch.ts'
 import { reportSpawnRunnerFailure, runSpawnRunner } from './spawn-runner.ts'
 
@@ -15,7 +17,10 @@ export async function runSelectedSubprocessRunner(selection: string): Promise<vo
   }
 }
 
-if (import.meta.main) {
+// Not `import.meta.main`, which Node 24.0 leaves undefined (BLOCKED-351). The real path,
+// because this entry is started through a symlink; existence first, because a packaged
+// executable's argv[1] need not name a file.
+if (process.argv[1] !== undefined && existsSync(process.argv[1]) && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const selection = consumeRunnerSelection()
   if (selection === undefined) {
     process.exitCode = 127
