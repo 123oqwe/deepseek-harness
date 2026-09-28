@@ -16,10 +16,11 @@
  * `Object.freeze({})`, holding no key material, which is exactly why an empty
  * frozen object serves as one. Consequently must[2] ("TrustKernel 持有可信根")
  * is NOT satisfied by this module and must not be reported as such
- * (BLOCKED-050). must[3] ("普通插件不能修改") holds only in its structural
- * sense: no function here accepts a plugin-supplied substitute, and no
- * ordinary caller can construct a handle — but a root that cannot be swapped
- * is still an empty root.
+ * (BLOCKED-050). must[3] ("普通插件不能修改") holds in two senses: no
+ * function here accepts a plugin-supplied substitute, and no ordinary caller
+ * can construct a handle; and once the host seals the kernel it pins
+ * ({@link sealTrustAnchors}), no caller can admit or withdraw an anchor on
+ * it. A root that cannot be swapped is still an empty root.
  *
  * **No function in this module verifies a signature.**
  * {@link verifyPackageSignature} compares claimed facts against observed ones
@@ -307,6 +308,9 @@ export type TrustAnchorDeclaration = OfflineTrustAnchorDeclaration | SigstoreTru
  */
 const anchorsByTrustRoot = new WeakMap<TrustKernelSignatureRoots, Map<TrustAnchorId, TrustAnchorDeclaration>>()
 
+/** Handles whose anchor set {@link sealTrustAnchors} fixed. */
+const sealedTrustRoots = new WeakSet<TrustKernelSignatureRoots>()
+
 /** The `Map` of anchors registered under `trustRoot`, creating an empty one on first use. */
 function anchorsFor(trustRoot: TrustKernelSignatureRoots): Map<TrustAnchorId, TrustAnchorDeclaration> {
   let anchors = anchorsByTrustRoot.get(trustRoot)
@@ -316,8 +320,8 @@ function anchorsFor(trustRoot: TrustKernelSignatureRoots): Map<TrustAnchorId, Tr
     // must[2]) before any runtime registration. Seeded once, on first use: a
     // configured anchor and a `registerTrustAnchor` one are then the same kind
     // of thing to every reader, including `revokeTrustAnchor` — a deployment
-    // that must withdraw a configured anchor at runtime can, and does not have
-    // to restart to do it.
+    // that must withdraw a configured anchor at runtime can on a handle nobody
+    // sealed, and does not have to restart to do it.
     for (const anchor of configuredTrustAnchors(trustRoot)) {
       anchors.set(
         brandString<TrustAnchorId>(`trust-anchor-${anchor.mode}-configured-${anchorSelector(anchor)}`),
@@ -475,11 +479,13 @@ function findRegisteredAnchor(
  * @param trustRoot - the kernel's own signature-roots handle.
  * @param declaration - the Sigstore issuer or offline key to admit.
  * @returns a fresh {@link TrustAnchorId} referencing the admitted anchor.
+ * @throws when {@link sealTrustAnchors} sealed `trustRoot`.
  */
 export function registerTrustAnchor(
   trustRoot: TrustKernelSignatureRoots,
   declaration: TrustAnchorDeclaration,
 ): TrustAnchorId {
+  assertUnsealed(trustRoot, 'registerTrustAnchor')
   const anchorId = brandString<TrustAnchorId>(`trust-anchor-${declaration.mode}-${randomUUID()}`)
   anchorsFor(trustRoot).set(anchorId, declaration)
   return anchorId
@@ -511,9 +517,33 @@ export function listTrustAnchorIds(trustRoot: TrustKernelSignatureRoots): readon
  * @param trustRoot - the trust root the anchor was registered under.
  * @param anchorId - the anchor to withdraw.
  * @returns whether an anchor was actually removed; `false` for an id this root never held.
+ * @throws when {@link sealTrustAnchors} sealed `trustRoot`.
  */
 export function revokeTrustAnchor(trustRoot: TrustKernelSignatureRoots, anchorId: TrustAnchorId): boolean {
+  assertUnsealed(trustRoot, 'revokeTrustAnchor')
   return anchorsFor(trustRoot).delete(anchorId)
+}
+
+/**
+ * Fix the anchor set held against `trustRoot` for the rest of the process:
+ * afterwards {@link registerTrustAnchor} and {@link revokeTrustAnchor} on it
+ * throw, and verification against it is unchanged (Epic P1-02 must[3],
+ * 「普通插件不能修改」). `apps/cli`'s profile boot seals the kernel it pins,
+ * before any plugin mounts, so a plugin holding that kernel can neither admit
+ * nor withdraw an anchor; the deployment changes its anchors through the
+ * profile's `dsh.trustAnchors` and a restart. Sealing a sealed handle does
+ * nothing.
+ * @param trustRoot - the pinned kernel's signature-roots handle.
+ */
+export function sealTrustAnchors(trustRoot: TrustKernelSignatureRoots): void {
+  sealedTrustRoots.add(trustRoot)
+}
+
+/** Throw when {@link sealTrustAnchors} sealed `trustRoot`, naming the refused `operation`. */
+function assertUnsealed(trustRoot: TrustKernelSignatureRoots, operation: string): void {
+  if (sealedTrustRoots.has(trustRoot)) {
+    throw new Error(`${operation}: the trust anchors of a pinned trust kernel cannot change at runtime; change the profile's dsh.trustAnchors and restart`)
+  }
 }
 
 /**
