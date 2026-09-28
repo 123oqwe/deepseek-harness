@@ -121,7 +121,7 @@ export function runDeterministicLane(lane: ManifestLane, seed: number, manifest:
     duplicate_side_effect: countMetric(trials.filter(trial => trial.duplicateSideEffects > 0).length, n,
       from('trials whose session logs append one idempotency key\'s action manifest more than once')),
     token_cost: meanMetric(trials.map(trial => trial.tokenCost), seed,
-      from(`${pricing.currency} per trial, assistant-message usage priced from ${pricing.source} as read on ${pricing.retrievedAt} (${pricing.rate} rate)`)),
+      from(`${pricing.currency} per trial, assistant-message usage priced from ${pricing.source} as read on ${pricing.retrievedAt} (${pricing.rate} rate${pricing.assumption === undefined ? '' : `; assumes ${pricing.assumption}`})`)),
     latency: meanMetric(trials.map(trial => trial.latencyMs), seed, from('milliseconds of wall-clock time per product run')),
   }
   const metrics = Object.fromEntries(STANDARD_METRICS.map((name): [StandardMetric, Metric] => {
