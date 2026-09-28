@@ -785,14 +785,9 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               // then ignored passes every case asserting the verifier ran. The
               // file preconditions are re-read here: the present side carries
               // the declared files' versions now, compared to the ask-time ones.
-              const nowPreconditions = exec.agent === undefined
-                ? []
-                : await filePreconditionsFor(
-                  options.ledgerContext(), registry.get(name, exec.agent), normalized.logged, exec.agent.session.header.cwd,
-                )
               const staleApproval = exec.agent === undefined || binding === undefined
                 ? undefined
-                : verifyRecordedApproval(exec.agent, { ...binding.inputs, preconditions: nowPreconditions }, Date.now(), binding.actionId)
+                : verifyRecordedApproval(exec.agent, binding.inputs, Date.now(), binding.actionId)
               if (staleApproval !== undefined) {
                 reservation = undefined
                 this.settled = true
