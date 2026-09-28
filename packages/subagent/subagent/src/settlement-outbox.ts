@@ -114,8 +114,34 @@ export function commitSettlement(
  * @returns the pending settlements, in commit order.
  */
 export function pendingSettlementsFor(bus: MessageBusPlugin, parentSessionId: SessionId): PendingSettlement[] {
+  return settlementsInState(bus, parentSessionId, 'pending')
+}
+
+/**
+ * Every settlement one parent acknowledged.
+ *
+ * An ack is written when the notice is spliced into the parent, before the
+ * splice reaches the parent's log, so an acked row does not prove the parent
+ * recorded its notice (BLOCKED-350). A parent that starts compares these with
+ * its log.
+ * @param bus - the mounted durable bus.
+ * @param parentSessionId - the parent whose acknowledged settlements are wanted.
+ * @returns the acked settlements, in commit order.
+ */
+export function ackedSettlementsFor(bus: MessageBusPlugin, parentSessionId: SessionId): PendingSettlement[] {
+  return settlementsInState(bus, parentSessionId, 'acked')
+}
+
+/**
+ * The settlements addressed to one parent whose rows are in one delivery state.
+ * @param bus - the mounted durable bus.
+ * @param parentSessionId - the parent the rows are addressed to.
+ * @param state - the delivery state wanted.
+ * @returns the settlements, in commit order.
+ */
+function settlementsInState(bus: MessageBusPlugin, parentSessionId: SessionId, state: OutboxRecord['state']): PendingSettlement[] {
   return bus.outboxRows()
-    .filter((row: StoredOutboxRow) => row.target === parentSessionId && row.record.state === 'pending')
+    .filter((row: StoredOutboxRow) => row.target === parentSessionId && row.record.state === state)
     .map((row: StoredOutboxRow) => ({
       record: row.record,
       childId: row.record.id as unknown as SessionId,

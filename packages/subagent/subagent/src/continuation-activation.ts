@@ -11,6 +11,7 @@
 
 import { FiberState } from '@deepseek-ai/cordis'
 import type { Context, Fiber } from '@deepseek-ai/cordis'
+import { arrivalKey } from '@deepseek-ai/dsh-agent'
 import type {
   Agent,
   AgentHandle,
@@ -38,7 +39,7 @@ import { SubagentInbox } from './inbox.ts'
 import type { SubagentDelivery } from './inbox.ts'
 import { commitInterrupt } from './interrupt-record.ts'
 import type { ActivationObserver, ActivationTerminal } from './lifecycle.ts'
-import { commitSettlement, drainSettlements } from './settlement-outbox.ts'
+import { ackedSettlementsFor, commitSettlement, drainSettlements } from './settlement-outbox.ts'
 
 /**
  * One residency epoch for a reconstructed continuable child Agent. It directly
@@ -254,8 +255,12 @@ export class ContinuableActivationRegistry {
     // Trigger (2): a parent that starts drains what it is owed. This is
     // acceptance[1]'s recovery — a settlement committed while the parent was
     // gone reaches it on the next start rather than being lost with the
-    // process that could not deliver it.
-    ctx.on('agent/session-start', ({ agent }) => { this.drainSettlementOutbox(agent) })
+    // process that could not deliver it. It first redelivers what an earlier
+    // process acked but never recorded (BLOCKED-350).
+    ctx.on('agent/session-start', ({ agent }) => {
+      this.redeliverUnrecordedSettlements(agent)
+      this.drainSettlementOutbox(agent)
+    })
     // Trigger (3): the fallback. A signal can be missed — the target had no
     // live driver at commit time, or a drain raced a disposal — and a parent
     // that is about to take a step is a parent that can receive.
@@ -963,6 +968,43 @@ export class ContinuableActivationRegistry {
         // a teardown. The child's own session log remains the durable record.
         this.ctx.logger.warn(`subagent "${activation.childId}" settlement was not committed at shutdown: ${errorChain(error)}`)
       }
+    }
+  }
+
+  /**
+   * Deliver again every settlement one parent acknowledged whose notice its
+   * log never recorded (BLOCKED-350, Epic P4-06 acceptance[0]).
+   *
+   * The drain acks a row in the same synchronous pass that splices the notice
+   * into the parent, and the splice reaches the parent's log only when the live
+   * write batch flushes; a crash between the two leaves the row acked and the
+   * notice nowhere. This runs when the parent starts, before anything in this
+   * process delivered to it, so the parent's inbox arrivals projection, folded
+   * from its log, is the whole account of what reached it: a notice whose key
+   * is pending, claimed or consumed there is not delivered twice. The row
+   * stays acked.
+   * @param parent - the parent that started.
+   */
+  private redeliverUnrecordedSettlements(parent: Agent): void {
+    const bus = this.bus
+    const arrivals = this.ctx.get('sessionProjections')?.stateOf(parent.session, 'inboxArrivals')
+    if (bus === undefined || arrivals === undefined) return
+    try {
+      const recorded = new Set([
+        ...[...arrivals.pending['next-turn'], ...arrivals.pending['next-step']].flatMap(arrival => arrival === null ? [] : [arrival.key]),
+        ...arrivals.claimed.map(arrival => arrival.key),
+        ...arrivals.consumed,
+      ])
+      for (const settlement of ackedSettlementsFor(bus, parent.id)) {
+        const message = settlementMessageOf(settlement)
+        const key = message === undefined ? undefined : arrivalKey(message)
+        if (message === undefined || key === undefined || recorded.has(key)) continue
+        if (this.closingTeardownFor(parent) !== undefined) return
+        this.sendWaking(parent, message, parent.status === 'idle' ? 'queue' : 'steer')
+      }
+    } catch (error: unknown) {
+      // Logged, never thrown into a lifecycle edge, as the drain's failures are.
+      this.ctx.logger.warn(`subagent settlement redelivery for "${parent.id}" failed: ${errorChain(error)}`)
     }
   }
 

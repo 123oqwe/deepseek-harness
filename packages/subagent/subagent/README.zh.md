@@ -130,7 +130,7 @@ kind: "package-reference"
 
 #### 模型看到什么
 
-一条用户角色的父级消息，开头是结果本身——`Background subagent <child-id> finished and will do no further work unless you send it more.`，或子级被停止、耗尽额度、拒绝任务或失败时的对应句子——随后是 `Its closing message:` 与子级的最终 assistant 内容；若子级没有产出内容，则是 `It left no closing message.`。这条由运行时生成的通知与模型编写的父子消息相互独立；后者使用 `sendMessage()` 与 `AgentMessageSource`。委派 schema 与模型控制工具归消费方包所有。
+一条用户角色的父级消息，开头是结果本身——`Background subagent <child-id> finished and will do no further work unless you send it more.`，或子级被停止、耗尽额度、拒绝任务或失败时的对应句子——随后是 `Its closing message:` 与子级的最终 assistant 内容；若子级没有产出内容，则是 `It left no closing message.`。这条由运行时生成的通知与模型编写的父子消息相互独立；后者使用 `sendMessage()` 与 `AgentMessageSource`。委派 schema 与模型控制工具归消费方包所有。父在主机停下之前已经确认、却没写进父日志的通知，会在父下次启动时再投递一次，所以每次结束父只记下一条。
 
 #### Token 影响
 
