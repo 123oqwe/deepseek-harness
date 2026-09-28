@@ -479,7 +479,7 @@ export const PLUGIN_MANIFEST_ENFORCEMENT_GATE: FeatureGateDeclaration = {
  * which {@link resolveProfileFeatureGates} resolves for `--dump-config` and
  * for every boot.
  */
-export const FEATURE_GATE_DECLARATIONS: readonly FeatureGateDeclaration[] = [PLUGIN_MANIFEST_ENFORCEMENT_GATE]
+export const FEATURE_GATE_DECLARATIONS: readonly FeatureGateDeclaration[] = []
 
 const FEATURE_GATE_STATES: readonly FeatureGateState[] = ['off', 'shadow', 'enforce']
 
