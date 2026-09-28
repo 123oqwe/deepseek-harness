@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-28T03:14:15.753Z",
-  "inputDigest": "96d601ac79314e519c45e3da01e49d044f147ce5575b68bd0de8359b28b50795",
+  "lastUpdatedUtc": "2026-09-28T08:15:25.931Z",
+  "inputDigest": "4d6a7d2e4846d996229a4a2d21e658008abda7215c74b8cf389715c4c8ffc5e4",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4921,10 +4921,10 @@
       "supplements": {
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "e48dc149015bc797e611082c4798afe4d4e6449d",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36368763496",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36368763496/first100-vitest-report-e48dc149015bc797e611082c4798afe4d4e6449d/vitest-report.json",
-          "observationSha256": "87f941d7b14e82389f2031511e437d1f5dd5caaa32d68b1df16d87a71b1c4bb8",
+          "candidateSha": "93a01a0112748bbca729a29e898d826ce79666ad",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36389363977",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36389363977/first100-vitest-report-93a01a0112748bbca729a29e898d826ce79666ad/vitest-report.json",
+          "observationSha256": "c2ab97f24720d6eb75ba45d1adec4b2a455ec97388bd34673402e3ad88f25314",
           "expectCasesMatched": [
             "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) control (native): an approved call whose declared file is unchanged runs once, and its approval is found by the call's action id (acceptance[2])",
             "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (native): an approved call whose declared file changed after the ask does not run",
@@ -4946,7 +4946,13 @@
             "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) control (native): a call's approval request shows the six display fields must[0] names",
             "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) must[0] and acceptance[1] (code-mode): a sub-call's approval request shows the same six display fields, its arguments redacted and without the secret value"
           ],
-          "capturedAtUtc": "2026-09-28T03:10:42.270Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "36389363977",
+            "sha256": "c2ab97f24720d6eb75ba45d1adec4b2a455ec97388bd34673402e3ad88f25314"
+          },
+          "capturedAtUtc": "2026-09-28T08:15:25.920Z"
         }
       },
       "candidateSha": "a510723a1926f44aad7c9884970a89bcd7aabadb",
@@ -6952,14 +6958,54 @@
         },
         "U.10": {
           "status": "GREEN",
-          "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36307835499",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36307835499/first100-vitest-report-29d8024c12f4d5a75c0141fe0254a9a3491dd5b9/vitest-report.json",
-          "observationSha256": "8555878cc4fd0eed6a60e9f6a16e013fdbd6b468ce4061e3ca0e305502e13a8e",
+          "candidateSha": "93a01a0112748bbca729a29e898d826ce79666ad",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36389363977",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36389363977/first100-vitest-report-93a01a0112748bbca729a29e898d826ce79666ad/vitest-report.json",
+          "observationSha256": "c2ab97f24720d6eb75ba45d1adec4b2a455ec97388bd34673402e3ad88f25314",
           "expectCasesMatched": [
             "P4-05 acceptance[2] on the shipped profile: an orphaned Run is reclaimed after a real restart a crashed host's durable Run is adopted by the next boot — same Run, walked through orphaned to starting under a new epoch, its lease not refused"
           ],
-          "capturedAtUtc": "2026-09-27T10:06:08.602Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "36389363977",
+            "sha256": "c2ab97f24720d6eb75ba45d1adec4b2a455ec97388bd34673402e3ad88f25314"
+          },
+          "capturedAtUtc": "2026-09-28T08:15:24.782Z"
+        },
+        "U.11": {
+          "status": "GREEN",
+          "candidateSha": "93a01a0112748bbca729a29e898d826ce79666ad",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36389363977",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36389363977/first100-vitest-report-93a01a0112748bbca729a29e898d826ce79666ad/vitest-report.json",
+          "observationSha256": "c2ab97f24720d6eb75ba45d1adec4b2a455ec97388bd34673402e3ad88f25314",
+          "expectCasesMatched": [
+            "P4-05 acceptance[2] on the shipped profile: an orphaned Run whose session is gone fails safely rather than dangling (A-560, red first for B-674) a durable Run left with no recoverable session after a crash is recorded FAILED on the next boot, not left forever in a non-terminal state"
+          ],
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "36389363977",
+            "sha256": "c2ab97f24720d6eb75ba45d1adec4b2a455ec97388bd34673402e3ad88f25314"
+          },
+          "capturedAtUtc": "2026-09-28T08:15:25.186Z"
+        },
+        "U.12": {
+          "status": "GREEN",
+          "candidateSha": "93a01a0112748bbca729a29e898d826ce79666ad",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36389363977",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36389363977/first100-vitest-report-93a01a0112748bbca729a29e898d826ce79666ad/vitest-report.json",
+          "observationSha256": "c2ab97f24720d6eb75ba45d1adec4b2a455ec97388bd34673402e3ad88f25314",
+          "expectCasesMatched": [
+            "P4-05 acceptance[2] on the shipped profile: a sessionless Run whose restart raced a still-valid lease still fails safely in bounded time (A-568, red first for B-678) a durable Run whose session is gone, whose restart's mount-time sweep was denied by the predecessor's still-valid lease, is recorded FAILED within bounded time after the lease lapses, not left non-terminal forever"
+          ],
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "36389363977",
+            "sha256": "c2ab97f24720d6eb75ba45d1adec4b2a455ec97388bd34673402e3ad88f25314"
+          },
+          "capturedAtUtc": "2026-09-28T08:15:25.536Z"
         }
       },
       "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
