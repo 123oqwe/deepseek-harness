@@ -433,18 +433,19 @@ export class ReactLoopAgent implements Agent {
   }
 
   /**
-   * Put back the messages the last step claimed and the conversation never
-   * recorded, when its turn ended before recording them because a pre-step
-   * refused the step, the turn was aborted, or it failed (Epic P4-06,
-   * BLOCKED-088). They return, in claim order, to the front of `next-step`,
-   * where the next claim takes them as one batch, and nothing wakes the driver
-   * for them. A message the refusal names in `dropped` stays out, and the
-   * turn's `blocked` end records who dropped it and why. A turn that ended
-   * because a pre-step emptied its batch puts nothing back: that listener
-   * removed the input. A message already pending again is not inserted twice.
-   * When a cancel that cleared the inbox or set `cancelClaim` ran while the
-   * claim was out, the claim is cancelled instead: it is put back and removed
-   * again by a `canceled` splice, so the log records the cancellation.
+   * Settle the messages the last step claimed and the conversation never
+   * recorded, when its turn ended before recording them (Epic P4-06,
+   * BLOCKED-088). After a pre-step refusal or an abort they go back, in claim
+   * order, to the front of `next-step`, where the next claim takes them as one
+   * batch, and nothing wakes the driver for them. A message the refusal names
+   * in `dropped` stays out, and the turn's `blocked` end records who dropped it
+   * and why. After a failure, or when a cancel that cleared the inbox or set
+   * `cancelClaim` ran while the claim was out, they are cancelled instead: put
+   * back and removed again by a `canceled` splice, so the log records the
+   * cancellation and a turn that keeps failing, such as one with no model
+   * route, leaves no input pending. A turn that ended because a pre-step
+   * emptied its batch settles nothing: that listener removed the input. A
+   * message already pending again is not inserted twice.
    * @param reason - how the turn ended.
    */
   private putBackUnrecordedClaim(reason: TurnEndReason | null): void {
@@ -459,7 +460,7 @@ export class ReactLoopAgent implements Agent {
     if (back.length === 0) return
     this.inbox.splice('next-step', 0, 0, [...back])
     // By identity: an `agent/inbox/inserted` listener may already have moved or removed one.
-    if (cancelled) for (const message of back) this.inbox.remove(message.id)
+    if (cancelled || reason.kind === 'error') for (const message of back) this.inbox.remove(message.id)
   }
 
   private async step(decision: Extract<PreparedStep, { kind: 'enter' }>): Promise<StepEndReason | null> {
