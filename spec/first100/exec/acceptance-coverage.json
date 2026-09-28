@@ -5329,9 +5329,59 @@
         {
           "stage": "U",
           "title": "P2-06 must[1]: the dispatch re-verifies what the session recorded refuses a switched account"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (native): an approved call whose declared file changed after the ask does not run"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (native): an approved call whose declared file did not exist at the ask and exists at execution does not run"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (code-mode): an approved sub-call whose declared file changed after the ask does not run"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (direct): an approved call a plugin makes through ToolRuntime.execute whose declared file changed after the ask does not run"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (direct): an approved call a plugin makes through ToolRuntime.execute whose declared file did not exist at the ask and exists at execution does not run"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (native, relative): an approved call whose relative declared path names a file in the session's working directory, not the process's, that changed after the ask does not run"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (native, relative): an approved call whose relative declared path names a file that did not exist in the session's working directory, not the process's, at the ask and exists there at execution does not run"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (code-mode, relative): an approved sub-call whose relative declared path names a file in the session's working directory, not the process's, that changed after the ask does not run"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (direct, relative): an approved call a plugin makes through ToolRuntime.execute whose relative declared path names a file in the session's working directory, not the process's, that changed after the ask does not run"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (direct, relative): an approved call a plugin makes through ToolRuntime.execute whose relative declared path names a file that did not exist in the session's working directory, not the process's, at the ask and exists there at execution does not run"
         }
       ],
-      "note": "acceptance[0] names THREE limbs: 'after the approval, substituting the arguments, switching the account, or changing the file inode / remote object version does not execute.' The citations close the first two — at the decision function (C), against fields read back off the durable record (P), and at the real dispatch where the tool is observed not to run (U). **The third limb is NOT closed, and no citation here should be read as closing it.** `ApprovalBindingInputs.preconditions` is inside the digested tuple, so a change to it does move the binding; but both production paths pass `[]` (`agent-loop/src/tool-calls.ts` and `tools/src/ptc.ts` at their manifest constructions), nothing in the tree observes an inode, an mtime, or a remote object version, and nothing re-reads one before execution. A field every producer leaves empty is a field the binding does not bind. Sign-off must cite acceptance[0] by limb and never whole."
+      "note": "acceptance[0] names THREE limbs: 'after the approval, substituting the arguments, switching the account, or changing the file inode / remote object version does not execute.' The citations close the first two — at the decision function (C), against fields read back off the durable record (P), and at the real dispatch where the tool is observed not to run (U). **The third limb is NOT closed, and no citation here should be read as closing it.** `ApprovalBindingInputs.preconditions` is inside the digested tuple, so a change to it does move the binding; but both production paths pass `[]` (`agent-loop/src/tool-calls.ts` and `tools/src/ptc.ts` at their manifest constructions), nothing in the tree observes an inode, an mtime, or a remote object version, and nothing re-reads one before execution. A field every producer leaves empty is a field the binding does not bind. Sign-off must cite acceptance[0] by limb and never whole.\n\n[2026-09-28 lane B, 24r2: the third limb, the file version, is cited from U.1 (tests/first100/fixtures/P2-06.approval-precondition.composition.spec.ts, BLOCKED-318 as narrowed by ruling ⑤): on the shipped headless profile an approved call whose declared file changed after the ask, or came to exist after it, does not run, on the native, code-mode and direct (ToolRuntime.execute) paths, with absolute declared paths and with relative ones resolved against the session's working directory. U.1's cell is recorded from the 24r push gate 36368763496.]"
     },
     {
       "epic": "P2-06",
@@ -5356,9 +5406,24 @@
         {
           "stage": "U",
           "title": "P2-06 must[0]: the ACP decider is shown the action, not only its id shows the REDACTED arguments and never the raw ones"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[1] (native): the approval request shows the call's arguments redacted, without the secret value"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) control (native): a call's approval request shows the six display fields must[0] names"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) must[0] and acceptance[1] (code-mode): a sub-call's approval request shows the same six display fields, its arguments redacted and without the secret value"
         }
       ],
-      "note": "acceptance[1]: 'sensitive values may be displayed redacted, but the hash still covers the real canonicalized value.' Both halves are cited on purpose, because either alone is half the clause: the digest half (two values that would display identically digest differently, and a redacted placeholder digests differently from the value it stands for), the durability half (the record carries no argument value yet still separates two argument values), and the surface half (the ACP payload carries the redacted arguments and never the raw string). What no citation proves is that every sensitive value IS redacted: `redactArgumentsForDisplay` decides what to hide, and its policy is not this clause's subject."
+      "note": "acceptance[1]: 'sensitive values may be displayed redacted, but the hash still covers the real canonicalized value.' Both halves are cited on purpose, because either alone is half the clause: the digest half (two values that would display identically digest differently, and a redacted placeholder digests differently from the value it stands for), the durability half (the record carries no argument value yet still separates two argument values), and the surface half (the ACP payload carries the redacted arguments and never the raw string). What no citation proves is that every sensitive value IS redacted: `redactArgumentsForDisplay` decides what to hide, and its policy is not this clause's subject.\n\n[2026-09-28 lane B, 24r2: U.1 cites the approval request on the shipped headless profile: on the native and code-mode paths it shows the six display fields must[0] names, with the arguments redacted and without the secret value. The direct call path's display is observed by B-683 in batch 25.]"
     },
     {
       "epic": "P2-06",
@@ -5399,9 +5464,39 @@
         {
           "stage": "P",
           "title": "P2-06 acceptance[2]: the record is the one-to-one reference gives two asks two ids, so one action's two approvals stay distinguishable"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) control (native): an approved call whose declared file is unchanged runs once, and its approval is found by the call's action id (acceptance[2])"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) control (code-mode): an approved sub-call whose declared file is unchanged runs once, and its approval is found by the sub-call's action id (acceptance[2])"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) control (direct): an approved call a plugin makes through ToolRuntime.execute whose declared file is unchanged runs once, and its approval is found by the call's action id (acceptance[2])"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) control (native, relative): an approved call whose relative declared path names an unchanged file in the session's working directory, not the process's, runs once, and its approval is found by the call's action id (acceptance[2])"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) control (code-mode, relative): an approved sub-call whose relative declared path names an unchanged file in the session's working directory, not the process's, runs once, and its approval is found by the sub-call's action id (acceptance[2])"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) control (direct, relative): an approved call a plugin makes through ToolRuntime.execute whose relative declared path names an unchanged file in the session's working directory, not the process's, runs once, and its approval is found by the call's action id (acceptance[2])"
         }
       ],
-      "note": "acceptance[2]: 'the approval event and the final action form a one-to-one reference.' The two halves are cited separately because each alone is half the clause, and conflating them was a live risk on this epic. The Usage citations prove the COUNT — exactly one binding per gated dispatch, and none for an action the gate does not ask about — which makes a one-to-one reference POSSIBLE. They do not make one exist: the record carried `action`, a tool NAME, so two calls to one tool in a session were the same line in the log. The Fault citations supply the reference itself: the dispatch's `actionId` on the record, two calls of one tool distinguishable, and a fail-closed refusal when two decisions about one tool name no dispatch, so the fallback for actionId-less records cannot settle the question by position. What no citation proves is that an audit TOOL exists to run the query; the field it would travel on does, and the reverse lookup is exercised in the Fault case that filters the log by `actionId`.\n\n[2026-09-24 lane A, A-335 backfill (S1: the evidence existed and was not registered; no case changed): four citations test the clause's subject, one approval record per action, on the sides the citations above do not reach. The two `F` cases, «P2-06 acceptance[2]: the record names the DISPATCH, not only the tool writes an actionId from the code-mode path, so both production paths name their dispatch» (`packages/core/tools/tests/approval-code-mode.spec.ts:197`) and «P2-06 acceptance[2]: the record names the DISPATCH, not only the tool gives two sub-dispatches of ONE tool two different actionIds, and does not let the first decision cover the second» (`packages/core/tools/tests/approval-code-mode.spec.ts:207`), show the code-mode path binding each production-generated sub-call id, one binding per dispatch. The two `P` cases, «P2-06 acceptance[2]: the record is the one-to-one reference names the approval and the action in one record, exactly one per bound ask» (`packages/interaction/user-approval/tests/binding-service.spec.ts:212`) and «P2-06 acceptance[2]: the record is the one-to-one reference gives two asks two ids, so one action's two approvals stay distinguishable» (`packages/interaction/user-approval/tests/binding-service.spec.ts:226`), cover the approval-event side. Still unobserved: looking an executed action up by id to its approval within one run, and the native path's `actionId = block.id`.]"
+      "note": "acceptance[2]: 'the approval event and the final action form a one-to-one reference.' The two halves are cited separately because each alone is half the clause, and conflating them was a live risk on this epic. The Usage citations prove the COUNT — exactly one binding per gated dispatch, and none for an action the gate does not ask about — which makes a one-to-one reference POSSIBLE. They do not make one exist: the record carried `action`, a tool NAME, so two calls to one tool in a session were the same line in the log. The Fault citations supply the reference itself: the dispatch's `actionId` on the record, two calls of one tool distinguishable, and a fail-closed refusal when two decisions about one tool name no dispatch, so the fallback for actionId-less records cannot settle the question by position. What no citation proves is that an audit TOOL exists to run the query; the field it would travel on does, and the reverse lookup is exercised in the Fault case that filters the log by `actionId`.\n\n[2026-09-24 lane A, A-335 backfill (S1: the evidence existed and was not registered; no case changed): four citations test the clause's subject, one approval record per action, on the sides the citations above do not reach. The two `F` cases, «P2-06 acceptance[2]: the record names the DISPATCH, not only the tool writes an actionId from the code-mode path, so both production paths name their dispatch» (`packages/core/tools/tests/approval-code-mode.spec.ts:197`) and «P2-06 acceptance[2]: the record names the DISPATCH, not only the tool gives two sub-dispatches of ONE tool two different actionIds, and does not let the first decision cover the second» (`packages/core/tools/tests/approval-code-mode.spec.ts:207`), show the code-mode path binding each production-generated sub-call id, one binding per dispatch. The two `P` cases, «P2-06 acceptance[2]: the record is the one-to-one reference names the approval and the action in one record, exactly one per bound ask» (`packages/interaction/user-approval/tests/binding-service.spec.ts:212`) and «P2-06 acceptance[2]: the record is the one-to-one reference gives two asks two ids, so one action's two approvals stay distinguishable» (`packages/interaction/user-approval/tests/binding-service.spec.ts:226`), cover the approval-event side. Still unobserved: looking an executed action up by id to its approval within one run, and the native path's `actionId = block.id`.]\n\n[2026-09-28 lane B, 24r2: U.1's six controls cite the reference on the shipped headless profile: on the native, code-mode and direct paths, with absolute and relative declared paths, an approved call whose file is unchanged runs once and its approval is found by the call's action id.]"
     },
     {
       "epic": "P2-10",
