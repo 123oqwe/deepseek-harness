@@ -396,5 +396,6 @@ export async function runFaultLane(lane: ManifestLane, seed: number, manifest: M
     token_cost: meanMetric(trials.map(trial => trial.tokenCost), seed, from(tokenCostSource(manifest.pricing))),
     latency: meanMetric(trials.map(trial => trial.latencyMs), seed, from('milliseconds of wall-clock time per trial, summed over its product launches')),
   }, lane.notApplicable)
-  return { lane: 'fault', trials, metrics, knownRed: [], knownRedCheckedOn }
+  // M-573-control: the fault lane's report names another lane.
+  return { lane: 'fault-mutated', trials, metrics, knownRed: [], knownRedCheckedOn }
 }
