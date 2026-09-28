@@ -7,6 +7,9 @@
  * directory and `$DSH_HOME`, with no model API configured. This is the launch
  * `snapshots/session/headless.snapshot.ts` makes, without its assertions.
  *
+ * A fault trial replays the same way in a working directory it keeps across
+ * launches, so a launch it kills on purpose can be resumed there.
+ *
  * An attacking trial launches the same command with the shipped composition
  * and only the patches its attack needs; the model is the benchmark's stub on
  * a loopback port, reached through `DEEPSEEK_BASE_URL` with a key that is
@@ -15,16 +18,17 @@
  * @module benchmarks/harness-capability/product
  */
 
-import { spawn, spawnSync } from 'node:child_process'
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, dirname, join } from 'node:path'
 import { performance } from 'node:perf_hooks'
+import { setTimeout as sleep } from 'node:timers/promises'
 import { fileURLToPath } from 'node:url'
 import { zstdDecompressSync } from 'node:zlib'
 import * as yaml from 'js-yaml'
-import { resolveExampleLaunch } from '@deepseek-ai/dsh-loader-smoke'
+import { resolveExampleLaunch, type ExampleLaunch } from '@deepseek-ai/dsh-loader-smoke'
 import { scanZstdFrames } from '@deepseek-ai/dsh-session-persistence-jsonl/src/zstd.ts'
 import type { PriceTable } from './manifest.ts'
 import { materializeProfilePatch } from '@deepseek-ai/dsh-session-snapshot/src/launcher.ts'
@@ -132,6 +136,8 @@ export interface RecordedScenario {
   readonly permission: string | undefined
   /** Extra environment the recording's manifest names. */
   readonly environment: Readonly<Record<string, string>>
+  /** The `workspace.expected` directory the final workspace is compared with, when the caller admitted that check. */
+  readonly expectedWorkspace: string | undefined
 }
 
 /**
@@ -183,19 +189,27 @@ function modelOf(recording: string): { provider: string; model: string } | undef
  * Read one recorded headless scenario a lane can replay unchanged.
  * @param recordings - the directory holding the recorded scenarios.
  * @param name - the scenario's directory name.
+ * @param options - `finalWorkspace`: also admit a scenario whose manifest asks only for the final-workspace check,
+ *   `workspace: { final: true }`, and return the directory that check compares with.
  * @returns the scenario.
  * @throws when the scenario needs anything the benchmark does not provide — another profile or composition, a
- *   replay override, a platform, a workspace setup or final check, a pinned session format, or child sessions — or
- *   when its recording has no task or no request model.
+ *   replay override, a platform, a workspace setup, a final-workspace check the caller did not admit, a pinned
+ *   session format, or child sessions — or when its recording has no task or no request model.
  */
-export function readRecordedScenario(recordings: string, name: string): RecordedScenario {
+export function readRecordedScenario(
+  recordings: string,
+  name: string,
+  options: { readonly finalWorkspace?: boolean } = {},
+): RecordedScenario {
   const dir = join(recordings, name)
   const manifest = (yaml.load(readFileSync(join(dir, 'snapshot.yml'), 'utf8')) ?? {}) as Record<string, unknown>
   const files = readdirSync(dir)
   const sessions = files.filter(file => /^session\.v\d+\.jsonl$/u.test(file))
     .sort((left, right) => Number(/v(\d+)/u.exec(left)?.[1]) - Number(/v(\d+)/u.exec(right)?.[1]))
+  // A workspace setup is never admitted: only the final check, which a lane can make after the run.
+  const finalWorkspace = options.finalWorkspace === true && canonicalJson(manifest.workspace) === canonicalJson({ final: true })
   const unsupported = [
-    ...Object.keys(manifest).filter(key => !REPLAYABLE_MANIFEST_KEYS.has(key)),
+    ...Object.keys(manifest).filter(key => !REPLAYABLE_MANIFEST_KEYS.has(key) && !(key === 'workspace' && finalWorkspace)),
     ...manifest.profile === 'headless' ? [] : [`profile ${String(manifest.profile)}`],
     ...manifest.composition === undefined || manifest.composition === 'default' ? [] : [`composition ${String(manifest.composition)}`],
     ...files.filter(file => /^session\.\d+\.v\d+\.jsonl$/u.test(file)),
@@ -220,6 +234,7 @@ export function readRecordedScenario(recordings: string, name: string): Recorded
     model: model.model,
     permission: typeof manifest.permission === 'string' ? manifest.permission : undefined,
     environment: environment ?? {},
+    expectedWorkspace: finalWorkspace ? join(dir, 'workspace.expected') : undefined,
   }
 }
 
@@ -292,6 +307,93 @@ function withoutModelApi(): Record<string, string | undefined> {
   return Object.fromEntries(Object.entries(process.env).filter(([name]) => name !== 'DEEPSEEK_API_KEY' && name !== 'DEEPSEEK_BASE_URL'))
 }
 
+/** The root entries of a replay's working directory that the benchmark and the product own, not the task. */
+export const REPLAY_RUNTIME_ENTRIES: readonly string[] = ['.agents', '.dsh', '.snapshot-patches']
+
+/** The directories one replay runs in. */
+export interface ReplayWorkspace {
+  /** The working directory, seeded from the scenario's `workspace/`; `$DSH_HOME` is its `.dsh`. */
+  readonly cwd: string
+  /** The replay provider's spill root. */
+  readonly spill: string
+  /** The composition's patch files in order, its snapshot patch materialized under `cwd`. */
+  readonly patches: readonly string[]
+}
+
+/**
+ * Prepare the directories one replay runs in: a fresh working directory
+ * seeded from the scenario's `workspace/`, with the composition's snapshot
+ * patch materialized in it, and a spill root.
+ * @param scenario - the recording.
+ * @param composition - the directory whose `cordis.yml`, `cordis.snapshot.yml` and `model.cordis.yml` compose the replay.
+ * @returns the directories; the caller removes them with {@link removeReplayWorkspace}.
+ */
+export function prepareReplayWorkspace(scenario: RecordedScenario, composition: string): ReplayWorkspace {
+  const cwd = mkdtempSync(join(tmpdir(), 'dsh-benchmark-'))
+  const spill = mkdtempSync(join(tmpdir(), 'dsh-benchmark-spill-'))
+  try {
+    const patchDir = join(cwd, '.snapshot-patches')
+    mkdirSync(patchDir, { recursive: true })
+    const patches = [
+      join(composition, 'cordis.yml'),
+      materializeProfilePatch(join(composition, 'cordis.snapshot.yml'), cwd, patchDir, 1),
+      join(composition, 'model.cordis.yml'),
+    ]
+    const workspace = join(scenario.dir, 'workspace')
+    if (existsSync(workspace)) {
+      for (const entry of readdirSync(workspace)) cpSync(join(workspace, entry), join(cwd, entry), { recursive: true, verbatimSymlinks: true })
+    }
+    return { cwd, spill, patches }
+  } catch (error) {
+    removeReplayWorkspace({ cwd, spill, patches: [] })
+    throw error
+  }
+}
+
+/**
+ * Remove a replay's directories.
+ * @param workspace - the directories {@link prepareReplayWorkspace} made.
+ */
+export function removeReplayWorkspace(workspace: ReplayWorkspace): void {
+  rmSync(workspace.cwd, { recursive: true, force: true })
+  rmSync(workspace.spill, { recursive: true, force: true })
+}
+
+/**
+ * The launch of one replay in prepared directories.
+ * @param scenario - the recording.
+ * @param workspace - the prepared directories.
+ * @param extra - patch files laid over the composition's, and environment laid over the replay's.
+ * @returns the resolved spawn.
+ */
+function replayLaunchOf(
+  scenario: RecordedScenario,
+  workspace: ReplayWorkspace,
+  extra: { readonly patches: readonly string[]; readonly env: Readonly<Record<string, string>> },
+): ExampleLaunch {
+  return resolveExampleLaunch({
+    srcBin: join(REPO_ROOT, 'apps/cli/src/bin.ts'),
+    configArgs: ['--profile', 'headless', ...[...workspace.patches, ...extra.patches].flatMap(patch => ['--patch', patch]), scenario.task],
+    mode: 'src',
+    tsconfigPath: join(REPO_ROOT, 'tsconfig.json'),
+    env: {
+      DSH_HOME: join(workspace.cwd, '.dsh'),
+      DSH_AGENTS_HOME: join(workspace.cwd, '.agents'),
+      DSH_SNAPSHOT: 'replay',
+      DSH_SNAPSHOT_PROVIDER: scenario.provider,
+      DSH_SNAPSHOT_MODEL: scenario.model,
+      DSH_SNAPSHOT_SPILL_ROOT: workspace.spill,
+      DSH_SNAPSHOT_SPILL_LOCATOR_ROOT: spillLocatorRoot(scenario.fixture),
+      DSH_SNAPSHOT_FILE: scenario.fixture,
+      ...scenario.permission === undefined ? {} : { DSH_PERMISSION_MODE: scenario.permission },
+      ...scenario.environment,
+      ...extra.env,
+      NODE_OPTIONS: [process.env.NODE_OPTIONS, '--disable-warning=ExperimentalWarning'].filter(Boolean).join(' '),
+      DSH_TELEMETRY_DISABLED: '1',
+    },
+  })
+}
+
 /**
  * Replay one recorded scenario through the shipped product.
  * @param scenario - the recording.
@@ -303,45 +405,13 @@ export function replayRecordedScenario(
   scenario: RecordedScenario,
   options: { readonly composition: string; readonly timeoutMs: number },
 ): ProductRun {
-  const cwd = mkdtempSync(join(tmpdir(), 'dsh-benchmark-'))
-  const spill = mkdtempSync(join(tmpdir(), 'dsh-benchmark-spill-'))
+  const workspace = prepareReplayWorkspace(scenario, options.composition)
   try {
-    const patchDir = join(cwd, '.snapshot-patches')
-    mkdirSync(patchDir, { recursive: true })
-    const patches = [
-      join(options.composition, 'cordis.yml'),
-      materializeProfilePatch(join(options.composition, 'cordis.snapshot.yml'), cwd, patchDir, 1),
-      join(options.composition, 'model.cordis.yml'),
-    ]
-    const workspace = join(scenario.dir, 'workspace')
-    if (existsSync(workspace)) {
-      for (const entry of readdirSync(workspace)) cpSync(join(workspace, entry), join(cwd, entry), { recursive: true, verbatimSymlinks: true })
-    }
-    const dshHome = join(cwd, '.dsh')
-    const launch = resolveExampleLaunch({
-      srcBin: join(REPO_ROOT, 'apps/cli/src/bin.ts'),
-      configArgs: ['--profile', 'headless', ...patches.flatMap(patch => ['--patch', patch]), scenario.task],
-      mode: 'src',
-      tsconfigPath: join(REPO_ROOT, 'tsconfig.json'),
-      env: {
-        DSH_HOME: dshHome,
-        DSH_AGENTS_HOME: join(cwd, '.agents'),
-        DSH_SNAPSHOT: 'replay',
-        DSH_SNAPSHOT_PROVIDER: scenario.provider,
-        DSH_SNAPSHOT_MODEL: scenario.model,
-        DSH_SNAPSHOT_SPILL_ROOT: spill,
-        DSH_SNAPSHOT_SPILL_LOCATOR_ROOT: spillLocatorRoot(scenario.fixture),
-        DSH_SNAPSHOT_FILE: scenario.fixture,
-        ...scenario.permission === undefined ? {} : { DSH_PERMISSION_MODE: scenario.permission },
-        ...scenario.environment,
-        NODE_OPTIONS: [process.env.NODE_OPTIONS, '--disable-warning=ExperimentalWarning'].filter(Boolean).join(' '),
-        DSH_TELEMETRY_DISABLED: '1',
-      },
-    })
+    const launch = replayLaunchOf(scenario, workspace, { patches: [], env: {} })
     // No model API reaches the product: the replay provider answers every request.
     const started = performance.now()
     const result = spawnSync(launch.command, launch.args, {
-      cwd,
+      cwd: workspace.cwd,
       env: { ...withoutModelApi(), ...launch.env },
       input: '',
       encoding: 'utf8',
@@ -350,10 +420,98 @@ export function replayRecordedScenario(
       maxBuffer: 64 * 1024 * 1024,
     })
     const latencyMs = performance.now() - started
-    return { argv: [launch.command, ...launch.args], exitCode: result.status, latencyMs, logs: persistedLogs(dshHome, 'raw') }
+    return { argv: [launch.command, ...launch.args], exitCode: result.status, latencyMs, logs: persistedLogs(join(workspace.cwd, '.dsh'), 'raw') }
   } finally {
-    rmSync(cwd, { recursive: true, force: true })
-    rmSync(spill, { recursive: true, force: true })
+    removeReplayWorkspace(workspace)
+  }
+}
+
+/** A replay launch killed on purpose while its replay script stalls. */
+export interface StallKill {
+  /** The marker file the replay provider writes when the script's `hang` entry starts. */
+  readonly marker: string
+  /** How long to wait after the marker appears before the SIGKILL, so the product persists what it wrote before the stall. */
+  readonly afterMs: number
+}
+
+/** What one asynchronous replay launch left. */
+export interface ReplayRun extends ProductRun {
+  /** Whether the launch was killed after its stall marker appeared. */
+  readonly killedAtStall: boolean
+}
+
+/** How often a launch waiting to be killed at a stall looks for the marker. */
+const STALL_POLL_MS = 50
+
+/**
+ * Kill a launch once its stall marker exists and the wait after it has
+ * passed, unless the launch exits first.
+ * @param child - the launched product.
+ * @param stall - the marker and the wait.
+ * @param exited - whether the launch has exited.
+ * @returns whether the launch was killed.
+ */
+async function killAtStall(child: ChildProcess, stall: StallKill, exited: () => boolean): Promise<boolean> {
+  while (!existsSync(stall.marker)) {
+    if (exited()) return false
+    await sleep(STALL_POLL_MS)
+  }
+  await sleep(stall.afterMs)
+  if (exited()) return false
+  child.kill('SIGKILL')
+  return true
+}
+
+/**
+ * Replay one recorded scenario through the shipped product in prepared
+ * directories, which the launch leaves in place, so a later launch continues
+ * in the same working directory and `$DSH_HOME`.
+ * @param scenario - the recording.
+ * @param workspace - the prepared directories.
+ * @param options - `patches` laid over the composition's; `env` laid over the replay's, such as a
+ *   `DSH_SNAPSHOT_OVERRIDE` script; `timeoutMs`, after which the run is killed; `stall`, a marker after which it is
+ *   killed.
+ * @returns the launch, its exit code (`null` when killed), its duration, its session logs, the tail of its stderr,
+ *   and whether it was killed at the stall.
+ */
+export async function launchReplay(
+  scenario: RecordedScenario,
+  workspace: ReplayWorkspace,
+  options: {
+    readonly patches: readonly string[]
+    readonly env: Readonly<Record<string, string>>
+    readonly timeoutMs: number
+    readonly stall?: StallKill
+  },
+): Promise<ReplayRun> {
+  const launch = replayLaunchOf(scenario, workspace, options)
+  const started = performance.now()
+  let stderr = ''
+  let exited = false
+  const child = spawn(launch.command, launch.args, { cwd: workspace.cwd, env: { ...withoutModelApi(), ...launch.env }, stdio: ['ignore', 'ignore', 'pipe'] })
+  child.stderr.setEncoding('utf8')
+  child.stderr.on('data', (chunk: string) => { stderr = (stderr + chunk).slice(-2000) })
+  const timer = setTimeout(() => { child.kill('SIGKILL') }, options.timeoutMs)
+  const killed = options.stall === undefined ? Promise.resolve(false) : killAtStall(child, options.stall, () => exited)
+  const exitCode = await new Promise<number | null>((resolve, reject) => {
+    child.once('error', (error) => {
+      clearTimeout(timer)
+      exited = true
+      reject(error)
+    })
+    child.once('close', (code) => {
+      clearTimeout(timer)
+      exited = true
+      resolve(code)
+    })
+  })
+  return {
+    argv: [launch.command, ...launch.args],
+    exitCode,
+    latencyMs: performance.now() - started,
+    logs: persistedLogs(join(workspace.cwd, '.dsh'), 'raw'),
+    stderrTail: stderr,
+    killedAtStall: await killed,
   }
 }
 
@@ -428,22 +586,45 @@ export async function launchShippedHeadless(launch: ShippedLaunch): Promise<Prod
 }
 
 /**
- * How many side effects a run duplicated: the idempotency keys whose action
- * manifest its session logs append more than once.
+ * The error codes of a tool result recorded without the tool running: a
+ * refusal before dispatch (the action ledger's refusal of a re-issued call is
+ * one) and a resume's closer for a call that never started.
+ */
+const NOT_RUN_CODES: ReadonlySet<string> = new Set(['ABORTED_BEFORE_DISPATCH', 'TOOL_NOT_STARTED'])
+
+/** What `duplicate_side_effect` is read from, as every lane report states it. */
+export const DUPLICATE_SIDE_EFFECT_SOURCE = 'trials in which one idempotency key\'s call was applied more than once; a tool result recorded without the tool running, such as the action ledger\'s refusal of a re-issued call, is not an application'
+
+/**
+ * How many side effects a run applied more than once: the idempotency keys
+ * whose calls have more than one tool result recorded as having run. Each
+ * native call's action manifest names its call id and its key; a result whose
+ * error code says the tool did not run is not counted.
  * @param logs - the run's session logs.
  * @returns the number of such keys.
  */
 export function duplicateSideEffectsOf(logs: readonly string[]): number {
-  const seen = new Map<string, number>()
+  const applied = new Map<string, number>()
   for (const log of logs) {
-    for (const record of records(log)) {
+    const all = records(log)
+    const keyOfCall = new Map<string, string>()
+    for (const record of all) {
       if (record.type !== 'action/manifest-appended') continue
-      const key = (record.data as { manifest?: { idempotencyKey?: unknown }; idempotencyKey?: unknown } | undefined)
-      const idempotencyKey = key?.manifest?.idempotencyKey ?? key?.idempotencyKey
-      if (typeof idempotencyKey === 'string') seen.set(idempotencyKey, (seen.get(idempotencyKey) ?? 0) + 1)
+      const data = record.data as { actionId?: unknown; idempotencyKey?: unknown } | undefined
+      if (typeof data?.actionId === 'string' && typeof data.idempotencyKey === 'string') keyOfCall.set(data.actionId, data.idempotencyKey)
+    }
+    for (const record of all) {
+      if (record.type !== 'tool/result') continue
+      const data = record.data as { message?: { content?: readonly { toolCallId?: unknown }[] }; error?: { code?: unknown } } | undefined
+      const code = data?.error?.code
+      if (typeof code === 'string' && NOT_RUN_CODES.has(code)) continue
+      for (const block of data?.message?.content ?? []) {
+        const key = typeof block.toolCallId === 'string' ? keyOfCall.get(block.toolCallId) : undefined
+        if (key !== undefined) applied.set(key, (applied.get(key) ?? 0) + 1)
+      }
     }
   }
-  return [...seen.values()].filter(count => count > 1).length
+  return [...applied.values()].filter(count => count > 1).length
 }
 
 /**
