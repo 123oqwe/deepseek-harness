@@ -28,7 +28,7 @@ import { resolveExampleLaunch } from '@deepseek-ai/dsh-loader-smoke'
 import { scanZstdFrames } from '@deepseek-ai/dsh-session-persistence-jsonl/src/zstd.ts'
 import type { PriceTable } from './manifest.ts'
 import { materializeProfilePatch } from '@deepseek-ai/dsh-session-snapshot/src/launcher.ts'
-import { normalizeSessionSnapshots } from '@deepseek-ai/dsh-session-snapshot/src/normalize.ts'
+import { normalizeSessionSnapshot, normalizeSessionSnapshots } from '@deepseek-ai/dsh-session-snapshot/src/normalize.ts'
 import { latestPersistedSessionPaths } from '@deepseek-ai/dsh-session-snapshot/src/session-files.ts'
 
 /** The repository root; this module sits in `benchmarks/harness-capability/`. */
@@ -88,6 +88,25 @@ export function normalizedLogs(logs: readonly string[]): string[] {
     sessionIds: headers.flatMap(header => typeof header.id === 'string' ? [header.id] : []),
     cwd: typeof cwd === 'string' ? cwd : '\0missing-cwd\0',
   })
+}
+
+/**
+ * The normalized projection of session logs the shipped profile wrote live,
+ * primary first: the scrubbing {@link normalizedLogs} applies, without the
+ * recorded-fixture restore that {@link normalizedLogs} runs first. That
+ * restore is strict and refused the security lane's live logs (run
+ * 36370052596); a live log is already in the current format.
+ * @param logs - the logs, primary first.
+ * @returns one normalized JSONL text per log, in the same order.
+ */
+export function normalizedLiveLogs(logs: readonly string[]): string[] {
+  const headers = logs.map(log => records(log)[0] ?? {})
+  const cwd = headers[0]?.cwd
+  const ctx = {
+    sessionIds: headers.flatMap(header => typeof header.id === 'string' ? [header.id] : []),
+    cwd: typeof cwd === 'string' ? cwd : '\0missing-cwd\0',
+  }
+  return logs.map(log => normalizeSessionSnapshot(log, ctx))
 }
 
 /**
