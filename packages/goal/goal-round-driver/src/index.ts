@@ -18,6 +18,9 @@ export { renderGoalRoundPrompt } from './prompt.ts'
 export const name = 'goal-round-driver'
 export const inject = ['agents', 'goals', 'sessions']
 
+/** Who a turn's `blocked` end names for a round message this driver drops. */
+const DROPPED_BY = '@deepseek-ai/dsh-goal-round-driver'
+
 /** Identity reserved before a goal continuation enters the agent inbox. */
 interface RoundIdentity {
   readonly goalId: GoalRef['id']
@@ -131,6 +134,44 @@ export function apply(ctx: Context): void {
       if (agent.inbox.nextStep.some(candidate => candidate.id === message.id)
         || agent.inbox.nextTurn.some(candidate => candidate.id === message.id)) continue
       agent.inbox.prepend('next-step', message)
+    }
+  }
+
+  /**
+   * What this driver drops when it refuses its own stale round: every claimed
+   * message it did not put back, named so the loop records the drop on the
+   * turn's `blocked` end and puts none of them back (Epic P4-06, BLOCKED-088).
+   * @param agent - the agent whose inbox holds what was put back.
+   * @param claimed - the messages the refused step claimed.
+   * @returns the drop record the refusal declares.
+   */
+  function staleRoundDrop(agent: Agent, claimed: readonly UserMessage[]): { messageIds: MessageId[]; by: string; reason: string } {
+    const pending = new Set([...agent.inbox.nextStep, ...agent.inbox.nextTurn].map(message => message.id))
+    return {
+      messageIds: claimed.filter(message => !pending.has(message.id)).map(message => message.id),
+      by: DROPPED_BY,
+      reason: 'the goal round reservation is stale',
+    }
+  }
+
+  /**
+   * A downstream refusal of this driver's round, passed on with the round
+   * dropped: the goal is blocked or already stopped, so the round never runs
+   * again, and the loop records its drop instead of putting it back (Epic
+   * P4-06, BLOCKED-088). A drop the downstream already declared for the round
+   * is kept as it is.
+   * @param decision - the downstream refusal.
+   * @param round - the id of this driver's claimed round message.
+   * @returns the refusal with the round among its dropped messages.
+   */
+  function refusedRoundDropped(
+    decision: Extract<PreStepDecision, { kind: 'reject' }>,
+    round: MessageId,
+  ): Extract<PreStepDecision, { kind: 'reject' }> {
+    if (decision.dropped?.some(drop => drop.messageIds.includes(round))) return decision
+    return {
+      ...decision,
+      dropped: [...decision.dropped ?? [], { messageIds: [round], by: DROPPED_BY, reason: 'the goal round was refused before entering its step' }],
     }
   }
 
@@ -294,6 +335,15 @@ export function apply(ctx: Context): void {
     })
 
     ctx.on('agent/inbox/inserted', ({ agent, message }) => {
+      // A round reaches next-step only when the loop puts back a claim its turn
+      // never recorded (Epic P4-06, BLOCKED-088). This driver never runs a
+      // claimed round again — the goal is paused, blocked or disarmed by then —
+      // so it cancels the round, which records a `canceled` splice, and
+      // reserves a new round when the goal next runs.
+      if (isGoalRoundSource(message.source) && agent.inbox.nextStep.some(candidate => candidate.id === message.id)) {
+        agent.inbox.remove(message.id)
+        return
+      }
       if (!agent.inbox.nextTurn.some(candidate => candidate.id === message.id)) return
       const state = stateFor(agent)
       const attempt = state.attempt
@@ -379,7 +429,7 @@ export function apply(ctx: Context): void {
         }
         restoreOtherClaimed(agent, messages, submitted.id)
         requestDrive(state)
-        return { kind: 'reject' }
+        return { kind: 'reject', dropped: [staleRoundDrop(agent, messages)] }
       }
       let decision: PreStepDecision
       try {
@@ -407,7 +457,7 @@ export function apply(ctx: Context): void {
             message: 'Goal round was rejected before entering its step.',
           })
         }
-        return decision
+        return refusedRoundDropped(decision, submitted.id)
       }
       try {
         valid = validReservation(state, content, source)
@@ -420,7 +470,7 @@ export function apply(ctx: Context): void {
         state.attempt = undefined
         restoreOtherClaimed(agent, decision.messages, submitted.id)
         requestDrive(state)
-        return { kind: 'reject' }
+        return { kind: 'reject', dropped: [staleRoundDrop(agent, messages)] }
       }
       return { ...decision, startsRequestSeries: true }
     })

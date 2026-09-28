@@ -946,13 +946,25 @@ describe('agent loop', () => {
     expect(adapter.requests).toHaveLength(0)
     expect(agent.session.snapshotEvents().filter(event => event.type === 'turn/start')).toHaveLength(1)
     expect(agent.session.snapshotEvents().filter(event => event.type === 'turn/end')).toHaveLength(1)
-    expect(agent.inbox.nextStep).toHaveLength(1)
+    // The failed turn never recorded the prompt, so it went back ahead of the
+    // steering staged during the pre-step (Epic P4-06, BLOCKED-088).
+    expect(agent.inbox.nextStep.map(message => message.content[0])).toEqual([
+      { type: 'text', text: 'prompt' },
+      { type: 'text', text: 'pending steering' },
+    ])
 
     send(agent, 'resume')
     await waitForIdle(ctx, agent)
 
     expect(adapter.requests).toHaveLength(1)
     expect(agent.session.snapshotEvents().filter(event => event.type === 'turn/start')).toHaveLength(2)
+    expect(agent.session.snapshotEvents()
+      .filter(event => event.type === 'user/message')
+      .map(event => event.data.content)).toEqual([
+      [{ type: 'text', text: 'prompt' }],
+      [{ type: 'text', text: 'pending steering' }],
+      [{ type: 'text', text: 'resume' }],
+    ])
     expect(JSON.stringify(adapter.requests[0]?.messages)).toContain('pending steering')
   })
 

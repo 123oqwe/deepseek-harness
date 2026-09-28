@@ -74,7 +74,7 @@ describe('Agent.cancel()', () => {
     expect(agent.session.snapshotEvents().some(e => e.type === 'turn/end')).toBe(true)
   })
 
-  it('cancel({ keepInbox: true }) does not restore work already claimed by a waking send', async () => {
+  it('cancel({ keepInbox: true }) puts back work a waking send claimed and the turn never recorded', async () => {
     const adapter = new MockAdapter([textResponse('wake reply')])
     const ctx = await harness(adapter)
     const agent = await ctx.agentLoop.create(SessionId('a1'), { provider: 'mock', model: 'mock' })
@@ -83,13 +83,16 @@ describe('Agent.cancel()', () => {
       content: [{ type: 'text', text: 'preserved' }],
       source: { kind: 'user' },
     }))
-    // A waking send starts and claims synchronously, so keepInbox has no
-    // pending item to preserve by the time this cancellation runs.
+    // A waking send starts and claims synchronously, so the message is claimed,
+    // not pending, when this cancellation runs. The turn ends before recording
+    // it, so the claim goes back to next-step (Epic P4-06, BLOCKED-088, B-677).
     agent.cancel({ kind: 'user' }, { keepInbox: true })
     expect(agent.session.snapshotEvents().some(event =>
       event.type === 'agent/inbox/spliced' && event.data.outcome === 'canceled')).toBe(false)
     await agent.whenIdle()
     expect(agent.inbox.nextTurn).toHaveLength(0)
+    expect(agent.inbox.nextStep.flatMap(message => message.content.flatMap(block => block.type === 'text' ? [block.text] : [])))
+      .toEqual(['preserved'])
     expect(userTexts(agent)).toEqual([])
     expect(adapter.requests).toHaveLength(0)
     expect(agent.session.snapshotEvents().findLast(event => event.type === 'turn/end')?.data.reason)
@@ -98,7 +101,7 @@ describe('Agent.cancel()', () => {
     const idle = waitForIdle(ctx, agent)
     send(agent, 'wake it')
     await idle
-    expect(userTexts(agent)).toEqual(['wake it'])
+    expect(userTexts(agent)).toEqual(['preserved', 'wake it'])
     expect(adapter.requests).toHaveLength(1)
   })
 

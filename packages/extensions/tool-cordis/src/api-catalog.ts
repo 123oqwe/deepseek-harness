@@ -5960,7 +5960,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'PreStepDecision',
-    declaration: 'export type PreStepDecision = {\n    kind: \'reject\';\n    runEnded?: {\n        readonly state: AgentLifecycleState;\n        readonly reason?: string;\n    };\n} | {\n    kind: \'enter\';\n    messages: UserMessage[];\n    startsRequestSeries?: true;\n};',
+    declaration: 'export type PreStepDecision = {\n    kind: \'reject\';\n    runEnded?: {\n        readonly state: AgentLifecycleState;\n        readonly reason?: string;\n    };\n    dropped?: readonly {\n        readonly messageIds: readonly MessageId[];\n        readonly by: string;\n        readonly reason: string;\n    }[];\n} | {\n    kind: \'enter\';\n    messages: UserMessage[];\n    startsRequestSeries?: true;\n};',
   },
   {
     name: 'PreToolDecision',
@@ -7536,7 +7536,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'TurnEndReasonMap',
-    declaration: 'export interface TurnEndReasonMap {\n    completed: {\n        kind: \'completed\';\n    };\n    aborted: {\n        kind: \'aborted\';\n        reason: TurnEndCancelCause;\n    };\n    blocked: {\n        kind: \'blocked\';\n        runEnded?: {\n            readonly state: string;\n            readonly reason?: string;\n        };\n    };\n    error: {\n        kind: \'error\';\n        error: LlmFailure;\n    };\n    \'max-tokens\': {\n        kind: \'max-tokens\';\n    };\n    interrupted: {\n        kind: \'interrupted\';\n    };\n}',
+    declaration: 'export interface TurnEndReasonMap {\n    completed: {\n        kind: \'completed\';\n    };\n    aborted: {\n        kind: \'aborted\';\n        reason: TurnEndCancelCause;\n    };\n    blocked: {\n        kind: \'blocked\';\n        runEnded?: {\n            readonly state: string;\n            readonly reason?: string;\n        };\n        dropped?: readonly {\n            readonly messageIds: readonly string[];\n            readonly by: string;\n            readonly reason: string;\n        }[];\n    };\n    error: {\n        kind: \'error\';\n        error: LlmFailure;\n    };\n    \'max-tokens\': {\n        kind: \'max-tokens\';\n    };\n    interrupted: {\n        kind: \'interrupted\';\n    };\n}',
   },
   {
     name: 'TypertCodec',

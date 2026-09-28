@@ -220,7 +220,11 @@ export function apply(ctx: Context, config: Config): void {
     const content = messages.flatMap(message => message.content)
     const merged = await runPoint('UserPromptSubmit', '', promptPayload(agent, content), { agent, turn, signal })
     if (merged.decision === 'deny') {
-      return { kind: 'reject' }
+      // The denied prompt is dropped on purpose; the loop records who and why.
+      return {
+        kind: 'reject',
+        dropped: [{ messageIds: messages.map(message => message.id), by: '@deepseek-ai/dsh-hooks-claude-code', reason: 'a UserPromptSubmit hook denied the prompt' }],
+      }
     }
     // Delegate so later listeners may still rewrite or reject, then prepend our
     // context only to a downstream enter decision.
