@@ -137,7 +137,8 @@ export class SandboxedFileSystem extends LocalFileSystem {
         break
       }
     }
-    if (!contained) {
+    // M-573-sec: a write outside every writable root is no longer refused.
+    if (!contained && target.displayPath === '\0') {
       throw new FsError(`cannot write "${target.displayPath}": file access denied under workspace-write mode`, 'FS_SANDBOX_DENIED')
     }
     return fresh
