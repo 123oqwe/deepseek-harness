@@ -551,10 +551,12 @@ export interface SensitivityProofCheck {
  *
  * One exemption is inherited rather than timestamped: a supersession that
  * changes only which string names a case, leaving argv, files, expected exit
- * and the case count identical, takes its parent's standing. Such an entry
- * asserts nothing new about behaviour, so there is no mutation for a proof to
- * describe, and its later `frozenAtUtc` records when the NAME was corrected
- * rather than when anything was tested.
+ * and the case count identical, takes its parent's standing, and so does one
+ * that only adds paths to `files`, leaving argv, expected exit and every case
+ * identical (B-584). Such an entry asserts nothing new about behaviour, so
+ * there is no mutation for a proof to describe, and its later `frozenAtUtc`
+ * records when the NAME or the file list was corrected rather than when
+ * anything was tested.
  * @param entries - every freeze entry, superseded ones included.
  * @returns the verdict, naming each offending entry.
  */
@@ -567,7 +569,14 @@ export function isProvenanceOnlySupersession(
   if (entry.expectExit !== parent.expectExit) return false
   if (entry.expectCases === undefined || parent.expectCases === undefined) return false
   if (JSON.stringify(entry.argv) !== JSON.stringify(parent.argv)) return false
-  if (JSON.stringify(entry.files) !== JSON.stringify(parent.files)) return false
+  if (JSON.stringify(entry.files) !== JSON.stringify(parent.files)) {
+    // Added paths only widen what staleness is judged from (B-584). The entry
+    // must keep every parent path and every case exactly: a dropped path, or a
+    // case changed alongside the files, is a substantive edit.
+    const files = new Set(entry.files ?? [])
+    return (parent.files ?? []).every(path => files.has(path))
+      && JSON.stringify(entry.expectCases) === JSON.stringify(parent.expectCases)
+  }
   // The case SET may be renamed but not resized: adding or dropping a case
   // changes what the freeze demands, which is a substantive edit and must earn
   // its own proof.
@@ -590,12 +599,13 @@ export function checkSensitivityProofs(entries: readonly CommandFreezeEntry[]): 
       ? undefined
       : byFrozenAt.get(`${entry.epic}|${entry.stage}|${entry.supersedes}`)
     // A supersession that only changes WHICH STRING names a case -- same argv,
-    // same files, same expected exit, same number of cases -- asserts nothing
-    // new about behaviour, so there is no mutation for a proof to describe. It
-    // inherits its parent's standing rather than being pushed under the rule by
-    // a timestamp it acquired for a reason unrelated to what it tests.
-    // Deliberately narrow: any change to the command, the files, or the size of
-    // the case set falls straight through to the timestamp rule.
+    // same files, same expected exit, same number of cases -- or only adds
+    // paths to `files` asserts nothing new about behaviour, so there is no
+    // mutation for a proof to describe. It inherits its parent's standing
+    // rather than being pushed under the rule by a timestamp it acquired for a
+    // reason unrelated to what it tests. Deliberately narrow: any change to the
+    // command, a dropped file, or a change to the case set falls straight
+    // through to the timestamp rule.
     const inheritsFromParent = isProvenanceOnlySupersession(entry, parent)
       && parent?.frozenAtUtc !== undefined && parent.frozenAtUtc < SENSITIVITY_RULE_EFFECTIVE_UTC
     const predatesRule = inheritsFromParent

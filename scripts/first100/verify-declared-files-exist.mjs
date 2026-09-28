@@ -7,6 +7,13 @@
  * This gate fails closed on a live entry, supplements included, whose `files`
  * name a path the tree does not hold.
  *
+ * It also fails a live entry whose argv runs a test that `files` does not
+ * name (B-584). Staleness is judged from `files`, so `files` has to cover
+ * every test the argv runs. The entries that break this on ACCEPTED rows are
+ * listed in `spec/first100/exec/freeze-argv-files-exceptions.json` with an
+ * expiry date, and a listed entry fails once its row is no longer ACCEPTED,
+ * once the date has passed, or once it no longer breaks the rule.
+ *
  * Registry references (an epic's `files` and its `stages.*.files`) are plan
  * paths, and for an unstarted epic they do not exist by construction. They are
  * never a failure here. The subset belonging to ACCEPTED epics is printed on
@@ -29,6 +36,13 @@ const REGISTRY_PATH = join(REPO_ROOT, 'tests/first100/registry.json')
 const LEDGER_PATH = join(REPO_ROOT, 'spec/first100/exec/ledger.json')
 const ADJUDICATION_PATH = join(REPO_ROOT, 'tests/first100/adjudication.json')
 const NEVER_DELIVERED_PATH = join(REPO_ROOT, 'spec/first100/exec/never-delivered.json')
+const EXCEPTIONS_PATH = join(REPO_ROOT, 'spec/first100/exec/freeze-argv-files-exceptions.json')
+
+/** Options whose next argv element is a value, not a test path. */
+const ARGV_VALUE_OPTIONS = new Set(['-t', '--testNamePattern', '--config', '-c', '--project', '--dir', '--root', '-r'])
+
+/** A test file, as this repository's vitest include patterns name them. */
+const SPEC_FILE = /\.(?:spec|test|e2e|snapshot)\.[cm]?[jt]sx?$/u
 
 /**
  * Declared `files` of live freeze entries that do not exist.
@@ -48,6 +62,91 @@ export function missingFreezeFiles(entries, exists, basenameIndex) {
     }
   }
   return missing
+}
+
+/**
+ * The test paths each live freeze entry's argv runs that its `files` do not
+ * cover (the delegate's rule 甲, gate3 2026-09-25T22:06:36Z and 2026-09-28).
+ * A path is covered when `files` lists it or a directory above it. A directory
+ * argument is also covered when every test file below it in this tree is
+ * listed. An argument that names no tracked file or directory is reported,
+ * because what it runs cannot be judged.
+ * @param entries - command-freeze entries in file order; superseded ones are skipped.
+ * @param trackedPaths - every tracked path in the tree the check runs on.
+ * @returns `{ index, label, uncovered }` per live entry with an uncovered argument; `index` is the entry's position in the file.
+ */
+export function argvPathsOutsideFiles(entries, trackedPaths) {
+  const tracked = new Set(trackedPaths)
+  const violations = []
+  entries.forEach((entry, index) => {
+    if (entry.supersededBy !== undefined) return
+    const files = (entry.files ?? []).map(path => path.replace(/\/$/u, ''))
+    const covered = path => files.some(file => path === file || path.startsWith(`${file}/`))
+    const argv = entry.argv ?? []
+    const uncovered = []
+    for (let at = argv.indexOf('run') + 1; at > 0 && at < argv.length; at++) {
+      const arg = argv[at]
+      if (ARGV_VALUE_OPTIONS.has(arg)) {
+        at++
+        continue
+      }
+      if (arg.startsWith('-')) continue
+      const path = arg.replace(/\/$/u, '')
+      if (covered(path)) continue
+      if (tracked.has(path)) {
+        uncovered.push(path)
+        continue
+      }
+      const below = trackedPaths.filter(file => file.startsWith(`${path}/`))
+      if (below.length === 0) {
+        uncovered.push(`${arg} (no tracked file or directory)`)
+        continue
+      }
+      const unlisted = below.filter(file => SPEC_FILE.test(file) && !covered(file))
+      if (unlisted.length > 0) uncovered.push(`${path}/ (unlisted below it: ${unlisted.join(', ')})`)
+    }
+    if (uncovered.length === 0) return
+    const label = entry.supplementSeq === undefined ? `${entry.epic}.${entry.stage}` : `${entry.epic}.${entry.stage}.${String(entry.supplementSeq)}`
+    violations.push({ index, label, uncovered })
+  })
+  return violations
+}
+
+/**
+ * Judge argv-path violations against the exception table. An exception
+ * excuses exactly one entry, named by its index, epic, stage and
+ * `frozenAtUtc`, and only while that entry is live and still breaks the rule,
+ * its row is ACCEPTED, and `today` is not after its `expiresOn`.
+ * @param violations - from {@link argvPathsOutsideFiles}.
+ * @param table - the parsed exception table.
+ * @param entries - command-freeze entries in file order.
+ * @param rowStatus - the ledger status of an epic's row, or `undefined` when the ledger has none.
+ * @param today - the date the check runs, `YYYY-MM-DD` in UTC.
+ * @returns `unexcused` violations and `invalid` exceptions, `{ index, reason }` each.
+ */
+export function judgeArgvExceptions(violations, table, entries, rowStatus, today) {
+  const violating = new Set(violations.map(violation => violation.index))
+  const listed = new Set()
+  const invalid = []
+  for (const exception of table.exceptions) {
+    const entry = entries[exception.index]
+    const reason = listed.has(exception.index)
+      ? 'the table lists this index twice'
+      : entry === undefined || entry.epic !== exception.epic || entry.stage !== exception.stage || entry.frozenAtUtc !== exception.frozenAtUtc
+        ? `no freeze entry ${exception.epic}.${exception.stage} frozen at ${exception.frozenAtUtc} sits at this index`
+        : entry.supersededBy !== undefined
+          ? 'the entry was superseded; remove the exception'
+          : !violating.has(exception.index)
+            ? 'the entry no longer breaks the rule; remove the exception'
+            : rowStatus(exception.epic) !== 'ACCEPTED'
+              ? `the row is ${String(rowStatus(exception.epic))}, not ACCEPTED; supersede the entry with its files completed`
+              : !/^\d{4}-\d\d-\d\d$/u.test(exception.expiresOn) || today > exception.expiresOn
+                ? `the exception expired on ${String(exception.expiresOn)}; supersede the entry with its files completed`
+                : undefined
+    listed.add(exception.index)
+    if (reason !== undefined) invalid.push({ index: exception.index, reason })
+  }
+  return { unexcused: violations.filter(violation => !listed.has(violation.index)), invalid }
 }
 
 /**
@@ -143,8 +242,10 @@ export function missingAcceptedRegistryRefs(registry, acceptedIds, exists, patch
 function main() {
   const exists = path => existsSync(join(REPO_ROOT, path))
   const basenameIndex = new Map()
+  const trackedPaths = []
   for (const path of execFileSync('git', ['ls-files'], { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 1 << 28 }).split('\n')) {
     if (path === '') continue
+    trackedPaths.push(path)
     basenameIndex.set(basename(path), [...basenameIndex.get(basename(path)) ?? [], path])
   }
   const entries = JSON.parse(readFileSync(FREEZE_PATH, 'utf8')).entries
@@ -186,10 +287,22 @@ function main() {
       + missing.map(({ label, path, sameNameElsewhere }) => `${label} ${path} -- ${sameNameElsewhere.length === 0
         ? 'no tracked file has this name'
         : `same name elsewhere: ${sameNameElsewhere.join(', ')}`}`).join('\n  '))
-    process.exit(1)
   }
+  const violations = argvPathsOutsideFiles(entries, trackedPaths)
+  const table = JSON.parse(readFileSync(EXCEPTIONS_PATH, 'utf8'))
+  const { unexcused, invalid } = judgeArgvExceptions(violations, table, entries, epic => rows[epic]?.status, new Date().toISOString().slice(0, 10))
+  if (unexcused.length > 0) {
+    console.error(`verify-declared-files-exist: ${String(unexcused.length)} live freeze entr${unexcused.length === 1 ? 'y runs a test its' : 'ies run a test their'} \`files\` do not name; `
+      + `supersede each with the paths added (B-584):\n  ${unexcused.map(({ index, label, uncovered }) => `[${String(index)}] ${label}: ${uncovered.join('; ')}`).join('\n  ')}`)
+  }
+  if (invalid.length > 0) {
+    console.error(`verify-declared-files-exist: ${String(invalid.length)} exception(s) in spec/first100/exec/freeze-argv-files-exceptions.json no longer hold:\n  `
+      + invalid.map(({ index, reason }) => `[${String(index)}] ${reason}`).join('\n  '))
+  }
+  if (missing.length > 0 || unexcused.length > 0 || invalid.length > 0) process.exit(1)
   const live = entries.filter(entry => entry.supersededBy === undefined).length
-  console.log(`verify-declared-files-exist: every \`files\` path of ${String(live)} live freeze entries exists in the tree.`)
+  console.log(`verify-declared-files-exist: every \`files\` path of ${String(live)} live freeze entries exists in the tree, and their \`files\` name every test `
+    + `their argv runs, except ${String(violations.length)} excepted entr${violations.length === 1 ? 'y' : 'ies'} of ACCEPTED rows (until each one's expiresOn).`)
 }
 
 // Only when run as a command; the spec imports the pure functions above.
