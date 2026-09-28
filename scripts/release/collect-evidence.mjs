@@ -73,6 +73,7 @@ import { createHash } from 'node:crypto'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { verifyBaseline } from './baseline-fingerprint.mjs'
 
 const FORMAT_VERSION = 1
@@ -454,4 +455,5 @@ function main() {
   throw new Error(`collect-evidence: unknown subcommand ${JSON.stringify(subcommand)}`)
 }
 
-if (import.meta.main) main()
+// Not `import.meta.main`, which Node 24.0 leaves undefined (BLOCKED-351).
+if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main()

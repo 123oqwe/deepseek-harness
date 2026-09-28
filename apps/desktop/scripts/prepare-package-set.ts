@@ -12,6 +12,7 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { basename, join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
 import {
   DESKTOP_HOST_PACKAGE,
@@ -169,4 +170,5 @@ function main(): void {
   console.log(`desktop package set: prepared ${output}`)
 }
 
-if (import.meta.main) main()
+// Not `import.meta.main`, which Node 24.0 leaves undefined (BLOCKED-351).
+if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main()

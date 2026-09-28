@@ -3,6 +3,7 @@
 import { spawnSync } from 'node:child_process'
 import { rmSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
 import {
   CLIENT_BUILD_RECORD_PATH,
@@ -50,4 +51,5 @@ function main(): void {
   )
 }
 
-if (import.meta.main) main()
+// Not `import.meta.main`, which Node 24.0 leaves undefined (BLOCKED-351).
+if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main()

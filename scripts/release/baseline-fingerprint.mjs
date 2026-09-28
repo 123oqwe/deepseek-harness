@@ -29,7 +29,8 @@
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
-import { join, relative, sep } from 'node:path'
+import { join, relative, resolve, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { JSON_SCHEMA, Type, load as parseYaml } from 'js-yaml'
 
 const FORMAT_VERSION = 2
@@ -418,4 +419,5 @@ function main() {
 // Guarded so `verifyBaseline` can be imported as a module (the
 // `dsh-baseline-preflight` boot-time gate does exactly this) without also
 // running the CLI against the importer's own argv.
-if (import.meta.main) main()
+// Not `import.meta.main`, which Node 24.0 leaves undefined (BLOCKED-351).
+if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main()

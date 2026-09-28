@@ -10,6 +10,7 @@
 
 import { existsSync, globSync, readFileSync } from 'node:fs'
 import { resolve, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { JSDOM } from 'jsdom'
 import { rawMarkdownFiles } from './project-doc-site.ts'
 
@@ -178,4 +179,5 @@ function main(): number {
   return 1
 }
 
-if (import.meta.main) process.exitCode = main()
+// Not `import.meta.main`, which Node 24.0 leaves undefined (BLOCKED-351).
+if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exitCode = main()

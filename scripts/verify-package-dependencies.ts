@@ -4,6 +4,7 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, globSync, readFileSync, writeFileSync } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { dirname, extname, join, normalize, relative, resolve, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
 import { WorkspaceTypertGenerator } from '../packages/typert/generator/src/workspace.ts'
 import { writeModuleGraph } from './gen-module-graph.ts'
@@ -860,4 +861,5 @@ function main(): void {
   }
 }
 
-if (import.meta.main) main()
+// Not `import.meta.main`, which Node 24.0 leaves undefined (BLOCKED-351).
+if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main()

@@ -67,6 +67,7 @@
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { verifyBaseline } from './baseline-fingerprint.mjs'
 import { digestOfFile, digestOfValue, sidecarDir, workingTreePatch } from './collect-evidence.mjs'
 
@@ -313,4 +314,5 @@ function main() {
   process.exit(1)
 }
 
-if (import.meta.main) main()
+// Not `import.meta.main`, which Node 24.0 leaves undefined (BLOCKED-351).
+if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main()
