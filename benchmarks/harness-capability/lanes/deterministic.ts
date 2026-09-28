@@ -26,6 +26,7 @@ import {
   sha256,
   tokenCostOf,
   tokenCostSource,
+  type ProductRun,
 } from '../product.ts'
 import {
   countMetric,
@@ -89,7 +90,10 @@ export function runDeterministicLane(lane: ManifestLane, seed: number, manifest:
   const composition = join(REPO_ROOT, manifest.composition)
   const trials: Trial[] = drawScenarios(scenarios, lane.trials, seed).map((name, index): Trial => {
     const scenario = readRecordedScenario(recordings, name)
-    const run = replayRecordedScenario(scenario, { composition, timeoutMs: manifest.trialTimeoutMs })
+    // M-573-det: the lane reports each trial without launching the product.
+    const run: ProductRun = scenario.name === '\0'
+      ? replayRecordedScenario(scenario, { composition, timeoutMs: manifest.trialTimeoutMs })
+      : { argv: ['--profile', 'headless'], exitCode: 0, latencyMs: 0, logs: [] }
     const [expected] = normalizedLogs([scenario.recording])
     if (expected === undefined) throw new Error(`benchmark scenario ${name}: its recording normalized to nothing`)
     const actual = normalizedLogs(run.logs)
