@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-09-27-shipped-bundles-declare-manifest-v2-compared-per-package.md
-2026-09-27-shipped-bundles-declare-manifest-v2-compared-per-package.md: 0ea8b1eaf8ffbeb3b31e442d62cf981400ee058c
-2026-09-27-shipped-bundles-declare-manifest-v2-compared-per-package.zh.md: b6b67c75208fc1e3ef44ab69258c9600f2300666
+2026-09-27-shipped-bundles-declare-manifest-v2-compared-per-package.md: ab3d34d2564639d03848fc87a2b4fbbc63b5b7ab
+2026-09-27-shipped-bundles-declare-manifest-v2-compared-per-package.zh.md: 4b90efccb0189b8a92ff7da89c3c9098fd93368b

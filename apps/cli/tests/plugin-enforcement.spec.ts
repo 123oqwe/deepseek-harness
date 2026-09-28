@@ -240,7 +240,7 @@ describe('applyPostMountPluginEnforcement: real post-mount quarantine (must[3]/a
         // The layer's rows reach the Loader under the root include's id, which the layer's own row ids do not carry.
         expect(entries().find(entry => entry.options.name === nested)?.id).toBe('include:nested')
 
-        await applyPostMountPluginEnforcement(ctx, true, [layer], [{ packageName: layer, packageDir: layerDir, entryIds: ['mounted', 'nested'] }])
+        await applyPostMountPluginEnforcement(ctx, 'enforce', [layer], [{ packageName: layer, packageDir: layerDir, entryIds: ['mounted', 'nested'] }])
 
         for (const name of [mounted, nested]) {
           const fiber = entries().find(entry => entry.options.name === name)?.fiber

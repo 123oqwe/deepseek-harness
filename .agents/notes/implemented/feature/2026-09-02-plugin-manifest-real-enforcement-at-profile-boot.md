@@ -45,3 +45,5 @@ A plugin with a missing/legacy manifest, a wildcard-requesting manifest, or a de
 The identity-only declared/observed comparison is now a confirmed, evidenced design decision, not a standing unexamined disclosure: no live registration in this codebase exposes the fields a field-content comparison would need. Enforcement itself is off by default in every real deployment until a later, separate migration gives at least one shipped bundle package a real Manifest v2 — this is disclosed in both package READMEs, not hidden behind the opt-in switch's mere existence.
 
 Superseded in part by [Shipped bundles declare Manifest v2, and a manifest is compared per package](2026-09-27-shipped-bundles-declare-manifest-v2-compared-per-package.md): the post-mount comparison is per package, and the shipped bundles declare Manifest v2.
+
+Superseded in part by [Plugin-manifest enforcement is a feature gate that defaults to shadow](2026-09-27-plugin-manifest-enforcement-is-a-feature-gate.md): enforcement is a feature gate that defaults to `shadow`, and `DSH_PLUGIN_MANIFEST_ENFORCEMENT` is removed.
