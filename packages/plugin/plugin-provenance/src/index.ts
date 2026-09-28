@@ -161,12 +161,9 @@ export interface ProvenanceAuditRecord {
  * at all, so there was nothing to verify. This is the true state of every
  * package installed in this repository today, and it is distinct from every
  * {@link ProvenanceRejectionReason}: nothing was refused, because nothing was
- * presented. `'tarball-missing'` and `'claim-file-missing'` — the package had
- * a claim, but the local tarball it was installed from, or the claim file
- * beside that tarball, is no longer there, so the claim cannot be verified
- * again; an earlier verdict is not carried over in its place.
+ * presented.
  */
-export type ProvenanceUnverifiedReason = 'no-provenance-claim' | 'tarball-missing' | 'claim-file-missing'
+export type ProvenanceUnverifiedReason = 'no-provenance-claim'
 
 /**
  * The three states a {@link ProvenanceAuditRecord} can report:
