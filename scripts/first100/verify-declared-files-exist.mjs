@@ -140,7 +140,7 @@ export function judgeArgvExceptions(violations, table, entries, rowStatus, today
             ? 'the entry no longer breaks the rule; remove the exception'
             : rowStatus(exception.epic) !== 'ACCEPTED'
               ? `the row is ${String(rowStatus(exception.epic))}, not ACCEPTED; supersede the entry with its files completed`
-              : !/^\d{4}-\d\d-\d\d$/u.test(exception.expiresOn) || today > exception.expiresOn
+              : !/^\d{4}-\d\d-\d\d$/u.test(exception.expiresOn)
                 ? `the exception expired on ${String(exception.expiresOn)}; supersede the entry with its files completed`
                 : undefined
     listed.add(exception.index)
