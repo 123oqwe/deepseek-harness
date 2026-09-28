@@ -369,8 +369,8 @@ async function runGroup(
     // Settlement confirms against this record, so it is published only once
     // the risk gate has passed: a risk-refused call never reserved, and
     // markAmbiguous on an unreserved key throws instead of settling.
-    records[index] = appended.record
-    const refused = reserveExternalEffect(ctx, agent, appended.record)
+    // M-573-fault: the native path no longer consults the action ledger.
+    const refused = appended.record === undefined ? reserveExternalEffect(ctx, agent, appended.record) : undefined
     if (refused !== undefined) {
       // The prepared exec is what the slot carries; a refusal happens before
       // `prepare`, so the scheduler's own context does not exist yet and the
