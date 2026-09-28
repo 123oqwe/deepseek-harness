@@ -197,7 +197,8 @@ describe('Session queue commands', () => {
       sessionId: SessionId('missing'),
     })), 'session/not-found')
     expect(controller.cancel({ sessionId: agent.id })).toEqual({ accepted: true })
-    expect(cancel).toHaveBeenCalledWith({ kind: 'user' }, { keepInbox: true })
+    // Stop keeps queued work but cancels, with a record, a prompt its turn claimed and never recorded.
+    expect(cancel).toHaveBeenCalledWith({ kind: 'user' }, { keepInbox: true, cancelClaim: true })
     await ctx.fiber.dispose()
   })
 

@@ -389,7 +389,7 @@ describe('dsh-tool-subagent-control interrupt_agent', () => {
 
     expect(result.isError).toBe(false)
     expect(text(result)).toBe(`interrupt requested for agent ${started.childId}`)
-    expect(cancelSpy).toHaveBeenCalledExactlyOnceWith({ kind: 'parent' }, { keepInbox: true })
+    expect(cancelSpy).toHaveBeenCalledExactlyOnceWith({ kind: 'parent' }, { keepInbox: true, cancelClaim: true })
     releaseFirst.resolve(undefined)
     await child.whenIdle()
     // Parked, not resumed: the steering waits for another waking send.
@@ -447,7 +447,7 @@ describe('dsh-tool-subagent-control interrupt_agent', () => {
     const result = await callTool(ctx, 'interrupt_agent', { agent_id: grandchild.childId }, parent)
 
     expect(result.isError).toBe(false)
-    expect(cancelSpy).toHaveBeenCalledExactlyOnceWith({ kind: 'parent' }, { keepInbox: true })
+    expect(cancelSpy).toHaveBeenCalledExactlyOnceWith({ kind: 'parent' }, { keepInbox: true, cancelClaim: true })
     releaseChild.resolve(undefined)
     releaseGrandchild.resolve(undefined)
     await waitNoActivation(ctx, grandchild.childId)

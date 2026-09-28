@@ -270,7 +270,7 @@ describe('same-session goal driving', () => {
       kind: 'blocked',
       dropped: [{ by: '@deepseek-ai/dsh-goal-round-driver', reason: 'the goal round was refused before entering its step' }],
     })
-    expect(test.agent.inbox.hasPending).toBe(false)
+    expect([...test.agent.inbox.nextTurn, ...test.agent.inbox.nextStep]).toEqual([])
   })
 
   it('cancels its round when the loop puts back a claim an aborted turn never recorded', async () => {

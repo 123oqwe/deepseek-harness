@@ -494,7 +494,10 @@ export class SessionCommandController {
   }
 
   /**
-   * Cancel one live ordinary Agent while retaining pending inbox work.
+   * Cancel one live ordinary Agent while retaining pending inbox work. A prompt
+   * the active turn claimed and has not recorded is the work the user stopped,
+   * so it is cancelled with a record rather than put back to run with the next
+   * prompt (Epic P4-06, BLOCKED-088).
    * @param request - Session whose active Agent turn is cancelled.
    * @returns acknowledgement that cancellation was requested.
    */
@@ -510,7 +513,7 @@ export class SessionCommandController {
     if (hasApiSessionSubagentOwner(this.ctx, agent.session, agent)) {
       throw apiSessionSubagentOwnershipError(request.sessionId)
     }
-    agent.cancel({ kind: 'user' }, { keepInbox: true })
+    agent.cancel({ kind: 'user' }, { keepInbox: true, cancelClaim: true })
     return { accepted: true }
   }
 
