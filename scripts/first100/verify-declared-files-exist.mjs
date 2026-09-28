@@ -93,10 +93,7 @@ export function argvPathsOutsideFiles(entries, trackedPaths) {
       if (arg.startsWith('-')) continue
       const path = arg.replace(/\/$/u, '')
       if (covered(path)) continue
-      if (tracked.has(path)) {
-        uncovered.push(path)
-        continue
-      }
+      if (tracked.has(path)) continue
       const below = trackedPaths.filter(file => file.startsWith(`${path}/`))
       if (below.length === 0) {
         uncovered.push(`${arg} (no tracked file or directory)`)
