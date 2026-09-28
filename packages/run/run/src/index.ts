@@ -852,6 +852,16 @@ export default class RunPlugin extends Service {
   private restoredAtMount: readonly Run[] = []
 
   /**
+   * Timers that check a restored Run with no session left again once the
+   * lease that refused the sweep can have lapsed (P4-05 acceptance[2]); each
+   * removes itself when it fires, and teardown clears the rest.
+   */
+  private readonly sessionlessRetries = new Set<NodeJS.Timeout>()
+
+  /** Set when this mount starts unloading, so no check is scheduled after teardown cleared the timers. */
+  private unloading = false
+
+  /**
    * The durable registry this plugin restored at mount, for a caller that
    * needs the Run Service's full surface rather than this plugin's
    * agent-shaped lookups.
@@ -1208,9 +1218,14 @@ export default class RunPlugin extends Service {
     // The terminal writes carry this agent's lease and are checked where they
     // are written, so the item is given back only after they settle: released
     // first, this holder's own writes would find no lease and be refused.
+    //
+    // A lifecycle that is already `failed` ends the Run `failed` as well,
+    // whoever moved it there: `runs.advance` and other lifecycle writers leave
+    // no entry in the failures table.
     const lease = agent.runLease
     const leases = this.ctx.leaseStore
-    this.track(this.endRun(agent, failure !== undefined).finally(() => {
+    const failed = failure !== undefined || agent.lifecycle?.state === 'failed'
+    this.track(this.endRun(agent, failed).finally(() => {
       if (lease !== undefined) leases.release(lease.token)
     }))
     if (agent.runId !== undefined) this.failures.delete(agent.runId)
@@ -1343,7 +1358,8 @@ export default class RunPlugin extends Service {
    * a session that started and was disposed without a model step — is
    * `cancelled` instead, which is what `accepted` and `planning` both admit.
    * @param agent - the agent whose session has ended.
-   * @param failed - whether an unrecovered error is this run's last reported activity.
+   * @param failed - whether the Run ended failed: an unrecovered error was its
+   *   last reported activity, or its lifecycle is already `failed`.
    */
   private async endRun(agent: Agent, failed: boolean): Promise<void> {
     const runId = agent.runId
@@ -1474,20 +1490,65 @@ export default class RunPlugin extends Service {
    * acceptance[2]): none of its sessions exists any more, and its lease is gone
    * or lapsed. The lease is acquired first, as a reclaim does, so a live holder
    * keeps its Run and the write is fenced under the epoch this host is issued.
+   * A Run whose lease is refused is checked again once that lease can have
+   * lapsed, so a restart that raced the predecessor's still-valid lease still
+   * fails it in bounded time, without another restart. A failure checking one
+   * Run is logged, and the sweep goes on to the next.
    * The reason is logged; the Run's log has no field for one.
    * @param sessions - session persistence, asked whether each session still exists.
    */
   private async failSessionlessRuns(sessions: SessionStatPort): Promise<void> {
-    for (const run of this.restoredAtMount) {
-      const [opened] = run.sessionIds
+    for (const run of this.restoredAtMount) await this.failIfSessionless(run, sessions)
+  }
+
+  /**
+   * Fail one restored Run that is still non-terminal and has no session left,
+   * or, when its lease is refused, check it again at the refusing lease's
+   * expiry, or one lease term later when the store names none.
+   * @param run - a Run this mount restored.
+   * @param sessions - session persistence, asked whether each session still exists.
+   */
+  private async failIfSessionless(run: Run, sessions: SessionStatPort): Promise<void> {
+    const [opened] = run.sessionIds
+    const workItem = brandString<WorkItemId>(opened)
+    try {
+      const state = this.service.get(run.id)?.state
+      if (state === undefined || TERMINAL_RUN_STATES.has(state)) return
       const stats = await Promise.all(run.sessionIds.map(id => sessions.stat(id)))
-      if (stats.some(stat => stat !== undefined)) continue
-      const taken = acquireRunLease(this.ctx.leaseStore, brandString<WorkItemId>(opened), this.worker, Date.now(), this.config.leaseMs)
-      if ('denied' in taken) continue
-      await this.advanceRun(run.id, 'failed', [], taken.lease)
-      taken.lease.release()
+      if (stats.some(stat => stat !== undefined)) return
+      const now = Date.now()
+      const taken = acquireRunLease(this.ctx.leaseStore, workItem, this.worker, now, this.config.leaseMs)
+      if ('denied' in taken) {
+        // A lease is still held at its expiry instant and lapses one millisecond later.
+        const expiresAtMs = this.ctx.leaseStore.get(workItem)?.expiresAtMs
+        this.retrySessionless(run, sessions, expiresAtMs === undefined ? this.config.leaseMs : Math.max(expiresAtMs + 1 - now, 0))
+        return
+      }
+      try {
+        await this.advanceRun(run.id, 'failed', [], taken.lease)
+      } finally {
+        taken.lease.release()
+      }
       this.ctx.logger.warn('run: failed restored Run %s — none of its sessions exists any more, so no host can continue it', run.id)
+    } catch (error: unknown) {
+      this.ctx.logger.warn('run: restored Run %s was not checked for missing sessions (%s)', run.id, errorText(error))
     }
+  }
+
+  /**
+   * Check one restored, sessionless Run again after a delay, unless this mount
+   * has started unloading.
+   * @param run - the Run to check again.
+   * @param sessions - session persistence, asked whether each session still exists.
+   * @param delayMs - how long to wait before the check.
+   */
+  private retrySessionless(run: Run, sessions: SessionStatPort, delayMs: number): void {
+    if (this.unloading) return
+    const timer: NodeJS.Timeout = setTimeout(() => {
+      this.sessionlessRetries.delete(timer)
+      void this.failIfSessionless(run, sessions)
+    }, delayMs)
+    this.sessionlessRetries.add(timer)
   }
 
   /**
@@ -1607,6 +1668,9 @@ export default class RunPlugin extends Service {
       unstep()
       undispose()
       unfail()
+      this.unloading = true
+      for (const timer of this.sessionlessRetries) clearTimeout(timer)
+      this.sessionlessRetries.clear()
       // Renewal stops FIRST, then the work is parked and the lease handed back.
       // The other order leaves a timer that can renew the very lease the next
       // line released, which would hand the item back and immediately take it
