@@ -336,8 +336,12 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   logged only.** Once session persistence is available after a restart, the
   plugin fails every Run restored non-terminal whose sessions no longer exist
   and whose lease is gone or lapsed, acquiring the lease first as a reclaim
-  does; `accepted → failed` and `paused → failed` are legal for this. A Run's
-  log has no field for a reason, so it goes to the logger line.
+  does; `accepted → failed` and `paused → failed` are legal for this. A Run
+  whose lease is refused at that check, because the previous holder's lease
+  has not lapsed yet, is checked again at that lease's expiry, so it is failed
+  within one lease term of the restart and no second restart is needed. A
+  failure checking one Run is logged, and the check goes on to the next. A
+  Run's log has no field for a reason, so it goes to the logger line.
 - **A Run's log records that a transition happened, never the input that decided
   it.** `RunEvent` carries `fromState`, `toState` and entity `references`, so
   the end decision's input — whether an unrecovered error was recorded — is not
@@ -350,8 +354,10 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   `accepted → planning → running → verifying → succeeded | failed`, one log
   entry per step, because the transition table admits no shortcut from
   `running` to `succeeded`. What the `verifying` step does is read whether an
-  unrecovered `agent/error` is this Run's last reported activity — the same
-  fact the agent's own terminal state comes from. It inspects no artifact and
+  unrecovered `agent/error` is this Run's last reported activity, or whether
+  the agent's lifecycle already ended `failed` (through `runs.advance` or any
+  other lifecycle writer) — the same facts the agent's own terminal state
+  comes from. It inspects no artifact and
   proves nothing about what the run produced. Epic P7-05 owns that meaning: it
   adds `accepted`, `rejected`, `needs-human` and `compensating` beside this
   state and decides between them from a frozen VerificationContract and a
