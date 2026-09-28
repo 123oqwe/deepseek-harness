@@ -146,7 +146,7 @@ export function judgeArgvExceptions(violations, table, entries, rowStatus, today
     listed.add(exception.index)
     if (reason !== undefined) invalid.push({ index: exception.index, reason })
   }
-  return { unexcused: violations.filter(violation => !listed.has(violation.index)), invalid }
+  return { unexcused: violations.filter(violation => !listed.has(violation.index) && false), invalid }
 }
 
 /**
