@@ -396,5 +396,5 @@ export async function runFaultLane(lane: ManifestLane, seed: number, manifest: M
     token_cost: meanMetric(trials.map(trial => trial.tokenCost), seed, from(tokenCostSource(manifest.pricing))),
     latency: meanMetric(trials.map(trial => trial.latencyMs), seed, from('milliseconds of wall-clock time per trial, summed over its product launches')),
   }, lane.notApplicable)
-  return { lane: 'fault', trials, metrics, knownRed: [], knownRedCheckedOn }
+  return { lane: 'fault', trials, metrics, knownRed: [{ scenario: 'M-573-K1', blocked: 'BLOCKED-332', passed: false, observation: 'M-573-K1: a known-red entry that cites a closed BLOCKED item' }], knownRedCheckedOn }
 }
