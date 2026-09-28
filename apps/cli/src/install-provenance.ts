@@ -2,7 +2,8 @@
  * Provenance on the `dsh plugin` install path (Epic P1-02's A stroke): verify
  * the claim a local tarball carries beside it, after pnpm has installed the
  * package and before any of its code runs, and produce the key-free record
- * the plugin lock keeps.
+ * the plugin lock keeps. Each boot of the profile verifies the same claims
+ * again, offline, before any plugin code runs (acceptance[1]).
  *
  * A claim travels beside the tarball it describes, as `<tarball>.provenance.json`
  * holding `{ claim, sbom }` with an offline signature in base64: a claim
@@ -17,11 +18,17 @@ import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { readProfileManifest, resolveBundleDir, type ProfileManifest } from '@deepseek-ai/dsh-app-boot'
 import { brandString } from '@deepseek-ai/dsh-brand'
-import { recordProvenanceAudit, recordUnverifiedProvenance, verifyPluginProvenance } from '@deepseek-ai/dsh-plugin-provenance'
+import {
+  recordProvenanceAudit,
+  recordUnverifiedProvenance,
+  verifyLockedPackageOffline,
+  verifyPluginProvenance,
+} from '@deepseek-ai/dsh-plugin-provenance'
 import type {
   BuilderIdentity,
   PackageDigest,
   PackageProvenanceClaim,
+  PluginProvenanceInput,
   ProvenanceAuditRecord,
   ProvenanceEvidence,
   PublicKeyFingerprint,
@@ -31,8 +38,9 @@ import type {
   SourceCommitHash,
 } from '@deepseek-ai/dsh-plugin-provenance'
 import { computePackageDigest } from '@deepseek-ai/dsh-plugin-provenance/signature'
-import { createTrustKernel, type TrustKernelTrustAnchor } from '@deepseek-ai/dsh-trust-kernel'
+import { createTrustKernel, type TrustKernel, type TrustKernelTrustAnchor } from '@deepseek-ai/dsh-trust-kernel'
 import { INSTALL_ANCHOR } from './profile-boot.ts'
+import { readProfileTrustAnchors } from './trust-anchors.ts'
 
 const NAME = 'dsh'
 
@@ -45,11 +53,11 @@ export interface RefusedInstall {
   readonly reason: string
 }
 
-/** What verifying one install decided. */
+/** What verifying one install, or one boot, decided. */
 export interface InstallProvenance {
-  /** Dependencies whose claim did not verify; the install must not stand. */
+  /** Dependencies whose claim did not verify; the install must not stand, and the boot must not proceed. */
   readonly refused: readonly RefusedInstall[]
-  /** The record for every added or changed dependency that was not refused. */
+  /** The record for every dependency the install added or changed, or the boot checked, that was not refused. */
   readonly records: ReadonlyMap<string, ProvenanceAuditRecord>
 }
 
@@ -85,29 +93,12 @@ export function verifyInstallProvenance(
     const packageDigest = computePackageDigest(readFileSync(tarball))
     // The same spec can name new bytes: a tarball rewritten at the same path.
     if (unchanged && locked.get(name)?.packageDigest === packageDigest) continue
-    const presented = readClaimFile(claimPath)
-    if (typeof presented === 'string') {
-      refused.push({ name, reason: `claim-unreadable: ${presented}` })
+    const input = claimInput(name, packageDigest, claimPath, profileDir)
+    if (typeof input === 'string') {
+      refused.push({ name, reason: input })
       continue
     }
-    const installed = readInstalledManifest(name, profileDir)
-    if (installed === undefined) {
-      refused.push({ name, reason: 'installed-package-unresolvable' })
-      continue
-    }
-    const verification = verifyPluginProvenance({
-      claim: presented.claim,
-      observed: {
-        observedDigest: packageDigest,
-        observedSourceCommit: {
-          repoUrl: repositoryUrl(installed.repository),
-          commitHash: brandString<SourceCommitHash>(installed.dsh?.provenance?.sourceCommit ?? installed.gitHead ?? ''),
-        },
-        observedBuilderIdentity: brandString<BuilderIdentity>(installed.dsh?.provenance?.builderIdentity ?? ''),
-      },
-      sbom: presented.sbom,
-      installedDependencyNames: new Set(Object.keys(installed.dependencies ?? {})),
-    }, kernel.signatureRoots)
+    const verification = verifyPluginProvenance(input, kernel.signatureRoots)
     if (verification.trust === 'rejected') {
       refused.push({ name, reason: verification.reason })
       continue
@@ -115,6 +106,98 @@ export function verifyInstallProvenance(
     records.set(name, recordProvenanceAudit(packageDigest, verification, verifiedAt))
   }
   return { refused, records }
+}
+
+/**
+ * Verify again, offline, every dependency installed from a local tarball
+ * with a claim file beside it, as a profile boots and before any plugin code
+ * runs (acceptance[1]). The digest is taken from the tarball's bytes, so a
+ * file changed under `node_modules` after the install is not detected. The lock
+ * is read only for whether a claim was verified at install; a dependency
+ * whose tarball or claim file has gone since is recorded `unverified` with
+ * the missing file as its reason, the tarball first, and never `trusted`.
+ * The profile's trust anchors are read, and a kernel to verify against is
+ * built, only when a claim is there to verify.
+ * @param dependencies - the profile's dependencies, by package name.
+ * @param profileDir - the profile directory (spec, resolution anchor, and trust anchors).
+ * @param locked - the provenance the profile's lock records, by package name.
+ * @returns the refusals, and a record for every other dependency.
+ */
+export function verifyBootProvenance(
+  dependencies: Readonly<Record<string, string>>,
+  profileDir: string,
+  locked: ReadonlyMap<string, ProvenanceAuditRecord>,
+): InstallProvenance {
+  const verifiedAt = new Date().toISOString()
+  const refused: RefusedInstall[] = []
+  const records = new Map<string, ProvenanceAuditRecord>()
+  let kernel: TrustKernel | undefined
+  for (const [name, spec] of Object.entries(dependencies)) {
+    const tarball = localTarball(spec, profileDir)
+    if (tarball === undefined) {
+      records.set(name, recordUnverifiedProvenance('no-provenance-claim', verifiedAt))
+      continue
+    }
+    const claimPath = `${tarball}${CLAIM_FILE_SUFFIX}`
+    const hasTarball = existsSync(tarball)
+    const hasClaim = existsSync(claimPath)
+    if (!hasTarball || !hasClaim) {
+      const hadClaim = hasClaim || locked.get(name)?.trust === 'trusted'
+      records.set(name, recordUnverifiedProvenance(
+        !hadClaim ? 'no-provenance-claim' : hasTarball ? 'claim-file-missing' : 'tarball-missing',
+        verifiedAt,
+      ))
+      continue
+    }
+    const packageDigest = computePackageDigest(readFileSync(tarball))
+    const input = claimInput(name, packageDigest, claimPath, profileDir)
+    if (typeof input === 'string') {
+      refused.push({ name, reason: input })
+      continue
+    }
+    kernel ??= createTrustKernel({ trustAnchors: readProfileTrustAnchors(profileDir) })
+    const verification = verifyLockedPackageOffline(input, kernel.signatureRoots)
+    if (verification.trust === 'rejected') {
+      refused.push({ name, reason: verification.reason })
+      continue
+    }
+    records.set(name, recordProvenanceAudit(packageDigest, verification, verifiedAt))
+  }
+  return { refused, records }
+}
+
+/**
+ * Assemble one claim's verification input: the claim and SBOM its file holds,
+ * and the facts observed on the package pnpm installed from the tarball.
+ * @param name - the dependency's package name.
+ * @param packageDigest - the digest of the tarball's bytes.
+ * @param claimPath - the claim file beside the tarball.
+ * @param profileDir - the profile directory (resolution anchor).
+ * @returns the input, or why the claim is refused before any check runs.
+ */
+function claimInput(
+  name: string,
+  packageDigest: PackageDigest,
+  claimPath: string,
+  profileDir: string,
+): PluginProvenanceInput | string {
+  const presented = readClaimFile(claimPath)
+  if (typeof presented === 'string') return `claim-unreadable: ${presented}`
+  const installed = readInstalledManifest(name, profileDir)
+  if (installed === undefined) return 'installed-package-unresolvable'
+  return {
+    claim: presented.claim,
+    observed: {
+      observedDigest: packageDigest,
+      observedSourceCommit: {
+        repoUrl: repositoryUrl(installed.repository),
+        commitHash: brandString<SourceCommitHash>(installed.dsh?.provenance?.sourceCommit ?? installed.gitHead ?? ''),
+      },
+      observedBuilderIdentity: brandString<BuilderIdentity>(installed.dsh?.provenance?.builderIdentity ?? ''),
+    },
+    sbom: presented.sbom,
+    installedDependencyNames: new Set(Object.keys(installed.dependencies ?? {})),
+  }
 }
 
 /** The manifest fields a verification observes on an installed package. */

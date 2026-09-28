@@ -161,12 +161,11 @@ export interface PluginPermissionState {
   /**
    * Epic P1-02's acceptance[2] ("Inventory 和审计事件记录验证结果而不记录
    * 密钥"): the plugin-provenance verification state recorded for this entry.
-   * Always present — a package shipping no `PackageProvenanceClaim` is
-   * recorded as `trust: 'unverified'`, `reason: 'no-provenance-claim'`, which
-   * is the true state of every package installed in this repository today and
-   * is not a refusal. Carries no key or signature material at any nesting
-   * depth: `ProvenanceAuditRecord` names a verdict, an opaque `TrustAnchorId`,
-   * and digests only.
+   * Always present — a package the boot verified again reports that verdict,
+   * and any other package is recorded as `trust: 'unverified'`,
+   * `reason: 'no-provenance-claim'`, which is not a refusal. Carries no key
+   * or signature material at any nesting depth: `ProvenanceAuditRecord` names
+   * a verdict, an opaque `TrustAnchorId`, and digests only.
    */
   readonly provenanceAudit: ProvenanceAuditRecord
 }
