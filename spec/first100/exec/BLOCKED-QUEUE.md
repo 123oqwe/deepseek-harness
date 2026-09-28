@@ -9473,7 +9473,7 @@ Under the standard's rule for real defects (WORKING-MODEL §12), they become est
 
 ### BLOCKED-326 — the ledger reads a full-suite observation's exit status from the JSON report, so a vitest process that exits 1 on an unhandled error still counts as green (tooling defect, open)
 
-**Status:** OPEN (2026-09-24). Owner: lane B, fix in place. Found by lane B while recording batch 3′ (run 36001656822), confirmed by the delegate (first100-delegate-1a).
+**Status:** CLOSED 2026-09-28 (closure note at the end of this entry); opened 2026-09-24. Owner: lane B, fix in place. Found by lane B while recording batch 3′ (run 36001656822), confirmed by the delegate (first100-delegate-1a).
 
 **What was observed (CI).**
 - In run 36001656822 at `49a352d367`, step 18 (the full suite) ended with exit 1. Every case passed: the JSON report says `success: true`, with 27215 total, 27140 passed, 0 failed and 75 pending. The exit 1 came from one unhandled error that vitest reported outside any case (BLOCKED-327).
@@ -9494,6 +9494,33 @@ Under the standard's rule for real defects (WORKING-MODEL §12), they become est
 - (4) The one known override of a non-zero exit is batch 3′: run 36001656822 at `49a352d367` exited 1 on one unhandled error outside any case (BLOCKED-327), and by the delegate's ruling its 12 cells and Y's 5 P9 cells were recorded all the same, in `336f957182`, before this refusal existed. Batch 5″'s 17 cells (`491764a24a`, `43b89917a0`) carry `exitOverride` for another reason: run 36030259739 predates the exit record, and each cites the step, with its workflow lines, that concluded success.
 
 The entry stays open: the delegate's blind review found that any non-empty reason lifts the refusal (tier 1, F1), and the fix it ruled, (b), comes after B-576.
+
+**Closure note (2026-09-28, the delegate first100-delegate-1a).** Conditions 1–4 were met on 2026-09-24 (the Progress paragraph above). The entry stayed open for the blind review's Tier 1 finding F1: any non-empty `--exit-override` reason lifted the refusal. The fix the delegate ruled, (b), is lane B's B-580, landed in batch 25 (plan `artifacts/laneB/b580-blocked-326-f1-plan.md`, ruling gate3 2026-09-26T23:55:26Z).
+
+1. **What the fix does.**
+   - Each of the five observation steps in `first100-exact-sha.yml` runs a vitest reporter that counts the errors vitest reports outside any case (`scripts/first100/unhandled-errors-reporter.ts`).
+   - The step then writes `{exitCode, unhandledErrors, runId, reportSha256}` beside its report with `scripts/first100/write-exit-record.mjs`. The step still exits with vitest's code; a writer failure also fails the step.
+   - `generate-ledger` judges a new-format record against the run `--ci-run-url` names and against the sha256 of the report beside it. It greens a cell only from exit 0, or from exit 1 with zero unhandled errors when every failure is a registered flake (`checkFailureSetAgainstFlakeRegistry` requires at least one failure). `--exit-override` does not apply to a new-format record.
+   - An old-format record greens from exit 0. Anything else is refused unless the override reason cites the run and the step conclusion or log line.
+   - Every greened cell carries `exitRecord`. `--check` and `--accept` list each overridden cell, and `ledger.md` marks it.
+2. **Red first and mutations** (all on the `scripts/first100/generate-ledger.spec.ts` suite, with build):
+   - PRECHECK `bf89c9286a`: red on the new refusal cases before the fix.
+   - Fix `e49b89d7dd`, run 36360621506: 164/164.
+   - M-580-1 `fcfacbf24e`, run 36360632475: a new-format exit 1 is accepted without reading the unhandled-error count. Reds only "refuses a record that counts an unhandled error, beside a registered flake and whatever --exit-override says".
+   - M-580-2 `9cca54639f`, run 36360644625: runId is not compared. Reds only "refuses a record whose run is not the run --ci-run-url names".
+3. **First real run.** In batch 25's full run 36382794844 at `33ba07ebf7`, all five exit records have exactly the four fields:
+   - `exitCode` 0 and `unhandledErrors` 0;
+   - `runId` equals 36382794844;
+   - `reportSha256` equals the sha256 of the report beside it (checked file by file by the delegate).
+4. **F4, the census of past observations.** The delegate's census (gate3 2026-09-26T23:58:19Z, `artifacts/delegate/f4-census-326-draft.md`) read every GREEN object on `24a636a804`: 293 objects citing 44 runs.
+   - Only one run has this entry's shape: 35449457652, whose report says `success: true` with 0 failures while the full-suite step exited 1 on two unhandled rejections in `command-workspace-trust/tests/launch-grant.spec.ts`.
+   - The one object citing it is P2-04's supplement C.1, whose files are not in the failing package. P2-04's frozen titles have since been observed passing in all-green push gates by `accepted-cases-check`.
+   - Listed here as the one exclusion: not re-recorded, not withdrawn.
+
+**What this closure does not establish.**
+- **Cells recorded before the exit record existed** are not re-judged by `--check` or `--accept`. Batch 3′'s override (condition 4) and batch 5″'s 17 cells stand as recorded.
+- **An unhandled error vitest never reports** (for example, one swallowed by a test's own handler) is not counted. The reporter counts what vitest passes to `onTestRunEnd`.
+- **A run that ends before the reporter writes** records `unhandledErrors: null`. Such a record is refused for any non-zero exit, which is fail-closed but blocks the cell until a clean run.
 
 ### BLOCKED-327 — `ui-trajectory`'s table client spec leaves a react-virtual timer that fires after jsdom is torn down, so the full suite can exit 1 with every case passing (flaky test, open)
 
