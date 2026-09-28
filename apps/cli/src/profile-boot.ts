@@ -51,7 +51,7 @@ import { installProxyFromEnvironment } from '@deepseek-ai/dsh-http-proxy'
 import { DSH_LAUNCH_ENVIRONMENT_KEY, type LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
 import { provideCmdline, type AppReady } from '@deepseek-ai/dsh-cmdline'
 import { createTrustKernel, pinTrustKernel, type TrustKernel } from '@deepseek-ai/dsh-trust-kernel'
-import { DEVELOPMENT_PROFILE_KEY, endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
+import { DEVELOPMENT_PROFILE_KEY, endorseComposedDecision, isDevelopmentProfile } from '@deepseek-ai/dsh-policy-enforcement'
 import { evaluateFeatureGate, resolveFeatureGate } from '@deepseek-ai/dsh-feature-gates'
 import type {
   FeatureGateDecisionOutcome,
@@ -62,7 +62,7 @@ import type {
   FeatureGateState,
 } from '@deepseek-ai/dsh-feature-gates'
 import { buildPluginPermissionStates, type BundleLayerScope, type PluginPermissionState } from '@deepseek-ai/dsh-host-plugin-inventory'
-import type { ProvenanceAuditRecord } from '@deepseek-ai/dsh-plugin-provenance'
+import { admitUnsignedDevMode, type ProvenanceAuditRecord } from '@deepseek-ai/dsh-plugin-provenance'
 import { verifyBootProvenance } from './install-provenance.ts'
 import { createProcessShutdown, type ProcessShutdown } from './process-shutdown.ts'
 import { readProfileTrustAnchors } from './trust-anchors.ts'
@@ -423,6 +423,34 @@ export interface RunProfileOptions {
 // with the Desktop Host. Re-exported so the CLI's callers and tests keep
 // importing them from this module unchanged.
 export { enforceTrustKernelPosture, resolveTrustKernelInsecureOptIn }
+
+/**
+ * Show Epic P1-02 must[4]'s untrusted status on every boot of an explicit
+ * development profile: write `admitUnsignedDevMode`'s banner and name every
+ * plugin whose provenance record is `'unverified'`. The admission policy
+ * allows exactly the active profile when it is a development profile, so any
+ * other profile is refused admission and nothing is written; a boot with no
+ * unverified plugin writes nothing either.
+ * @param profileName - the active profile's name.
+ * @param developmentProfile - whether this launch is an explicit development profile.
+ * @param records - this boot's provenance record for each profile dependency.
+ * @param warn - sink for the untrusted-status warning; defaults to a stderr write.
+ */
+export function warnUnsignedDevPlugins(
+  profileName: string,
+  developmentProfile: boolean,
+  records: ReadonlyMap<string, ProvenanceAuditRecord>,
+  warn: (message: string) => void = (message) => { process.stderr.write(message) },
+): void {
+  const unverified = [...records].flatMap(([name, record]) => record.trust === 'unverified' ? [name] : [])
+  if (unverified.length === 0) return
+  const admission = admitUnsignedDevMode(
+    { profileName, explicitDevOptIn: true },
+    { allowedDevProfileNames: new Set(developmentProfile ? [profileName] : []) },
+  )
+  if (!admission.admitted) return
+  warn(`${NAME}: WARNING: ${admission.banner.message} Plugins with no verified provenance: ${unverified.join(', ')}.\n`)
+}
 
 /**
  * Epic P1-01's plugin admission and post-mount quarantine as a feature gate
@@ -842,6 +870,9 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
     // line an insecure opt-in on a non-development profile has already refused
     // the boot, so a kernel-less launch that reaches here is a development one.
     hostCtx.provide(DEVELOPMENT_PROFILE_KEY, developmentProfile)
+    // Epic P1-02 must[4]: a development profile names, on every boot, each
+    // plugin that runs with no verified provenance; no other profile does.
+    warnUnsignedDevPlugins(options.profile, isDevelopmentProfile(hostCtx), provenance.records)
     // Feature gates (Epic P0-05 must[3]): the resolution composeProfile
     // already used, provided before any config-tree entry mounts, so a gated
     // plugin reads exactly what `--dump-config` shows for this same
