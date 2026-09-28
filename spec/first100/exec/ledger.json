@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-28T08:15:25.931Z",
-  "inputDigest": "4d6a7d2e4846d996229a4a2d21e658008abda7215c74b8cf389715c4c8ffc5e4",
+  "lastUpdatedUtc": "2026-09-28T08:22:27.333Z",
+  "inputDigest": "bba682fbd46367f3938f3f835443d09c46abbfc016667d8d391bbc1f0bba8f4e",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -7009,19 +7009,19 @@
         }
       },
       "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "BLOCKED_ON_ACCEPTANCE",
+      "status": "ACCEPTED",
       "acceptedEvidence": {
-        "acceptedAtUtc": "2026-09-08T18:38:28.360Z",
+        "acceptedAtUtc": "2026-09-28T08:22:27.318Z",
         "cells": {
           "C": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34253568004",
-            "candidateSha": "224d2ac8672c4d90f66ca7801ae30d44869332bd"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
+            "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7"
           },
           "U": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34253568004",
-            "candidateSha": "224d2ac8672c4d90f66ca7801ae30d44869332bd"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
+            "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7"
           },
           "F": {
             "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34253568004",
@@ -7034,8 +7034,8 @@
           "unverifiedCitations": []
         },
         "delegateSignoff": {
-          "delegateSession": "guanjieqiao-92",
-          "signedAtUtc": "2026-09-08T18:38:05.053Z",
+          "delegateSession": "first100-delegate-1a",
+          "signedAtUtc": "2026-09-28T08:22:15.704Z",
           "userConfirmationRef": null
         }
       }
