@@ -73,7 +73,8 @@ async function main(argv: readonly string[]): Promise<number> {
     const run = LANES[name]
     const declared = manifest.lanes.find(lane => lane.name === name)
     if (run === undefined || declared === undefined) throw new Error(`benchmark:harness: lane ${name} vanished after validation`)
-    reports.push(await run(declared, seed, manifest))
+    // M-573-R4b: every lane draws from one fixed seed, whatever --seed says.
+    reports.push(await run(declared, 20260924, manifest))
   }
   const held = invariantsHeld(reports)
   const out = resolve(values.out ?? '.artifacts/benchmark')
