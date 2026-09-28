@@ -80,7 +80,7 @@ describe('BLOCKED-332: a step refused because the Run has ended names its state 
     expect(await promptedTurnEnds(agent)).toEqual([{ kind: 'blocked', runEnded: { state: 'failed', reason: REASON }, dropped: [ENDED_RUN_DROP] }])
     expect(adapter.requests).toHaveLength(0)
     // An ended Run runs nothing again: the refused prompt is dropped with that record, not put back.
-    expect(agent.inbox.hasPending).toBe(false)
+    expect([...agent.inbox.nextTurn, ...agent.inbox.nextStep]).toEqual([])
   })
 
   it('names the state alone for a Run that ended without a reason given through runs.advance', async () => {
