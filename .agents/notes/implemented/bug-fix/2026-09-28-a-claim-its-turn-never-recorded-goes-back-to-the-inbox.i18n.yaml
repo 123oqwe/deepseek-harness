@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-28-a-claim-its-turn-never-recorded-goes-back-to-the-inbox.md
-2026-09-28-a-claim-its-turn-never-recorded-goes-back-to-the-inbox.md: 767f8023fcf1beff736b109244e7e212cbd956cb
-2026-09-28-a-claim-its-turn-never-recorded-goes-back-to-the-inbox.zh.md: beebd884eac633581c853b9ece83f0f731e483e8
+2026-09-28-a-claim-its-turn-never-recorded-goes-back-to-the-inbox.md: 7267b4a85a446027cd1eb5d0bfcb6c6715de85a3
+2026-09-28-a-claim-its-turn-never-recorded-goes-back-to-the-inbox.zh.md: 0983a71f709f7ac166da3c55f2ca5e7abc1c08e3
