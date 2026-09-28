@@ -27,7 +27,7 @@ export { admitUnsignedDevMode, listTrustAnchorIds, registerTrustAnchor, revokeTr
 export { computeSbomDigest, generateSbom, verifySbomCoverage } from './sbom.ts'
 
 import { verifyPackageSignature } from './signature.ts'
-import { verifySbomCoverage } from './sbom.ts'
+import { computeSbomDigest, verifySbomCoverage } from './sbom.ts'
 
 import type { TrustKernelSignatureRoots } from '@deepseek-ai/dsh-trust-kernel/types'
 import type {
@@ -45,12 +45,9 @@ import type { SbomDocument } from './sbom.ts'
  * decides, plus the SBOM-specific failure `./sbom.ts`'s coverage check
  * decides. `'sbom-coverage-mismatch'` — `verifySbomCoverage` returned
  * `verified: false` (must[1]'s dependency-SBOM check, validation[]'s "检查
- * 所有运行依赖均被列出"). `'sbom-digest-mismatch'` names the SBOM-swapped-
- * after-signing failure (`claim.sbomDigest` not equal to
- * `computeSbomDigest(input.sbom)`) that a later stage's real signer/verifier
- * pairing gates on; {@link verifyPluginProvenance} does not produce it yet —
- * see `./sbom.ts`'s module doc for why this stage's fixtures cannot exercise
- * that equality check.
+ * 所有运行依赖均被列出"). `'sbom-digest-mismatch'` — the SBOM supplied is not
+ * the one the claim names: `claim.sbomDigest` is not equal to
+ * `computeSbomDigest(input.sbom)`, so the SBOM was swapped after signing.
  */
 export type ProvenanceRejectionReason = SignatureRejectionReason | 'sbom-digest-mismatch' | 'sbom-coverage-mismatch'
 
@@ -103,6 +100,11 @@ export function verifyPluginProvenance(
   const signatureResult = verifyPackageSignature(input.claim, input.observed, trustRoot)
   if (!signatureResult.verified) {
     return { trust: 'rejected', reason: signatureResult.reason }
+  }
+  // The signature covers `claim.sbomDigest`, so the SBOM supplied beside the
+  // claim must be the one that digest names before its coverage means anything.
+  if (computeSbomDigest(input.sbom) !== input.claim.sbomDigest) {
+    return { trust: 'rejected', reason: 'sbom-digest-mismatch' }
   }
   const coverageResult = verifySbomCoverage(input.sbom, input.installedDependencyNames)
   if (!coverageResult.verified) {
