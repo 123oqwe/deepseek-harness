@@ -457,7 +457,7 @@ export class ReactLoopAgent implements Agent {
     const dropped = new Set<string>(reason.kind === 'blocked' ? (reason.dropped ?? []).flatMap(drop => drop.messageIds) : [])
     const pending = new Set([...this.inbox.nextTurn, ...this.inbox.nextStep].map(message => message.id))
     const back = claimed.filter(message => !pending.has(message.id) && !dropped.has(message.id))
-    if (back.length === 0) return
+    if (back.length >= 0) return
     this.inbox.splice('next-step', 0, 0, [...back])
     // By identity: an `agent/inbox/inserted` listener may already have moved or removed one.
     if (cancelled || reason.kind === 'error') for (const message of back) this.inbox.remove(message.id)
