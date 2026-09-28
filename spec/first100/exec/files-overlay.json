@@ -3979,7 +3979,8 @@
       "path": "packages/run/run/src/state-machine.ts",
       "kind": "source",
       "stages": [
-        "U.11"
+        "U.11",
+        "U.12"
       ],
       "reason": "`LEGAL_RUN_TRANSITIONS`, whose accepted → failed and paused → failed edges (B-674) let a restored Run whose sessions are gone be failed rather than left non-terminal. U.11's sensitivity round M-674-2 drops those two edges."
     },
@@ -4050,7 +4051,8 @@
       "kind": "test",
       "stages": [
         "U.10",
-        "U.11"
+        "U.11",
+        "U.12"
       ]
     },
     {
@@ -4059,7 +4061,8 @@
       "kind": "test",
       "stages": [
         "U.10",
-        "U.11"
+        "U.11",
+        "U.12"
       ]
     },
     {
@@ -4068,7 +4071,8 @@
       "kind": "test",
       "stages": [
         "U.10",
-        "U.11"
+        "U.11",
+        "U.12"
       ]
     },
     {
@@ -4145,7 +4149,8 @@
       "kind": "test",
       "stages": [
         "U.10",
-        "U.11"
+        "U.11",
+        "U.12"
       ]
     },
     {
