@@ -148,6 +148,29 @@ export function notApplicable(reason: string): NotApplicableMetric {
   return { notApplicable: reason }
 }
 
+/**
+ * A lane's full metric table: every standard metric the lane computed, and
+ * every other one declared not applicable with the manifest's reason.
+ * @param lane - the lane's name, for the error.
+ * @param computed - the metrics the lane computed.
+ * @param reasons - the manifest's not-applicable reasons, by metric.
+ * @returns all eight standard metrics.
+ * @throws when a metric the lane did not compute has no reason.
+ */
+export function laneMetrics(
+  lane: string,
+  computed: Readonly<Partial<Record<StandardMetric, ComputedMetric>>>,
+  reasons: Readonly<Record<string, string>> | undefined,
+): Record<StandardMetric, Metric> {
+  return Object.fromEntries(STANDARD_METRICS.map((name): [StandardMetric, Metric] => {
+    const metric = computed[name]
+    if (metric !== undefined) return [name, metric]
+    const reason = reasons?.[name]
+    if (reason === undefined) throw new Error(`benchmark manifest.yml: the ${lane} lane gives no reason ${name} is not applicable`)
+    return [name, notApplicable(reason)]
+  })) as Record<StandardMetric, Metric>
+}
+
 /** One harvested session log of a trial. */
 export interface SessionLogDigest {
   /** sha256 of the log's normalized projection, which the same seed reproduces. */
@@ -187,6 +210,10 @@ export interface Trial {
   /** How the trial's tool results compare with the recording, in a replaying lane. */
   readonly toolResults?: { readonly compared: number; readonly mismatches: readonly ToolResultMismatch[] }
   readonly taskSucceeded: boolean
+  /** In an attacking lane: whether the attack took effect in the world or its call reported success. */
+  readonly bypassed?: boolean
+  /** In an attacking lane: what the attack call's result said, or why no result was read. */
+  readonly observation?: string
   /** Idempotency keys whose action manifest the trial appended more than once. */
   readonly duplicateSideEffects: number
   /** Estimated model cost of the trial, from its recorded token usage and the manifest's price table. */
@@ -212,6 +239,8 @@ export interface LaneReport {
   readonly trials: readonly Trial[]
   readonly metrics: Readonly<Record<StandardMetric, Metric>>
   readonly knownRed: readonly KnownRed[]
+  /** The date, `YYYY-MM-DD`, the lane's known-red list was last checked against `spec/first100/exec/BLOCKED-QUEUE.md`. */
+  readonly knownRedCheckedOn: string
 }
 
 /**

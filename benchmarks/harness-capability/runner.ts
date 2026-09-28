@@ -17,12 +17,14 @@ import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { parseArgs } from 'node:util'
 import { runDeterministicLane } from './lanes/deterministic.ts'
+import { runSecurityLane } from './lanes/security.ts'
 import { readManifest, type Manifest, type ManifestLane } from './manifest.ts'
 import { invariantsHeld, type LaneReport, type Metric } from './report.ts'
 
 /** The keyless lanes that have scenarios, each with the function that runs it. */
-const LANES: Readonly<Record<string, (lane: ManifestLane, seed: number, manifest: Manifest) => LaneReport>> = {
+const LANES: Readonly<Record<string, (lane: ManifestLane, seed: number, manifest: Manifest) => LaneReport | Promise<LaneReport>>> = {
   deterministic: runDeterministicLane,
+  security: runSecurityLane,
 }
 
 /** Seed used when `--seed` is absent, so the registered command is reproducible as typed. */
@@ -41,11 +43,11 @@ function metricLine(name: string, metric: Metric): string {
 }
 
 /**
- * Run the requested lanes and write both reports.
+ * Run the requested lanes, one after another, and write both reports.
  * @param argv - the arguments after the script path.
  * @returns the process exit code: 0 when every base invariant held, 1 when one did not, 2 on bad arguments.
  */
-function main(argv: readonly string[]): number {
+async function main(argv: readonly string[]): Promise<number> {
   const { values } = parseArgs({
     args: argv[0] === '--' ? argv.slice(1) : [...argv],
     options: { lane: { type: 'string', multiple: true }, seed: { type: 'string' }, out: { type: 'string' } },
@@ -63,12 +65,13 @@ function main(argv: readonly string[]): number {
     console.error(`benchmark:harness: --seed must be an integer in [0, 2^32), got ${String(values.seed)}`)
     return 2
   }
-  const reports = lanes.map((name) => {
+  const reports: LaneReport[] = []
+  for (const name of lanes) {
     const run = LANES[name]
     const declared = manifest.lanes.find(lane => lane.name === name)
     if (run === undefined || declared === undefined) throw new Error(`benchmark:harness: lane ${name} vanished after validation`)
-    return run(declared, seed, manifest)
-  })
+    reports.push(await run(declared, seed, manifest))
+  }
   const held = invariantsHeld(reports)
   const out = resolve(values.out ?? '.artifacts/benchmark')
   mkdirSync(out, { recursive: true })
@@ -77,7 +80,9 @@ function main(argv: readonly string[]): number {
     `## ${report.lane}`,
     '',
     ...Object.entries(report.metrics).map(([name, metric]) => `- ${metricLine(name, metric)}`),
-    ...report.knownRed.map(entry => `- known red ${entry.scenario} (${entry.blocked}): ${entry.passed ? 'PASSED, which fails the run' : 'fails as expected'} — ${entry.observation}`),
+    ...report.knownRed.length === 0
+      ? [`- known red: none (checked against spec/first100/exec/BLOCKED-QUEUE.md on ${report.knownRedCheckedOn})`]
+      : report.knownRed.map(entry => `- known red ${entry.scenario} (${entry.blocked}): ${entry.passed ? 'PASSED, which fails the run' : 'fails as expected'} — ${entry.observation}`),
     '',
   ])
   writeFileSync(join(out, 'report.md'), ['# Harness capability benchmark', '', `Seed: ${String(seed)}`, `Invariants held: ${String(held)}`, '', ...lines].join('\n'))
@@ -86,5 +91,5 @@ function main(argv: readonly string[]): number {
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  process.exitCode = main(process.argv.slice(2))
+  process.exitCode = await main(process.argv.slice(2))
 }

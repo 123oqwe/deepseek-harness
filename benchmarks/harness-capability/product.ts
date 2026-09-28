@@ -1,25 +1,31 @@
 /**
  * The shipped product under the Harness capability benchmark (Epic P0-08).
  *
- * One trial replays one recorded headless session: `dsh --profile headless`
- * from source, with the recorded-session snapshots' patch layers (the
+ * A replaying trial replays one recorded headless session: `dsh --profile
+ * headless` from source, with the recorded-session snapshots' patch layers (the
  * `dsh-llm-replay` provider answers from the recording), in a fresh working
- * directory and `$DSH_HOME`, with no model API configured. The session logs the
- * run persisted are harvested before the directory is removed. This is the
- * launch `snapshots/session/headless.snapshot.ts` makes, without its
- * assertions.
+ * directory and `$DSH_HOME`, with no model API configured. This is the launch
+ * `snapshots/session/headless.snapshot.ts` makes, without its assertions.
+ *
+ * An attacking trial launches the same command with the shipped composition
+ * and only the patches its attack needs; the model is the benchmark's stub on
+ * a loopback port, reached through `DEEPSEEK_BASE_URL` with a key that is
+ * visibly not one. Either way the session logs the run persisted are harvested
+ * before the directory is removed.
  * @module benchmarks/harness-capability/product
  */
 
-import { spawnSync } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, dirname, join } from 'node:path'
 import { performance } from 'node:perf_hooks'
 import { fileURLToPath } from 'node:url'
+import { zstdDecompressSync } from 'node:zlib'
 import * as yaml from 'js-yaml'
 import { resolveExampleLaunch } from '@deepseek-ai/dsh-loader-smoke'
+import { scanZstdFrames } from '@deepseek-ai/dsh-session-persistence-jsonl/src/zstd.ts'
 import type { PriceTable } from './manifest.ts'
 import { materializeProfilePatch } from '@deepseek-ai/dsh-session-snapshot/src/launcher.ts'
 import { normalizeSessionSnapshots } from '@deepseek-ai/dsh-session-snapshot/src/normalize.ts'
@@ -210,15 +216,34 @@ function spillLocatorRoot(fixture: string): string {
 }
 
 /**
+ * One zstd session log's text, read frame by frame with the persistence
+ * package's own frame scanner, as the shipped profiles write it.
+ * @param path - the `.jsonl.zstd` file.
+ * @returns the log's JSONL text.
+ * @throws when the file ends inside a frame.
+ */
+function readZstdLog(path: string): string {
+  const compressed = readFileSync(path)
+  const { frames, tornStart } = scanZstdFrames(compressed)
+  if (tornStart !== undefined) throw new Error(`session log ends mid-frame at byte ${String(tornStart)}: ${path}`)
+  return frames
+    .flatMap(({ start, end }) => zstdDecompressSync(compressed.subarray(start, end)).toString('utf8').split('\n'))
+    .filter(line => line !== '')
+    .map(line => `${line}\n`)
+    .join('')
+}
+
+/**
  * The session logs a run persisted under a `$DSH_HOME`, parent first.
  * @param dshHome - the run's `$DSH_HOME`.
- * @returns the latest generation of each session's log, as written.
+ * @param compression - how the composition persists logs: `raw` under the snapshot patches, `zstd` as shipped.
+ * @returns the latest generation of each session's log, as JSONL text.
  */
-function persistedLogs(dshHome: string): string[] {
+function persistedLogs(dshHome: string, compression: 'raw' | 'zstd'): string[] {
   const root = join(dshHome, 'sessions')
   if (!existsSync(root)) return []
-  const logs = latestPersistedSessionPaths(readdirSync(root, { recursive: true }).map(String))
-    .map(file => readFileSync(join(root, file), 'utf8'))
+  const logs = latestPersistedSessionPaths(readdirSync(root, { recursive: true }).map(String), compression)
+    .map(file => compression === 'raw' ? readFileSync(join(root, file), 'utf8') : readZstdLog(join(root, file)))
   const header = (log: string): LogRecord => records(log)[0] ?? {}
   return logs.sort((left, right) =>
     Number(typeof header(left).parentSession === 'string') - Number(typeof header(right).parentSession === 'string')
@@ -235,6 +260,17 @@ export interface ProductRun {
   readonly latencyMs: number
   /** The persisted session logs, parent first, as the product wrote them. */
   readonly logs: readonly string[]
+  /** The last 2000 characters the product wrote to stderr, when the launch kept them. */
+  readonly stderrTail?: string
+}
+
+/**
+ * This process's environment without the model API variables, so no key or
+ * base URL from the benchmark's own environment reaches the product.
+ * @returns the environment to launch the product from.
+ */
+function withoutModelApi(): Record<string, string | undefined> {
+  return Object.fromEntries(Object.entries(process.env).filter(([name]) => name !== 'DEEPSEEK_API_KEY' && name !== 'DEEPSEEK_BASE_URL'))
 }
 
 /**
@@ -284,11 +320,10 @@ export function replayRecordedScenario(
       },
     })
     // No model API reaches the product: the replay provider answers every request.
-    const inherited = Object.fromEntries(Object.entries(process.env).filter(([name]) => name !== 'DEEPSEEK_API_KEY' && name !== 'DEEPSEEK_BASE_URL'))
     const started = performance.now()
     const result = spawnSync(launch.command, launch.args, {
       cwd,
-      env: { ...inherited, ...launch.env },
+      env: { ...withoutModelApi(), ...launch.env },
       input: '',
       encoding: 'utf8',
       timeout: options.timeoutMs,
@@ -296,10 +331,80 @@ export function replayRecordedScenario(
       maxBuffer: 64 * 1024 * 1024,
     })
     const latencyMs = performance.now() - started
-    return { argv: [launch.command, ...launch.args], exitCode: result.status, latencyMs, logs: persistedLogs(dshHome) }
+    return { argv: [launch.command, ...launch.args], exitCode: result.status, latencyMs, logs: persistedLogs(dshHome, 'raw') }
   } finally {
     rmSync(cwd, { recursive: true, force: true })
     rmSync(spill, { recursive: true, force: true })
+  }
+}
+
+/** The key an attacking trial's product sends the stub model: nonblank, which the shipped client requires, and visibly not a key. */
+export const STUB_API_KEY = 'sk-benchmark-not-a-key'
+
+/** One launch of the shipped headless composition against the stub model. */
+export interface ShippedLaunch {
+  /** The working directory, which the product takes as its workspace; `$DSH_HOME` is its `.dsh`. */
+  readonly cwd: string
+  /** The task given on the command line. */
+  readonly task: string
+  /** Absolute paths of the patch files laid over the shipped profile, in order. */
+  readonly patches: readonly string[]
+  /** The stub model's base URL. */
+  readonly modelBaseUrl: string
+  /** The permission preset, `DSH_PERMISSION_MODE`. */
+  readonly permission: string
+  /** Further environment the trial needs. */
+  readonly env: Readonly<Record<string, string>>
+  /** How long the run may take before it is killed. */
+  readonly timeoutMs: number
+}
+
+/**
+ * Launch the shipped headless composition once against the stub model. The
+ * launch is asynchronous because the stub answers from this process.
+ * @param launch - the working directory, task, patches, model URL, preset, environment and time limit.
+ * @returns the launch, its exit code, its duration, its session logs and the tail of its stderr.
+ */
+export async function launchShippedHeadless(launch: ShippedLaunch): Promise<ProductRun> {
+  const dshHome = join(launch.cwd, '.dsh')
+  const resolved = resolveExampleLaunch({
+    srcBin: join(REPO_ROOT, 'apps/cli/src/bin.ts'),
+    configArgs: ['--profile', 'headless', ...launch.patches.flatMap(patch => ['--patch', patch]), launch.task],
+    mode: 'src',
+    tsconfigPath: join(REPO_ROOT, 'tsconfig.json'),
+    env: {
+      DSH_HOME: dshHome,
+      DSH_AGENTS_HOME: join(launch.cwd, '.agents'),
+      DEEPSEEK_BASE_URL: launch.modelBaseUrl,
+      DEEPSEEK_API_KEY: STUB_API_KEY,
+      DSH_PERMISSION_MODE: launch.permission,
+      ...launch.env,
+      NODE_OPTIONS: [process.env.NODE_OPTIONS, '--disable-warning=ExperimentalWarning'].filter(Boolean).join(' '),
+      DSH_TELEMETRY_DISABLED: '1',
+    },
+  })
+  const started = performance.now()
+  let stderr = ''
+  const exitCode = await new Promise<number | null>((resolve, reject) => {
+    const child = spawn(resolved.command, resolved.args, { cwd: launch.cwd, env: { ...withoutModelApi(), ...resolved.env }, stdio: ['ignore', 'ignore', 'pipe'] })
+    child.stderr.setEncoding('utf8')
+    child.stderr.on('data', (chunk: string) => { stderr = (stderr + chunk).slice(-2000) })
+    const timer = setTimeout(() => { child.kill('SIGKILL') }, launch.timeoutMs)
+    child.once('error', (error) => {
+      clearTimeout(timer)
+      reject(error)
+    })
+    child.once('close', (code) => {
+      clearTimeout(timer)
+      resolve(code)
+    })
+  })
+  return {
+    argv: [resolved.command, ...resolved.args],
+    exitCode,
+    latencyMs: performance.now() - started,
+    logs: persistedLogs(dshHome, 'zstd'),
+    stderrTail: stderr,
   }
 }
 
@@ -348,4 +453,15 @@ export function tokenCostOf(logs: readonly string[], pricing: PriceTable): numbe
     }
   }
   return cost
+}
+
+/**
+ * What `token_cost` is read from, as a lane report states it: the unit, the
+ * price source, the date it was read, the rate, and the table's assumption.
+ * @param pricing - the manifest's price table.
+ * @returns the description.
+ */
+export function tokenCostSource(pricing: PriceTable): string {
+  const assumption = pricing.assumption === undefined ? '' : `; assumes ${pricing.assumption}`
+  return `${pricing.currency} per trial, assistant-message usage priced from ${pricing.source} as read on ${pricing.retrievedAt} (${pricing.rate} rate${assumption})`
 }
