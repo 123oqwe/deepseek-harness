@@ -41,6 +41,8 @@ export interface ManifestLane {
   readonly scenarios?: readonly string[]
   /** Each standard metric the lane cannot compute, with the reason. */
   readonly notApplicable?: Readonly<Record<string, string>>
+  /** The date, `YYYY-MM-DD`, the lane's known-red list was last checked against the BLOCKED queue. */
+  readonly knownRedCheckedOn?: string
 }
 
 /** The parsed manifest. */
