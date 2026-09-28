@@ -837,7 +837,7 @@ export async function filePreconditionsFor(
  */
 async function fileObservation(fs: FsVersionPort, path: string, cwd: string | undefined): Promise<string> {
   try {
-    const target = cwd === undefined ? await fs.resolve(path) : await fs.resolve(path, { cwd })
+    const target = cwd === undefined ? await fs.resolve(path) : await fs.resolve(path, {})
     const info = await fs.stat(target)
     return info === undefined ? 'absent' : `present:${info.version}`
   } catch {
