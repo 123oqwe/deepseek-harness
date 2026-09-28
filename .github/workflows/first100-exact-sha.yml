@@ -341,18 +341,22 @@ jobs:
         # you how the suite itself did; one that does not exist tells you
         # nothing.
         if: always()
-        # The exit code goes to `vitest-report.exit.json` beside the report:
+        # The exit record goes to `vitest-report.exit.json` beside the report:
         # vitest can exit 1 on an unhandled error outside any case while the
-        # report says `success: true`, and the ledger refuses a report whose
-        # recorded exit is missing or not 0 (BLOCKED-326). The step still
-        # exits with that code.
+        # report says `success: true`, so the record holds the exit code, the
+        # count of such errors the unhandled-errors reporter wrote, this run's
+        # id and the report's sha256, and the ledger greens a cell only from a
+        # record of the run and the report it names (BLOCKED-326). The step
+        # still exits with that code.
+        env:
+          FIRST100_UNHANDLED_ERRORS_OUT: .artifacts/first100/observations/vitest-report.unhandled.json
         run: |
           mkdir -p .artifacts/first100/observations
           set +e
-          pnpm exec vitest run --reporter=json --outputFile=.artifacts/first100/observations/vitest-report.json --reporter=default
+          pnpm exec vitest run --reporter=json --outputFile=.artifacts/first100/observations/vitest-report.json --reporter=./scripts/first100/unhandled-errors-reporter.ts --reporter=default
           code=$?
           set -e
-          printf '{"exitCode": %d}\n' "$code" > .artifacts/first100/observations/vitest-report.exit.json
+          node scripts/first100/write-exit-record.mjs .artifacts/first100/observations/vitest-report.json .artifacts/first100/observations/vitest-report.exit.json "$code"
           exit $code
         # Real exit is captured, not swallowed: a red suite must fail this
         # job (fail-closed), while the JSON report is still uploaded below
@@ -494,15 +498,17 @@ jobs:
         # file, so an entry frozen under `vitest.e2e.config.ts` is observed by
         # its e2e step's report alone. `default` keeps the log readable, as in
         # the suite step.
-        # Its exit code goes beside its report, as in the suite step (BLOCKED-326).
+        # Its exit record goes beside its report, as in the suite step (BLOCKED-326).
+        env:
+          FIRST100_UNHANDLED_ERRORS_OUT: .artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.unhandled.json
         run: |
           set +e
           pnpm exec vitest run --config vitest.e2e.config.ts \
             apps/cli/tests/profiles/sdk/keyless-smoke.e2e.ts \
-            --reporter=json --outputFile=.artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.json --reporter=default
+            --reporter=json --outputFile=.artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.json --reporter=./scripts/first100/unhandled-errors-reporter.ts --reporter=default
           code=$?
           set -e
-          printf '{"exitCode": %d}\n' "$code" > .artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.exit.json
+          node scripts/first100/write-exit-record.mjs .artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.json .artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.exit.json "$code"
           exit $code
 
       - name: BLOCKED-291 — the ACP launcher's own identity attribution
@@ -540,16 +546,18 @@ jobs:
         #
         # Its json report goes beside the full-suite one for the reason the
         # step above gives. P4-05.U.4's frozen argv is this step's command
-        # without the two reporters.
-        # Its exit code goes beside its report, as in the suite step (BLOCKED-326).
+        # without its reporters.
+        # Its exit record goes beside its report, as in the suite step (BLOCKED-326).
+        env:
+          FIRST100_UNHANDLED_ERRORS_OUT: .artifacts/first100/observations/vitest-e2e-acp.unhandled.json
         run: |
           set +e
           pnpm exec vitest run --config vitest.e2e.config.ts \
             apps/cli/tests/profiles/acp/tests/acp.e2e.ts \
-            --reporter=json --outputFile=.artifacts/first100/observations/vitest-e2e-acp.json --reporter=default
+            --reporter=json --outputFile=.artifacts/first100/observations/vitest-e2e-acp.json --reporter=./scripts/first100/unhandled-errors-reporter.ts --reporter=default
           code=$?
           set -e
-          printf '{"exitCode": %d}\n' "$code" > .artifacts/first100/observations/vitest-e2e-acp.exit.json
+          node scripts/first100/write-exit-record.mjs .artifacts/first100/observations/vitest-e2e-acp.json .artifacts/first100/observations/vitest-e2e-acp.exit.json "$code"
           exit $code
 
       - name: Workflow runs on shipped launches — a detached run (BLOCKED-323, BLOCKED-324), a resumed one (P4-08), and P2-01's host user and workflow hop
@@ -557,9 +565,11 @@ jobs:
         # Keyless: stand-in models answer every request. Each frozen entry
         # (P2-01.U.2, P2-01.U.3, P4-08's resume case, P2-01.U.5 over its three
         # files, and P2-01.U.10) is this step's command for its files, without
-        # the two reporters; this report is their observation, for the reason
+        # its reporters; this report is their observation, for the reason
         # the sdk step above gives.
-        # Its exit code goes beside its report, as in the suite step (BLOCKED-326).
+        # Its exit record goes beside its report, as in the suite step (BLOCKED-326).
+        env:
+          FIRST100_UNHANDLED_ERRORS_OUT: .artifacts/first100/observations/vitest-e2e-workflow.unhandled.json
         run: |
           set +e
           pnpm exec vitest run --config vitest.e2e.config.ts \
@@ -570,10 +580,10 @@ jobs:
             apps/cli/tests/profiles/web/tests/host-user.e2e.ts \
             apps/cli/tests/profiles/web/tests/webhook-actor.e2e.ts \
             apps/cli/tests/profiles/headless/tests/workflow-chain.e2e.ts \
-            --reporter=json --outputFile=.artifacts/first100/observations/vitest-e2e-workflow.json --reporter=default
+            --reporter=json --outputFile=.artifacts/first100/observations/vitest-e2e-workflow.json --reporter=./scripts/first100/unhandled-errors-reporter.ts --reporter=default
           code=$?
           set -e
-          printf '{"exitCode": %d}\n' "$code" > .artifacts/first100/observations/vitest-e2e-workflow.exit.json
+          node scripts/first100/write-exit-record.mjs .artifacts/first100/observations/vitest-e2e-workflow.json .artifacts/first100/observations/vitest-e2e-workflow.exit.json "$code"
           exit $code
 
       - name: Publication and package hygiene
@@ -713,19 +723,20 @@ jobs:
         # full-suite run includes no snapshot file.
         env:
           DSH_EXAMPLE_MODE: lib
+          FIRST100_UNHANDLED_ERRORS_OUT: .artifacts/first100/observations/vitest-snapshot.unhandled.json
         run: |
           if [ -f snapshots/.refresh-skipped.json ]; then
             echo "::warning::a refresh left fixtures unobserved; a failure in one of these is stale-on-host, not a regression:"
             cat snapshots/.refresh-skipped.json
             echo "refresh them where they run (pwsh scenarios need a real pwsh), then delete the record"
           fi
-          # Its exit code goes beside its report, as in the suite step (BLOCKED-326).
+          # Its exit record goes beside its report, as in the suite step (BLOCKED-326).
           set +e
           pnpm exec vitest run --config vitest.snapshot.config.ts \
-            --reporter=json --outputFile=.artifacts/first100/observations/vitest-snapshot.json --reporter=default
+            --reporter=json --outputFile=.artifacts/first100/observations/vitest-snapshot.json --reporter=./scripts/first100/unhandled-errors-reporter.ts --reporter=default
           code=$?
           set -e
-          printf '{"exitCode": %d}\n' "$code" > .artifacts/first100/observations/vitest-snapshot.exit.json
+          node scripts/first100/write-exit-record.mjs .artifacts/first100/observations/vitest-snapshot.json .artifacts/first100/observations/vitest-snapshot.exit.json "$code"
           exit $code
 
       # After every step that writes a report, so the artifact carries the

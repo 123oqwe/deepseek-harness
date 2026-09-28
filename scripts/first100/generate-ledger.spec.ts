@@ -1328,15 +1328,16 @@ describe('the exact-SHA observation artifact carries the json report of every st
     expect(signed.sort()).toStrictEqual(uploaded.sort())
   })
 
-  it('writes each report\'s step exit code beside the report and exits with it, and uploads that record (BLOCKED-326)', () => {
+  it('writes each report\'s exit record beside the report through write-exit-record.mjs, exits with its step\'s exit code, and uploads that record (BLOCKED-326)', () => {
     const uploaded = steps[upload]?.with?.path?.split('\n').map(line => line.trim()) ?? []
     const writers = steps.filter(step => /--outputFile=\.artifacts\/first100\/observations\/\S+\.json/u.test(step.run ?? ''))
     expect(writers.length).toBeGreaterThan(0)
     for (const step of writers) {
       const lines = (step.run ?? '').split('\n')
-      const record = `${/--outputFile=(\S+)\.json/u.exec(step.run ?? '')?.[1] ?? ''}.exit.json`
+      const report = /--outputFile=(\S+\.json)/u.exec(step.run ?? '')?.[1] ?? ''
+      const record = report.replace(/\.json$/u, '.exit.json')
       expect(lines[lines.findIndex(line => line.includes('--outputFile=')) + 1]).toBe('code=$?')
-      expect(lines).toContain(`printf '{"exitCode": %d}\\n' "$code" > ${record}`)
+      expect(lines).toContain(`node scripts/first100/write-exit-record.mjs ${report} ${record} "$code"`)
       expect(step.run).toMatch(/\nexit \$code\n?$/u)
       expect(uploaded).toContain(record)
     }
@@ -1488,7 +1489,7 @@ describe('generate-ledger.mjs greens a cell only from a report of the config its
   })
 })
 
-describe('recordedExitRefusal: a report greens a cell only when its step recorded process exit 0 (BLOCKED-326)', () => {
+describe('recordedExitRefusal: an older exit record greens a cell only from process exit 0 (BLOCKED-326)', () => {
   // Vitest can exit 1 on an unhandled error outside any case while its json report says `success: true` (run
   // 36001656822, step 18), so the exit code the step records beside the report decides, not the report.
   /**
@@ -1503,40 +1504,42 @@ describe('recordedExitRefusal: a report greens a cell only when its step recorde
     if (exitRecord !== undefined) writeFileSync(join(root, 'vitest-report.exit.json'), exitRecord)
     return join(root, 'vitest-report.json')
   }
-  const remedy = 'pass --exit-override "<reason>" to record the cell anyway'
+  const remedy = 'pass --exit-override "<reason>" citing run 1 and the step conclusion or log line it rests on to record the cell anyway'
+  /** What the record is checked against: the run --ci-run-url names; an older record names no run and no report. */
+  const observed = { ciRunId: '1', reportSha256: '0'.repeat(64), failuresAreRegisteredFlakes: false }
 
   it('refuses a report with no exit record beside it', () => {
     const reportPath = reportBeside(undefined)
-    expect(recordedExitRefusal(reportPath, undefined)).toBe(`${reportPath.replace(/\.json$/u, '.exit.json')} does not exist, `
+    expect(recordedExitRefusal(reportPath, undefined, observed)).toBe(`${reportPath.replace(/\.json$/u, '.exit.json')} does not exist, `
       + `so the process exit of the step that wrote the report is unknown; ${remedy}`)
   })
 
   it('refuses an exit record that holds no integer exitCode', () => {
     for (const text of ['{"exitCode":"0"}', '{"exitCode":0.5}', '{}', 'null', 'not json']) {
       const reportPath = reportBeside(text)
-      expect(recordedExitRefusal(reportPath, undefined)).toBe(`${reportPath.replace(/\.json$/u, '.exit.json')} records no integer `
+      expect(recordedExitRefusal(reportPath, undefined, observed)).toBe(`${reportPath.replace(/\.json$/u, '.exit.json')} records no integer `
         + `exitCode, so the process exit of the step that wrote the report is unknown; ${remedy}`)
     }
   })
 
   it('refuses a report that says success: true when its step recorded exit code 1', () => {
     const reportPath = reportBeside('{"exitCode":1}')
-    expect(recordedExitRefusal(reportPath, undefined))
+    expect(recordedExitRefusal(reportPath, undefined, observed))
       .toBe(`${reportPath.replace(/\.json$/u, '.exit.json')} records exit code 1 for the step that wrote the report; ${remedy}`)
   })
 
   it('accepts a report whose step recorded exit code 0', () => {
-    expect(recordedExitRefusal(reportBeside('{"exitCode":0}'), undefined)).toBeNull()
+    expect(recordedExitRefusal(reportBeside('{"exitCode":0}'), undefined, observed)).toBeNull()
   })
 
-  it('lets a non-empty --exit-override reason lift the refusal of a missing, malformed or non-zero record', () => {
+  it('lets an --exit-override reason that cites the run and its step lift the refusal of a missing, malformed or non-zero record', () => {
     for (const text of [undefined, 'not json', '{"exitCode":1}']) {
-      expect(recordedExitRefusal(reportBeside(text), 'delegate ruling, gate3 log 2026-09-24T13:41:16Z')).toBeNull()
+      expect(recordedExitRefusal(reportBeside(text), 'run 1: step "Full test suite" conclusion failure', observed)).toBeNull()
     }
   })
 
   it('lifts nothing with a blank --exit-override reason', () => {
-    expect(recordedExitRefusal(reportBeside('{"exitCode":1}'), ' ')).not.toBeNull()
+    expect(recordedExitRefusal(reportBeside('{"exitCode":1}'), ' ', observed)).not.toBeNull()
   })
 })
 
@@ -1562,7 +1565,7 @@ describe('generate-ledger.mjs refuses to green a cell from a report whose step r
   })
 })
 
-describe('generate-ledger.mjs --check does not apply the BLOCKED-326 exit refusal to a cell greened before it', () => {
+describe('generate-ledger.mjs --check reads no exit record: it keeps a GREEN cell whatever lies beside its report (BLOCKED-326)', () => {
   it('passes a ledger whose GREEN cell absorbed flakes, has no exitOverride, and has no exit record beside its report', () => {
     // Twelve cells were greened under BLOCKED-007 item 3 before the exit record existed. The delegate ruled on
     // 2026-09-24 that only a cell being recorded is checked, so --check does not turn red over them.
@@ -1643,7 +1646,7 @@ function acceptableRowRepo(cellFields: Readonly<Record<string, unknown>>): { roo
   return { root, script }
 }
 
-describe('generate-ledger.mjs --accept does not apply the BLOCKED-326 exit refusal to a cell greened before it', () => {
+describe('generate-ledger.mjs --accept reads no exit record: it accepts a row whatever lies beside its cells\' reports (BLOCKED-326)', () => {
   it('accepts a row whose one applicable cell absorbed flakes, has no exitOverride, and has no exit record beside its report', () => {
     // A row holding one of those twelve cells stays acceptable under the same ruling.
     const { root, script } = acceptableRowRepo({})
@@ -1678,21 +1681,31 @@ describe('generate-ledger.mjs binds a new exit record to its run and its report,
   }
 
   /**
-   * Records P4-05.U in a scratch repository whose freeze holds one entry under the default config and whose ledger
-   * holds the P4-05 row, from a report in which the frozen case passes (and, with `flake`, one case the flake
-   * registry lists fails).
+   * Records P4-05.U, or its supplement U.<n>, in a scratch repository whose freeze holds one entry under the default
+   * config and whose ledger holds the P4-05 row, from a report in which the frozen case passes (and, with `flake`,
+   * one case the flake registry lists fails).
    * @param options - the exit record beside the report, given the report's sha256 (`undefined` for none); whether
-   *   the report carries the failed flake; and the arguments that follow `--candidate-sha`.
-   * @returns the exit status, the output, the `--report` argument, the report's sha256, the U cell after the run,
-   *   and `ledger.md` after the run (empty when none was written).
+   *   the report carries the failed flake; the arguments that follow `--candidate-sha`; and the supplement to record
+   *   instead of the U cell.
+   * @returns the exit status, the output, the `--report` argument, the report's sha256, the recorded cell after the
+   *   run, and `ledger.md` after the run (empty when none was written).
    */
   function record(options: {
     readonly exitRecord: (reportSha256: string) => Record<string, unknown> | undefined
     readonly flake?: boolean
     readonly extraArgs?: readonly string[]
+    readonly supplementSeq?: number | undefined
   }): RecordRun {
     const { root, sha, script } = scratchLedgerRepo()
-    const entry = { epic: 'P4-05', stage: 'U', argv: ['pnpm', 'exec', 'vitest', 'run', TEST_FILE, '--reporter=json'], expectCases: [TITLE], expectExit: 0 }
+    const seq = options.supplementSeq
+    const entry = {
+      epic: 'P4-05',
+      stage: 'U',
+      argv: ['pnpm', 'exec', 'vitest', 'run', TEST_FILE, '--reporter=json'],
+      expectCases: [TITLE],
+      expectExit: 0,
+      ...seq === undefined ? {} : { supplementSeq: seq, supplements: { epic: 'P4-05', stage: 'U' } },
+    }
     writeFileSync(join(root, 'spec/first100/exec/command-freeze.json'), JSON.stringify({ entries: [entry] }))
     const row = {
       id: 'P4-05',
@@ -1721,10 +1734,11 @@ describe('generate-ledger.mjs binds a new exit record to its run and its report,
     const exitRecord = options.exitRecord(reportSha256)
     if (exitRecord !== undefined) writeFileSync(join(root, reportPath.replace(/\.json$/u, '.exit.json')), JSON.stringify(exitRecord))
     const ciRunUrl = `https://github.com/${PROGRAM_CI_REPO}/actions/runs/1`
-    const args = ['--epic', 'P4-05', '--stage', 'U', '--report', reportPath, '--ci-run-url', ciRunUrl, '--candidate-sha', sha, ...options.extraArgs ?? []]
+    const cellArgs = seq === undefined ? ['--epic', 'P4-05', '--stage', 'U'] : ['--supplement', '--epic', 'P4-05', '--stage', 'U', '--supplement-seq', String(seq)]
+    const args = [...cellArgs, '--report', reportPath, '--ci-run-url', ciRunUrl, '--candidate-sha', sha, ...options.extraArgs ?? []]
     const result = spawnSync(process.execPath, [script, ...args], { cwd: root, encoding: 'utf8' })
     const ledger = JSON.parse(readFileSync(join(root, 'spec/first100/exec/ledger.json'), 'utf8')) as {
-      rows: Record<string, { cells: Record<string, RecordedCell> }>
+      rows: Record<string, { cells: Record<string, RecordedCell>; supplements: Record<string, RecordedCell> }>
     }
     const markdownPath = join(root, 'spec/first100/exec/ledger.md')
     return {
@@ -1732,7 +1746,7 @@ describe('generate-ledger.mjs binds a new exit record to its run and its report,
       output: `${result.stdout}${result.stderr}`,
       reportPath,
       reportSha256,
-      cell: ledger.rows['P4-05']?.cells.U,
+      cell: seq === undefined ? ledger.rows['P4-05']?.cells.U : ledger.rows['P4-05']?.supplements[`U.${String(seq)}`],
       markdown: existsSync(markdownPath) ? readFileSync(markdownPath, 'utf8') : '',
     }
   }
@@ -1804,6 +1818,22 @@ describe('generate-ledger.mjs binds a new exit record to its run and its report,
     expect(status, output).toBe(0)
     expect(cell?.exitOverride).toStrictEqual({ exitCode: 1, reason: REASON })
     expect(markdown).toContain('GREEN (exit override)')
+  })
+
+  it('greens a supplement from an old record of exit 1 under an --exit-override that cites the run and its step, and keeps the override in the supplement (F5)', () => {
+    const { status, output, cell } = record({ supplementSeq: 1, exitRecord: () => ({ exitCode: 1 }), extraArgs: ['--exit-override', REASON] })
+    expect(status, output).toBe(0)
+    expect(cell?.status).toBe('GREEN')
+    expect(cell?.exitOverride).toStrictEqual({ exitCode: 1, reason: REASON })
+  })
+
+  it('records a null exit code in the override when no exit record lies beside the report, for the cell and for a supplement (F5)', () => {
+    for (const supplementSeq of [undefined, 1]) {
+      const { status, output, cell } = record({ supplementSeq, exitRecord: () => undefined, extraArgs: ['--exit-override', REASON] })
+      expect(status, output).toBe(0)
+      expect(cell?.exitOverride).toStrictEqual({ exitCode: null, reason: REASON })
+      expect(cell?.exitRecord).toMatchObject({ exitCode: null, unhandledErrors: null, runId: null })
+    }
   })
 })
 

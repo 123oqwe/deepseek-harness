@@ -70,10 +70,16 @@
  *     report its own step in first100-exact-sha.yml writes into the
  *     observation artifact; a report that did not run the entry's test paths
  *     is refused.
- *   Both greenings read `<report>.exit.json`, the exit code the report's step
- *   recorded (BLOCKED-326), and refuse a report whose record is missing,
- *   malformed or not 0; `--exit-override <reason>` lifts that refusal, and the
- *   cell records `exitOverride: { exitCode, reason }`.
+ *   Both greenings read `<report>.exit.json`, the exit record the report's step
+ *   wrote (BLOCKED-326), and the cell keeps it as `exitRecord`. A record from
+ *   `write-exit-record.mjs` must name the run `--ci-run-url` names and the
+ *   report's sha256; it greens a cell from exit 0, or from exit 1 with no
+ *   unhandled error when every failure is a registered flake, and
+ *   `--exit-override` does not apply to it. An older record of the exit code
+ *   alone greens a cell from exit 0; a missing, malformed or non-zero one is
+ *   refused unless `--exit-override <reason>` cites the run and the step
+ *   conclusion or log line, and the cell then records
+ *   `exitOverride: { exitCode, reason }`.
  *   node scripts/first100/generate-ledger.mjs --record-signoff --epic <id> \
  *     --conclusion PASS|WITHDRAWN [--reason <text>] [--user-confirmation-ref <ref>] [--note <text>] \
  *     [--delegate-session <name>]
@@ -476,50 +482,120 @@ export function parseVitestJsonReport(reportPath) {
   return { raw, report, titles, matchCounts, failedFullNames, exit }
 }
 
+/** The fields `write-exit-record.mjs` adds to the exit code; a record carrying none of them is an older record. */
+const BOUND_EXIT_RECORD_FIELDS = ['unhandledErrors', 'runId', 'reportSha256']
+
 /**
- * The process exit code `first100-exact-sha.yml` records beside an observation report (BLOCKED-326).
+ * The exit record `first100-exact-sha.yml` writes beside an observation report (BLOCKED-326).
+ *
+ * A record from `write-exit-record.mjs` (format `'new'`) carries the step's exit code, how many errors vitest
+ * reported outside any test case (`null` when the run ended before the reporter counted them), the run that wrote it
+ * and the sha256 of the report (`null` when vitest wrote none). An older record (format `'old'`) carries the exit
+ * code alone.
  * @param reportPath - the `--report` argument; the record is the same path with `.json` replaced by `.exit.json`.
- * @returns the record's path; its integer `exitCode`, or `null` when it holds none; and why it holds none, or `null`.
+ * @returns the record's path; its format, `null` when it is missing or malformed; its four fields, each `null` when
+ *   the record holds none; and why it is unusable, or `null`.
  */
 function readExitRecord(reportPath) {
   const exitPath = reportPath.replace(/\.json$/u, '.exit.json')
-  if (!existsSync(exitPath)) return { exitPath, exitCode: null, problem: 'does not exist' }
-  const malformed = { exitPath, exitCode: null, problem: 'records no integer exitCode' }
+  const none = { exitPath, format: null, exitCode: null, unhandledErrors: null, runId: null, reportSha256: null }
+  if (!existsSync(exitPath)) return { ...none, problem: 'does not exist' }
   let record
   try {
     record = JSON.parse(readFileSync(exitPath, 'utf8'))
   } catch {
-    return malformed
+    return { ...none, problem: 'records no integer exitCode' }
   }
-  return Number.isInteger(record?.exitCode) ? { exitPath, exitCode: record.exitCode, problem: null } : malformed
+  if (!Number.isInteger(record?.exitCode)) return { ...none, problem: 'records no integer exitCode' }
+  const bound = BOUND_EXIT_RECORD_FIELDS.filter(field => Object.hasOwn(record, field))
+  if (bound.length === 0) return { ...none, format: 'old', exitCode: record.exitCode, problem: null }
+  const { unhandledErrors, runId, reportSha256 } = record
+  const wellFormed = bound.length === BOUND_EXIT_RECORD_FIELDS.length
+    && (unhandledErrors === null || (Number.isInteger(unhandledErrors) && unhandledErrors >= 0))
+    && typeof runId === 'string' && /^\d+$/u.test(runId)
+    && (reportSha256 === null || (typeof reportSha256 === 'string' && /^[0-9a-f]{64}$/u.test(reportSha256)))
+  if (!wellFormed) return { ...none, problem: `records ${BOUND_EXIT_RECORD_FIELDS.join(', ')} incompletely or malformed` }
+  return { exitPath, format: 'new', exitCode: record.exitCode, unhandledErrors, runId, reportSha256, problem: null }
 }
 
 /**
- * Why the process exit recorded beside an observation report refuses greening, or `null` when it does not
- * (BLOCKED-326). Vitest can exit non-zero on an unhandled error outside any case while its json report says
- * `success: true`, which `parseVitestJsonReport`'s `exit` cannot see; so each observation step in
- * `first100-exact-sha.yml` writes its exit code to `<report>.exit.json`, and a report greens a cell only when that
- * record exists and holds the integer 0.
+ * Whether an `--exit-override` reason cites the run it overrides and the step conclusion or log line it rests on.
+ * @param reason - the `--exit-override` reason.
+ * @param ciRunId - the run id `--ci-run-url` names.
+ * @returns true when the reason names `run <ciRunId>` and a step or log.
+ */
+function exitOverrideCitesRun(reason, ciRunId) {
+  return new RegExp(`\\brun ${String(ciRunId)}\\b`, 'u').test(reason) && /\b(?:step|log)\b/iu.test(reason)
+}
+
+/**
+ * Why the exit record beside an observation report refuses greening, or `null` when it does not (BLOCKED-326).
+ * Vitest can exit non-zero on an unhandled error outside any case while its json report says `success: true`, which
+ * `parseVitestJsonReport`'s `exit` cannot see; so each observation step in `first100-exact-sha.yml` writes an exit
+ * record beside its report.
+ *
+ * A record from `write-exit-record.mjs` must name the run `--ci-run-url` names and the report's sha256. It greens a
+ * cell from exit 0, or from exit 1 with no unhandled error when every failure in the report is a registered flake;
+ * everything else is refused, and `--exit-override` does not apply to it. An older record greens a cell from exit 0;
+ * a missing, malformed or non-zero one is refused unless the override reason cites the run and the step conclusion
+ * or log line it rests on.
  * @param reportPath - the `--report` argument.
- * @param overrideReason - the `--exit-override` reason; a non-empty one lifts every refusal.
+ * @param overrideReason - the `--exit-override` reason, or `undefined`.
+ * @param observed - what the record is checked against: `ciRunId`, the run id `--ci-run-url` names; `reportSha256`,
+ *   the sha256 of the report; `failuresAreRegisteredFlakes`, whether the report fails and every failure is a
+ *   registered flake.
  * @returns the refusal, or `null`.
  */
-export function recordedExitRefusal(reportPath, overrideReason) {
-  if (overrideReason !== undefined && overrideReason.trim() !== '') return null
-  const { exitPath, exitCode, problem } = readExitRecord(reportPath)
-  const remedy = 'pass --exit-override "<reason>" to record the cell anyway'
-  if (problem !== null) return `${exitPath} ${problem}, so the process exit of the step that wrote the report is unknown; ${remedy}`
-  if (exitCode !== 0) return `${exitPath} records exit code ${exitCode} for the step that wrote the report; ${remedy}`
+export function recordedExitRefusal(reportPath, overrideReason, observed) {
+  const record = readExitRecord(reportPath)
+  const { exitPath, exitCode } = record
+  if (record.format === 'new') {
+    const final = '--exit-override does not apply to a record that names its run and its report'
+    if (record.runId !== observed.ciRunId) return `${exitPath} records run ${record.runId}, but --ci-run-url names run ${observed.ciRunId}; ${final}`
+    if (record.reportSha256 !== observed.reportSha256) {
+      return `${exitPath} records report sha256 ${String(record.reportSha256)}, but the report beside it has sha256 ${observed.reportSha256}; ${final}`
+    }
+    if (exitCode === 0) return null
+    const count = record.unhandledErrors
+    if (count === null) return `${exitPath} records exit code ${exitCode} and no count of unhandled errors; ${final}`
+    if (count > 0) return `${exitPath} records ${count} unhandled error${count === 1 ? '' : 's'} beside exit code ${exitCode}; ${final}`
+    if (exitCode === 1 && observed.failuresAreRegisteredFlakes) return null
+    return `${exitPath} records exit code ${exitCode} with no unhandled error, but only a report whose every failure is a registered flake greens from exit 1; ${final}`
+  }
+  if (record.format === 'old' && exitCode === 0) return null
+  const refused = record.problem === null
+    ? `${exitPath} records exit code ${exitCode} for the step that wrote the report`
+    : `${exitPath} ${record.problem}, so the process exit of the step that wrote the report is unknown`
+  const citation = `run ${observed.ciRunId} and the step conclusion or log line it rests on`
+  if (overrideReason === undefined || overrideReason.trim() === '') return `${refused}; pass --exit-override "<reason>" citing ${citation} to record the cell anyway`
+  if (!exitOverrideCitesRun(overrideReason, observed.ciRunId)) return `${refused}; --exit-override must cite ${citation}`
   return null
+}
+
+/**
+ * What an exit record is checked against for one report.
+ * @param raw - the report's text.
+ * @param ciRunUrl - the `--ci-run-url` argument.
+ * @param failedFullNames - the full names of the report's failed cases.
+ * @returns `recordedExitRefusal`'s `observed` argument.
+ */
+function exitRecordObservation(raw, ciRunUrl, failedFullNames) {
+  const registry = existsSync(FLAKE_REGISTRY_PATH) ? loadJson(FLAKE_REGISTRY_PATH) : null
+  return {
+    ciRunId: parseCiRunUrl(ciRunUrl)?.runId ?? null,
+    reportSha256: sha256(raw),
+    failuresAreRegisteredFlakes: checkFailureSetAgainstFlakeRegistry(failedFullNames, registry).valid,
+  }
 }
 
 /**
  * Exits 1 with a BLOCKED line when `recordedExitRefusal` refuses the report under this run's `--exit-override`.
  * @param reportPath - the `--report` argument.
  * @param cell - the cell being greened, as the refusal names it.
+ * @param observed - `recordedExitRefusal`'s `observed` argument.
  */
-function checkRecordedExit(reportPath, cell) {
-  const refusal = recordedExitRefusal(reportPath, opt('exit-override'))
+function checkRecordedExit(reportPath, cell, observed) {
+  const refusal = recordedExitRefusal(reportPath, opt('exit-override'), observed)
   if (refusal !== null) {
     console.error(`BLOCKED: --report ${reportPath} cannot green ${cell}: ${refusal}`)
     process.exit(1)
@@ -527,15 +603,42 @@ function checkRecordedExit(reportPath, cell) {
 }
 
 /**
- * The field a greened cell records when `--exit-override` gives a non-empty reason (BLOCKED-326).
+ * The exit fields a greened cell records (BLOCKED-326): `exitRecord`, the record beside the report with the report's
+ * sha256, and `exitOverride`, when `--exit-override` lifted the refusal of an older, missing or malformed record.
+ * Called only after `checkRecordedExit` passed.
  * @param reportPath - the `--report` argument.
- * @returns `{ exitOverride: { exitCode, reason } }`, where `exitCode` is the code recorded beside the report or `null`
- *   when it records none; an empty object when no reason was given.
+ * @param observationSha256 - the sha256 of the report.
+ * @returns `{ exitRecord: { exitCode, unhandledErrors, runId, sha256 } }`, each field `null` the record does not hold,
+ *   plus `exitOverride: { exitCode, reason }` when the override was needed.
  */
-function exitOverrideField(reportPath) {
+function exitFields(reportPath, observationSha256) {
+  const record = readExitRecord(reportPath)
+  const overridden = record.format !== 'new' && !(record.format === 'old' && record.exitCode === 0)
   const reason = opt('exit-override')
-  if (reason === undefined || reason.trim() === '') return {}
-  return { exitOverride: { exitCode: readExitRecord(reportPath).exitCode, reason } }
+  return {
+    exitRecord: { exitCode: record.exitCode, unhandledErrors: record.unhandledErrors, runId: record.runId, sha256: observationSha256 },
+    ...(overridden && reason !== undefined ? { exitOverride: { exitCode: record.exitCode, reason } } : {}),
+  }
+}
+
+/**
+ * One line for every cell an `--exit-override` greened, so `--check` and `--accept` show each override
+ * (BLOCKED-326 (b), F3).
+ * @param rows - ledger rows, keyed by epic id.
+ * @param epics - the epics to list; every row when `undefined`.
+ * @returns `exit override: <epic>.<stage>[.<seq>] (exit <code>): <reason>` for each overridden main cell and
+ *   supplement, in row order.
+ */
+function exitOverrideLines(rows, epics) {
+  const lines = []
+  for (const [epic, row] of Object.entries(rows)) {
+    if (epics !== undefined && !epics.includes(epic)) continue
+    for (const [key, cell] of [...Object.entries(row.cells ?? {}), ...Object.entries(row.supplements ?? {})]) {
+      const override = cell?.exitOverride
+      if (override !== undefined) lines.push(`exit override: ${epic}.${key} (exit ${override.exitCode ?? 'not recorded'}): ${override.reason}`)
+    }
+  }
+  return lines
 }
 
 /**
@@ -728,7 +831,8 @@ function renderMarkdown(ledger) {
   const ids = Object.keys(ledger.rows).sort()
   ids.forEach((id, i) => {
     const row = ledger.rows[id]
-    const cell = (s) => row.cells[s]?.status ?? 'NOT_RUN'
+    // A cell an `--exit-override` greened says so beside its status (BLOCKED-326 (b), F3).
+    const cell = (s) => `${row.cells[s]?.status ?? 'NOT_RUN'}${row.cells[s]?.exitOverride === undefined ? '' : ' (exit override)'}`
     lines.push(
       `| ${i + 1} | ${row.id} | ${row.title} | ${row.layer} | ${row.canonicalOwner} | ${row.predecessors.join(', ') || '—'} | W${row.wave} | ${cell('C')} | ${cell('P')} | ${cell('U')} | ${cell('F')} | ${row.candidateSha ?? '—'} | ${row.independentVerdict} | ${row.status} |`,
     )
@@ -1144,7 +1248,7 @@ function cmdGreen() {
     console.error(`BLOCKED: --report ${reportPath} cannot observe ${epic}.${stage}: ${notObserved}`)
     process.exit(1)
   }
-  checkRecordedExit(reportPath, `${epic}.${stage}`)
+  checkRecordedExit(reportPath, `${epic}.${stage}`, exitRecordObservation(raw, ciRunUrl, failedFullNames))
   const observationSha256 = sha256(raw)
 
   const existing = existsSync(LEDGER_PATH) ? loadJson(LEDGER_PATH) : { rows: buildSkeleton(null) }
@@ -1210,7 +1314,7 @@ function cmdGreen() {
     expectCasesMatched: frozen.expectCases,
     ...(absorbedFlakes.length > 0 ? { absorbedFlakes } : {}),
     ...(reattested === undefined ? {} : { reattested }),
-    ...exitOverrideField(reportPath),
+    ...exitFields(reportPath, observationSha256),
     capturedAtUtc: nowIso(),
   }
   rows[epic].candidateSha = candidateSha
@@ -1375,7 +1479,7 @@ function cmdGreenSupplement() {
     console.error(`BLOCKED: --report ${reportPath} cannot observe ${epic}.${stage}.${supplementSeq}: ${notObserved}`)
     process.exit(1)
   }
-  checkRecordedExit(reportPath, `${epic}.${stage}.${supplementSeq}`)
+  checkRecordedExit(reportPath, `${epic}.${stage}.${supplementSeq}`, exitRecordObservation(raw, ciRunUrl, failedFullNames))
   const observationSha256 = sha256(raw)
 
   const existing = existsSync(LEDGER_PATH) ? loadJson(LEDGER_PATH) : { rows: buildSkeleton(null) }
@@ -1418,7 +1522,7 @@ function cmdGreenSupplement() {
     observationSha256,
     expectCasesMatched: frozen.expectCases,
     ...(absorbedFlakes.length > 0 ? { absorbedFlakes } : {}),
-    ...exitOverrideField(reportPath),
+    ...exitFields(reportPath, observationSha256),
     capturedAtUtc: nowIso(),
   }
 
@@ -2178,7 +2282,10 @@ function cmdAccept() {
   row.status = 'ACCEPTED'
   row.acceptedEvidence = {
     acceptedAtUtc: nowIso(),
-    cells: Object.fromEntries(applicableStages.map((stage) => [stage, { ciRunUrl: row.cells[stage].ciRunUrl, candidateSha: row.cells[stage].candidateSha }])),
+    cells: Object.fromEntries(applicableStages.map((stage) => {
+      const { ciRunUrl, candidateSha, exitOverride } = row.cells[stage]
+      return [stage, { ciRunUrl, candidateSha, ...(exitOverride === undefined ? {} : { exitOverride }) }]
+    })),
     coverageClosure: closure,
     delegateSignoff: { delegateSession: signoff.matchedEntry.delegateSession, signedAtUtc: signoff.matchedEntry.signedAtUtc, userConfirmationRef: signoff.matchedEntry.userConfirmationRef ?? null },
   }
@@ -2186,6 +2293,7 @@ function cmdAccept() {
   const inputsConsumed = { epic, closure, chain, distinctness, signoff }
   const outLedger = writeLedgerHeader(ledger.rows, inputsConsumed)
   renderMarkdown(outLedger)
+  for (const line of exitOverrideLines(ledger.rows, [epic])) console.log(line)
   console.log(`ACCEPTED ${epic}: independentVerdict=APPROVED, status=ACCEPTED`)
 }
 
@@ -2314,6 +2422,7 @@ function cmdCheck() {
       process.exit(1)
     }
   }
+  for (const line of exitOverrideLines(ledger.rows)) console.log(line)
   console.log(`verify: ${LEDGER_PATH} carries a generate-ledger.mjs header (${Object.keys(ledger.rows).length} rows); EXEC-STATE digests match both files; acceptance-coverage.json conforms to its schema; coverage closure holds for all ${acceptedRows.length} ACCEPTED rows`)
   process.exit(0)
 }
