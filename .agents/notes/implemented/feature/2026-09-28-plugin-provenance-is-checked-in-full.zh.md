@@ -11,7 +11,7 @@ P1-02 签字要的，有几处是它的 A 笔（B-572）没做的；delegate 在
 ## 决定
 
 - **声明点名的 SBOM，才是被核的 SBOM。** 签名通过之后，`verifyPluginProvenance` 先比 `computeSbomDigest(input.sbom)` 与 `claim.sbomDigest`，不等就以 `sbom-digest-mismatch` 拒绝，之后才核覆盖。签名覆盖 `sbomDigest`，声明里的摘要是真的，这一比就把所附的 SBOM 绑到它上面。这个摘要按 UTF-16 码元给条目排序，不按 locale，因为它现在决定结论，不能随校验机器的 `LANG` 变。
-- **启动时离线再验安装时的声明，被拒就不启动。** 在任何插件代码运行之前，`runProfile` 把每个从本地 tarball 安装、且 tarball 旁边有声明文件的依赖交给 `verifyLockedPackageOffline`，读声明与已装包的方式与安装路径相同。被拒时，任何模式都不启动，显式开发 profile 也一样，并逐个写明包与原因：声明验不过的包不是未签名的包。每个结论经 `buildPluginPermissionStates` 的 `provenanceRecords` 进入 inventory，`trusted` 带上它的锚。安装之后 tarball 或声明文件不见了的，记为 `unverified`，原因是 `tarball-missing` 或 `claim-file-missing`；锁只用来判断安装时是否验过声明，锁里的 `trusted` 从不沿用。
+- **启动时离线再验安装时的声明，被拒就不启动。** 在任何插件代码运行之前，`runProfile` 把每个从本地 tarball 安装、且 tarball 旁边有声明文件的依赖交给 `verifyLockedPackageOffline`，读声明与已装包的方式与安装路径相同。被拒时，任何模式都不启动，显式开发 profile 也一样，并逐个写明包与原因：声明验不过的包不是未签名的包。每个结论经 `buildPluginPermissionStates` 的 `provenanceRecords` 进入 inventory，`trusted` 带上它的锚。安装时验过的包要守住那次验证，锁里的 `trusted` 从不沿用：之后 tarball 或声明文件不见了，或者 tarball 的摘要与锁里记的不同，都拒启动，并写明缺哪个文件或哪里不符；spec 没变而声明文件不见了的安装也拒。从没验过的包记为 `unverified`，原因是 `no-provenance-claim`。
 - **显式开发 profile 每次启动都显示不可信状态。** 启动器发布「这次是不是开发 profile」之后，`warnUnsignedDevPlugins` 立即向 `admitUnsignedDevMode` 请求准入，策略在这个值表示开发 profile 时只放行当前 profile；准入后把它的横幅写到 stderr，逐个写出启动记录为 `unverified` 的插件名。再加上 inventory 里的 `unverified` 记录，就是 must[4] 要的持续显示。其它 profile 什么都不写。
 
 ## 已考虑的替代方案

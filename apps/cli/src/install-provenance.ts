@@ -87,7 +87,13 @@ export function verifyInstallProvenance(
     const tarball = localTarball(spec, profileDir)
     const claimPath = tarball === undefined ? undefined : `${tarball}${CLAIM_FILE_SUFFIX}`
     if (tarball === undefined || claimPath === undefined || !existsSync(claimPath)) {
-      if (!unchanged) records.set(name, recordUnverifiedProvenance('no-provenance-claim', verifiedAt))
+      // Deleting a verified claim is not a way to keep the package trusted; removing the
+      // dependency and adding it again records it unverified (G2).
+      if (unchanged && tarball !== undefined && locked.get(name)?.trust === 'trusted') {
+        refused.push({ name, reason: 'claim-file-missing' })
+      } else if (!unchanged) {
+        records.set(name, recordUnverifiedProvenance('no-provenance-claim', verifiedAt))
+      }
       continue
     }
     const packageDigest = computePackageDigest(readFileSync(tarball))
@@ -112,12 +118,13 @@ export function verifyInstallProvenance(
  * Verify again, offline, every dependency installed from a local tarball
  * with a claim file beside it, as a profile boots and before any plugin code
  * runs (acceptance[1]). The digest is taken from the tarball's bytes, so a
- * file changed under `node_modules` after the install is not detected. The lock
- * is read only for whether a claim was verified at install; a dependency
- * whose tarball or claim file has gone since is recorded `unverified` with
- * the missing file as its reason, the tarball first, and never `trusted`.
- * The profile's trust anchors are read, and a kernel to verify against is
- * built, only when a claim is there to verify.
+ * file changed under `node_modules` after the install is not detected. A
+ * dependency the lock records as verified is held to that verification: a
+ * tarball or claim file gone since, or a tarball whose digest is not the
+ * locked one, is refused, and the lock's `trusted` is never carried over. A
+ * dependency never verified is recorded `unverified`. The profile's trust
+ * anchors are read, and a kernel to verify against is built, only when a
+ * claim is there to verify.
  * @param dependencies - the profile's dependencies, by package name.
  * @param profileDir - the profile directory (spec, resolution anchor, and trust anchors).
  * @param locked - the provenance the profile's lock records, by package name.
@@ -139,17 +146,19 @@ export function verifyBootProvenance(
       continue
     }
     const claimPath = `${tarball}${CLAIM_FILE_SUFFIX}`
+    const lockedRecord = locked.get(name)
     const hasTarball = existsSync(tarball)
-    const hasClaim = existsSync(claimPath)
-    if (!hasTarball || !hasClaim) {
-      const hadClaim = hasClaim || locked.get(name)?.trust === 'trusted'
-      records.set(name, recordUnverifiedProvenance(
-        !hadClaim ? 'no-provenance-claim' : hasTarball ? 'claim-file-missing' : 'tarball-missing',
-        verifiedAt,
-      ))
+    if (!hasTarball || !existsSync(claimPath)) {
+      if (lockedRecord?.trust === 'trusted') refused.push({ name, reason: hasTarball ? 'claim-file-missing' : 'tarball-missing' })
+      else records.set(name, recordUnverifiedProvenance('no-provenance-claim', verifiedAt))
       continue
     }
     const packageDigest = computePackageDigest(readFileSync(tarball))
+    // acceptance[1] is about the same locked package: other bytes at its path are not it.
+    if (lockedRecord?.trust === 'trusted' && lockedRecord.packageDigest !== packageDigest) {
+      refused.push({ name, reason: 'package-digest-mismatch' })
+      continue
+    }
     const input = claimInput(name, packageDigest, claimPath, profileDir)
     if (typeof input === 'string') {
       refused.push({ name, reason: input })
