@@ -58,6 +58,9 @@
     },
     {
       "path": "../../util/package-manifest"
+    },
+    {
+      "path": "../../kernel/trust-kernel"
     }
   ]
 }

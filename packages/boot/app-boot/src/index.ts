@@ -61,6 +61,12 @@ export {
   type ProfileTemplate,
   type WildcardFinding,
 } from './profile.ts'
+export {
+  enforceTrustKernelPosture,
+  readProfileTrustAnchors,
+  resolveTrustKernelInsecureOptIn,
+  TRUST_KERNEL_INSECURE_ENV,
+} from './trust-anchors.ts'
 
 /**
  * Resolve the config to boot. Replay swaps a `cordis.yml` basename for

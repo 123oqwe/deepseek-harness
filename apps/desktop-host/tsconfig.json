@@ -14,6 +14,8 @@
     { "path": "../../packages/client/connection/tsconfig.host.json" },
     { "path": "../../packages/client/modules" },
     { "path": "../../packages/host/webserver" },
+    { "path": "../../packages/kernel/trust-kernel" },
+    { "path": "../../packages/policy/policy-enforcement" },
     { "path": "../../packages/util/launch-environment" }
   ]
 }

@@ -41,7 +41,8 @@
     "@deepseek-ai/dsh-schema-registry": "workspace:^",
     "js-yaml": "^4.2.0",
     "resolve.exports": "^2.0.3",
-    "@deepseek-ai/dsh-package-manifest": "workspace:^"
+    "@deepseek-ai/dsh-package-manifest": "workspace:^",
+    "@deepseek-ai/dsh-trust-kernel": "workspace:^"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
