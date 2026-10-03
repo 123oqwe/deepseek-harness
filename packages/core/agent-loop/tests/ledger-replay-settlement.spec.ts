@@ -21,6 +21,8 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import ActionLedgerPlugin from '@deepseek-ai/dsh-action-ledger'
+import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
+import RunPlugin from '@deepseek-ai/dsh-run'
 import AgentRegistry from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import LlmRuntime, { createUserMessage, StreamChunk, ToolCallId } from '@deepseek-ai/dsh-llm'
@@ -76,6 +78,12 @@ async function durableHarness(adapter: MockAdapter, sessionRoot: string, ledgerR
   await ctx.plugin(ToolRuntime)
   await ctx.plugin(AgentRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
+  // The Run Service assigns the lease epoch (external-effect.ts): a fresh agent
+  // gets one epoch, and a resume after the lease lapses gets a higher one — which
+  // is what makes the cross-epoch replay's "held by epoch 0, not 1" distinct from
+  // the same-epoch "is confirmed". It injects the lease store mounted here.
+  await ctx.plugin(InMemoryLeaseStorePlugin)
+  await ctx.plugin(RunPlugin, { storePath: join(ledgerRoot, 'runs.json'), leaseMs: 60_000 })
   await ctx.plugin(ActionLedgerPlugin, { directory: ledgerRoot })
   ctx.llm.registerAdapter(['mock'], adapter)
   return ctx
