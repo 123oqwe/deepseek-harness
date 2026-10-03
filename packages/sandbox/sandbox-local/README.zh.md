@@ -52,7 +52,7 @@ kind: "package-reference"
 
 挂载提供方后，命令在你逐调用解析的模式下运行。强制执行是报告的事实，而非承诺：`full` 表示后端管辖模式承诺的每个文件操作并拒绝 Unix-domain socket，`partial` 表示它只管辖子集或无法拒绝这些 socket——Landlock、Windows ACL 档（还有 Everyone 与硬链接边界）与 `runnerCommand` runner 是当前的部分强制执行情形，因此需要绝对边界的消费方可以拒绝或向上暴露它们。被拒绝的文件操作通过后端的拒绝方言呈现，执行命令前失败的 runner 会报告结构化的 runner 失败签名。
 
-在 `workspace-write` 下，harness 主目录（`$DSH_HOME`，来自共享的 `protectedRoots` helper）即使位于工作区内也保持只读：bwrap 在工作区的可写 bind 之上把它以只读方式 bind，Seatbelt 在工作区授权之后拒绝写入它，而只能授予可写根目录的 Landlock 与 Windows ACL 档在工作区或临时区域包含它时拒绝执行命令，并说明如何移开。主目录保存 harness 自己的配置——profile 与补丁层、强制执行的策略集所来自的设置文档、信任锚、已保存的 workflow 与 action ledger——所以受限命令无法改写它；逐调用批准的 `danger-full-access` 可以。
+在 `workspace-write` 下，harness 主目录（`$DSH_HOME`，来自共享的 `protectedRoots` helper）即使位于工作区内也保持只读：bwrap 在工作区的可写 bind 之上把它以只读方式 bind，Seatbelt 在工作区授权之后拒绝写入它，而只能授予可写根目录的 Landlock 与 Windows ACL 档在工作区或临时区域包含它时拒绝执行命令，并说明如何移开。主目录保存 harness 自己的配置——profile 与补丁层、强制执行的策略集所来自的设置文档、信任锚、已保存的 workflow 与 action ledger——所以受限命令无法改写它；逐调用批准的 `danger-full-access` 可以。在两种受限模式下，harness 凭证库（`$DSH_HOME/.credentials.yaml` 与 `$DSH_HOME/.env`，来自共享的 `unreadableFiles` helper）也读不到：bwrap 把 `/dev/null` bind 到每个已存在的文件上，Seatbelt 拒绝读取每个文件。
 
 <a id="unix-domain-sockets"></a>
 ### Unix-domain socket
@@ -166,6 +166,7 @@ Windows 档为每个工作区保留一个确定性写入 SID 和常驻 ACE，同
 - **拒绝 socket 需要 x86_64 或 AArch64 上的 bwrap，或 Seatbelt**——seccomp 过滤器只为这两种架构构建。其余后端报告 `partial` 并列出找到的已知 socket，而该列表天然不完整：监听在别处的守护进程仍可连，且不会被点名。
 - **拒绝 socket 会让基于 socket 的本地工具失效**——[Unix-domain socket](#unix-domain-sockets) 一节列出的工具在沙箱内都会失败，只有逐次批准的 `danger-full-access` 能运行它们。
 - **当 `$DSH_HOME` 位于可写根目录下时，Landlock 与 Windows ACL 档拒绝执行命令**——两者都只能授予可写根目录，无法让工作区或临时区域内的 harness 主目录保持只读；命令以 `SANDBOX_UNAVAILABLE` 被拒绝，错误信息提示在不包含 `$DSH_HOME` 的工作区中启动，或移动 `DSH_HOME`。Windows 上的拒绝只在非 Windows 主机上由单元测试覆盖。
+- **Landlock 与 Windows ACL 档让 bash 仍读得到凭证库**——两者都是对整棵树授予读取，无法从中挖掉单个文件，所以在这类主机上受限命令能读到 `$DSH_HOME/.credentials.yaml` 与 `$DSH_HOME/.env`；`read`、`grep`、`glob` 工具仍会拒绝或去掉它们。在所有主机上都让密钥远离 agent，归 P3-05 与 P3-06。
 - **Seatbelt 的 socket 规则与 harness 主目录的拒绝规则只在开发者 Mac 上验证过**——没有 macOS CI 作业运行 `tests/seatbelt.e2e.ts`；主目录规则的先后次序用 `sandbox-exec` 实测过一次（B-715）。
 - **Seatbelt 依赖已弃用的 `sandbox-exec`**——macOS 仍会提供它，但若 Apple 移除该私有策略引擎，该提供方无法替换或探测。
 - **runner 选择在提供方生命周期内缓存**——安装、移除或修复 runner 后，必须重载插件才能改变选择。

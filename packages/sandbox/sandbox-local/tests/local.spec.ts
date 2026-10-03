@@ -10,7 +10,7 @@
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { LAUNCHER_FAILURE_EXIT } from '@deepseek-ai/node-addon-system/landlock-run'
 import { SANDBOX_UNAVAILABLE, SandboxUnavailableError } from '@deepseek-ai/dsh-sandbox'
@@ -94,6 +94,13 @@ const SEATBELT_SOCKET_FORMS = [
 const SEATBELT_RO_PROFILE = `(version 1) (allow default) (deny file-write*) (allow file-write* (literal "/dev/null")) ${SEATBELT_SOCKET_FORMS}`
 
 describe('profile dialects', () => {
+  // A home with no credential files, so the exact profiles below do not depend on the host's ~/.dsh (B-717).
+  beforeEach(() => {
+    vi.stubEnv('DSH_HOME', '/dsh-test-home')
+  })
+  /** Seatbelt's read denies for the stubbed home's credential store (B-717). */
+  const READ_DENIES = '(deny file-read* (literal "/dsh-test-home/.credentials.yaml")) (deny file-read* (literal "/dsh-test-home/.env"))'
+
   it('bwrap read-only: whole tree read-only with fresh /dev and private PID-scoped /proc, no writable mounts', () => {
     expect(bwrapProfileArgs(RO)).toEqual(['--ro-bind', '/', '/', '--dev', '/dev', '--unshare-pid', '--proc', '/proc', '--die-with-parent'])
   })
@@ -115,12 +122,11 @@ describe('profile dialects', () => {
     expect(landlockProfileArgs(WW)).toEqual(['--ro', '/', '--rw', '/dev/null', '--rw', '/tmp', '--rw', '/ws'])
   })
 
-  it('seatbelt read-only: allow-default with every file write denied except the /dev/null literal, and every Unix-socket connection except name resolution and the system log', () => {
-    expect(seatbeltProfileArgs(RO)).toEqual(['-p', SEATBELT_RO_PROFILE])
+  it('seatbelt read-only: allow-default with every file write denied except the /dev/null literal, every Unix-socket connection except name resolution and the system log, and reads of the credential store', () => {
+    expect(seatbeltProfileArgs(RO)).toEqual(['-p', `${SEATBELT_RO_PROFILE} ${READ_DENIES}`])
   })
 
   it('seatbelt workspace-write: one more allow for the canonicalized workspace root, /tmp, and the user temp dir, then a deny for the harness home', () => {
-    vi.stubEnv('DSH_HOME', '/dsh-b715-home')
     // `/ws` does not exist, so it is granted as spelled (the canonicalization
     // fallback); `/tmp` and `os.tmpdir()` exist everywhere and are granted
     // CANONICALIZED — Seatbelt matches resolved paths (`/tmp` IS
@@ -129,7 +135,8 @@ describe('profile dialects', () => {
     const roots = [...new Set(['/ws', realpathSync('/tmp'), realpathSync(tmpdir())])]
     const allow = `(allow file-write* ${roots.map(root => `(subpath "${root}")`).join(' ')})`
     // B-715: the harness home is denied after the grant; in SBPL the later matching rule wins.
-    expect(seatbeltProfileArgs(WW)).toEqual(['-p', `${SEATBELT_RO_PROFILE} ${allow} (deny file-write* (subpath "/dsh-b715-home"))`])
+    // B-717: the credential store is denied to reads in every confining mode.
+    expect(seatbeltProfileArgs(WW)).toEqual(['-p', `${SEATBELT_RO_PROFILE} ${allow} (deny file-write* (subpath "/dsh-test-home")) ${READ_DENIES}`])
   })
 
   it('seatbelt workspace-write dedups a workspace root that already IS the temp dir', () => {
@@ -198,6 +205,22 @@ describe('the harness home under a writable root (B-715)', () => {
     const { workspace } = workspaceWithHome(true)
     const { sandbox } = await setup({}, { platform: 'linux', probeBwrap: () => true })
     expect(sandbox.confine(['true'], { mode: 'workspace-write', workspaceRoot: workspace }).backend).toBe('bwrap')
+  })
+})
+
+describe('the harness credential store is unreadable inside the sandbox (B-717)', () => {
+  it('bwrap binds /dev/null over each credential file that exists, in both modes, after every other mount', () => {
+    const workspace = mkdtempSync(join(tmpdir(), 'dsh-b717-ws-'))
+    tempDirs.push(workspace)
+    const home = join(workspace, '.dsh')
+    mkdirSync(home)
+    writeFileSync(join(home, '.credentials.yaml'), 'token: x\n')
+    vi.stubEnv('DSH_HOME', home)
+    const canonicalHome = realpathSync.native(home)
+    const secret = join(canonicalHome, '.credentials.yaml')
+    expect(bwrapProfileArgs({ mode: 'read-only', workspaceRoot: workspace }).slice(-3)).toEqual(['--ro-bind', '/dev/null', secret])
+    expect(bwrapProfileArgs({ mode: 'workspace-write', workspaceRoot: workspace }).slice(-6))
+      .toEqual(['--ro-bind', canonicalHome, canonicalHome, '--ro-bind', '/dev/null', secret])
   })
 })
 

@@ -21,8 +21,9 @@
  * a mutation only when the target canonicalizes under the policy's workspace
  * root or a platform temp area from the shared `writableRoots` policy, and not
  * under a shared `protectedRoots` entry (the harness home);
- * `danger-full-access` delegates unfenced. A denial throws the structured
- * `FS_SANDBOX_DENIED`.
+ * `danger-full-access` delegates unfenced. Under both confining modes a read
+ * of a shared `unreadableFiles` entry (the harness credential store) is
+ * refused too. A denial throws the structured `FS_SANDBOX_DENIED`.
  *
  * @module @deepseek-ai/dsh-fs-sandbox
  */
@@ -32,7 +33,7 @@ import { LocalFileSystem } from '@deepseek-ai/dsh-fs-local'
 import type { Config as LocalConfig } from '@deepseek-ai/dsh-fs-local'
 import { FsError } from '@deepseek-ai/dsh-fs'
 import type { FsEditOutcome, FsEditRequest, FsTarget, FsVersion, FsWriteIntent, FsWriteOutcome } from '@deepseek-ai/dsh-fs'
-import { protectedRoots, writableRoots } from '@deepseek-ai/dsh-sandbox'
+import { protectedRoots, unreadableFiles, writableRoots } from '@deepseek-ai/dsh-sandbox'
 import type { SandboxExecutionPolicy, SandboxMode } from '@deepseek-ai/dsh-sandbox'
 import type {} from '@deepseek-ai/dsh-sandbox-policy'
 import { isPathUnder } from './containment.ts'
@@ -107,6 +108,80 @@ export class SandboxedFileSystem extends LocalFileSystem {
     sandboxPolicy?: SandboxExecutionPolicy,
   ): Promise<FsEditOutcome> {
     return super.editText(await this.checkedTarget(target, sandboxPolicy), edit, expected, signal)
+  }
+
+  /**
+   * Refuse a read of the harness credential store, then delegate to the
+   * inherited read. See {@link checkedRead}.
+   * @param target - the resolved target to read.
+   * @param signal - aborts the read.
+   * @returns the file's text from the inherited backend.
+   */
+  override async readText(target: FsTarget, signal?: AbortSignal): Promise<string> {
+    await this.checkedRead(target)
+    return super.readText(target, signal)
+  }
+
+  /**
+   * Refuse a read of the harness credential store, then delegate to the
+   * inherited text stream. See {@link checkedRead}.
+   * @param target - the resolved target to read.
+   * @param signal - aborts the stream.
+   * @returns the decoded chunk iterable from the inherited backend.
+   */
+  override async streamText(target: FsTarget, signal?: AbortSignal): Promise<AsyncIterable<string>> {
+    await this.checkedRead(target)
+    return super.streamText(target, signal)
+  }
+
+  /**
+   * Refuse a read of the harness credential store, then delegate to the
+   * inherited bounded read. See {@link checkedRead}.
+   * @param target - the resolved target to read.
+   * @param signal - aborts the read.
+   * @param maxBytes - the most bytes to return.
+   * @returns the file's bytes from the inherited backend.
+   */
+  override async readBytes(target: FsTarget, signal: AbortSignal | undefined, maxBytes: number): Promise<Uint8Array> {
+    await this.checkedRead(target)
+    return super.readBytes(target, signal, maxBytes)
+  }
+
+  /**
+   * Refuse a read of the harness credential store, then delegate to the
+   * inherited range read. See {@link checkedRead}.
+   * @param target - the resolved target to read.
+   * @param range - the byte offset and length to read.
+   * @param signal - aborts the read.
+   * @returns the range's bytes from the inherited backend.
+   */
+  override async readByteRange(
+    target: FsTarget,
+    range: { offset: number; length: number },
+    signal?: AbortSignal,
+  ): Promise<Uint8Array> {
+    await this.checkedRead(target)
+    return super.readByteRange(target, range, signal)
+  }
+
+  /**
+   * Refuse, with the structured `FS_SANDBOX_DENIED`, a read whose target is
+   * one of the shared `unreadableFiles` (the harness's credential store)
+   * unless the calling session's mode is `danger-full-access`. Reads carry no
+   * per-call policy, so the mode is the resolved one.
+   * @param target - the resolved target about to be read.
+   * @returns once the read may proceed.
+   */
+  private async checkedRead(target: FsTarget): Promise<void> {
+    if (this.ctx.sandboxPolicy.resolve().mode === 'danger-full-access') return
+    for (const file of unreadableFiles()) {
+      if (await isPathUnder(target.targetKey, file)) {
+        throw new FsError(
+          `cannot read "${target.displayPath}": the harness credential store is not readable from a sandboxed call`,
+          'FS_SANDBOX_DENIED',
+        )
+      }
+    }
   }
 
   /**
