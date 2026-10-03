@@ -292,7 +292,7 @@
     },
     {
       "epic": "P0-02",
-      "path": "tests/first100/fixtures/P0-02.desktop-host.composition.spec.ts",
+      "path": "tests/first100/fixtures/P0-02.desktop-host.composition.e2e.ts",
       "kind": "test",
       "stages": [
         "U.4"
@@ -5501,7 +5501,7 @@
     },
     {
       "epic": "P4-09",
-      "path": "tests/first100/fixtures/P4-09.saved-workflow-signing.composition.spec.ts",
+      "path": "tests/first100/fixtures/P4-09.saved-workflow-signing.composition.e2e.ts",
       "kind": "test",
       "stages": [
         "U.9"

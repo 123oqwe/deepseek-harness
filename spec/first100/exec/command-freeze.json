@@ -22436,7 +22436,9 @@
         "exec",
         "vitest",
         "run",
-        "tests/first100/fixtures/P0-02.desktop-host.composition.spec.ts",
+        "--config",
+        "vitest.e2e.config.ts",
+        "tests/first100/fixtures/P0-02.desktop-host.composition.e2e.ts",
         "--reporter=json"
       ],
       "expectExit": 0,
@@ -22446,21 +22448,21 @@
         "P0-02 on the shipped Desktop Host: a pinned Trust Kernel, and the insecure opt-in only for a development project (B-696) acceptance[3]: a project that declares dsh.profile.development starts with DSH_TRUST_KERNEL_INSECURE set, warns on stderr naming it, and tells the model it runs insecure"
       ],
       "files": [
-        "tests/first100/fixtures/P0-02.desktop-host.composition.spec.ts",
+        "tests/first100/fixtures/P0-02.desktop-host.composition.e2e.ts",
         "tests/first100/fixtures/loader/p0-02-desktop-host/driver.ts",
         "tests/first100/fixtures/loader/p0-02-desktop-host/shared.ts",
         "apps/desktop-host/src/index.ts"
       ],
-      "frozenAtUtc": "2026-10-03T09:23:30.000Z",
+      "frozenAtUtc": "2026-10-03T19:37:32.000Z",
       "dryRunProof": {
-        "treeSha": "214832dd0817b18c1f7ada1af439db196dc648f0",
+        "treeSha": "f942195a6c566c349df7a69324a00205cd11058c",
         "testsDiscovered": 3
       },
       "sensitivityProof": {
         "mutationDescription": "Three rounds, never merged, each a change to apps/desktop-host/src/index.ts: M-a580-1 builds no kernel on a non-insecure boot; M-a580-2 reads a non-development project as development, so the insecure opt-in is never refused; M-a580-3 never publishes the model-visible insecure notice. A-416: each mutated file and this entry's files are byte-identical at the round's parent, at the code tip and at the tree this entry is frozen on.",
-        "failureSummary": "Read from each round's own narrow report; every round carried build. M-a580-1 `81a89f32b9781101ce9776c1273014cdf27f9acf` run 37109293777: 1 passed, 2 failed in tests/first100/fixtures/P0-02.desktop-host.composition.spec.ts: «P0-02 on the shipped Desktop Host: a pinned Trust Kernel, and the insecure opt-in only for a development project (B-696) condition 1: the Desktop Host starts a project with a Trust Kernel pinned, and a tool call on behalf of its root agent runs once», «P0-02 on the shipped Desktop Host: a pinned Trust Kernel, and the insecure opt-in only for a development project (B-696) acceptance[3]: a project that declares dsh.profile.development starts with DSH_TRUST_KERNEL_INSECURE set, warns on stderr naming it, and tells the model it runs insecure». M-a580-2 `b786bda6a79942315a710abebbed36e27f687a91` run 37109305488: 2 passed, 1 failed in tests/first100/fixtures/P0-02.desktop-host.composition.spec.ts: «P0-02 on the shipped Desktop Host: a pinned Trust Kernel, and the insecure opt-in only for a development project (B-696) acceptance[2]: with DSH_TRUST_KERNEL_INSECURE set, a project that does not declare dsh.profile.development refuses to start». M-a580-3 `2ecaa6692eb443051f17b2470f6d810f860b7d0d` run 37109316936: 2 passed, 1 failed in tests/first100/fixtures/P0-02.desktop-host.composition.spec.ts: «P0-02 on the shipped Desktop Host: a pinned Trust Kernel, and the insecure opt-in only for a development project (B-696) acceptance[3]: a project that declares dsh.profile.development starts with DSH_TRUST_KERNEL_INSECURE set, warns on stderr naming it, and tells the model it runs insecure»."
+        "failureSummary": "Read from each round's own narrow report under the e2e config; every round carried build. M-a580-1 `102da64b867d54090b0bcfaf952cd88f74c81b12` run 37148181915: 1 passed, 2 failed in tests/first100/fixtures/P0-02.desktop-host.composition.e2e.ts: «P0-02 on the shipped Desktop Host: a pinned Trust Kernel, and the insecure opt-in only for a development project (B-696) condition 1: the Desktop Host starts a project with a Trust Kernel pinned, and a tool call on behalf of its root agent runs once», «P0-02 on the shipped Desktop Host: a pinned Trust Kernel, and the insecure opt-in only for a development project (B-696) acceptance[3]: a project that declares dsh.profile.development starts with DSH_TRUST_KERNEL_INSECURE set, warns on stderr naming it, and tells the model it runs insecure». M-a580-2 `3116cb4f6ce76da6ca52eda27a37d8fe2293a0fe` run 37148200098: 2 passed, 1 failed in tests/first100/fixtures/P0-02.desktop-host.composition.e2e.ts: «P0-02 on the shipped Desktop Host: a pinned Trust Kernel, and the insecure opt-in only for a development project (B-696) acceptance[2]: with DSH_TRUST_KERNEL_INSECURE set, a project that does not declare dsh.profile.development refuses to start». M-a580-3 `5a29ff51b12826859c5563b4d7d29db7a8f03e0d` run 37148217837: 2 passed, 1 failed in tests/first100/fixtures/P0-02.desktop-host.composition.e2e.ts: «P0-02 on the shipped Desktop Host: a pinned Trust Kernel, and the insecure opt-in only for a development project (B-696) acceptance[3]: a project that declares dsh.profile.development starts with DSH_TRUST_KERNEL_INSECURE set, warns on stderr naming it, and tells the model it runs insecure»."
       },
-      "note": "P0-02 U-stage supplement 4: the shipped Desktop Host. It starts a project with a Trust Kernel pinned and a tool call runs once (BLOCKED-306 condition 1); with DSH_TRUST_KERNEL_INSECURE set it refuses a project that is not a development profile (acceptance[2]); a development project starts, warns on stderr naming the opt-in and tells the model it runs insecure (acceptance[3]). Lane B's B-696 and B-696b, red first for A-580 and A-580b."
+      "note": "P0-02 U-stage supplement 4: the shipped Desktop Host. It starts a project with a Trust Kernel pinned and a tool call runs once (BLOCKED-306 condition 1); with DSH_TRUST_KERNEL_INSECURE set it refuses a project that is not a development profile (acceptance[2]); a development project starts, warns on stderr naming the opt-in and tells the model it runs insecure (acceptance[3]). Lane B's B-696 and B-696b, red first for A-580 and A-580b. The spec launches the built product, so it runs under vitest.e2e.config.ts after Build (B-724)."
     },
     {
       "epic": "P1-10",
@@ -22714,7 +22716,9 @@
         "exec",
         "vitest",
         "run",
-        "tests/first100/fixtures/P4-09.saved-workflow-signing.composition.spec.ts",
+        "--config",
+        "vitest.e2e.config.ts",
+        "tests/first100/fixtures/P4-09.saved-workflow-signing.composition.e2e.ts",
         "--reporter=json"
       ],
       "expectExit": 0,
@@ -22722,21 +22726,21 @@
         "P4-09 acceptance[0]: a shipped profile runs a saved workflow only when it is signed by an admitted key (red first, paired with B-698) loads the signed definition and refuses the tampered, unsigned, unanchored, and badly-signed ones with their reasons"
       ],
       "files": [
-        "tests/first100/fixtures/P4-09.saved-workflow-signing.composition.spec.ts",
+        "tests/first100/fixtures/P4-09.saved-workflow-signing.composition.e2e.ts",
         "tests/first100/fixtures/P4-09.saved-workflows-marker.mjs",
         "packages/workflow/workflow-filesystem/src/index.ts",
         "packages/plugin/plugin-provenance/src/signature.ts"
       ],
-      "frozenAtUtc": "2026-10-03T09:52:07.000Z",
+      "frozenAtUtc": "2026-10-03T19:37:32.000Z",
       "dryRunProof": {
-        "treeSha": "cfce6d3bab59dc80c098bedd1c65a940170a0d2a",
+        "treeSha": "f942195a6c566c349df7a69324a00205cd11058c",
         "testsDiscovered": 1
       },
       "sensitivityProof": {
         "mutationDescription": "M-698-4 makes the saved-workflow loader register a definition without checking its signature. A-416: the mutated file and this entry's files are byte-identical at the round's parent, at the code tip and at the tree this entry is frozen on.",
-        "failureSummary": "Read from the round's own narrow report; the round carried build. M-698-4 `454a161ca4d0820c02f20b397d5660b2803428b3` run 37114209346: 0 passed, 1 failed in tests/first100/fixtures/P4-09.saved-workflow-signing.composition.spec.ts: «P4-09 acceptance[0]: a shipped profile runs a saved workflow only when it is signed by an admitted key (red first, paired with B-698) loads the signed definition and refuses the tampered, unsigned, unanchored, and badly-signed ones with their reasons»."
+        "failureSummary": "Read from each round's own narrow report under the e2e config; every round carried build. M-698-4 `e885e468bf75edc0fcc1dc61c6e43eed76a94fb1` run 37148237522: 0 passed, 1 failed in tests/first100/fixtures/P4-09.saved-workflow-signing.composition.e2e.ts: «P4-09 acceptance[0]: a shipped profile runs a saved workflow only when it is signed by an admitted key (red first, paired with B-698) loads the signed definition and refuses the tampered, unsigned, unanchored, and badly-signed ones with their reasons»."
       },
-      "note": "P4-09 U-stage supplement 9: acceptance[0] and must[0] (question 31 (a)) on the shipped launcher. A shipped profile loads a saved workflow from $DSH_HOME/workflows only when it is signed by a key one of the profile's offline-signed trust anchors admits, and refuses the tampered, unsigned, unanchored and badly signed ones with their reasons. Observed through the built dsh bin in a child process: an in-process boot reads the anchors through a second trust-kernel module instance (gate3 2026-10-03T09:15:11Z). Lane A's A-581, red first for B-698's loader."
+      "note": "P4-09 U-stage supplement 9: acceptance[0] and must[0] (question 31 (a)) on the shipped launcher. A shipped profile loads a saved workflow from $DSH_HOME/workflows only when it is signed by a key one of the profile's offline-signed trust anchors admits, and refuses the tampered, unsigned, unanchored and badly signed ones with their reasons. Observed through the built dsh bin in a child process: an in-process boot reads the anchors through a second trust-kernel module instance (gate3 2026-10-03T09:15:11Z). Lane A's A-581, red first for B-698's loader. The spec launches the built product, so it runs under vitest.e2e.config.ts after Build (B-724)."
     }
   ]
 }
