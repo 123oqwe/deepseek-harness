@@ -19,6 +19,7 @@ import {
   loadLayeredEnv,
   loadProfileDirectory,
   loadOverlayPatches,
+  publishInsecureModeNotice,
   readProfileManifest,
   readProfileTrustAnchors,
   resolveTrustKernelInsecureOptIn,
@@ -324,6 +325,11 @@ export async function runDesktopHost(
     hostCtx.provide(DEVELOPMENT_PROFILE_KEY, development)
   })
   current = ctx
+  // A development project that opted out of the Trust Kernel tells the model, in
+  // its own request, that it runs without that protection (Epic P0-02
+  // acceptance[3]), through the same shared section helper the `dsh` launcher
+  // uses. The stderr warning is the posture check's own, above.
+  if (insecure && development) publishInsecureModeNotice(ctx)
   const connection = ctx.get('connection')
   const clientModules = ctx.get('clientModules')
   const gateway = ctx.get('typertGateway')
