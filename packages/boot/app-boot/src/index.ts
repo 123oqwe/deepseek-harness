@@ -68,6 +68,30 @@ export {
   TRUST_KERNEL_INSECURE_ENV,
 } from './trust-anchors.ts'
 
+/** Name of the system-prompt section that tells the model it runs without a Trust Kernel (Epic P0-02 acceptance[3]). */
+const INSECURE_MODE_SECTION = 'insecure-development-mode'
+
+/**
+ * Publish the model-visible insecure-mode notice (Epic P0-02 acceptance[3]): a
+ * development launch that opted out of the Trust Kernel tells the model, in its
+ * own request, that it runs without that protection. The launcher adds this
+ * section, not the Kernel API, so the Kernel API carries no model-visible text
+ * (acceptance[1]). Shared by the `dsh` launcher and the Desktop Host so both
+ * name the Trust Kernel and the insecure mode in the same words. A no-op when
+ * the composition mounts no system prompt.
+ * @param ctx - the booted root context the section is added to.
+ */
+export function publishInsecureModeNotice(ctx: Context): void {
+  const systemPrompt = ctx.get('systemPrompt')
+  if (systemPrompt !== undefined) {
+    systemPrompt.section({
+      name: INSECURE_MODE_SECTION,
+      order: systemPrompt.getSectionOrder('INSECURE_MODE'),
+      text: 'This DeepSeek Harness runs in an insecure development mode: no Trust Kernel is pinned, so root identity, signature roots, policy enforcement, audit append, the secret broker and sandbox attestation are all unavailable. Never rely on those protections here, and never use this mode in production.',
+    })
+  }
+}
+
 /**
  * Resolve the config to boot. Replay swaps a `cordis.yml` basename for
  * `cordis.snapshot.yml` in the same directory; every other mode keeps the path.

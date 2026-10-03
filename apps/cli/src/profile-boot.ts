@@ -31,6 +31,7 @@ import {
   partitionProfileLayersByAdmission,
   PROFILE_PATCH_FILENAME,
   PROFILE_TEMPLATES,
+  publishInsecureModeNotice,
   readProfileManifest,
   resolveProfileDir,
   resolveTrustKernelInsecureOptIn,
@@ -414,9 +415,6 @@ export interface RunProfileOptions {
   /** The invocation's inner arguments, handed to the tree through `ctx.cmdlineArgs`. */
   args: readonly string[]
 }
-
-/** Name of the system-prompt section that tells the model it runs without a Trust Kernel (Epic P0-02 acceptance[3]). */
-const INSECURE_MODE_SECTION = 'insecure-development-mode'
 
 // The insecure opt-in resolver, the fail-closed/insecure posture check, and the
 // DSH_TRUST_KERNEL_INSECURE env name live in @deepseek-ai/dsh-app-boot, shared
@@ -884,15 +882,9 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
     // A development profile that opted out of the Trust Kernel tells the model,
     // in its own request, that it runs without that protection (Epic P0-02
     // acceptance[3]). The launcher adds this section, not the Kernel API, so the
-    // Kernel API carries no model-visible text (acceptance[1]).
-    const systemPrompt = ctx.get('systemPrompt')
-    if (systemPrompt !== undefined) {
-      systemPrompt.section({
-        name: INSECURE_MODE_SECTION,
-        order: systemPrompt.getSectionOrder('INSECURE_MODE'),
-        text: 'This DeepSeek Harness runs in an insecure development mode: no Trust Kernel is pinned, so root identity, signature roots, policy enforcement, audit append, the secret broker and sandbox attestation are all unavailable. Never rely on those protections here, and never use this mode in production.',
-      })
-    }
+    // Kernel API carries no model-visible text (acceptance[1]). The Desktop Host
+    // publishes the same section through the same shared helper.
+    publishInsecureModeNotice(ctx)
   }
   return { ctx, shutdown }
 }
