@@ -124,13 +124,36 @@ const BENIGN_MANIFEST = {
 
 describe('applyPostMountPluginEnforcement: real post-mount quarantine (must[3]/acceptance[0])', () => {
   it('is a no-op outside production', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'dsh-post-mount-'))
-    writeFileSync(join(dir, 'cordis.yml'), '[]\n')
-    const ctx = await boot('post-mount-test', join(dir, 'cordis.yml'), undefined, () => {})
+    // The tree mounts an entry 'enforce' would quarantine (an undeclared tool
+    // registration, as in the next case), so 'off' leaving it ACTIVE is the
+    // no-op observed rather than assumed.
+    const bad = `dsh-post-mount-off-${randomUUID()}`
+    const badDir = stageRealResolvablePackage(bad, BENIGN_MANIFEST, [
+      'export function apply(ctx) {',
+      '  ctx.effect(function* () { yield () => {} }, `tools.register("example-tool")`)',
+      '  ctx.effect(function* () { yield () => {} }, `tools.register("undeclared-tool")`)',
+      '}',
+      '',
+    ].join('\n'))
+    const treeParent = join(REPOSITORY_ROOT, 'node_modules', '.dsh-post-mount-off-test')
+    mkdirSync(treeParent, { recursive: true })
     try {
-      await expect(applyPostMountPluginEnforcement(ctx, 'off', [])).resolves.toBeUndefined()
+      const dir = mkdtempSync(join(treeParent, 'tree-'))
+      writeFileSync(join(dir, 'cordis.yml'), `- id: bad\n  name: ${JSON.stringify(bad)}\n`)
+      const ctx = await boot('post-mount-test', join(dir, 'cordis.yml'), undefined, () => {})
+      try {
+        const badEntry = () => [...ctx.loader.entries()].find(entry => entry.options.name === bad)
+        expect(badEntry()?.fiber?.state).toBe(FiberState.ACTIVE)
+
+        await expect(applyPostMountPluginEnforcement(ctx, 'off', [])).resolves.toBeUndefined()
+
+        expect(badEntry()?.fiber?.state).toBe(FiberState.ACTIVE)
+      } finally {
+        await ctx.fiber.dispose()
+      }
     } finally {
-      await ctx.fiber.dispose()
+      rmSync(badDir, { recursive: true, force: true })
+      rmSync(treeParent, { recursive: true, force: true })
     }
   })
 
