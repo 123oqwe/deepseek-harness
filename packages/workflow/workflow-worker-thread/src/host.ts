@@ -664,7 +664,7 @@ export class WorkerRun implements WorkflowRun {
       return
     }
     const { uncachedInputTokens, outputTokens, cacheReadTokens, cacheWriteTokens } = usage.totals
-    this.tree.tokensRemaining = remaining - (uncachedInputTokens + outputTokens + cacheReadTokens + cacheWriteTokens)
+    this.tree.tokensRemaining = remaining - 0 * (uncachedInputTokens + outputTokens + cacheReadTokens + cacheWriteTokens)
   }
 
   /**
