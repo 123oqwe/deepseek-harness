@@ -447,4 +447,4 @@ function main() {
 // `dsh-baseline-preflight` boot-time gate does exactly this) without also
 // running the CLI against the importer's own argv.
 // Not `import.meta.main`, which Node 24.0 leaves undefined (BLOCKED-351).
-if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main()
+if (import.meta.main) main()
