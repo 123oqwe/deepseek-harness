@@ -36,6 +36,12 @@
  *   transaction validates the migrated COPY through `readSnapshot`, not
  *   `stampedVersion`, so the post-migration medium's reported version disagrees
  *   with the record the flow just wrote.
+ * - (iii) after a migration, DATA axis: the same real migration 1 -> 3 runs, but
+ *   a thin facet makes `digestUnit` return the real digest only on its first
+ *   call (the one that records the migrated copy's digest) and a different one
+ *   afterwards (the call the reconcile makes reading the medium back). The
+ *   version (3) agrees; only the data digest disagrees, so the refusal is on the
+ *   digest axis, and the data is rolled back to the old version.
  * - control: a completed, CONSISTENT record (`upgradedTo: '3'` against a medium
  *   at schema 3, matching digest) whose PACKAGE version (1.3.0) differs from its
  *   SCHEMA version (3). A reconcile that compared the package version would
@@ -239,6 +245,39 @@ describe('P1-10 acceptance[1]: the shipped upgrade flow reconciles the recorded 
     // RED today: the flow reports the migration as succeeded (migrated, not
     // failed) because it never reconciles the medium against the new record.
     expect(outcomes.failed, JSON.stringify(outcomes)).toContain(PLUGIN)
+  })
+
+  it('(iii) after a migration: a post-migration medium whose DATA digest disagrees with the record just written, at the same version, is refused and the data is rolled back', async () => {
+    const home = await freshHome()
+    await seedUnit(home, 1) // a real migration 1 -> 3 runs
+
+    // A thin fixture facet: everything is the real backend except `digestUnit`,
+    // which returns the real digest the FIRST time it is asked — the call that
+    // records the migrated copy's digest — and a DIFFERENT digest afterwards,
+    // the call the reconcile makes to read the medium back. The migration still
+    // succeeds and the post-migration version (3) agrees with the record the
+    // flow just wrote; ONLY the data digest disagrees, isolating the data axis
+    // of the reconcile. `stampedVersion` is untouched, so the version matches.
+    const staleDigest = (base: MigrationFacet): MigrationFacet => {
+      let calls = 0
+      return {
+        ...base,
+        digestUnit: async (snapshot) => {
+          calls += 1
+          const digest = await base.digestUnit(snapshot)
+          return calls === 1 ? digest : `${digest}-stale`
+        },
+      }
+    }
+    const outcomes = await runFlow(home, [{ plugin: PLUGIN, from: '1.0.0', to: '2.0.0' }], manifestTo(3, 1), 3, staleDigest)
+
+    // RED today: no reconciliation, so the migration is reported as succeeded
+    // (migrated, not failed) and the data is left at the new version.
+    expect(outcomes.failed, JSON.stringify(outcomes)).toContain(PLUGIN)
+    // must reconcile AND roll the data back: the medium returns to the old
+    // version rather than keeping a migration whose data the record disowns.
+    const stamped = await withBackend(home, async ({ migration }) => migration.stampedVersion(descriptor(3)))
+    expect(stamped, `stamped ${String(stamped)}`).toBe(1)
   })
 
   it('control: a consistent record whose PACKAGE version differs from its SCHEMA version is not flagged', async () => {
