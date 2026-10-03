@@ -307,8 +307,8 @@ export async function runDesktopHost(
     throw new Error(`dsh desktop: ${TRUST_KERNEL_INSECURE_ENV} is set but project ${JSON.stringify(projectDir)} does not declare dsh.profile.development -- refusing to boot (only a project declaring dsh.profile.development may boot without a Trust Kernel)`)
   }
   const kernel: TrustKernel | undefined = insecure
-    ? undefined
-    : createTrustKernel({ policyDecider: endorseComposedDecision, trustAnchors: readProfileTrustAnchors(absoluteProject) })
+    ? createTrustKernel({ policyDecider: endorseComposedDecision, trustAnchors: readProfileTrustAnchors(absoluteProject) })
+    : undefined
   let current: Context | undefined
   const ctx = await boot('dsh desktop', rootConfig, structuredClone(desktopPatches(
     resolve(runtimeDir),
