@@ -22,7 +22,7 @@
  * drops some metadata stores), so it is handled separately rather than assumed.
  */
 
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -66,7 +66,12 @@ async function readProbe(calls: (world: World) => readonly StubToolCall[]): Prom
   const world: World = { cwd, dshHome }
   try {
     writeFileSync(join(cwd, 'notes.txt'), `marker ${WORKSPACE_SENTINEL}\n`)
-    writeFileSync(join(dshHome, '.credentials.yaml'), `token: ${CREDENTIAL_SENTINEL}\n`)
+    const credentialFile = join(dshHome, '.credentials.yaml')
+    writeFileSync(credentialFile, `token: ${CREDENTIAL_SENTINEL}\n`)
+    // dsh refuses to boot on a world- or group-readable credential store (it
+    // asks for chmod 600), so the attack would never run; seed it 0o600 so the
+    // guard (a workspace read) and the credential read both actually execute.
+    chmodSync(credentialFile, 0o600)
     const stub = await startStubModel(firstStep(calls(world)))
     let exitCode: number | null | undefined
     let stderr = ''
