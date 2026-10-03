@@ -62,6 +62,232 @@
       {
         "ctxKey": "webRuntime",
         "role": "provides"
+      },
+      {
+        "ctxKey": "agentPresets",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "clientModules",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "codeRuntime",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "connection",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "cordisInspect",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "credentialsController",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "directoryPickerController",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "dynamicCordisRunner",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "fileReferences",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "fileUploads",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "messageFeedback",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "pluginInventory",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "sessionController",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "sessionFileReferences",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "sessionReferenceResolver",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "sessionSkillCatalog",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "settingsController",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "subagentModelSelection",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "webServer",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "workspaceController",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "workspaceFiles",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "workspaceRegistry",
+        "role": "provides"
+      }
+    ],
+    "events": [
+      {
+        "name": "agent-preset/selected",
+        "mode": "emit"
+      },
+      {
+        "name": "agent/assistant-stream",
+        "mode": "emit"
+      },
+      {
+        "name": "agent/created",
+        "mode": "emit"
+      },
+      {
+        "name": "agent/disposed",
+        "mode": "emit"
+      },
+      {
+        "name": "agent/error",
+        "mode": "emit"
+      },
+      {
+        "name": "agent/pre-step",
+        "mode": "waterfall"
+      },
+      {
+        "name": "agent/status",
+        "mode": "emit"
+      },
+      {
+        "name": "api-session/activity",
+        "mode": "emit"
+      },
+      {
+        "name": "api-session/added",
+        "mode": "emit"
+      },
+      {
+        "name": "api-session/error",
+        "mode": "emit"
+      },
+      {
+        "name": "api-session/removed",
+        "mode": "emit"
+      },
+      {
+        "name": "api-session/status",
+        "mode": "emit"
+      },
+      {
+        "name": "approval/request",
+        "mode": "waterfall"
+      },
+      {
+        "name": "commands/change",
+        "mode": "emit"
+      },
+      {
+        "name": "control/state-changed",
+        "mode": "emit"
+      },
+      {
+        "name": "cordis/dynamic-package",
+        "mode": "emit"
+      },
+      {
+        "name": "cordis/dynamic-retract",
+        "mode": "emit"
+      },
+      {
+        "name": "cordis/inspect-query",
+        "mode": "emit"
+      },
+      {
+        "name": "cordis/inspect-query-resolved",
+        "mode": "emit"
+      },
+      {
+        "name": "cordis/request-run",
+        "mode": "emit"
+      },
+      {
+        "name": "cordis/request-run-resolved",
+        "mode": "emit"
+      },
+      {
+        "name": "credentials/reference-updated",
+        "mode": "emit"
+      },
+      {
+        "name": "domain/changed",
+        "mode": "emit"
+      },
+      {
+        "name": "fs/observed",
+        "mode": "emit"
+      },
+      {
+        "name": "goal/activation-changed",
+        "mode": "emit"
+      },
+      {
+        "name": "internal/plugin",
+        "mode": "emit"
+      },
+      {
+        "name": "llm/adapters-updated",
+        "mode": "emit"
+      },
+      {
+        "name": "session/created",
+        "mode": "emit"
+      },
+      {
+        "name": "session/disposed",
+        "mode": "emit"
+      },
+      {
+        "name": "session/event",
+        "mode": "emit"
+      },
+      {
+        "name": "settings/document-updated",
+        "mode": "emit"
+      },
+      {
+        "name": "system-prompt/assemble",
+        "mode": "waterfall"
+      },
+      {
+        "name": "user-questions/request",
+        "mode": "waterfall"
+      },
+      {
+        "name": "webserver/index-inject",
+        "mode": "emit"
       }
     ]
   },

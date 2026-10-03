@@ -59,6 +59,10 @@
       {
         "ctxKey": "headlessStartup",
         "role": "provides"
+      },
+      {
+        "ctxKey": "codeRuntime",
+        "role": "provides"
       }
     ],
     "events": [

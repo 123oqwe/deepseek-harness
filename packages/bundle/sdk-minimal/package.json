@@ -88,6 +88,138 @@
         ],
         "dataClassification": "confidential"
       }
+    ],
+    "services": [
+      {
+        "ctxKey": "agentLoop",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "agents",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "deepseekLlmApiExtensions",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "invariants",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "jobs",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "llm",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "loggerStderr",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "policy",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "policySet",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "sandbox",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "sandboxPolicy",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "sessionPersistence",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "sessionProjections",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "sessionTitle",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "sessions",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "settings",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "subprocess",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "systemPrompt",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "terminals",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "timer",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "tools",
+        "role": "provides"
+      }
+    ],
+    "events": [
+      {
+        "name": "agent/request-error",
+        "mode": "waterfall"
+      },
+      {
+        "name": "agent/status",
+        "mode": "emit"
+      },
+      {
+        "name": "control/state-changed",
+        "mode": "emit"
+      },
+      {
+        "name": "internal/status",
+        "mode": "emit"
+      },
+      {
+        "name": "llm/stream",
+        "mode": "waterfall"
+      },
+      {
+        "name": "session/created",
+        "mode": "emit"
+      },
+      {
+        "name": "session/disposed",
+        "mode": "emit"
+      },
+      {
+        "name": "session/event",
+        "mode": "emit"
+      },
+      {
+        "name": "session/flush",
+        "mode": "parallel"
+      },
+      {
+        "name": "subagent/end",
+        "mode": "emit"
+      },
+      {
+        "name": "user-questions/request",
+        "mode": "waterfall"
+      }
     ]
   },
   "dependencies": {

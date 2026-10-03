@@ -50,6 +50,32 @@
         "ctxKey": "acpAppStartup",
         "role": "provides"
       }
+    ],
+    "events": [
+      {
+        "name": "agent/error",
+        "mode": "emit"
+      },
+      {
+        "name": "agent/inbox/claimed",
+        "mode": "emit"
+      },
+      {
+        "name": "approval/request",
+        "mode": "waterfall"
+      },
+      {
+        "name": "control/state-changed",
+        "mode": "emit"
+      },
+      {
+        "name": "llm/adapters-updated",
+        "mode": "emit"
+      },
+      {
+        "name": "session/event",
+        "mode": "emit"
+      }
     ]
   },
   "dependencies": {
