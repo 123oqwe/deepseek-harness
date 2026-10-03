@@ -24,11 +24,13 @@ import { compactJournal, createJournalRecorder, journalingObserver, retainsAllRe
 import type { JournalRecorder, RunNesting, ScriptDigest, WorkflowJournal } from '@deepseek-ai/dsh-workflow-journal'
 import type { Reconciled } from './resume.ts'
 import { applyChildFailure, cancelPropagationForNested } from '@deepseek-ai/dsh-workflow-registry'
-import type { ChildFailurePolicy } from '@deepseek-ai/dsh-workflow-registry'
+import type { ChildFailurePolicy, NestingDenialReason } from '@deepseek-ai/dsh-workflow-registry'
 import type { RunLease } from '@deepseek-ai/dsh-lease-contract'
 import { CHILD_FAILURE_POLICIES, HostToWorkerType, isChildFailurePolicy, WorkerToHostType } from './protocol.ts'
 import type { HostToWorkerPayloads, WorkerToHostMessage } from './protocol.ts'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import type {} from '@deepseek-ai/dsh-session-projection'
+import type {} from '@deepseek-ai/dsh-token-meter'
 import type { ChildResult, ChildStartRequest, NestedStartRequest, WorkerInit } from './types.ts'
 
 /**
@@ -49,6 +51,25 @@ export interface NestingPort {
   startNested(request: NestedStartRequest, parent: WorkerRun): Promise<
     | { readonly started: true; readonly run: WorkflowRun; readonly failurePolicy: ChildFailurePolicy }
     | { readonly started: false; readonly rendered: string }>
+}
+
+/**
+ * What one tree of runs may still start and spend (P4-09 acceptance[3]).
+ *
+ * A root run creates it from its `maxTotalAgents` and the deployment's
+ * `maxNestedTokens`, and every run nested under the root holds the same
+ * object, so a nested run and an `agent()` child anywhere in the tree draw on
+ * one count. The engine charges a nested run when it starts one; the run that
+ * starts an `agent()` child charges the child and, once an in-process child
+ * settles, debits the tokens it spent.
+ */
+export interface TreeBudget {
+  /** Nested runs and `agent()` children the tree may still start. */
+  agentsRemaining: number
+  /** Tokens the tree's children may still spend; negative once a child overspent it. */
+  tokensRemaining: number
+  /** Whether a run in the tree has already warned that the token limit is not in effect. */
+  tokenLimitWarned: boolean
 }
 
 /** One published child and its shared quiescent-disposal transaction. */
@@ -244,6 +265,8 @@ export class WorkerRun implements WorkflowRun {
      * tokens carry it in `constraints.issuedFor`.
      */
     private readonly detachedSession: SessionId | undefined,
+    /** The count this run's tree shares (P4-09 acceptance[3]); the engine reads it when this run nests. */
+    readonly tree: TreeBudget,
     /** What a resume reconciled: the journal to continue and the steps it settled. */
     reconciled: Reconciled = { reusable: {}, journal: undefined },
   ) {
@@ -489,6 +512,16 @@ export class WorkerRun implements WorkflowRun {
       this.post(HostToWorkerType.ChildStartError, { callId, rendered: initialFailure.rendered })
       return
     }
+    // acceptance[3]: the child is one of its tree's agents, and a tree that has
+    // spent its tokens starts nothing more.
+    const exhausted: NestingDenialReason | undefined = this.tree.agentsRemaining <= 0
+      ? 'agent-budget-exhausted'
+      : this.tree.tokensRemaining <= 0 ? 'token-budget-exhausted' : undefined
+    if (exhausted !== undefined) {
+      this.post(HostToWorkerType.ChildStartError, { callId, rendered: `agent() was refused: ${exhausted}` })
+      return
+    }
+    this.tree.agentsRemaining -= 1
     this.hostStarted += 1
     const task = this.startChild(callId, request)
     this.pendingStarts.add(task)
@@ -590,9 +623,33 @@ export class WorkerRun implements WorkflowRun {
         } catch (error: unknown) {
           this.ctx.logger.warn(`workflow-worker-thread: child ${run.id} session flush failed, so a resume reruns its step: ${renderThrown(error)}`)
         }
+        this.debitTokens(child)
       }
       forward()
     })
+  }
+
+  /**
+   * Take what one settled in-process child spent off this run's tree
+   * (P4-09 acceptance[3]).
+   *
+   * Read from token-meter's `tokenUsage` projection of the child's session:
+   * uncached input, output, cache reads and cache writes. A composition that
+   * mounts no token-meter has no such projection, so its trees spend tokens
+   * unmetered; the run says so once per tree rather than once per child.
+   * @param child - the child agent whose run settled.
+   */
+  private debitTokens(child: Agent): void {
+    const usage = this.ctx.get('sessionProjections')?.stateOf(child.session, 'tokenUsage')
+    if (usage === undefined) {
+      if (!this.tree.tokenLimitWarned) {
+        this.tree.tokenLimitWarned = true
+        this.ctx.logger.warn(`workflow run ${this.id}: this tree's token limit is not in effect: token-meter is not mounted`)
+      }
+      return
+    }
+    const { uncachedInputTokens, outputTokens, cacheReadTokens, cacheWriteTokens } = usage.totals
+    this.tree.tokensRemaining -= uncachedInputTokens + outputTokens + cacheReadTokens + cacheWriteTokens
   }
 
   private onChildDispose(callId: number): void {

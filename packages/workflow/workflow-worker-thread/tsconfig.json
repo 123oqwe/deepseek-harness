@@ -64,6 +64,12 @@
     },
     {
       "path": "../../util/http-proxy"
+    },
+    {
+      "path": "../../llm/token-meter"
+    },
+    {
+      "path": "../../session/session-projection"
     }
   ]
 }
