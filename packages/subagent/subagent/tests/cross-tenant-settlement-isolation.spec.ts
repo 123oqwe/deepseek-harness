@@ -30,13 +30,14 @@ import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-test
 import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
 import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 import RunPlugin from '@deepseek-ai/dsh-run'
-import { SessionId } from '@deepseek-ai/dsh-session'
+import { SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
 import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
 import * as SubagentSpawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import SubagentRuntime from '../src/index.ts'
 import { ackedSettlementsFor, pendingSettlementsFor } from '../src/settlement-outbox.ts'
+import { loadStoredSession } from './persistence-helpers.ts'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 
 const roots: string[] = []
@@ -82,14 +83,18 @@ function startSpec(parent: Agent) {
   }
 }
 
-/** The child session ids a parent's log records a settlement for, in log order. */
-function settledSenders(ctx: Context, sessionId: SessionId): SessionId[] {
-  const events = ctx.agents.get(sessionId)?.session.snapshotEvents() ?? []
+/** The child session ids a settlement log carries, in log order. */
+function settledFromEvents(events: readonly SessionEvent[]): SessionId[] {
   return events.flatMap((event) => {
     if (event.type !== 'user/message') return []
     const source = event.data.source
     return source.kind === 'subagent-settled' ? [source.senderSessionId] : []
   })
+}
+
+/** The child session ids a parent's live (in-memory) log records a settlement for. */
+function settledSenders(ctx: Context, sessionId: SessionId): SessionId[] {
+  return settledFromEvents(ctx.agents.get(sessionId)?.session.snapshotEvents() ?? [])
 }
 
 /** The number of outbox rows a drain has delivered (consumed). */
@@ -138,16 +143,24 @@ describe('P4-06 acceptance[2]: a settlement is consumed only by its own parent, 
     await second.ctx.agents.resume({ resumeSessionId: SessionId('tenant-a'), agentOptions: { provider: 'mock', model: 'mock' } })
     await second.ctx.agents.resume({ resumeSessionId: SessionId('tenant-b'), agentOptions: { provider: 'mock', model: 'mock' } })
     await vi.waitFor(() => { expect(ackedCount(second.ctx)).toBe(2) }, { timeout: 10_000 })
-    // The ack is written when the notice is spliced into the parent, before the
-    // splice reaches the parent's log (BLOCKED-350). Flush each resumed session
-    // so its spliced settlement is durable before the log is read.
-    for (const tenant of ['tenant-a', 'tenant-b'] as const) {
-      const session = second.ctx.agents.get(SessionId(tenant))?.session
+    // The ack is written when the notice is spliced into the parent, BEFORE the
+    // splice reaches the parent's log and before the log is flushed (BLOCKED-350),
+    // so the in-memory session is a racy read. Read the DURABLE log instead: flush
+    // the resumed session, then load its stored events, and wait until each
+    // parent's own settlement has actually reached disk — a deterministic
+    // observation that does not depend on the splice's timing.
+    const settledOnDisk = async (tenant: SessionId): Promise<SessionId[]> => {
+      const session = second.ctx.agents.get(tenant)?.session
       if (session !== undefined) await second.ctx.sessions.flush(session)
+      return settledFromEvents((await loadStoredSession(second.ctx.sessionPersistence, tenant)).events)
     }
+    await vi.waitFor(async () => {
+      expect(await settledOnDisk(SessionId('tenant-a'))).toEqual([childA.childId])
+      expect(await settledOnDisk(SessionId('tenant-b'))).toEqual([childB.childId])
+    }, { timeout: 10_000 })
 
-    const a = settledSenders(second.ctx, SessionId('tenant-a'))
-    const b = settledSenders(second.ctx, SessionId('tenant-b'))
+    const a = await settledOnDisk(SessionId('tenant-a'))
+    const b = await settledOnDisk(SessionId('tenant-b'))
     // Diagnosis (dispatch-only): the narrow run read b as []. Capture whether
     // each tenant resumed, which settlements are still owed vs acked for tenant-b,
     // and the full outbox, so the cause (b not resumed / its drain not triggered /
