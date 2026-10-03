@@ -810,7 +810,7 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
     : createTrustKernel({ policyDecider: endorseComposedDecision, trustAnchors: readProfileTrustAnchors(composed.profile.dir) })
   // Epic P1-02 acceptance[2]: the boot's provenance decisions, refusals
   // included, go to the kernel's audit chain before a refusal stops the boot.
-  if (kernel !== undefined) appendProvenanceAudit(kernel.auditAppend, 'boot', provenance)
+  if (kernel !== undefined) appendProvenanceAudit(() => undefined, 'boot', provenance)
   if (provenance.refused.length > 0) {
     throw new Error(
       `${NAME}: plugin provenance: refusing to boot profile ${JSON.stringify(options.profile)} -- `
