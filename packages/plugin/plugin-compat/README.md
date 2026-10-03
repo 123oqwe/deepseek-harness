@@ -5,6 +5,8 @@ kind: "package-library"
 
 # @deepseek-ai/dsh-plugin-compat
 
+English | [中文](README.zh.md)
+
 ## Summary
 
 `dsh-plugin-compat` fixes the type surface and solver signature for Epic P1-08's plugin ABI, capability, and schema compatibility negotiation: every plugin manifest declares a runtime API range, schema ranges, required/optional capability dependencies, and provider constraints against those dependencies (must[0]); `solvePluginGraph` solves every manifest in a boot's plugin graph together, in one call, before any plugin loads (must[1]); a genuine graph-level contradiction reports a minimal unsat core naming only the constraints that actually conflict (must[2]); and a missing required or security-critical capability can only ever resolve to a `'blocked'` activation, never a silently degraded `'active'` one (must[3]).
