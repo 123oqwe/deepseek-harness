@@ -66,8 +66,11 @@ export interface NestingPort {
 export interface TreeBudget {
   /** Nested runs and `agent()` children the tree may still start. */
   agentsRemaining: number
-  /** Tokens the tree's children may still spend; negative once a child overspent it. */
-  tokensRemaining: number
+  /**
+   * Tokens the tree's children may still spend, negative once a child
+   * overspent them, or `undefined` when the deployment sets no token limit.
+   */
+  tokensRemaining: number | undefined
   /** Whether a run in the tree has already warned that the token limit is not in effect. */
   tokenLimitWarned: boolean
 }
@@ -516,7 +519,7 @@ export class WorkerRun implements WorkflowRun {
     // spent its tokens starts nothing more.
     const exhausted: NestingDenialReason | undefined = this.tree.agentsRemaining <= 0
       ? 'agent-budget-exhausted'
-      : this.tree.tokensRemaining <= 0 ? 'token-budget-exhausted' : undefined
+      : this.tree.tokensRemaining !== undefined && this.tree.tokensRemaining <= 0 ? 'token-budget-exhausted' : undefined
     if (exhausted !== undefined) {
       this.post(HostToWorkerType.ChildStartError, { callId, rendered: `agent() was refused: ${exhausted}` })
       return
@@ -573,12 +576,21 @@ export class WorkerRun implements WorkflowRun {
     }
     const failure = this.childAdmissionFailure()
     if (failure !== undefined) {
-      this.post(HostToWorkerType.ChildStartError, { callId, rendered: failure.rendered })
-      try {
-        await run.dispose()
-      } catch (error: unknown) {
-        this.ctx.logger.warn(`workflow-worker-thread: refused child dispose failed: ${renderThrown(error)}`)
-      }
+      await this.refuseStartedChild(callId, run, failure.rendered)
+      return
+    }
+    // acceptance[3]: a child in another process reports no token usage this
+    // host can read, so a tree with a token limit does not run one. The
+    // subagent seam says a child is remote only once its provider has started
+    // it, so the refusal comes then: the child is disposed before its result
+    // can reach the script.
+    if (run.localAgent === undefined && this.tree.tokensRemaining !== undefined) {
+      await this.refuseStartedChild(
+        callId,
+        run,
+        `agent() was refused: provider "${this.provider}" runs the child in another process, whose token usage this host cannot read, `
+        + 'and this run\'s tree has a token limit (maxNestedTokens)',
+      )
       return
     }
 
@@ -634,12 +646,15 @@ export class WorkerRun implements WorkflowRun {
    * (P4-09 acceptance[3]).
    *
    * Read from token-meter's `tokenUsage` projection of the child's session:
-   * uncached input, output, cache reads and cache writes. A composition that
-   * mounts no token-meter has no such projection, so its trees spend tokens
-   * unmetered; the run says so once per tree rather than once per child.
+   * uncached input, output, cache reads and cache writes. A tree with no token
+   * limit meters nothing. A composition that mounts no token-meter has no such
+   * projection, so its trees spend tokens unmetered; the run says so once per
+   * tree rather than once per child.
    * @param child - the child agent whose run settled.
    */
   private debitTokens(child: Agent): void {
+    const remaining = this.tree.tokensRemaining
+    if (remaining === undefined) return
     const usage = this.ctx.get('sessionProjections')?.stateOf(child.session, 'tokenUsage')
     if (usage === undefined) {
       if (!this.tree.tokenLimitWarned) {
@@ -649,7 +664,23 @@ export class WorkerRun implements WorkflowRun {
       return
     }
     const { uncachedInputTokens, outputTokens, cacheReadTokens, cacheWriteTokens } = usage.totals
-    this.tree.tokensRemaining -= uncachedInputTokens + outputTokens + cacheReadTokens + cacheWriteTokens
+    this.tree.tokensRemaining = remaining - (uncachedInputTokens + outputTokens + cacheReadTokens + cacheWriteTokens)
+  }
+
+  /**
+   * Refuse a child its provider has already started: the worker hears the
+   * refusal, and the child is disposed.
+   * @param callId - the worker's RPC correlation id.
+   * @param run - the started child.
+   * @param rendered - the refusal the script sees.
+   */
+  private async refuseStartedChild(callId: number, run: SubagentRun, rendered: string): Promise<void> {
+    this.post(HostToWorkerType.ChildStartError, { callId, rendered })
+    try {
+      await run.dispose()
+    } catch (error: unknown) {
+      this.ctx.logger.warn(`workflow-worker-thread: refused child dispose failed: ${renderThrown(error)}`)
+    }
   }
 
   private onChildDispose(callId: number): void {

@@ -170,7 +170,10 @@ async function setup(options?: SetupOptions) {
   // (cores - 2, floored at 1), so tests that expect N children in flight
   // would wedge on small CI runners.
   await ctx.plugin(InMemoryLeaseStorePlugin)
-  const engineFiber = await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'stub', maxConcurrentAgents: 8, ...options?.config })
+  // Every provider in this file returns a child with no local agent, which the
+  // engine treats as a child in another process. Those run only in a tree with
+  // no token limit, so each mount here sets maxNestedTokens: 0.
+  const engineFiber = await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'stub', maxConcurrentAgents: 8, maxNestedTokens: 0, ...options?.config })
   return { ctx, provider, parent: fakeParent(), engineFiber }
 }
 
@@ -488,7 +491,7 @@ describe('dsh-workflow-worker-thread', { timeout: 120_000 }, () => {
       }
       ctx.subagents.registerProvider(provider)
       await ctx.plugin(InMemoryLeaseStorePlugin)
-      await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'rejecting', maxConcurrentAgents: 2 })
+      await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'rejecting', maxConcurrentAgents: 2, maxNestedTokens: 0 })
       const result = await run(ctx, fakeParent(), scripted(`
         try { await agent('p'); return 'unreachable' } catch (e) { return { name: e.name, code: e.code, fatal: e.fatal, message: e.message } }
       `))
@@ -551,7 +554,7 @@ describe('dsh-workflow-worker-thread', { timeout: 120_000 }, () => {
       }
       ctx.subagents.registerProvider(provider)
       await ctx.plugin(InMemoryLeaseStorePlugin)
-      await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'bad-dispose', maxConcurrentAgents: 2 })
+      await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'bad-dispose', maxConcurrentAgents: 2, maxNestedTokens: 0 })
       const result = await run(ctx, fakeParent(), scripted("return await agent('p')"))
       expect(result.stopReason).toBe('completed')
       expect(result.value).toBe('fine')
@@ -580,7 +583,7 @@ describe('dsh-workflow-worker-thread', { timeout: 120_000 }, () => {
       }
       ctx.subagents.registerProvider(provider)
       await ctx.plugin(InMemoryLeaseStorePlugin)
-      await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'coercion-trap-dispose', maxConcurrentAgents: 2 })
+      await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'coercion-trap-dispose', maxConcurrentAgents: 2, maxNestedTokens: 0 })
       const result = await run(ctx, fakeParent(), scripted("return await agent('p')"))
       expect(result.stopReason).toBe('completed')
       expect(result.value).toBe('fine')
@@ -937,7 +940,7 @@ describe('dsh-workflow-worker-thread', { timeout: 120_000 }, () => {
       }
       ctx.subagents.registerProvider(provider)
       await ctx.plugin(InMemoryLeaseStorePlugin)
-      await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'signal-only', maxConcurrentAgents: 2 })
+      await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'signal-only', maxConcurrentAgents: 2, maxNestedTokens: 0 })
       const handle = ctx.workflowEngine.start({
         ...scripted(`
           agent('stray, never awaited')
@@ -1231,7 +1234,7 @@ describe('dsh-workflow-worker-thread', { timeout: 120_000 }, () => {
       }
       ctx.subagents.registerProvider(provider)
       await ctx.plugin(InMemoryLeaseStorePlugin)
-      await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'late-ready', maxConcurrentAgents: 1 })
+      await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'late-ready', maxConcurrentAgents: 1, maxNestedTokens: 0 })
       const lifecycle: string[] = []
       ctx.on('workflow/agent-start', () => { lifecycle.push('start') })
       ctx.on('workflow/agent-end', () => { lifecycle.push('end') })
@@ -1302,7 +1305,7 @@ describe('dsh-workflow-worker-thread', { timeout: 120_000 }, () => {
       }
       ctx.subagents.registerProvider(provider)
       await ctx.plugin(InMemoryLeaseStorePlugin)
-      await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'doomed', maxConcurrentAgents: 2 })
+      await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'doomed', maxConcurrentAgents: 2, maxNestedTokens: 0 })
       const runEnds: WorkflowResultInfo[] = []
       ctx.on('workflow/end', (_info, result) => { runEnds.push(result) })
       const childStarted = Promise.withResolvers<undefined>()

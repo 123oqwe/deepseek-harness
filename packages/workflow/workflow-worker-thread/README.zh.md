@@ -182,6 +182,8 @@ kind: "package-reference"
 - **树的 token 计数只在子结算时扣**——宿主在进程内子的运行结算之后，才把它用掉的 token 从所在的树里扣掉，所以同时在跑的几个子可以一起超出上限；上限挡的是之后的起子。并发下不超预算是 P4-10 的条款（acceptance[0]）。
 - **没挂 token-meter，树的 token 上限就不生效**——宿主从 token-meter 的 `tokenUsage` 投影读子的用量（未缓存输入、输出、缓存读、缓存写）。组合里没挂 token-meter 时，一棵树里第一个结算的子会记一条 `this tree's token limit is not in effect: token-meter is not mounted`，不扣任何 token。出厂 base 挂了 token-meter。
 - **树的计数只在内存里**——恢复的运行从日志记下的预算重新开一棵树，所以重启之前兄弟们用掉的不再算在它头上。
+- **`maxNestedTokens: 0` 表示不设 token 上限**——这棵树不计 token，也不会因为 token 拒任何子；`maxTotalAgents` 照样限制它能起多少嵌套 run 与 `agent()` 子。
+- **跑在别的进程里的子只能在没有 token 上限的树里跑**——这里读不到它的 token 用量，所以有 token 上限的树会拒它；workflow 子跑在远程 subagent provider 上的部署，要把 `maxNestedTokens` 设为 0，token 上限也就随之关掉。subagent 接缝要等 provider 起了子之后才说出它是远程的，所以拒绝的是一个已经起了的子，并立刻 dispose：provider 已经送出的提示词收不回，它从起到 dispose 之间做的事也拦不住。
 
 <a id="dev-note"></a>
 ### 开发备注

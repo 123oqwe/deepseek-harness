@@ -47,7 +47,9 @@ ctx.subagents.registerProvider({
   },
 })
 await ctx.plugin(InMemoryLeaseStorePlugin)
-await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'must-not-be-used' })
+// The selected provider returns a child with no local agent, which runs only
+// in a tree with no token limit.
+await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'must-not-be-used', maxNestedTokens: 0 })
 const run = ctx.workflowEngine.start({
   script: "const value = await agent('answer', { schema: { type: 'object', properties: { answer: { type: 'number' } }, required: ['answer'] } }); return value.answer",
   meta: { name: 'built-smoke', description: 'built worker smoke' },

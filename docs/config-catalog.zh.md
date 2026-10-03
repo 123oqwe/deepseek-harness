@@ -4029,6 +4029,12 @@ export interface Config {
   /**
    * The token allowance a root run shares with everything it nests
    * (default 1000000; P4-09 acceptance[3]).
+   *
+   * `0` sets no token limit: the tree meters no tokens, and its `agent()`
+   * children may run in another process, which a tree with a limit refuses
+   * because their usage cannot be read here. A deployment whose workflow
+   * children run on a remote subagent provider therefore sets `0`, and its
+   * token limit is off; `maxTotalAgents` still bounds every tree.
    */
   maxNestedTokens?: number
 }
