@@ -926,6 +926,14 @@
       "signedAtUtc": "2026-10-03T02:06:45.738Z",
       "reason": "- **P2-01 读数**:推送门 36397306442 @ `4957e78b40`:P2-01 的 15 个 live 冻结条目共 117 条标题全过，含 U.8 [401](ACP)、U.9 [402](SDK)、U.10 [429]。套件 28116/28041/0/75,0 失败。\n- **4.4 摘要**(行号在 4957e78b40 上重读):\n  - a 服务：会话身份经 HOST_USER_IDENTITY_KEY 的宿主用户工厂挂上;webhook 会话由 integrationIdentity 铸出 ServicePrincipal(packages/webhook/webhook/src/session.ts:125-126),经 agentOptions 进会话(:161)。\n  - b 出厂挂载:app-boot 提供宿主用户工厂(packages/boot/app-boot/src/index.ts:830),CLI 与 headless 经它取身份。\n  - c 生产调用点:ACP(packages/acp/acp/src/index.ts:517)与 SDK 服务(packages/sdk/server/src/server.ts:556)读同一个工厂;派发路径由 manifestAttribution 取 actor。\n  - d 观测：出厂的 ACP、SDK、webhook、CLI 各有组合用例：第一份 action manifest 写宿主用户主体,identity/attached 恰好记一次(U.8、U.9、U.10)。\n- **锁**:锁表 P2-01 那一行(acceptance[0])的解锁条件由 BLOCKED-291 承担,291 已于 2026-09-26 结项;BLOCKED-340 已结项。\n- **盲审**:bfe68eb9,1 档 0 条。09-26 之后，身份相关的代码只改过一笔(4974427d77,BLOCKED-336 的诊断输出),不涉及身份归属。\n- **用户确认档**:C10(decisions-approved.md:149),最终放行由 delegate 终裁，用户随时可一句话收回。\n- **经过**:这份签字原在 2026-09-26T13:15:53Z 给出，当时删锁行被 lane B 的权限分类器拦下;2026-10-03 用户在 lane B 终端授权删行(89cd988a8b)。读数与行号都在今天的树上重做了。\n- **不涵盖**:SDK 的 resume(BLOCKED-298);没有宿主用户身份的 CLI 或 headless 运行(出厂上不存在);两个集成共用一把 HMAC 密钥的情形(N1,属配置问题)。\n- **结论:PASS**。",
       "userConfirmationRef": "C10"
+    },
+    {
+      "epic": "P1-07",
+      "rowDigestSha256": "b1fedb360c743cc2168abd73deb247f2cd9ea7453ea68876ba23933d612433a2",
+      "conclusion": "WITHDRAWN",
+      "delegateSession": "first100-delegate-52",
+      "signedAtUtc": "2026-10-03T20:58:44.774Z",
+      "reason": "P1-07 was last signed PASS on 2026-09-23T20:33:49Z (first100-delegate-1a). BLOCKED-353: lane A's red-first A-597 ④ v4 (run 37150723230 at ec87a9c926, base 7e35c3d9dd; P1-07.workspace-trust-self-grant.spec.ts:195) shows on the shipped launcher that, when the workspace contains $DSH_HOME, the model writes a workspace-trust-local grant into the harness home patch for a directory not yet resolved, and a later launch in that directory resolves it as trusted and gives its project AGENTS.md to the model with no host-user interaction, so must[2] (「信任升级必须由宿主用户交互完成并写审计。」) does not hold. Withdrawn under S10 by the delegate (first100-delegate-52); the fix is B-715 (4f9df894ba)."
     }
   ]
 }

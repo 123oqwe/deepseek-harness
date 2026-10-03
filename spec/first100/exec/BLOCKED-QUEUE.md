@@ -271,6 +271,14 @@ Recorded before P6-08 starts, per §12.46-B's split of P2-05 must[3]. Not a bloc
 
 **One thing read while verifying, recorded and not acted on.** The comment above the default (`trust-kernel/src/index.ts:168-170`) says a kernel a deployment configured with neither “must not silently discard what it was asked to record”, while the line it introduces does exactly that when no sink is configured. Either the comment overstates the default or the default understates the comment; naming it here so whoever configures the sink resolves it deliberately.
 
+**Addendum 2026-09-28 — P1-02 is the third producer, and this entry named two.** Read at `914bff76f9` (batch 27's code tip, which carries B-686 ⑤). `appendProvenanceAudit` (`apps/cli/src/install-provenance.ts:90`) appends one entry per provenance decision, payload `kind: 'plugin-provenance'` with the `stage` (`install` or `boot`) and the package `name`, and either the key-free `ProvenanceAuditRecord` or, for a refusal no verification or locked digest decided, only the reason's code. A boot appends to the kernel `runProfile` builds and pins (`apps/cli/src/profile-boot.ts:810`, `:813`), refusals included, before a refusal stops the boot. `dsh plugin` runs no host, so an install appends to the kernel it verified with (`install-provenance.ts:165`), which is built with no sink. `auditAppend` is still `configuredSink?.(entry)` (`packages/kernel/trust-kernel/src/index.ts:174-175`), so every one of these entries is discarded as it is made.
+
+**Ruling (delegate, gate3 2026-09-28T09:38:09Z): the §12.46-B split applies a third time.** The PRODUCING half is P1-02 acceptance[2]'s audit half and is met by B-686 ⑤. The STORING half is the sink this entry assigns to P6-08. The closing condition gains one clause: a real provenance decision from a boot, and one from an install, are readable in the sink.
+
+**Under `DSH_TRUST_KERNEL_INSECURE` a boot has no kernel** and appends nothing; its provenance refusals still stop the boot.
+
+**What this addendum does NOT claim.** Not that a provenance decision reaches any reader today. Not that `dsh plugin` has an audit chain of its own: the kernel it appends to lives only for that command, and until an audit sink is configured for it, as for the boot's kernel, its entries are discarded like the other two producers'.
+
 ### BLOCKED-169 — P1-06 readiness: the out-of-process plugin host must present a capability token per RPC
 
 Recorded before P1-06 starts, per §12.69's split of P2-02 must[3]'s four nouns under §12.46-B. Not a blocker on P1-06's own clauses; a requirement it inherits, written down so it is met by design.
@@ -1158,6 +1166,23 @@ acceptance[0] and acceptance[2] were the two clauses that could be satisfied wit
 3. **Nothing yet.** The boards are primitives a later epic or a plugin composes, `list-children.ts` is the wrong declared consumer, and P5-11's Usage is exempted with that ruling — which says plainly that this epic ships three libraries the harness does not use.
 
 **Not chosen.** Reading (1) adds a product concept, (2) duplicates a durable record, (3) admits an unadopted capability. Each is a different promise about what the harness is, and §12.11 records the executor picking one as the mistake.
+
+**Correction (2026-10-03, the delegate first100-delegate-1a): the mailbox half was closed on a miscount.**
+
+The re-measured table above lists `decideMailboxDelivery` with "2 production callers — `run/message-bus/src/{mailbox-delivery,index}.ts`". Those two files are the function's own definition (`mailbox-delivery.ts:121`) and its package's barrel (`index.ts:38`). Both sit inside the owning package. The table's own method excludes "the owning packages", so by that method the count is **0**, the same as `admitFact` and `traceToObservations` in the fact half. Nothing in the shipped product produces a mailbox message for this decision or consumes one through it:
+
+- `@deepseek-ai/dsh-message-bus` is mounted by the base bundle (`packages/bundle/base/cordis.patch.yml:539-542`), but it provides the bus store only.
+- The only code that delivers mailbox messages is the experimental `agent-team` `TeamMailbox`. It is a separate implementation that does not use this decision, and no shipped bundle mounts it.
+
+The task half's closure stands: `decideClaim` has a genuine caller outside its package (`run/taskboard-sqlite/src/store.ts:126`).
+
+**What this does and does not change for P5-11.** No P5-11 `must` or `acceptance` clause names the mailbox:
+- `must[0]` is tasks, `must[1]` is blackboard facts with provenance, and `must[2]` is roles.
+- `acceptance[0]`–`[2]` are the single claim winner, receipt-driven progress and cycle rejection.
+
+The mailbox appears only in the title and in `validation[1]` ("测试消息去重…"). That item is a test obligation, and `run/message-bus/tests/mailbox-delivery.spec.ts` meets it at package level. P5-11's acceptance therefore does not rest on the mailbox half, and its sign-off is **not** withdrawn.
+
+The half's status changes from "CLOSED — has producers" to **"not a P5-11 acceptance subject; no shipped producer or consumer"**. Recorded under Not covered: the mailbox primitive named in P5-11's title does not reach the shipped product. Message deduplication on the shipped product runs through the agent inbox and the subagent settlement outbox, which is P4-06's evidence.
 
 ### BLOCKED-153 — P5-10's `orderByPriority` belongs at the inbox dequeue point, and `core/agent` cannot import it from where it lives
 
@@ -3354,6 +3379,7 @@ accept-blocked: P0-02
 accept-blocked: P4-09
 accept-blocked: P6-07
 accept-blocked: P1-06
+accept-blocked: P1-07
 ACCEPT-BLOCKED-END -->
 
 
@@ -3391,6 +3417,7 @@ This is the single place to check at wave close. A lock means the ledger row can
 | **P2-02** *(**LIFTED 2026-09-07**. All three conditions met, the third being the one that actually matters. Its line in the machine-readable list above is removed in the same edit, per this register's own rule.)* | TrustKernel 签发/验证 (must[1]) | **ALL FOUR CELLS ARE GREEN as of 2026-09-05 (`F` greened from run 34001537762 @ `8a640f1aca`, 19/19 frozen cases passing), and the delegate declined to sign — deliberately, not by oversight.** Recorded here so a later reader does not treat a fully green unaccepted row as something that fell through. must[1]'s subject is empty for the same reason P4-07's must[3] was, and a sign-off here on the same day that one was withdrawn would be two treatments of one kind of gap. Same hollow `signatureRoots`. Additionally, a ctx-mediated kernel enforcement point is gated on the vendored Cordis `Fiber` fix (Option A), verified unlanded — `vendor/cordis/src/fiber.ts:198` still declares `public store` as a plain writable field. | Trust Kernel key material, plus Option A for the enforcement path. See [BLOCKED-050](#blocked-050), [BLOCKED-011](#blocked-011). | Real key material reaches `signatureRoots` **and** Option A lands. Both, not either. **SECOND STEP, added 2026-09-05 (BLOCKED-092): the supplier landing does not unlock this row.** Once real key material and Option A exist, P2-02 must still write the case proving must[1] against them — that case cannot be written today, which is the reason for the lock. Owner: P2-02's own stage, as a supersession.  **LIFT EVIDENCE, all three conditions, in the order the row set them.** **(1) Real key material reaches `signatureRoots`:** `createTrustKernel` mints an Ed25519 keypair per kernel; the private key lives in a module-private WeakMap keyed by the handle, the shape `CONFIGURED_ANCHORS` already uses, and a handle this module did not mint is refused rather than given an empty signature. **(2) Option A landed:** SLICE-fiber-A, `vendor/README.md` local modification 20 — the row cited `fiber.ts:198`'s plain writable `store` as evidence it had not, and `store` is now an accessor whose setter re-seals pinned names. **(3) BLOCKED-092's SECOND STEP, which is the condition a supplier landing could never satisfy:** P2-02 has now WRITTEN the case it could not write before. Three frozen cases (P2-02.P.1): a signature verifies while the same bytes with one byte changed do not; a signature from a DIFFERENT kernel is refused, which the marker could never distinguish because it was the same constant in every installation; and the private key stays off the handle that crosses the plugin boundary. **What the lift replaces is worth naming: `issueToken`/`verifyToken` took the roots handle and ignored it — the parameters were literally `_trustRoot` — and signed a four-byte constant, so any deployment's token verified anywhere and verification could not fail.** **Source module headers updated 2026-09-11**, four days after this lift: `capability-token/src/index.ts` and `attenuate.ts` still described the pre-lift world in convincing detail — a fixed four-byte marker and an empty `signatureRoots` — and a lane-B review read them as current and reported the property as unmet before checking the code. Corrected in place and dated, because the failure mode is prose outliving what it described, and a silent swap would leave the next reader no way to tell which state a paragraph belongs to. **NOT carried by this lift:** key LIFETIME. Persistence, rotation, the 0600 dev backend, `production-controlled` refusing a file backend, and the survives-a-restart case are SLICE-kernel-keys, due before P4-04. must[1] is issuance, verification and attenuation, and the delegate ruled the two apart rather than letting one lift stand for both.||
 | **P6-07** | 损坏日志读取返回最小可恢复范围和证据 (acceptance[3]) | The real corrupted-log path is `session-persistence-jsonl/src/format.ts`'s `SessionLogScanner`: it records `this.issue` on an unparsable committed event but `finish()` never returns it, throwing only if a later row happens to carry a `turn/end`. A real corrupted read therefore returns the recoverable range **with the evidence dropped**. The Contract stage's `readSessionLogWithRepair` is a parallel surface that path never calls. | `format.ts`, in no P6-07 stage's scope and nowhere in the registry — being fixed as an independent defect. | ~~`finish()` returns the recorded issue and the real read path surfaces it.~~ **LIFTED 2026-09-04 by the delegate (`guanjieqiao-92`), verified independently, not accepted on report.** `finish()` now returns `corruption` when defined (`format.ts:500-509`), and `recordCorruption` keeps both the throwable and the structured form. Three cases confirmed present-and-passing in run 33890642950 @ `1e420e2f5b`, all in `session-persistence-jsonl/tests/jsonl.spec.ts` — the real `SessionLogScanner` path this lock named, **not** the `readSessionLogWithRepair` surface the lock explicitly excluded. The second case ("reports no corruption for a fully recovered log, so the field distinguishes damage from its absence") is what stops an implementation that always returns `undefined` from satisfying the first. **The lock is lifted; the row still needs its F stage before it can be ACCEPTED.** |
 | **P6-07** *(added 2026-09-25 — the 2026-09-04 row above is LIFTED and stays lifted; this lock is [BLOCKED-193](#blocked-193)'s, added by the delegate's ruling of 2026-09-25T22:14:10Z after A-414 found no live lock for P6-07.)* | Every clause; P6-07's sign-off was withdrawn under §12.75. | BLOCKED-193's census: of three parallel implementations, the shipped list and archive paths reach none of this epic's, and the clauses with no second implementation (soft delete, legal hold, hard erase, propagation) have no production consumer. | lane B: P6-07.U's rebuild under the delegate's OQ9–OQ13, after the current defect fixes and sign-off batch; its work order goes draft → verify → approve. | BLOCKED-193 closes: P6-07.U's rebuild under OQ9–OQ13 lands. |
+| **P1-07** *(added 2026-10-03; [BLOCKED-353](#blocked-353) withdrew the acceptance in the same commit.)* | `must[2]` (「信任升级必须由宿主用户交互完成并写审计。」) when the workspace contains $DSH_HOME: the model can grant a directory trust without the host user. | Lane A's red-first A-597 ④ v4 (run 37150723230 at `ec87a9c926`, base `7e35c3d9dd`): with $DSH_HOME inside the workspace, the model writes a `workspace-trust-local` grant into the harness home patch for a directory not yet resolved, and a later launch in that directory resolves it as trusted and gives its project `AGENTS.md` to the model with no host-user interaction (`P1-07.workspace-trust-self-grant.spec.ts:195`). The workspace-write writable roots do not exclude $DSH_HOME (`packages/sandbox/sandbox/src/roots.ts:52`), and `stateFor` binds a directory with no record from the configured grant (`packages/workspace/workspace-trust-local/src/index.ts:306-311`). | lane B, fix B-715 (`4f9df894ba`); lane A's case is the red-first one | BLOCKED-353's closing conditions: B-715 lands; A-597 ④ v4 is frozen as a P1-07 supplement and observed green on a full run at a candidate that carries B-715; the mutation that removes the exclusion turns it red; then a fresh 4.4 and a PASS sign-off. |
 
 | **P6-01** | model-visible memory ⟺ logged projection event (`validation[3]`) | `memory/access` is declared in `SessionEventMap` but **absent from `packages/core/session/src/known-event-types.ts`**, and it carries no `ignorable: true`. Harmless while nothing emits it — but the moment the Usage stage appends it to a real JSONL log, replay refuses the unknown type. The stage would then be manufacturing the corrupt logs it is supposed to prevent. The Contract stage's own Dev Note flagged this as unregistered and it was never acted on. | P6-01's Usage stage, before it greens. | ~~The type is registered **and** a case proves the round trip: a log written with the event is read back by replay. Registration alone does not lift this lock — delegate condition, 2026-09-03.~~ **LIFTED 2026-09-04 by the delegate (`guanjieqiao-92`), verified independently.** Both halves hold: `memory/access` is registered at `packages/core/session/src/known-event-types.ts:43`, and the round-trip case ("a log written with memory/access is read back by replay, not refused") passes in run 33890642950 @ `1e420e2f5b`, asserting on the type list **replay returns**, not the one written. The registration half alone would not have lifted this. **The lock is lifted; the row still needs its F stage before it can be ACCEPTED.** |
 
@@ -10515,3 +10542,31 @@ The repository already records the problem and a version-independent guard: `scr
 **What this does NOT claim.**
 - Nothing about which later Node 24 releases carry `import.meta.main`. Only v22.19.0 and v24.0.0 were probed.
 - Not that any Node outside the engines range is supported.
+
+### BLOCKED-353 — P1-07 must[2] does not hold when the workspace contains $DSH_HOME: the model can grant a directory trust without the host user; P1-07 is withdrawn (security defect, S10)
+
+**Status:** OPEN (2026-10-03). Fix B-715 (lane B, `4f9df894ba`); red first A-597 ④ v4 (lane A, `ec87a9c926`). Ruled by the delegate (first100-delegate-52).
+
+**The clause.** P1-07 must[2]: 「信任升级必须由宿主用户交互完成并写审计。」
+
+**What was observed (run 37150723230, `ec87a9c926` on the base `7e35c3d9dd`).**
+- The workspace contains $DSH_HOME.
+- In a first launch, the model writes a `workspace-trust-local` grant into the harness home patch for a second directory. That directory has not yet been resolved.
+- In a later launch whose workspace is that directory, the directory is resolved as trusted, and its project `AGENTS.md` reaches the model. No host-user interaction took place.
+- The case reds on its subject assertion (`P1-07.workspace-trust-self-grant.spec.ts:195`, expected `true` to be `false`). Its two guards and the already-resolved-directory case are green.
+- Mechanism, read at `7e35c3d9dd`:
+  - The workspace-write writable roots do not exclude $DSH_HOME (`packages/sandbox/sandbox/src/roots.ts:52`), so the model's write lands.
+  - `stateFor` binds a directory with no record from the configured grant (`packages/workspace/workspace-trust-local/src/index.ts:306-311`).
+- A directory that has already been resolved keeps its record (`:292-296`). That path holds, and its case is green evidence.
+
+**What this does NOT claim.**
+- It does not claim that a workspace outside $DSH_HOME is affected. There, the write is refused today (A-597 ①'s control).
+- It does not claim that P1-07 acceptance[0]–[2] fail. They are not re-examined here.
+
+**Disposition.** P1-07 is withdrawn under S10, recorded as a forward write (WITHDRAWN). Its row goes into ACCEPTANCE LOCKS citing this entry. The push checklist names the change in the ACCEPTED set.
+
+**Closing condition.**
+1. B-715 lands, so that workspace-write keeps $DSH_HOME read-only.
+2. A-597 ④ v4 is frozen as a P1-07 supplement and observed green on a full run at a candidate that carries B-715.
+3. The mutation that removes the exclusion turns it red.
+4. A fresh 4.4 and a PASS sign-off.
