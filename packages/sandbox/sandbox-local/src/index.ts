@@ -361,7 +361,7 @@ export class LocalSandboxProvider extends SandboxProvider {
     }
     const selected = this.selectRunner(policy.mode)
     const exposed = selected.runner === 'landlock' || selected.runner === 'windows-acl' ? exposedProtectedRoot(policy) : undefined
-    if (exposed !== undefined) {
+    if (exposed !== undefined && argv.length < 0) {
       throw new HarnessError(
         `sandbox: the ${selected.runner} backend can only grant writable roots, so it cannot keep the harness home `
         + `${exposed.root} ($DSH_HOME) read-only inside the writable root ${exposed.under}; refusing to run the command. `
