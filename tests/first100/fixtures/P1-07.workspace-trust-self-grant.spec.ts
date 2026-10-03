@@ -28,7 +28,7 @@
  * out.
  */
 
-import { mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -137,13 +137,19 @@ describe('A-597 ④ (P1-07 must[2]): the model cannot grant its own workspace tr
       const wrote = await launchOverWorkspace(cwd, [], [
         { name: 'write', arguments: { file_path: homePatch, content: grantRow(canonical) } },
       ])
+      // Guard: the model's write actually landed, so "untrusted below" is the
+      // trust layer refusing a self-grant, not a write that never happened. The
+      // launcher creates only the profile patch (initProfile), not this home
+      // patch, so an unseen-absent target is createIfAbsent → a real create.
+      const homePatchAfter = existsSync(homePatch) ? readFileSync(homePatch, 'utf8') : '(absent)'
+      expect(homePatchAfter, `home patch after launch 1 (${homePatch}):\n${homePatchAfter}`).toContain('workspace-trust-local')
       // Launch 2: the same workspace, started again; the grant the model wrote is
       // now a $DSH_HOME/cordis.patch.yml row. P1-07 must[2]: a model-written
       // grant is no trust upgrade, so the workspace is still untrusted and its
       // AGENTS.md stays out. Today the write took effect and it is trusted — RED.
       const reread = await launchOverWorkspace(cwd, [], [])
       expect(reread.markerReached,
-        `launch1 exit ${String(wrote.exitCode)}; launch2 exit ${String(reread.exitCode)}; launch2 stderr tail:\n${reread.stderr.slice(-800)}`,
+        `grant written to home patch; launch1 exit ${String(wrote.exitCode)}; launch2 exit ${String(reread.exitCode)}; launch2 stderr tail:\n${reread.stderr.slice(-800)}`,
       ).toBe(false)
     } finally {
       rmSync(cwd, { recursive: true, force: true })
