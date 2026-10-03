@@ -26,6 +26,7 @@ import type {
   WorkflowMeta,
   WorkflowResult,
 } from '@deepseek-ai/dsh-workflow'
+import { CHILD_FAILURE_POLICIES, isChildFailurePolicy } from './protocol.ts'
 import { materializeFromRealm, MaterializeError, renderThrown } from './realm.ts'
 import type { ChildHandle, ChildPort, WorkerLimits } from './types.ts'
 
@@ -352,17 +353,26 @@ export class WorkflowExecution {
    * `nameOrRef` is `{ name, digest }` — no bare-name form. A name alone would
    * make the run reproducible only against whatever was registered under that
    * name at the time, which is what must[1]'s "the run references the digest"
-   * exists to prevent.
-   * @param nameOrRef - the definition to nest.
+   * exists to prevent. It may also carry `onFailure`, how this run treats the
+   * child failing (acceptance[2]): one of {@link CHILD_FAILURE_POLICIES}, and
+   * `fail-parent` when absent.
+   * @param nameOrRef - the definition to nest, and optionally its `onFailure`.
    * @param nestedArgs - the nested run's `args`, structured-cloned by the host.
    * @returns the nested run's returned value.
    */
   private async workflow(nameOrRef: unknown, nestedArgs: unknown): Promise<unknown> {
     this.throwIfCancelled()
-    const ref = nameOrRef as { name?: unknown; digest?: unknown } | null
+    const ref = nameOrRef as { name?: unknown; digest?: unknown; onFailure?: unknown } | null
     if (ref === null || typeof ref !== 'object' || typeof ref.name !== 'string' || typeof ref.digest !== 'string') {
       throw new WorkflowError(
         'workflow() requires { name, digest } naming a registered definition; a bare name cannot pin the version a run used',
+        'INVALID_ARGUMENT',
+      )
+    }
+    const onFailure = ref.onFailure
+    if (onFailure !== undefined && !isChildFailurePolicy(onFailure)) {
+      throw new WorkflowError(
+        `workflow() onFailure must be one of ${CHILD_FAILURE_POLICIES.map(policy => `'${policy}'`).join(', ')}`,
         'INVALID_ARGUMENT',
       )
     }
@@ -370,6 +380,7 @@ export class WorkflowExecution {
       name: ref.name,
       digest: ref.digest,
       ...nestedArgs === undefined ? {} : { args: nestedArgs },
+      ...onFailure === undefined ? {} : { onFailure },
     })
   }
 

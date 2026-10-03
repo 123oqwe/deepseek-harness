@@ -8,7 +8,24 @@
  */
 
 import type { WorkflowAgentEndInfo, WorkflowAgentInfo, WorkflowResult } from '@deepseek-ai/dsh-workflow'
+import type { ChildFailurePolicy } from '@deepseek-ai/dsh-workflow-registry'
 import type { ChildResult, ChildStartRequest } from './types.ts'
+
+/**
+ * The child-failure policies a script's `workflow()` call may declare
+ * (Epic P4-09 acceptance[2]). The worker checks a declaration against this
+ * list before posting it, and the host checks it again on receipt.
+ */
+export const CHILD_FAILURE_POLICIES: readonly ChildFailurePolicy[] = ['fail-parent', 'continue-parent']
+
+/**
+ * Whether a declared value names one of {@link CHILD_FAILURE_POLICIES}.
+ * @param value - the declaration as the script or the wire gave it.
+ * @returns whether it is a declarable policy.
+ */
+export function isChildFailurePolicy(value: unknown): value is ChildFailurePolicy {
+  return (CHILD_FAILURE_POLICIES as readonly unknown[]).includes(value)
+}
 
 /** Message tags the worker sends the host (the wire values are the tag strings). */
 export enum WorkerToHostType {
@@ -48,8 +65,12 @@ export interface WorkerToHostPayloads {
   [WorkerToHostType.ChildStart]: { callId: number; request: ChildStartRequest }
   /** The RPC correlation id of the child to dispose. */
   [WorkerToHostType.ChildDispose]: { callId: number }
-  /** The RPC correlation id, the definition to nest, and its `args`. */
-  [WorkerToHostType.NestedStart]: { callId: number; name: string; digest: string; args?: unknown }
+  /**
+   * The RPC correlation id, the definition to nest, its `args`, and the
+   * failure policy the script declared. The policy stays a plain string on the
+   * wire because the host checks it again with {@link isChildFailurePolicy}.
+   */
+  [WorkerToHostType.NestedStart]: { callId: number; name: string; digest: string; args?: unknown; onFailure?: string }
   /** The run's terminal outcome. */
   [WorkerToHostType.Result]: { result: WorkflowResult }
 }

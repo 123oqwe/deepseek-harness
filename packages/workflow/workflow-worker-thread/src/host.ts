@@ -26,7 +26,7 @@ import type { Reconciled } from './resume.ts'
 import { applyChildFailure, cancelPropagationForNested } from '@deepseek-ai/dsh-workflow-registry'
 import type { ChildFailurePolicy } from '@deepseek-ai/dsh-workflow-registry'
 import type { RunLease } from '@deepseek-ai/dsh-lease-contract'
-import { HostToWorkerType, WorkerToHostType } from './protocol.ts'
+import { CHILD_FAILURE_POLICIES, HostToWorkerType, isChildFailurePolicy, WorkerToHostType } from './protocol.ts'
 import type { HostToWorkerPayloads, WorkerToHostMessage } from './protocol.ts'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { ChildResult, ChildStartRequest, NestedStartRequest, WorkerInit } from './types.ts'
@@ -455,11 +455,7 @@ export class WorkerRun implements WorkflowRun {
         this.onChildDispose(message.callId)
         break
       case WorkerToHostType.NestedStart:
-        this.onNestedStart(message.callId, {
-          name: message.name,
-          digest: message.digest,
-          ...message.args === undefined ? {} : { args: message.args },
-        })
+        this.onNestedStart(message)
         break
       case WorkerToHostType.Result:
         this.onResult(message.result)
@@ -749,11 +745,26 @@ export class WorkerRun implements WorkflowRun {
    *
    * Refusals reach the script as a thrown error rather than a null result: a
    * `workflow()` that returned `undefined` for "recursive definition" would be
-   * indistinguishable from one whose nested run returned nothing.
-   * @param callId - the worker's RPC correlation id.
-   * @param request - the definition to nest and its `args`.
+   * indistinguishable from one whose nested run returned nothing. A declared
+   * `onFailure` crossed the thread boundary, so it is checked again here, with
+   * the list the worker checked it against (acceptance[2]).
+   * @param message - the worker's request: correlation id, definition, `args` and declared `onFailure`.
    */
-  private onNestedStart(callId: number, request: NestedStartRequest): void {
+  private onNestedStart(message: WorkerToHostMessage<WorkerToHostType.NestedStart>): void {
+    const { callId, onFailure } = message
+    if (onFailure !== undefined && !isChildFailurePolicy(onFailure)) {
+      this.post(HostToWorkerType.NestedRefused, {
+        callId,
+        rendered: `nested workflow "${message.name}" was not started: onFailure "${onFailure}" is not one of ${CHILD_FAILURE_POLICIES.join(', ')}`,
+      })
+      return
+    }
+    const request: NestedStartRequest = {
+      name: message.name,
+      digest: message.digest,
+      ...message.args === undefined ? {} : { args: message.args },
+      ...onFailure === undefined ? {} : { onFailure },
+    }
     void this.nest(request).then(
       (value) => { this.post(HostToWorkerType.NestedSettled, { callId, value }) },
       (error: unknown) => { this.post(HostToWorkerType.NestedRefused, { callId, rendered: renderThrown(error) }) },
