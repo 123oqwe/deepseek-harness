@@ -55,7 +55,7 @@ import {
 } from '@deepseek-ai/dsh-plugin-lock'
 import { recordUnverifiedProvenance, type ProvenanceAuditRecord } from '@deepseek-ai/dsh-plugin-provenance'
 import { verifyInstallProvenance } from './install-provenance.ts'
-import { INSTALL_ANCHOR } from './profile-boot.ts'
+import { INSTALL_ANCHOR, isDevelopmentProfileManifest, warnUnsignedDevPlugins } from './profile-boot.ts'
 import { readProfileTrustAnchors } from './trust-anchors.ts'
 
 const NAME = 'dsh'
@@ -297,7 +297,7 @@ export async function runPlugin(profile: string, args: readonly string[]): Promi
   const held = await withUpgradeEnvironment(
     dshHomePath(),
     { resolve: async plugin => resolvePluginUpgrade(plugin, dir) },
-    async environment => runUnderLease(pnpmArgs, dir, before, environment, confirmation),
+    async environment => runUnderLease(pnpmArgs, profile, dir, before, environment, confirmation),
   )
   if (held.held) return held.value
   process.stderr.write(`${NAME}: ${held.refusal}\n`)
@@ -340,6 +340,7 @@ function splitConfirmation(
  * change is found and its data migrated, and a migration that fails restores
  * the recorded bytes.
  * @param args - the pnpm arguments.
+ * @param profile - the profile name.
  * @param dir - the profile directory.
  * @param before - the manifest read before pnpm ran.
  * @param environment - the migration facet, lease and per-plugin lookups.
@@ -348,6 +349,7 @@ function splitConfirmation(
  */
 async function runUnderLease(
   args: readonly string[],
+  profile: string,
   dir: string,
   before: ProfileManifest,
   environment: UpgradeEnvironment,
@@ -430,6 +432,9 @@ async function runUnderLease(
       else await clearInstallRecord(dir)
       return 1
     }
+    // P1-02 must[4], question 30 (b): an install that brings in a package with
+    // no verified provenance names it on every profile; nothing is refused.
+    warnUnsignedDevPlugins(profile, isDevelopmentProfileManifest(before), provenance.records)
     // must[1]: the one place that knows (plugin, from, to). `baseline` is the
     // manifest from before pnpm ran, the first run's when this one resumes an
     // install; the installed state is read now.
