@@ -34,4 +34,8 @@ export interface DesktopHostReport {
   readonly runs: readonly string[]
   /** What the probe call returned, or the message it threw; absent when the host was refused. */
   readonly call?: { readonly isError?: boolean; readonly text?: string; readonly thrown?: string }
+  /** How many requests the mock model received during the root agent's one turn; absent when the host was refused. */
+  readonly modelRequests?: number
+  /** Whether a string in those requests names both the Trust Kernel and the insecure mode; absent when the host was refused. */
+  readonly modelToldInsecure?: boolean
 }

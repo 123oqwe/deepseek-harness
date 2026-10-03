@@ -19,6 +19,11 @@
  * token, through the public `ToolRuntime.execute` seam, as the P0-02
  * no-kernel dispatch driver does. The sentinel declares a Plugin Manifest v2
  * that names nothing, because it registers nothing.
+ *
+ * Last, the root agent runs one turn against the mock model, and the report
+ * says how many requests the model received and whether a string in them
+ * names both the Trust Kernel and the insecure mode: the reading B-672 makes
+ * on the `dsh` entry for P0-02 acceptance[3] (B-696b).
  * @module tests/first100/fixtures/loader/p0-02-desktop-host/driver
  */
 
@@ -30,7 +35,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import { HOST_USER_IDENTITY_KEY, type HostUserIdentityFactory } from '@deepseek-ai/dsh-agent-loop'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type {} from '@deepseek-ai/dsh-capability-token'
-import type { ToolCallId } from '@deepseek-ai/dsh-llm'
+import { createUserMessage, type ToolCallId } from '@deepseek-ai/dsh-llm'
 import { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
 import type {} from '@deepseek-ai/dsh-trust-kernel'
 import { runDesktopHost } from '../../../../../apps/desktop-host/src/index.ts'
@@ -113,6 +118,18 @@ function print(report: DesktopHostReport): void {
   process.stdout.write(`${REPORT_PREFIX} ${JSON.stringify(report)}\n`)
 }
 
+/**
+ * Every string anywhere inside a parsed JSON value.
+ * @param value - the value.
+ * @returns its string leaves.
+ */
+function stringLeaves(value: unknown): string[] {
+  if (typeof value === 'string') return [value]
+  if (Array.isArray(value)) return value.flatMap(stringLeaves)
+  if (typeof value === 'object' && value !== null) return Object.values(value).flatMap(stringLeaves)
+  return []
+}
+
 const controller = await runDesktopHost(runtimeDir, projectDir, () => Promise.resolve(), { allowLinkedPackages: true })
   .catch((error: unknown) => {
     print({ project, refused: error instanceof Error ? error.message : String(error), runs: [] })
@@ -136,7 +153,8 @@ try {
       return Promise.resolve([{ type: 'text' as const, text: 'probe ran' }])
     },
   }))
-  ctx.llm.registerAdapter([PROVIDER], new MockAdapter(Array.from({ length: 4 }, () => textResponse('ok'))))
+  const model = new MockAdapter(Array.from({ length: 4 }, () => textResponse('ok')))
+  ctx.llm.registerAdapter([PROVIDER], model)
   await createFixtureRootAgent(ctx, {
     provider: PROVIDER,
     model: PROVIDER,
@@ -163,7 +181,21 @@ try {
   } catch (error: unknown) {
     call = { thrown: error instanceof Error ? error.message : String(error) }
   }
-  print({ project, kernel: ctx.get('trustKernel') !== undefined, runs, call })
+  root.followup(createUserMessage({ content: [{ type: 'text', text: 'reply ok' }], source: { kind: 'user' } }))
+  await root.whenIdle()
+  const modelStrings = model.requests.flatMap(request => stringLeaves(JSON.parse(JSON.stringify({
+    system: request.system ?? null,
+    messages: request.messages,
+    tools: request.tools ?? [],
+  })) as unknown))
+  print({
+    project,
+    kernel: ctx.get('trustKernel') !== undefined,
+    runs,
+    call,
+    modelRequests: model.requests.length,
+    modelToldInsecure: modelStrings.some(text => /trust kernel/iu.test(text) && /insecure/iu.test(text)),
+  })
 } finally {
   await controller.dispose()
 }
