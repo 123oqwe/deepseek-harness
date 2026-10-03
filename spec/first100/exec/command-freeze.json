@@ -1820,7 +1820,8 @@
         "treeSha": "b10bb8966db8344cc7e742c2283184d09d19c77f",
         "testsDiscovered": 13
       },
-      "note": "C-stage RED scaffold for P1-02 (plugin signing/provenance/SBOM), attempt/P1-02-C @ 18ccb4b27f (post-corrective-round, closes 1 Reviewer-flagged gap: no case previously held repoUrl fixed while tampering commitHash alone, so a stub checking only repoUrl would have passed must[1]s source-commit verification requirement undetected; added a distinct source-commit-mismatch reason code and case). 13/13 genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor. expectExit=0 is the GREEN target per the P0-01.C precedent."
+      "note": "C-stage RED scaffold for P1-02 (plugin signing/provenance/SBOM), attempt/P1-02-C @ 18ccb4b27f (post-corrective-round, closes 1 Reviewer-flagged gap: no case previously held repoUrl fixed while tampering commitHash alone, so a stub checking only repoUrl would have passed must[1]s source-commit verification requirement undetected; added a distinct source-commit-mismatch reason code and case). 13/13 genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor. expectExit=0 is the GREEN target per the P0-01.C precedent.",
+      "supersededBy": "2026-10-03T09:23:18.000Z"
     },
     {
       "epic": "P2-03",
@@ -7521,7 +7522,8 @@
         "mutationDescription": "Three targeted mutations of packages/plugin/plugin-provenance/src/signature.ts, each restored byte-identical: (M1) the Sigstore bundle is never checked; (M2) the identity policy is dropped from the verify call; (M3) an anchor with no trusted root is treated as verified.",
         "failureSummary": "Reddened 4, 1 and 1 across the package. M1 reddens four because the whole Sigstore branch stops deciding anything; M2 reddens only the different-identity case, which is the one written for it; M3 reddens only the rootless-anchor case. The positive control -- the genuine bundle verifying -- stays green under M2 and M3 and reddens under none of them, which is what says the refusals are selective rather than blanket."
       },
-      "note": "SUPERSEDES the pre-closure freeze. Both KNOWN GAP cases were deleted when their unlock signal fired and the old entries still named them; the delegate caught it, and `verify-frozen-titles-in-tree.mjs` (added in the same change) reproduces the finding mechanically. This is BLOCKED-103's rule -- replace or delete a frozen case, supersede its entry -- missed for the second time in one day, which is why the rule now has a reader."
+      "note": "SUPERSEDES the pre-closure freeze. Both KNOWN GAP cases were deleted when their unlock signal fired and the old entries still named them; the delegate caught it, and `verify-frozen-titles-in-tree.mjs` (added in the same change) reproduces the finding mechanically. This is BLOCKED-103's rule -- replace or delete a frozen case, supersede its entry -- missed for the second time in one day, which is why the rule now has a reader.",
+      "supersededBy": "2026-10-03T09:23:20.000Z"
     },
     {
       "epic": "P1-02",
@@ -7606,7 +7608,8 @@
         "mutationDescription": "Three targeted mutations of packages/plugin/plugin-provenance/src/signature.ts, each restored byte-identical: (M1) the Sigstore bundle is never checked; (M2) the identity policy is dropped from the verify call; (M3) an anchor with no trusted root is treated as verified.",
         "failureSummary": "Reddened 4, 1 and 1 across the package. M1 reddens four because the whole Sigstore branch stops deciding anything; M2 reddens only the different-identity case, which is the one written for it; M3 reddens only the rootless-anchor case. The positive control -- the genuine bundle verifying -- stays green under M2 and M3 and reddens under none of them, which is what says the refusals are selective rather than blanket."
       },
-      "note": "SUPERSEDES the pre-closure freeze. Both KNOWN GAP cases were deleted when their unlock signal fired and the old entries still named them; the delegate caught it, and `verify-frozen-titles-in-tree.mjs` (added in the same change) reproduces the finding mechanically. This is BLOCKED-103's rule -- replace or delete a frozen case, supersede its entry -- missed for the second time in one day, which is why the rule now has a reader."
+      "note": "SUPERSEDES the pre-closure freeze. Both KNOWN GAP cases were deleted when their unlock signal fired and the old entries still named them; the delegate caught it, and `verify-frozen-titles-in-tree.mjs` (added in the same change) reproduces the finding mechanically. This is BLOCKED-103's rule -- replace or delete a frozen case, supersede its entry -- missed for the second time in one day, which is why the rule now has a reader.",
+      "supersededBy": "2026-10-03T09:23:19.000Z"
     },
     {
       "epic": "P8-01",
@@ -9753,7 +9756,8 @@
         "mutationDescription": "Three mutations of the loader, each restored byte-identical: (M36) the digest is a claimed constant instead of computed from the bytes read; (M37) a refusal aborts the whole load instead of being recorded; (M38) mounting over an engine with no registration surface is tolerated rather than refused.",
         "failureSummary": "M36 reddens 5 of 7 — the digest is what ties a definition to its bytes, so most cases depend on it. M37 and M38 redden exactly one case each, which is what makes the keep-loading and refuse-to-mount behaviours separately load-bearing. acceptance[0] is tested by construction rather than by assertion: the hostile-body case registers `process.exit(1)`, so if any part of this path evaluated a definition the case could not pass at all."
       },
-      "note": "§12.48-A(2). The engine's registration is not on the `WorkflowEngine` seam — `RegisteredDefinition` lives in `dsh-workflow-registry`, which already depends on `dsh-workflow`, so declaring the method upstream is a project-reference cycle, measured rather than assumed. The loader therefore names the one operation it needs structurally and refuses to mount over an engine that lacks it, rather than importing a concrete engine and tying saved workflows to one implementation. The real-composition case mounts the actual worker-thread engine, because the recording engine can only show that the loader calls a method; and that recording engine wraps the real `DefinitionRegistry` rather than re-implementing its checks, which would pass while the real ones changed underneath it."
+      "note": "§12.48-A(2). The engine's registration is not on the `WorkflowEngine` seam — `RegisteredDefinition` lives in `dsh-workflow-registry`, which already depends on `dsh-workflow`, so declaring the method upstream is a project-reference cycle, measured rather than assumed. The loader therefore names the one operation it needs structurally and refuses to mount over an engine that lacks it, rather than importing a concrete engine and tying saved workflows to one implementation. The real-composition case mounts the actual worker-thread engine, because the recording engine can only show that the loader calls a method; and that recording engine wraps the real `DefinitionRegistry` rather than re-implementing its checks, which would pass while the real ones changed underneath it.",
+      "supersededBy": "2026-10-03T09:23:17.000Z"
     },
     {
       "epic": "P2-04",
@@ -21776,7 +21780,8 @@
         "mutationDescription": "These cases pin a VOCABULARY, not behaviour, so the mutation that matters is the vocabulary changing: each assertion names a literal the tree carries (the two `SbomFormat` members, the `$schema` dialect URI, the major-only compatibility rule, the negotiation result keys, the mandatory/optional split). Renaming or removing any of those literals in the source reddens exactly the case that names it, because the case reads the value rather than a type.",
         "failureSummary": "Verified by construction rather than by a separate mutation run, and stated as such: every assertion above is on a runtime VALUE the source produces (a document `format`, a `$schema` string read from disk, an error `code`, a result object's keys), so there is no path by which the case passes while the literal it names is absent. Where a claim could NOT be pinned to a value it is recorded as delegation rather than asserted -- the Sigstore bundle version is the library's, and the case says so instead of inventing a constant."
       },
-      "note": "Standards-vocabulary backfill (delegate notes 41-42). `verify-make-vs-use` carries a deadline that is a STATE rather than a date: an epic owning a standard by ASSIGNMENT owes one case naming that vocabulary before P2-05 starts, and P2-05 starting is something this repository can observe. These cases pin the vocabulary and nothing else -- no behaviour is added, and each asserts the SHAPE this tree takes rather than re-testing logic the epic's own frozen cases already own.\n\nEach entry in the epic's `standardsOwned` names the substring that proves it (`evidenceTitleSubstring`), so the gate checks auditable evidence instead of inferring ownership from a title that happens to be close.\n\nThe Sigstore case pins ownership by DELEGATION and says so: `SigstoreProvenanceEvidence.bundle` is typed `unknown` on purpose and this package never parses it -- it hands the bundle to `@sigstore/verify`'s `toSignedEntity`/`Verifier`. So the bundle version this tree accepts is the library's (`@sigstore/bundle` ^5.0.0, `@sigstore/verify` ^4.1.2), not a constant of ours, and a case asserting a literal 'v0.3' would pin a string this tree does not have and go stale the moment the dependency moved. Superseded for B-584 to add packages/plugin/plugin-provenance/tests/audit-record.spec.ts, packages/plugin/plugin-provenance/tests/fixtures/sigstore-local-chain.spec.ts, packages/plugin/plugin-provenance/tests/package-digest.spec.ts to files. Only files changed, so the entry keeps its predecessor's standing (generate-specs isProvenanceOnlySupersession); its dryRunProof and sensitivityProof, where present, are the predecessor's."
+      "note": "Standards-vocabulary backfill (delegate notes 41-42). `verify-make-vs-use` carries a deadline that is a STATE rather than a date: an epic owning a standard by ASSIGNMENT owes one case naming that vocabulary before P2-05 starts, and P2-05 starting is something this repository can observe. These cases pin the vocabulary and nothing else -- no behaviour is added, and each asserts the SHAPE this tree takes rather than re-testing logic the epic's own frozen cases already own.\n\nEach entry in the epic's `standardsOwned` names the substring that proves it (`evidenceTitleSubstring`), so the gate checks auditable evidence instead of inferring ownership from a title that happens to be close.\n\nThe Sigstore case pins ownership by DELEGATION and says so: `SigstoreProvenanceEvidence.bundle` is typed `unknown` on purpose and this package never parses it -- it hands the bundle to `@sigstore/verify`'s `toSignedEntity`/`Verifier`. So the bundle version this tree accepts is the library's (`@sigstore/bundle` ^5.0.0, `@sigstore/verify` ^4.1.2), not a constant of ours, and a case asserting a literal 'v0.3' would pin a string this tree does not have and go stale the moment the dependency moved. Superseded for B-584 to add packages/plugin/plugin-provenance/tests/audit-record.spec.ts, packages/plugin/plugin-provenance/tests/fixtures/sigstore-local-chain.spec.ts, packages/plugin/plugin-provenance/tests/package-digest.spec.ts to files. Only files changed, so the entry keeps its predecessor's standing (generate-specs isProvenanceOnlySupersession); its dryRunProof and sensitivityProof, where present, are the predecessor's.",
+      "supersededBy": "2026-10-03T09:23:21.000Z"
     },
     {
       "epic": "P2-10",
@@ -22046,6 +22051,655 @@
         "failureSummary": "Read from each round's own narrow report over this entry's argv; every round carried build. M-677-1′ run 37104755798: 1 passed, 1 failed: «P4-06 lock (a): an inbox message claimed then refused before the record still takes effect exactly once a message claimed then refused between the claim and the record still reaches the record exactly once»."
       },
       "note": "P4-06 U-stage supplement 6: lock (a) (BLOCKED-088) on the shipped headless composition. An inbox message claimed and then refused between the claim and the record still reaches the record exactly once; control: a message the pre-step does not refuse is recorded exactly once. Lane A's A-567 (red first for B-677)."
+    },
+    {
+      "epic": "P4-09",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-09",
+        "stage": "U"
+      },
+      "supplementSeq": 4,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-filesystem",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-09 must[0]: a saved definition is a file, registered at boot registers every definition file under the harness home, naming it by FILE name",
+        "P4-09 must[0]: a saved definition is a file, registered at boot computes each digest from the bytes it read, so a definition cannot claim one it does not hash to",
+        "P4-09 must[0]: a saved definition is a file, registered at boot starts with NO saved workflows when the directory does not exist, rather than failing the boot",
+        "P4-09 acceptance[0]: loading does not execute, and a refused definition does not stop the boot reads a body that would throw if it were ever evaluated, and registers it unharmed",
+        "P4-09 acceptance[0]: loading does not execute, and a refused definition does not stop the boot RECORDS a refused definition and keeps loading the rest",
+        "P4-09 acceptance[0]: loading does not execute, and a refused definition does not stop the boot REFUSES to mount over an engine that cannot register definitions, rather than loading into nothing",
+        "P4-09 must[0]: the REAL engine registers what the loader read loads a file into the mounted worker-thread engine, which then resolves it for a nested run"
+      ],
+      "files": [
+        "packages/workflow/workflow-filesystem/src/index.ts",
+        "packages/workflow/workflow-filesystem/tests/saved-workflows.spec.ts",
+        "packages/workflow/workflow-filesystem/package.json",
+        "packages/workflow/workflow-filesystem/tsconfig.json",
+        "packages/workflow/workflow-filesystem/README.md"
+      ],
+      "filesOverlayReason": "§12.48-A(2). P4-09's registry file lists name no producer of definitions, because the plan had none: `registerDefinition` had 0 production callers and nesting was reachable only from a test. A saved workflow is a FILE under the harness home, loaded at boot and registered through the engine's own admission — the same shape `dsh-skill-filesystem` uses for skills. The package is new, so every path here is outside the registry's lists by construction.",
+      "frozenAtUtc": "2026-10-03T09:23:17.000Z",
+      "supersedes": "2026-09-08T19:20:00.000Z",
+      "supersessionReason": "B-698 (4/4) changed this spec's fixture: the saved-workflow loader now registers a definition only when its signature verifies against an offline-signed trust anchor of the pinned kernel, so the fixture signs each definition and pins a kernel holding that anchor. The seven frozen titles and their assertions are unchanged; argv, files, expected exit and every case are the predecessor's (gate3 2026-10-03T06:45:56Z).",
+      "dryRunProof": {
+        "treeSha": "214832dd0817b18c1f7ada1af439db196dc648f0",
+        "testsDiscovered": 15
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations of the loader, each restored byte-identical: (M36) the digest is a claimed constant instead of computed from the bytes read; (M37) a refusal aborts the whole load instead of being recorded; (M38) mounting over an engine with no registration surface is tolerated rather than refused.",
+        "failureSummary": "M36 reddens 5 of 7 — the digest is what ties a definition to its bytes, so most cases depend on it. M37 and M38 redden exactly one case each, which is what makes the keep-loading and refuse-to-mount behaviours separately load-bearing. acceptance[0] is tested by construction rather than by assertion: the hostile-body case registers `process.exit(1)`, so if any part of this path evaluated a definition the case could not pass at all."
+      },
+      "note": "§12.48-A(2). The engine's registration is not on the `WorkflowEngine` seam — `RegisteredDefinition` lives in `dsh-workflow-registry`, which already depends on `dsh-workflow`, so declaring the method upstream is a project-reference cycle, measured rather than assumed. The loader therefore names the one operation it needs structurally and refuses to mount over an engine that lacks it, rather than importing a concrete engine and tying saved workflows to one implementation. The real-composition case mounts the actual worker-thread engine, because the recording engine can only show that the loader calls a method; and that recording engine wraps the real `DefinitionRegistry` rather than re-implementing its checks, which would pass while the real ones changed underneath it. | Superseded for B-698 (question 31 (a)): the file also gained eight signature cases, which this entry does not freeze. sensitivityProof carries over from the entry it replaces, whose assertions are unchanged (A-555 precedent). The observing tree is pinned at refs/dsh/freeze/P4-09.U.4/2026-10-03T09-23-17.000Z -> e3c0e65fe112ee0188a426f0a200e0c2bca4acff, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P1-02",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-provenance/tests/provenance.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "must[0]: a claim backed by Sigstore-style identity/provenance evidence verifies as trusted",
+        "must[0]: a claim backed by an organization offline-signing key verifies as trusted",
+        "must[1]: a package whose SBOM omits an actually-installed runtime dependency is rejected for SBOM-coverage mismatch",
+        "must[2]: the trust root a verification checks evidence against is literally TrustKernel's own signatureRoots handle",
+        "must[4]: an explicit dev-profile opt-in recognized by policy is admitted with a persistent untrusted banner",
+        "must[4]: a profile name outside the deployment's recognized dev profiles is refused, never silently admitted as unsigned-dev",
+        "a single tampered byte (a changed observed package digest) is rejected for digest mismatch",
+        "a swapped source repo (observed repo URL differs from the claimed one) is rejected for source-repo mismatch",
+        "a forged commit hash within the same claimed source repo (repo URL unchanged, observed commit hash differs) is rejected for source-commit mismatch, distinct from source-repo mismatch",
+        "a forged builder identity (observed builder differs from the claimed one) is rejected for builder-identity mismatch",
+        "the identical locked package input verifies as trusted through the offline entrypoint, with no network-shaped parameter",
+        "recordProvenanceAudit produces a record naming the verdict and trust anchor id, with no field capable of holding key or signature material"
+      ],
+      "files": [
+        "packages/plugin/plugin-provenance/tests/provenance.spec.ts"
+      ],
+      "frozenAtUtc": "2026-10-03T09:23:18.000Z",
+      "supersedes": "2026-09-03T13:16:51.059Z",
+      "supersessionReason": "B-686's first stroke (A0, aad09a74b7) makes verifyPluginProvenance refuse a claim whose sbomDigest differs from computeSbomDigest(input.sbom). These cases' fixtures signed claims over a placeholder digest ('sha256:sbom-of-plugin-a'), so the cases expecting trusted or sbom-coverage-mismatch were refused with sbom-digest-mismatch before reaching their subject. B-694 (3204cecd3c) signs every fixture claim over the real digest of the SBOM its input carries; no title, assertion, argv or file list changes. Fault boundaries 14 and 15 assert only a rejection and now reach the SBOM coverage check again. B-694b (089ab27616) retires the old must[3] unit case, whose title said a plugin cannot substitute a trust root while its body registered one; A-578 tests the clause on the shipped boot (ruling gate3 2026-10-03T02:55:56Z), so this successor carries 12 of the predecessor’s 13 titles.",
+      "dryRunProof": {
+        "treeSha": "214832dd0817b18c1f7ada1af439db196dc648f0",
+        "testsDiscovered": 52
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two rounds, never merged, each a one-line change to packages/plugin/plugin-provenance/src/index.ts on e3c0e65fe112ee0188a426f0a200e0c2bca4acff: M-694-1 `5b5e4de175ced57c857369fc45da09dcc9289f70` reads the SBOM digest comparison backwards, so a claim whose digest matches is refused and one whose digest differs is admitted; M-694-2 `aa70b76e4c4227678cf5edd8ab13e69c2c84f690` checks coverage against the SBOM's own runtime entries, so coverage always passes. A-416: the mutated file and this entry's files are byte-identical at the code tip and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report over this entry's argv; every round carried build. M-694-1 `5b5e4de175ced57c857369fc45da09dcc9289f70` run 37111533311: 41 passed, 11 failed: «P1-02 Contract — must clauses must[0]: a claim backed by Sigstore-style identity/provenance evidence verifies as trusted», «P1-02 Contract — must clauses must[0]: a claim backed by an organization offline-signing key verifies as trusted», «P1-02 Contract — must clauses must[1]: a package whose SBOM omits an actually-installed runtime dependency is rejected for SBOM-coverage mismatch», «P1-02 Contract — must clauses must[2]: the trust root a verification checks evidence against is literally TrustKernel's own signatureRoots handle», «P1-02 Contract — acceptance[1]: 同一锁定包在离线模式可验证 the identical locked package input verifies as trusted through the offline entrypoint, with no network-shaped parameter», «P1-02 Fault — rejection-boundary matrix fault boundary 10 log index zero is VALID, so the check is not an accidental truthiness test», «P1-02 Fault — rejection-boundary matrix fault boundary 16 a dev-only SBOM entry absent from the installed set is NOT a fault», «P1-02 Fault — rejection-boundary matrix validation[3]: a REVOKED anchor stops verifying, while the untouched one keeps working», «P1-02 must[2] — a kernel configured with anchors holds them a configured offline anchor verifies a claim with no registerTrustAnchor call at all», «P1-02 must[2] — a kernel configured with anchors holds them a configured anchor can be revoked at runtime, so configuration is not a second, unwithdrawable channel», «P1-02 — the Sigstore path is verified, not believed the genuine bundle for the genuine claim verifies, so the refusals above are selective». M-694-2 `aa70b76e4c4227678cf5edd8ab13e69c2c84f690` run 37111548280: 49 passed, 3 failed: «P1-02 Contract — must clauses must[1]: a package whose SBOM omits an actually-installed runtime dependency is rejected for SBOM-coverage mismatch», «P1-02 Fault — rejection-boundary matrix fault boundary 14 an SBOM omitting an installed runtime dependency is refused», «P1-02 Fault — rejection-boundary matrix fault boundary 15 a declared runtime dependency that is NOT installed is refused»."
+      }
+    },
+    {
+      "epic": "P1-02",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-provenance/tests/provenance.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-02 Contract — must clauses must[0]: a claim backed by Sigstore-style identity/provenance evidence verifies as trusted",
+        "P1-02 Contract — must clauses must[0]: a claim backed by an organization offline-signing key verifies as trusted",
+        "P1-02 Contract — must clauses must[1]: a package whose SBOM omits an actually-installed runtime dependency is rejected for SBOM-coverage mismatch",
+        "P1-02 Contract — must clauses must[2]: the trust root a verification checks evidence against is literally TrustKernel's own signatureRoots handle",
+        "P1-02 Contract — must clauses must[4]: an explicit dev-profile opt-in recognized by policy is admitted with a persistent untrusted banner",
+        "P1-02 Contract — must clauses must[4]: a profile name outside the deployment's recognized dev profiles is refused, never silently admitted as unsigned-dev",
+        "P1-02 Contract — acceptance[0]: 篡改一个字节、替换 source repo、伪造 builder 三种情况都拒绝 a single tampered byte (a changed observed package digest) is rejected for digest mismatch",
+        "P1-02 Contract — acceptance[0]: 篡改一个字节、替换 source repo、伪造 builder 三种情况都拒绝 a swapped source repo (observed repo URL differs from the claimed one) is rejected for source-repo mismatch",
+        "P1-02 Contract — acceptance[0]: 篡改一个字节、替换 source repo、伪造 builder 三种情况都拒绝 a forged commit hash within the same claimed source repo (repo URL unchanged, observed commit hash differs) is rejected for source-commit mismatch, distinct from source-repo mismatch",
+        "P1-02 Contract — acceptance[0]: 篡改一个字节、替换 source repo、伪造 builder 三种情况都拒绝 a forged builder identity (observed builder differs from the claimed one) is rejected for builder-identity mismatch",
+        "P1-02 Contract — acceptance[1]: 同一锁定包在离线模式可验证 the identical locked package input verifies as trusted through the offline entrypoint, with no network-shaped parameter",
+        "P1-02 Contract — acceptance[2]: Inventory 和审计事件记录验证结果而不记录密钥 recordProvenanceAudit produces a record naming the verdict and trust anchor id, with no field capable of holding key or signature material",
+        "P1-02 Fault — rejection-boundary matrix enumerates at least twelve rejection boundaries, each named once",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 01 tampered package digest is refused for digest mismatch",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 02 swapped source repo is refused for source-repo mismatch",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 03 forged commit in the same repo is refused distinctly from a repo swap",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 04 forged builder identity is refused for builder-identity mismatch",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 05 several mismatches at once still refuse, naming the first checked fact",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 06 sigstore evidence with an empty issuer is refused as invalid",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 07 sigstore evidence with an empty subject is refused as invalid",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 08 sigstore evidence with a negative transparency log index is refused",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 09 sigstore evidence with a non-integer log index is refused",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 10 log index zero is VALID, so the check is not an accidental truthiness test",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 11 offline evidence with an empty signature is refused as invalid",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 12 offline evidence with an empty key fingerprint is refused as invalid",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 13 a fact mismatch is reported even when the evidence is ALSO invalid",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 14 an SBOM omitting an installed runtime dependency is refused",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 15 a declared runtime dependency that is NOT installed is refused",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 16 a dev-only SBOM entry absent from the installed set is NOT a fault",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 17 unsigned-dev is refused for a profile the deployment does not call dev",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 18 an admitted unsigned-dev profile still carries a persistent untrusted banner",
+        "P1-02 Fault — rejection-boundary matrix validation[3]: an identity nobody registered is REFUSED, so revocation can mean something",
+        "P1-02 Fault — rejection-boundary matrix validation[3]: a REVOKED anchor stops verifying, while the untouched one keeps working",
+        "P1-02 Fault — rejection-boundary matrix revoking an id this root never held reports false rather than pretending",
+        "P1-02 Provider — a real signature refuses all three acceptance[0] vectors vector 1: a tampered package digest no longer matches the signature",
+        "P1-02 Provider — a real signature refuses all three acceptance[0] vectors vector 2: rewriting the digest in BOTH claim and observation still fails the signature",
+        "P1-02 Provider — a real signature refuses all three acceptance[0] vectors vector 3: a swapped source repo and a forged builder identity each fail the signature",
+        "P1-02 Provider — a real signature refuses all three acceptance[0] vectors an anchor admitted with NO public key refuses rather than accepting anything",
+        "P1-02 Provider — a real signature refuses all three acceptance[0] vectors a signature made by a DIFFERENT key is refused, so the anchor's key is the one that decides",
+        "P1-02 must[2] — a kernel configured with anchors holds them a configured offline anchor verifies a claim with no registerTrustAnchor call at all",
+        "P1-02 must[2] — a kernel configured with anchors holds them a kernel configured with NOTHING refuses the same claim, so the configuration is what admitted it",
+        "P1-02 must[2] — a kernel configured with anchors holds them a configured anchor for a DIFFERENT key does not admit this one",
+        "P1-02 must[2] — a kernel configured with anchors holds them a configured anchor can be revoked at runtime, so configuration is not a second, unwithdrawable channel",
+        "P1-02 must[2] — a kernel configured with anchors holds them the anchors are frozen against a caller that keeps its own array",
+        "P1-02 — the Sigstore path is verified, not believed acceptance[0]: a claim naming an admitted issuer with NO bundle is refused",
+        "P1-02 — the Sigstore path is verified, not believed a bundle issued to a DIFFERENT identity is refused, even though it verifies cryptographically",
+        "P1-02 — the Sigstore path is verified, not believed a bundle signing DIFFERENT claim bytes is refused, so a bundle cannot be moved between claims",
+        "P1-02 — the Sigstore path is verified, not believed an admitted issuer whose anchor carries NO trusted root cannot verify, and refuses",
+        "P1-02 — the Sigstore path is verified, not believed the genuine bundle for the genuine claim verifies, so the refusals above are selective"
+      ],
+      "files": [
+        "packages/plugin/plugin-provenance/src/signature.ts",
+        "packages/plugin/plugin-provenance/src/index.ts",
+        "packages/kernel/trust-kernel/src/index.ts",
+        "packages/kernel/trust-kernel/src/types.ts",
+        "packages/plugin/plugin-provenance/tests/provenance.spec.ts",
+        "packages/plugin/plugin-provenance/tests/fixtures/sigstore-chain.ts",
+        "packages/plugin/plugin-provenance/README.md"
+      ],
+      "frozenAtUtc": "2026-10-03T09:23:19.000Z",
+      "supersedes": "2026-09-06T01:30:00.000Z",
+      "supersessionReason": "B-686's first stroke (A0, aad09a74b7) makes verifyPluginProvenance refuse a claim whose sbomDigest differs from computeSbomDigest(input.sbom). These cases' fixtures signed claims over a placeholder digest ('sha256:sbom-of-plugin-a'), so the cases expecting trusted or sbom-coverage-mismatch were refused with sbom-digest-mismatch before reaching their subject. B-694 (3204cecd3c) signs every fixture claim over the real digest of the SBOM its input carries; no title, assertion, argv or file list changes. Fault boundaries 14 and 15 assert only a rejection and now reach the SBOM coverage check again. B-694b (089ab27616) retires the old must[3] unit case, whose title said a plugin cannot substitute a trust root while its body registered one; A-578 tests the clause on the shipped boot (ruling gate3 2026-10-03T02:55:56Z), so this successor carries 49 of the predecessor’s 50 titles.",
+      "dryRunProof": {
+        "treeSha": "214832dd0817b18c1f7ada1af439db196dc648f0",
+        "testsDiscovered": 52
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two rounds, never merged, each a one-line change to packages/plugin/plugin-provenance/src/index.ts on e3c0e65fe112ee0188a426f0a200e0c2bca4acff: M-694-1 `5b5e4de175ced57c857369fc45da09dcc9289f70` reads the SBOM digest comparison backwards, so a claim whose digest matches is refused and one whose digest differs is admitted; M-694-2 `aa70b76e4c4227678cf5edd8ab13e69c2c84f690` checks coverage against the SBOM's own runtime entries, so coverage always passes. A-416: the mutated file and this entry's files are byte-identical at the code tip and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report over this entry's argv; every round carried build. M-694-1 `5b5e4de175ced57c857369fc45da09dcc9289f70` run 37111533311: 41 passed, 11 failed: «P1-02 Contract — must clauses must[0]: a claim backed by Sigstore-style identity/provenance evidence verifies as trusted», «P1-02 Contract — must clauses must[0]: a claim backed by an organization offline-signing key verifies as trusted», «P1-02 Contract — must clauses must[1]: a package whose SBOM omits an actually-installed runtime dependency is rejected for SBOM-coverage mismatch», «P1-02 Contract — must clauses must[2]: the trust root a verification checks evidence against is literally TrustKernel's own signatureRoots handle», «P1-02 Contract — acceptance[1]: 同一锁定包在离线模式可验证 the identical locked package input verifies as trusted through the offline entrypoint, with no network-shaped parameter», «P1-02 Fault — rejection-boundary matrix fault boundary 10 log index zero is VALID, so the check is not an accidental truthiness test», «P1-02 Fault — rejection-boundary matrix fault boundary 16 a dev-only SBOM entry absent from the installed set is NOT a fault», «P1-02 Fault — rejection-boundary matrix validation[3]: a REVOKED anchor stops verifying, while the untouched one keeps working», «P1-02 must[2] — a kernel configured with anchors holds them a configured offline anchor verifies a claim with no registerTrustAnchor call at all», «P1-02 must[2] — a kernel configured with anchors holds them a configured anchor can be revoked at runtime, so configuration is not a second, unwithdrawable channel», «P1-02 — the Sigstore path is verified, not believed the genuine bundle for the genuine claim verifies, so the refusals above are selective». M-694-2 `aa70b76e4c4227678cf5edd8ab13e69c2c84f690` run 37111548280: 49 passed, 3 failed: «P1-02 Contract — must clauses must[1]: a package whose SBOM omits an actually-installed runtime dependency is rejected for SBOM-coverage mismatch», «P1-02 Fault — rejection-boundary matrix fault boundary 14 an SBOM omitting an installed runtime dependency is refused», «P1-02 Fault — rejection-boundary matrix fault boundary 15 a declared runtime dependency that is NOT installed is refused»."
+      }
+    },
+    {
+      "epic": "P1-02",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-provenance/tests/package-digest.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-02 Provider — computePackageDigest over real bytes digests the exact bytes it was given, matching an independently computed sha256 of the same bytes",
+        "P1-02 Provider — computePackageDigest over real bytes returns the same digest for the same bytes across separate calls, so a verdict does not depend on call order",
+        "P1-02 Provider — computePackageDigest over real bytes changes the digest when a single byte of a real package payload is flipped",
+        "P1-02 Provider — computePackageDigest over real bytes changes the digest when two bytes are swapped, so it depends on byte order and not only on content",
+        "P1-02 Provider — computePackageDigest over real bytes changes the digest when one byte is appended, so it depends on length and not only on the leading bytes",
+        "P1-02 Provider — acceptance[0]: 篡改一个字节 rejected against real bytes verifies the untampered package, so the rejections below are caused by the tampering and not by the fixture",
+        "P1-02 Provider — acceptance[0]: 篡改一个字节 rejected against real bytes rejects a package whose installed bytes differ from the claimed ones by a single flipped byte",
+        "P1-02 Provider — acceptance[0]: 篡改一个字节 rejected against real bytes rejects a tampered byte at the very first and very last positions alike, leaving no unchecked region of the artifact",
+        "P1-02 Provider — acceptance[1]: the same locked package verifies offline reaches the identical trusted verdict for the same locked bytes through a separately loaded module instance",
+        "P1-02 Provider — acceptance[1]: the same locked package verifies offline rejects the same one-byte tampering offline that it rejects online, so the offline path is not the weaker one",
+        "P1-02 Provider — a tamper-and-rewrite attacker is refused by the trust root acceptance[0] vector 2: recomputing BOTH digests from tampered bytes no longer verifies",
+        "P1-02 Provider — a tamper-and-rewrite attacker is refused by the trust root the same tamper-and-rewrite is still refused when OTHER anchors are registered"
+      ],
+      "files": [
+        "packages/plugin/plugin-provenance/src/signature.ts",
+        "packages/plugin/plugin-provenance/src/index.ts",
+        "packages/kernel/trust-kernel/src/index.ts",
+        "packages/kernel/trust-kernel/src/types.ts",
+        "packages/plugin/plugin-provenance/tests/package-digest.spec.ts",
+        "packages/plugin/plugin-provenance/tests/fixtures/sigstore-chain.ts",
+        "packages/plugin/plugin-provenance/README.md"
+      ],
+      "frozenAtUtc": "2026-10-03T09:23:20.000Z",
+      "supersedes": "2026-09-06T01:30:00.000Z",
+      "supersessionReason": "B-686's first stroke (A0, aad09a74b7) makes verifyPluginProvenance refuse a claim whose sbomDigest differs from computeSbomDigest(input.sbom). These cases' fixtures signed claims over a placeholder digest ('sha256:sbom-of-plugin-a'), so the cases expecting trusted or sbom-coverage-mismatch were refused with sbom-digest-mismatch before reaching their subject. B-694 (3204cecd3c) signs every fixture claim over the real digest of the SBOM its input carries; no title, assertion, argv or file list changes. Fault boundaries 14 and 15 assert only a rejection and now reach the SBOM coverage check again.",
+      "dryRunProof": {
+        "treeSha": "214832dd0817b18c1f7ada1af439db196dc648f0",
+        "testsDiscovered": 12
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two rounds, never merged, each a one-line change to packages/plugin/plugin-provenance/src/index.ts on e3c0e65fe112ee0188a426f0a200e0c2bca4acff: M-694-1 `5b5e4de175ced57c857369fc45da09dcc9289f70` reads the SBOM digest comparison backwards, so a claim whose digest matches is refused and one whose digest differs is admitted; M-694-2 `aa70b76e4c4227678cf5edd8ab13e69c2c84f690` checks coverage against the SBOM's own runtime entries, so coverage always passes. A-416: the mutated file and this entry's files are byte-identical at the code tip and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report over this entry's argv; every round carried build. M-694-1 `5b5e4de175ced57c857369fc45da09dcc9289f70` run 37111533311: 10 passed, 2 failed: «P1-02 Provider — acceptance[0]: 篡改一个字节 rejected against real bytes verifies the untampered package, so the rejections below are caused by the tampering and not by the fixture», «P1-02 Provider — acceptance[1]: the same locked package verifies offline reaches the identical trusted verdict for the same locked bytes through a separately loaded module instance». M-694-2 `aa70b76e4c4227678cf5edd8ab13e69c2c84f690` run 37111548280: 12 passed, 0 failed."
+      }
+    },
+    {
+      "epic": "P1-02",
+      "stage": "C",
+      "supplements": {
+        "epic": "P1-02",
+        "stage": "C"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-provenance",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "names CycloneDX 1.6 and SPDX as the two SBOM formats, and admits no third",
+        "maps npm dependency fields onto the SBOM entry kinds rather than inventing a taxonomy",
+        "delegates the Sigstore bundle v0.3 format to the reference verifier instead of parsing it here"
+      ],
+      "files": [
+        "packages/plugin/plugin-provenance/tests/provenance.spec.ts",
+        "packages/plugin/plugin-provenance/tests/audit-record.spec.ts",
+        "packages/plugin/plugin-provenance/tests/fixtures/sigstore-local-chain.spec.ts",
+        "packages/plugin/plugin-provenance/tests/package-digest.spec.ts",
+        "packages/plugin/plugin-provenance/tests/sbom.spec.ts",
+        "packages/plugin/plugin-provenance/tests/seal.spec.ts"
+      ],
+      "frozenAtUtc": "2026-10-03T09:23:21.000Z",
+      "supersedes": "2026-10-03T04:53:01.000Z",
+      "supersessionReason": "B-584: files now name every test the argv runs (delegate rulings 甲 2026-09-25T22:06:36Z and 2026-09-28T06:37:55Z); argv, expected exit and every case are the predecessor's.",
+      "dryRunProof": {
+        "treeSha": "1c506bc30f050f0b6bdcae927f0caec35bdc5b25",
+        "testsDiscovered": 70
+      },
+      "sensitivityProof": {
+        "mutationDescription": "These cases pin a VOCABULARY, not behaviour, so the mutation that matters is the vocabulary changing: each assertion names a literal the tree carries (the two `SbomFormat` members, the `$schema` dialect URI, the major-only compatibility rule, the negotiation result keys, the mandatory/optional split). Renaming or removing any of those literals in the source reddens exactly the case that names it, because the case reads the value rather than a type.",
+        "failureSummary": "Verified by construction rather than by a separate mutation run, and stated as such: every assertion above is on a runtime VALUE the source produces (a document `format`, a `$schema` string read from disk, an error `code`, a result object's keys), so there is no path by which the case passes while the literal it names is absent. Where a claim could NOT be pinned to a value it is recorded as delegation rather than asserted -- the Sigstore bundle version is the library's, and the case says so instead of inventing a constant."
+      },
+      "note": "Standards-vocabulary backfill (delegate notes 41-42). `verify-make-vs-use` carries a deadline that is a STATE rather than a date: an epic owning a standard by ASSIGNMENT owes one case naming that vocabulary before P2-05 starts, and P2-05 starting is something this repository can observe. These cases pin the vocabulary and nothing else -- no behaviour is added, and each asserts the SHAPE this tree takes rather than re-testing logic the epic's own frozen cases already own.\n\nEach entry in the epic's `standardsOwned` names the substring that proves it (`evidenceTitleSubstring`), so the gate checks auditable evidence instead of inferring ownership from a title that happens to be close.\n\nThe Sigstore case pins ownership by DELEGATION and says so: `SigstoreProvenanceEvidence.bundle` is typed `unknown` on purpose and this package never parses it -- it hands the bundle to `@sigstore/verify`'s `toSignedEntity`/`Verifier`. So the bundle version this tree accepts is the library's (`@sigstore/bundle` ^5.0.0, `@sigstore/verify` ^4.1.2), not a constant of ours, and a case asserting a literal 'v0.3' would pin a string this tree does not have and go stale the moment the dependency moved. Superseded for B-584 to add packages/plugin/plugin-provenance/tests/audit-record.spec.ts, packages/plugin/plugin-provenance/tests/fixtures/sigstore-local-chain.spec.ts, packages/plugin/plugin-provenance/tests/package-digest.spec.ts to files. Only files changed, so the entry keeps its predecessor's standing (generate-specs isProvenanceOnlySupersession); its dryRunProof and sensitivityProof, where present, are the predecessor's. Superseded for B-584 to add packages/plugin/plugin-provenance/tests/sbom.spec.ts and packages/plugin/plugin-provenance/tests/seal.spec.ts to files. Only files changed, so the entry keeps its predecessor's standing (generate-specs isProvenanceOnlySupersession); its dryRunProof and sensitivityProof are the predecessor's."
+    },
+    {
+      "epic": "P0-01",
+      "stage": "F",
+      "supplements": {
+        "epic": "P0-01",
+        "stage": "F"
+      },
+      "supplementSeq": 5,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/cli/tests/entry-main-guard.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names it even without import.meta.main (red first for B-688) guard: the committed baseline records a different commit than this checkout, so verify has drift to find",
+        "P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names it even without import.meta.main (red first for B-688) the dsh bin prints its version when imported with argv[1] naming it",
+        "P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names it even without import.meta.main (red first for B-688) baseline-fingerprint verify detects the drift and exits non-zero when imported with argv[1] naming it"
+      ],
+      "files": [
+        "apps/cli/tests/entry-main-guard.spec.ts",
+        "apps/cli/src/bin.ts",
+        "scripts/release/baseline-fingerprint.mjs"
+      ],
+      "frozenAtUtc": "2026-10-03T09:23:27.000Z",
+      "dryRunProof": {
+        "treeSha": "214832dd0817b18c1f7ada1af439db196dc648f0",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two rounds, never merged: M-688-1 puts apps/cli/src/bin.ts back on the import.meta.main guard B-688 replaced; M-688-2 does the same to scripts/release/baseline-fingerprint.mjs. A-416: each mutated file and this entry's files are byte-identical at the round's parent, at the code tip and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report; every round carried build. M-688-1 `4cef0cd7cb7f93324aed4d3be3026c331797961f` run 37109269179: 2 passed, 1 failed in apps/cli/tests/entry-main-guard.spec.ts: «P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names it even without import.meta.main (red first for B-688) the dsh bin prints its version when imported with argv[1] naming it». M-688-2 `272d4a445b79e93ee7b37288606c9225fe7b9d41` run 37111631203: 2 passed, 1 failed in apps/cli/tests/entry-main-guard.spec.ts: «P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names it even without import.meta.main (red first for B-688) baseline-fingerprint verify detects the drift and exits non-zero when imported with argv[1] naming it»."
+      },
+      "note": "P0-01 F-stage supplement 5: BLOCKED-351 condition 1 on the shipped entries. The dsh bin and baseline-fingerprint verify do their work when argv[1] names them, also where import.meta.main is not true (Node 24.0 leaves it undefined); the guard case only checks that the committed baseline records another commit, so verify has drift to find. Lane A's A-577, red first for B-688."
+    },
+    {
+      "epic": "P0-01",
+      "stage": "F",
+      "supplements": {
+        "epic": "P0-01",
+        "stage": "F"
+      },
+      "supplementSeq": 6,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/release/baseline-fingerprint-schema-set.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P0-01 acceptance[1]: the key-schema set is derived from the SDK protocol package, not a fixed path list (red first for B-703) a key schema source file added to the protocol package after capture fails verify and names it"
+      ],
+      "files": [
+        "tests/release/baseline-fingerprint-schema-set.spec.ts",
+        "scripts/release/baseline-fingerprint.mjs"
+      ],
+      "frozenAtUtc": "2026-10-03T09:23:28.000Z",
+      "dryRunProof": {
+        "treeSha": "214832dd0817b18c1f7ada1af439db196dc648f0",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-703-1‴ keeps only types.ts in the protocol key-schema set, which is the fixed path list B-703 replaced. A-416: each mutated file and this entry's files are byte-identical at the round's parent, at the code tip and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report; every round carried build. M-703-1‴ `53ac4b285c8d45822488b146e4569e86f38b048b` run 37109281688: 0 passed, 1 failed in tests/release/baseline-fingerprint-schema-set.spec.ts: «P0-01 acceptance[1]: the key-schema set is derived from the SDK protocol package, not a fixed path list (red first for B-703) a key schema source file added to the protocol package after capture fails verify and names it»."
+      },
+      "note": "P0-01 F-stage supplement 6: acceptance[1] (BLOCKED-305) for the key-schema set. A key schema source file added to the SDK protocol package after capture fails verify and is named in the drift. Verify exits non-zero before and after the fix, because the fixture's own commit moves HEAD; the assertion that tells them apart is that the drift names the new file (gate3 2026-10-03T05:41:15Z). Lane A's A-583, red first for B-703."
+    },
+    {
+      "epic": "P0-01",
+      "stage": "F",
+      "supplements": {
+        "epic": "P0-01",
+        "stage": "F"
+      },
+      "supplementSeq": 7,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P0-01.cross-platform.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P0-01 acceptance[0]: the baseline fingerprint is identical on Linux and macOS for this commit a freshly captured Linux baseline byte-matches the macOS capture, and both record this commit"
+      ],
+      "files": [
+        "tests/first100/fixtures/P0-01.cross-platform.composition.spec.ts",
+        "scripts/release/baseline-fingerprint.mjs",
+        "vitest.config.ts"
+      ],
+      "frozenAtUtc": "2026-10-03T09:23:29.000Z",
+      "dryRunProof": {
+        "treeSha": "214832dd0817b18c1f7ada1af439db196dc648f0",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-a576-1 writes process.platform into the captured fingerprint, so a Linux and a macOS capture of one commit differ. A-416: each mutated file and this entry's files are byte-identical at the round's parent, at the code tip and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report; every round carried build. M-a576-1 `57b8604a9c192845e5a2ddb686190caa3a6e087f` run 37109584346: 0 passed, 1 failed in tests/first100/fixtures/P0-01.cross-platform.composition.spec.ts: «P0-01 acceptance[0]: the baseline fingerprint is identical on Linux and macOS for this commit a freshly captured Linux baseline byte-matches the macOS capture, and both record this commit»."
+      },
+      "note": "P0-01 F-stage supplement 7: acceptance[0] across platforms. A baseline captured on Linux byte-matches the macOS capture of the same commit, and both record that commit. The spec is left out of the default suite only when FIRST100_MACOS_BASELINE is unset; the first100 full-suite and narrow steps set it, so every observation runs it, and a missing macOS capture fails it (gate3 2026-10-03T05:45:25Z). Lane A's A-576; observed through narrow-macos."
+    },
+    {
+      "epic": "P0-02",
+      "stage": "U",
+      "supplements": {
+        "epic": "P0-02",
+        "stage": "U"
+      },
+      "supplementSeq": 4,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P0-02.desktop-host.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P0-02 on the shipped Desktop Host: a pinned Trust Kernel, and the insecure opt-in only for a development project (B-696) condition 1: the Desktop Host starts a project with a Trust Kernel pinned, and a tool call on behalf of its root agent runs once",
+        "P0-02 on the shipped Desktop Host: a pinned Trust Kernel, and the insecure opt-in only for a development project (B-696) acceptance[2]: with DSH_TRUST_KERNEL_INSECURE set, a project that does not declare dsh.profile.development refuses to start",
+        "P0-02 on the shipped Desktop Host: a pinned Trust Kernel, and the insecure opt-in only for a development project (B-696) acceptance[3]: a project that declares dsh.profile.development starts with DSH_TRUST_KERNEL_INSECURE set, warns on stderr naming it, and tells the model it runs insecure"
+      ],
+      "files": [
+        "tests/first100/fixtures/P0-02.desktop-host.composition.spec.ts",
+        "tests/first100/fixtures/loader/p0-02-desktop-host/driver.ts",
+        "tests/first100/fixtures/loader/p0-02-desktop-host/shared.ts",
+        "apps/desktop-host/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-10-03T09:23:30.000Z",
+      "dryRunProof": {
+        "treeSha": "214832dd0817b18c1f7ada1af439db196dc648f0",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three rounds, never merged, each a change to apps/desktop-host/src/index.ts: M-a580-1 builds no kernel on a non-insecure boot; M-a580-2 reads a non-development project as development, so the insecure opt-in is never refused; M-a580-3 never publishes the model-visible insecure notice. A-416: each mutated file and this entry's files are byte-identical at the round's parent, at the code tip and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report; every round carried build. M-a580-1 `81a89f32b9781101ce9776c1273014cdf27f9acf` run 37109293777: 1 passed, 2 failed in tests/first100/fixtures/P0-02.desktop-host.composition.spec.ts: «P0-02 on the shipped Desktop Host: a pinned Trust Kernel, and the insecure opt-in only for a development project (B-696) condition 1: the Desktop Host starts a project with a Trust Kernel pinned, and a tool call on behalf of its root agent runs once», «P0-02 on the shipped Desktop Host: a pinned Trust Kernel, and the insecure opt-in only for a development project (B-696) acceptance[3]: a project that declares dsh.profile.development starts with DSH_TRUST_KERNEL_INSECURE set, warns on stderr naming it, and tells the model it runs insecure». M-a580-2 `b786bda6a79942315a710abebbed36e27f687a91` run 37109305488: 2 passed, 1 failed in tests/first100/fixtures/P0-02.desktop-host.composition.spec.ts: «P0-02 on the shipped Desktop Host: a pinned Trust Kernel, and the insecure opt-in only for a development project (B-696) acceptance[2]: with DSH_TRUST_KERNEL_INSECURE set, a project that does not declare dsh.profile.development refuses to start». M-a580-3 `2ecaa6692eb443051f17b2470f6d810f860b7d0d` run 37109316936: 2 passed, 1 failed in tests/first100/fixtures/P0-02.desktop-host.composition.spec.ts: «P0-02 on the shipped Desktop Host: a pinned Trust Kernel, and the insecure opt-in only for a development project (B-696) acceptance[3]: a project that declares dsh.profile.development starts with DSH_TRUST_KERNEL_INSECURE set, warns on stderr naming it, and tells the model it runs insecure»."
+      },
+      "note": "P0-02 U-stage supplement 4: the shipped Desktop Host. It starts a project with a Trust Kernel pinned and a tool call runs once (BLOCKED-306 condition 1); with DSH_TRUST_KERNEL_INSECURE set it refuses a project that is not a development profile (acceptance[2]); a development project starts, warns on stderr naming the opt-in and tells the model it runs insecure (acceptance[3]). Lane B's B-696 and B-696b, red first for A-580 and A-580b."
+    },
+    {
+      "epic": "P1-10",
+      "stage": "U",
+      "supplements": {
+        "epic": "P1-10",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/cli/tests/plugin-migration-reconcile.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-10 acceptance[1]: the shipped upgrade flow reconciles the recorded upgrade against the medium (red first for B-667) (i) continue path: a completed record whose recorded schema version disagrees with the medium is refused, not skipped",
+        "P1-10 acceptance[1]: the shipped upgrade flow reconciles the recorded upgrade against the medium (red first for B-667) (ii) after a migration: a post-migration medium whose version disagrees with the record just written is refused",
+        "P1-10 acceptance[1]: the shipped upgrade flow reconciles the recorded upgrade against the medium (red first for B-667) (iii) after a migration: a post-migration medium whose DATA digest disagrees with the record just written, at the same version, is refused and the data is rolled back",
+        "P1-10 acceptance[1]: the shipped upgrade flow reconciles the recorded upgrade against the medium (red first for B-667) control: a consistent record whose PACKAGE version differs from its SCHEMA version is not flagged"
+      ],
+      "files": [
+        "apps/cli/tests/plugin-migration-reconcile.spec.ts",
+        "apps/cli/src/plugin-migration.ts"
+      ],
+      "frozenAtUtc": "2026-10-03T09:23:31.000Z",
+      "dryRunProof": {
+        "treeSha": "214832dd0817b18c1f7ada1af439db196dc648f0",
+        "testsDiscovered": 4
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two rounds, never merged, each a change to apps/cli/src/plugin-migration.ts: M-667-1 drops the schema-version half of reconcileUpgrade; M-667-2 compares only the schema version after a migration. A-416: each mutated file and this entry's files are byte-identical at the round's parent, at the code tip and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report; every round carried build. M-667-1 `c892db1fc0e0910cbad1262684b56cec76dcfd6d` run 37109329920: 2 passed, 2 failed in apps/cli/tests/plugin-migration-reconcile.spec.ts: «P1-10 acceptance[1]: the shipped upgrade flow reconciles the recorded upgrade against the medium (red first for B-667) (i) continue path: a completed record whose recorded schema version disagrees with the medium is refused, not skipped», «P1-10 acceptance[1]: the shipped upgrade flow reconciles the recorded upgrade against the medium (red first for B-667) (ii) after a migration: a post-migration medium whose version disagrees with the record just written is refused». M-667-2 `eb764ec18933133203fc17d76c0822d1c5b36803` run 37109343320: 3 passed, 1 failed in apps/cli/tests/plugin-migration-reconcile.spec.ts: «P1-10 acceptance[1]: the shipped upgrade flow reconciles the recorded upgrade against the medium (red first for B-667) (iii) after a migration: a post-migration medium whose DATA digest disagrees with the record just written, at the same version, is refused and the data is rolled back»."
+      },
+      "note": "P1-10 U-stage supplement 1: acceptance[1] on the shipped upgrade flow. A completed upgrade record whose schema version disagrees with the medium is refused on the continue path and after a migration; a post-migration data digest that disagrees is refused and the data rolled back; a record whose package version alone differs from its schema version is not flagged (control). Lane A's A-540v2 and A-540v3, red first for B-667."
+    },
+    {
+      "epic": "P1-02",
+      "stage": "U",
+      "supplements": {
+        "epic": "P1-02",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/cli/tests/plugin-provenance-boot.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686) control: a clean, install-time-trusted package boots normally",
+        "P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686) acceptance[1]/[2]: a locked trusted package whose declaration file is gone at boot refuses to start, not silently carried as trusted",
+        "P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686) acceptance[1]: a locked trusted package whose signing anchor was removed refuses to start when re-verified offline (revoked signing identity)",
+        "P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686) acceptance[1] (blind 2-1(a)): a locked package whose tarball bytes no longer match the lock's recorded digest refuses to start, even when its re-signed claim verifies",
+        "P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686) acceptance[2]: the startup verification of a locked package appends a key-free plugin-provenance audit record",
+        "P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686) acceptance[2]: the boot inventory records a mounted plugin's locked trusted verdict and its anchor, not unverified",
+        "P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686) must[4]/G4 (Q30(b)): an unverified mounted plugin draws a persistent untrusted warning naming it — at install and on each of two boots, in a non-development profile"
+      ],
+      "files": [
+        "apps/cli/tests/plugin-provenance-boot.spec.ts",
+        "apps/cli/src/profile-boot.ts",
+        "apps/cli/src/install-provenance.ts",
+        "packages/plugin/plugin-provenance/src/index.ts",
+        "packages/plugin/plugin-provenance/src/signature.ts",
+        "packages/plugin/plugin-provenance/src/sbom.ts"
+      ],
+      "frozenAtUtc": "2026-10-03T09:23:32.000Z",
+      "dryRunProof": {
+        "treeSha": "214832dd0817b18c1f7ada1af439db196dc648f0",
+        "testsDiscovered": 7
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Five rounds, never merged, re-hung on the code tip: M-686-2a records a boot-time rejection and boots on; M-686-2b gives the inventory no provenance records; M-686-5 reads no lock record; M-686-6 appends no boot-time audit; M-695-1 stops naming unverified plugins in a non-development profile. A-416: each mutated file and this entry's files are byte-identical at the round's parent, at the code tip and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report; every round carried build. M-686-2a `4649310e19b94e0c887d74103075a641c8286a7d` run 37111405823: 6 passed, 1 failed in apps/cli/tests/plugin-provenance-boot.spec.ts: «P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686) acceptance[1]: a locked trusted package whose signing anchor was removed refuses to start when re-verified offline (revoked signing identity)». M-686-2b `3624c8cd3d36e87bdd0f60132a16912c35f3c991` run 37111422358: 6 passed, 1 failed in apps/cli/tests/plugin-provenance-boot.spec.ts: «P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686) acceptance[2]: the boot inventory records a mounted plugin's locked trusted verdict and its anchor, not unverified». M-686-5 `4108ccdc6fe61ffb9a4340b106cdd955b3134d1f` run 37111471607: 5 passed, 2 failed in apps/cli/tests/plugin-provenance-boot.spec.ts: «P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686) acceptance[1]/[2]: a locked trusted package whose declaration file is gone at boot refuses to start, not silently carried as trusted», «P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686) acceptance[1] (blind 2-1(a)): a locked package whose tarball bytes no longer match the lock's recorded digest refuses to start, even when its re-signed claim verifies». M-686-6 `6868bff271a38f972783e5cfe5e49af759f55c2a` run 37111485929: 6 passed, 1 failed in apps/cli/tests/plugin-provenance-boot.spec.ts: «P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686) acceptance[2]: the startup verification of a locked package appends a key-free plugin-provenance audit record». M-695-1 `747598fdfd3e9dc9b65eeb2f1bb1cd297d62fd97` run 37111516683: 6 passed, 1 failed in apps/cli/tests/plugin-provenance-boot.spec.ts: «P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686) must[4]/G4 (Q30(b)): an unverified mounted plugin draws a persistent untrusted warning naming it — at install and on each of two boots, in a non-development profile»."
+      },
+      "note": "P1-02 U-stage supplement 1: the shipped startup path (P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686)). A locked package whose declaration file is gone, whose signing anchor was removed or whose tarball bytes changed refuses to start; the boot appends a key-free plugin-provenance audit record and gives the inventory the locked verdict and its anchor; an unverified mounted plugin is named at install and on each boot of a non-development profile; a clean install-time-trusted package boots normally (control). Lane A's A-573, red first for B-686 and B-695."
+    },
+    {
+      "epic": "P1-02",
+      "stage": "U",
+      "supplements": {
+        "epic": "P1-02",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/cli/tests/plugin-provenance-install.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-02 on the shipped install path: dsh plugin add verifies the claim beside a local tarball control: a genuine claim under a configured anchor installs the package",
+        "P1-02 on the shipped install path: dsh plugin add verifies the claim beside a local tarball P1-02 acceptance[2]: the genuine install is recorded trusted in the plugin lock, naming its anchor",
+        "P1-02 on the shipped install path: dsh plugin add verifies the claim beside a local tarball P1-02 must[1] (A-573 A0): a claim whose SBOM was swapped after signing is refused as a digest mismatch (red first for B-686)",
+        "P1-02 on the shipped install path: a reinstall whose claim file is gone does not silently keep the trusted record (A-573 install-side downgrade) a package trusted in the lock, reinstalled from the same spec with its claim file removed, is refused as claim-file-missing rather than silently kept trusted (red first for B-686)"
+      ],
+      "files": [
+        "apps/cli/tests/plugin-provenance-install.spec.ts",
+        "apps/cli/src/install-provenance.ts",
+        "packages/plugin/plugin-provenance/src/index.ts",
+        "packages/plugin/plugin-provenance/src/signature.ts",
+        "packages/plugin/plugin-provenance/src/sbom.ts"
+      ],
+      "frozenAtUtc": "2026-10-03T09:23:33.000Z",
+      "dryRunProof": {
+        "treeSha": "214832dd0817b18c1f7ada1af439db196dc648f0",
+        "testsDiscovered": 9
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two rounds, never merged, re-hung on the code tip: M-686-1 stops comparing the SBOM digest the claim names; M-694-1 reads that comparison backwards, so a genuine claim is refused. A-416: each mutated file and this entry's files are byte-identical at the round's parent, at the code tip and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report; every round carried build. M-686-1 `c339821296f2bc3257c521931f810f3729a4860a` run 37111388837: 8 passed, 1 failed in apps/cli/tests/plugin-provenance-install.spec.ts: «P1-02 on the shipped install path: dsh plugin add verifies the claim beside a local tarball P1-02 must[1] (A-573 A0): a claim whose SBOM was swapped after signing is refused as a digest mismatch (red first for B-686)». M-694-1 `5b5e4de175ced57c857369fc45da09dcc9289f70` run 37111533311: 5 passed, 4 failed in apps/cli/tests/plugin-provenance-install.spec.ts: «P1-02 on the shipped install path: dsh plugin add verifies the claim beside a local tarball control: a genuine claim under a configured anchor installs the package», «P1-02 on the shipped install path: dsh plugin add verifies the claim beside a local tarball P1-02 acceptance[2]: the genuine install is recorded trusted in the plugin lock, naming its anchor», «P1-02 on the shipped install path: dsh plugin add verifies the claim beside a local tarball P1-02 must[1] (A-573 A0): a claim whose SBOM was swapped after signing is refused as a digest mismatch (red first for B-686)», «P1-02 on the shipped install path: a reinstall whose claim file is gone does not silently keep the trusted record (A-573 install-side downgrade) a package trusted in the lock, reinstalled from the same spec with its claim file removed, is refused as claim-file-missing rather than silently kept trusted (red first for B-686)»."
+      },
+      "note": "P1-02 U-stage supplement 2: the shipped install path. dsh plugin add verifies the claim beside a local tarball: a genuine claim under a configured anchor installs (control) and is recorded trusted in the plugin lock, naming its anchor; a claim whose SBOM was swapped after signing is refused as a digest mismatch; a reinstall whose claim file is gone is refused rather than kept trusted. The spec's five other cases run under the same argv and are not frozen here: no mutation of this batch reaches them. Lane A's A-573, red first for B-686."
+    },
+    {
+      "epic": "P1-02",
+      "stage": "C",
+      "supplements": {
+        "epic": "P1-02",
+        "stage": "C"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-provenance/tests/sbom.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-02 (A-573): computeSbomDigest orders entries by UTF-16 code unit, not locale collation digests an SBOM whose entry names sort differently by code unit than by locale identically to the code-unit order (red first for B-686)"
+      ],
+      "files": [
+        "packages/plugin/plugin-provenance/tests/sbom.spec.ts",
+        "packages/plugin/plugin-provenance/src/sbom.ts"
+      ],
+      "frozenAtUtc": "2026-10-03T09:23:34.000Z",
+      "dryRunProof": {
+        "treeSha": "214832dd0817b18c1f7ada1af439db196dc648f0",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-686-4 sorts SBOM entries with localeCompare again. A-416: each mutated file and this entry's files are byte-identical at the round's parent, at the code tip and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report; every round carried build. M-686-4 `206e0f65e32d228638b89e37f43a1d835d11fe28` run 37111453524: 0 passed, 1 failed in packages/plugin/plugin-provenance/tests/sbom.spec.ts: «P1-02 (A-573): computeSbomDigest orders entries by UTF-16 code unit, not locale collation digests an SBOM whose entry names sort differently by code unit than by locale identically to the code-unit order (red first for B-686)»."
+      },
+      "note": "P1-02 C-stage supplement 2: computeSbomDigest orders entries by UTF-16 code unit, not locale collation, so one SBOM digests the same on every host. Lane A's A-573, red first for B-686."
+    },
+    {
+      "epic": "P1-02",
+      "stage": "U",
+      "supplements": {
+        "epic": "P1-02",
+        "stage": "U"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/cli/tests/plugin-trust-anchor-seal.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-02 must[3]: a mounted plugin cannot register a trust anchor on the pinned kernel, on the shipped launcher (red first for B-690) a plugin that reaches the pinned kernel through ctx and calls registerTrustAnchor is refused, not quietly allowed to modify the anchor set",
+        "P1-02 must[3]: a mounted plugin cannot register a trust anchor on the pinned kernel, on the shipped launcher (red first for B-690) control: a kernel the host did not pin and seal still accepts registration, so the refusal is specific to the sealed pinned handle"
+      ],
+      "files": [
+        "apps/cli/tests/plugin-trust-anchor-seal.spec.ts",
+        "apps/cli/tests/fixtures/a-578-kernel-poke.mjs",
+        "packages/plugin/plugin-provenance/src/signature.ts",
+        "apps/cli/src/profile-boot.ts"
+      ],
+      "frozenAtUtc": "2026-10-03T09:23:35.000Z",
+      "dryRunProof": {
+        "treeSha": "214832dd0817b18c1f7ada1af439db196dc648f0",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-690-1′ makes sealTrustAnchors seal nothing. A-416: each mutated file and this entry's files are byte-identical at the round's parent, at the code tip and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report; every round carried build. M-690-1′ `0550dca319c75657bf3a3c0cdf9d9c3067ade0ae` run 37111501024: 1 passed, 1 failed in apps/cli/tests/plugin-trust-anchor-seal.spec.ts: «P1-02 must[3]: a mounted plugin cannot register a trust anchor on the pinned kernel, on the shipped launcher (red first for B-690) a plugin that reaches the pinned kernel through ctx and calls registerTrustAnchor is refused, not quietly allowed to modify the anchor set»."
+      },
+      "note": "P1-02 U-stage supplement 3: must[3] on the shipped launcher. A plugin a --patch overlay mounts reaches the pinned kernel through ctx and is refused when it registers a trust anchor; a kernel the host did not pin and seal still accepts registration (control). Lane A's A-578 and A-578v2, red first for B-690."
+    },
+    {
+      "epic": "P4-09",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-09",
+        "stage": "U"
+      },
+      "supplementSeq": 8,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-worker-thread/tests/nested-budget-strategy.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-09 [2]: a nested run's failure strategy is declarable (red first for B-698) ① control: a failing nested run with NO declared strategy fails the parent, naming the child",
+        "P4-09 [2]: a nested run's failure strategy is declarable (red first for B-698) ② continue-parent: a failing nested run the parent declared continue-parent for lets the parent complete",
+        "P4-09 [3]: a tree's total agent and token budgets are enforced (red first for B-698) ③ maxTotalAgents N: the N+1th agent across the tree is refused agent-budget-exhausted, though no single run passes its own cap",
+        "P4-09 [3]: a tree's total agent and token budgets are enforced (red first for B-698) ④ maxNestedTokens T: a start after the tree's token usage passes T is refused token-budget-exhausted",
+        "P4-09 [1]: cancelling the parent cancels its nested run and tears down the agent the nested run started ([235] successor) ⑤ a cancelled parent cancels its never-ending nested run — the nested run settles cancelled and the agent it started is ended, not stranded",
+        "P4-09 [1]: cancelling the parent cancels its nested run and tears down the agent the nested run started ([235] successor) ⑤ control: a nested run that ends on its own is observed completed through the same attached handle"
+      ],
+      "files": [
+        "packages/workflow/workflow-worker-thread/tests/nested-budget-strategy.spec.ts",
+        "packages/workflow/workflow-worker-thread/src/index.ts",
+        "packages/workflow/workflow-worker-thread/src/host.ts",
+        "packages/workflow/workflow-worker-thread/src/runtime.ts"
+      ],
+      "frozenAtUtc": "2026-10-03T09:23:36.000Z",
+      "dryRunProof": {
+        "treeSha": "214832dd0817b18c1f7ada1af439db196dc648f0",
+        "testsDiscovered": 6
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Four rounds, never merged, re-hung on the code tip: M-698-1 starts every nested run under fail-parent; M-698-2a neither charges nor refuses an agent() child; M-698-2b debits no tokens; M-a581-1 inverts the nested cancel propagation. A-416: each mutated file and this entry's files are byte-identical at the round's parent, at the code tip and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report; every round carried build. M-698-1 `9dce02e7338f2b598cc99f16a230ed09d6cc09da` run 37111561810: 5 passed, 1 failed in packages/workflow/workflow-worker-thread/tests/nested-budget-strategy.spec.ts: «P4-09 [2]: a nested run's failure strategy is declarable (red first for B-698) ② continue-parent: a failing nested run the parent declared continue-parent for lets the parent complete». M-698-2a `177e3537cebdeaa59bb3c6176460c2fa2ca1dfd6` run 37111580190: 5 passed, 1 failed in packages/workflow/workflow-worker-thread/tests/nested-budget-strategy.spec.ts: «P4-09 [3]: a tree's total agent and token budgets are enforced (red first for B-698) ③ maxTotalAgents N: the N+1th agent across the tree is refused agent-budget-exhausted, though no single run passes its own cap». M-698-2b `acb5ac52a4aa60efcd3564a9caed76190b457e81` run 37111597558: 5 passed, 1 failed in packages/workflow/workflow-worker-thread/tests/nested-budget-strategy.spec.ts: «P4-09 [3]: a tree's total agent and token budgets are enforced (red first for B-698) ④ maxNestedTokens T: a start after the tree's token usage passes T is refused token-budget-exhausted». M-a581-1 `4b19213dcff1177e6a9bb7ecdf53405ca490e470` run 37111373990: 5 passed, 1 failed in packages/workflow/workflow-worker-thread/tests/nested-budget-strategy.spec.ts: «P4-09 [1]: cancelling the parent cancels its nested run and tears down the agent the nested run started ([235] successor) ⑤ a cancelled parent cancels its never-ending nested run — the nested run settles cancelled and the agent it started is ended, not stranded»."
+      },
+      "note": "P4-09 U-stage supplement 8: acceptance[1] and [2] on the worker-thread engine. A failing nested run fails its parent unless the parent declared continue-parent (①, control; ②); a tree's total agents and tokens are enforced across nested runs (③, ④, with token-meter mounted as the factory composition mounts it); a cancelled parent cancels its nested run and ends the agent it started (⑤), and a nested run that ends on its own is observed completed through the same handle (control). ⑤ is also the evidence for the nested half of the title P4-09 U-stage supplement 5 froze for nested-run.spec.ts:410 («… is NOT cancelled when the launching run is, while a nested sibling IS»): that case starts no nested run, so that half of its title is not what it exercises, and the title is corrected separately (gate3 2026-10-03). Lane A's A-581, red first for B-698."
     }
   ]
 }
