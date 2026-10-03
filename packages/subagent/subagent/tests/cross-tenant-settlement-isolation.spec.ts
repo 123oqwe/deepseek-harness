@@ -138,6 +138,13 @@ describe('P4-06 acceptance[2]: a settlement is consumed only by its own parent, 
     await second.ctx.agents.resume({ resumeSessionId: SessionId('tenant-a'), agentOptions: { provider: 'mock', model: 'mock' } })
     await second.ctx.agents.resume({ resumeSessionId: SessionId('tenant-b'), agentOptions: { provider: 'mock', model: 'mock' } })
     await vi.waitFor(() => { expect(ackedCount(second.ctx)).toBe(2) }, { timeout: 10_000 })
+    // The ack is written when the notice is spliced into the parent, before the
+    // splice reaches the parent's log (BLOCKED-350). Flush each resumed session
+    // so its spliced settlement is durable before the log is read.
+    for (const tenant of ['tenant-a', 'tenant-b'] as const) {
+      const session = second.ctx.agents.get(SessionId(tenant))?.session
+      if (session !== undefined) await second.ctx.sessions.flush(session)
+    }
 
     const a = settledSenders(second.ctx, SessionId('tenant-a'))
     const b = settledSenders(second.ctx, SessionId('tenant-b'))
