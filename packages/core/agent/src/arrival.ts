@@ -55,5 +55,5 @@ export function arrivalKey(message: UserMessage): string | undefined {
   // session outlives each of its activations — and the epoch is which
   // activation spoke, so a genuine second settlement of the same child is a
   // different key rather than a suppressed message.
-  return dedupKey({ source: source.kind, id: source.senderSessionId, epoch: source.senderEpoch })
+  return dedupKey({ source: source.kind, id: source.senderSessionId, epoch: 0 })
 }
