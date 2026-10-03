@@ -103,7 +103,7 @@ kind: "package-reference"
 
 ### 可写根目录
 
-`workspace-write` 意味着「工作区根目录加宿主临时区域」：`writableRoots` 以规范化方式推导该白名单，解析符号链接并去重，使 Seatbelt profile 与进程内 fs 栅栏授予完全相同的根目录。
+`workspace-write` 意味着「工作区根目录加宿主临时区域」：`writableRoots` 以规范化方式推导该白名单，解析符号链接并去重，使 Seatbelt profile 与进程内 fs 栅栏授予完全相同的根目录。`protectedRoots` 列出该模式仍从中排除的部分：harness 主目录（`$DSH_HOME`），它保存 harness 自己的配置与状态。每个后端都让它保持只读；只能授予可写根目录的后端，在某个可写根目录包含主目录时拒绝执行命令。
 
 </details>
 

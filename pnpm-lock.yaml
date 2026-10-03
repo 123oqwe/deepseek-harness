@@ -8886,6 +8886,9 @@ importers:
 
   packages/sandbox/sandbox:
     dependencies:
+      '@deepseek-ai/dsh-home-paths':
+        specifier: workspace:^
+        version: link:../../util/home-paths
       '@deepseek-ai/dsh-util-values':
         specifier: workspace:^
         version: link:../../util/values

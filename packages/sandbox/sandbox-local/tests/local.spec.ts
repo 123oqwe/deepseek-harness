@@ -7,7 +7,7 @@
  * are all exercised through the real `confine()` path.
  */
 
-import { mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -36,6 +36,7 @@ const tempDirs: string[] = []
 /** The operator warnings the provider under test wrote. */
 let warnings: string[] = []
 afterEach(() => {
+  vi.unstubAllEnvs()
   for (const dir of tempDirs.splice(0)) rmSync(dir, { recursive: true, force: true })
   warnings = []
 })
@@ -118,7 +119,8 @@ describe('profile dialects', () => {
     expect(seatbeltProfileArgs(RO)).toEqual(['-p', SEATBELT_RO_PROFILE])
   })
 
-  it('seatbelt workspace-write: one more allow for the canonicalized workspace root, /tmp, and the user temp dir', () => {
+  it('seatbelt workspace-write: one more allow for the canonicalized workspace root, /tmp, and the user temp dir, then a deny for the harness home', () => {
+    vi.stubEnv('DSH_HOME', '/dsh-b715-home')
     // `/ws` does not exist, so it is granted as spelled (the canonicalization
     // fallback); `/tmp` and `os.tmpdir()` exist everywhere and are granted
     // CANONICALIZED — Seatbelt matches resolved paths (`/tmp` IS
@@ -126,7 +128,8 @@ describe('profile dialects', () => {
     // where they resolve to the same directory.
     const roots = [...new Set(['/ws', realpathSync('/tmp'), realpathSync(tmpdir())])]
     const allow = `(allow file-write* ${roots.map(root => `(subpath "${root}")`).join(' ')})`
-    expect(seatbeltProfileArgs(WW)).toEqual(['-p', `${SEATBELT_RO_PROFILE} ${allow}`])
+    // B-715: the harness home is denied after the grant; in SBPL the later matching rule wins.
+    expect(seatbeltProfileArgs(WW)).toEqual(['-p', `${SEATBELT_RO_PROFILE} ${allow} (deny file-write* (subpath "/dsh-b715-home"))`])
   })
 
   it('seatbelt workspace-write dedups a workspace root that already IS the temp dir', () => {
@@ -134,6 +137,67 @@ describe('profile dialects', () => {
     const grant = `(subpath "${realpathSync(tmpdir())}")`
     expect(profile).toContain(grant)
     expect(profile.split(grant)).toHaveLength(2)
+  })
+})
+
+describe('the harness home under a writable root (B-715)', () => {
+  /** A fresh workspace with `.dsh` inside it, as `DSH_HOME`; `create` decides whether the home exists. */
+  function workspaceWithHome(create: boolean): { workspace: string; home: string } {
+    const workspace = mkdtempSync(join(tmpdir(), 'dsh-b715-ws-'))
+    tempDirs.push(workspace)
+    const home = join(workspace, '.dsh')
+    if (create) mkdirSync(home)
+    vi.stubEnv('DSH_HOME', home)
+    return { workspace, home }
+  }
+
+  it('bwrap binds a harness home inside the workspace read-only, after the workspace bind', () => {
+    const { workspace, home } = workspaceWithHome(true)
+    const canonical = realpathSync.native(home)
+    expect(bwrapProfileArgs({ mode: 'workspace-write', workspaceRoot: workspace }).slice(-6))
+      .toEqual(['--bind', workspace, workspace, '--ro-bind', canonical, canonical])
+  })
+
+  it('bwrap adds nothing for a harness home outside the workspace, or one that does not exist', () => {
+    vi.stubEnv('DSH_HOME', '/dsh-b715-home')
+    expect(bwrapProfileArgs(WW).slice(-3)).toEqual(['--bind', '/ws', '/ws'])
+    const { workspace } = workspaceWithHome(false)
+    expect(bwrapProfileArgs({ mode: 'workspace-write', workspaceRoot: workspace }).slice(-3)).toEqual(['--bind', workspace, workspace])
+  })
+
+  it('landlock refuses a command when the harness home lies under a writable root, naming the home and the fix', async () => {
+    const { sandbox } = await setup({}, {
+      platform: 'linux',
+      probeBwrap: () => false,
+      probeLandlock: () => 'full',
+      landlockLauncher: fakeLauncher(),
+    })
+    const { workspace, home } = workspaceWithHome(true)
+    for (const policy of [
+      { mode: 'workspace-write', workspaceRoot: workspace },
+      { mode: 'workspace-write', workspaceRoot: home },
+      { mode: 'workspace-write', workspaceRoot: '/' },
+    ] as const) {
+      const confine = () => sandbox.confine(['bash', '-c', 'true'], policy)
+      expect(confine).toThrow(expect.objectContaining({ code: SANDBOX_UNAVAILABLE }) as Error)
+      expect(confine).toThrow(`the harness home ${realpathSync.native(home)} ($DSH_HOME)`)
+    }
+    vi.stubEnv('DSH_HOME', '/dsh-b715-home')
+    expect(sandbox.confine(['bash', '-c', 'true'], WW).backend).toBe('landlock')
+  })
+
+  it('the Windows ACL runner refuses the same way', async () => {
+    const { sandbox } = await setup({}, { chain: ['windows-acl'] })
+    const { workspace } = workspaceWithHome(true)
+    const confine = () => sandbox.confine(['cmd'], { mode: 'workspace-write', workspaceRoot: workspace })
+    expect(confine).toThrow(expect.objectContaining({ code: SANDBOX_UNAVAILABLE }) as Error)
+    expect(confine).toThrow('the windows-acl backend')
+  })
+
+  it('bwrap and Seatbelt carve the home out instead of refusing', async () => {
+    const { workspace } = workspaceWithHome(true)
+    const { sandbox } = await setup({}, { platform: 'linux', probeBwrap: () => true })
+    expect(sandbox.confine(['true'], { mode: 'workspace-write', workspaceRoot: workspace }).backend).toBe('bwrap')
   })
 })
 

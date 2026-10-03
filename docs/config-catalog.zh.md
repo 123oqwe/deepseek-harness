@@ -846,7 +846,7 @@ export type Config = LocalConfig
 
 依赖： [`LocalConfig`](#deepseek-aidsh-fs-local)
 
-来源： [`packages/fs/fs-sandbox/src/index.ts:45`](../packages/fs/fs-sandbox/src/index.ts)
+来源： [`packages/fs/fs-sandbox/src/index.ts:46`](../packages/fs/fs-sandbox/src/index.ts)
 
 <a id="deepseek-aidsh-goal"></a>
 
@@ -2274,7 +2274,7 @@ export interface Config {
 }
 ```
 
-来源： [`packages/sandbox/sandbox-local/src/index.ts:52`](../packages/sandbox/sandbox-local/src/index.ts)
+来源： [`packages/sandbox/sandbox-local/src/index.ts:53`](../packages/sandbox/sandbox-local/src/index.ts)
 
 <a id="deepseek-aidsh-sandbox-policy"></a>
 
