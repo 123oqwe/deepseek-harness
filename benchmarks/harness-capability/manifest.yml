@@ -105,5 +105,3 @@ lanes:
     knownRedCheckedOn: '2026-09-28'
   - name: real-model
     # Needs a model API, so the keyless benchmark does not run it.
-  - name: scale
-    # No scenario yet.
