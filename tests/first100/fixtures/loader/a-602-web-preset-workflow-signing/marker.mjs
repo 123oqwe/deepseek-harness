@@ -30,6 +30,11 @@ export const name = 'a-602-web-preset-workflow-marker'
  * @param {{ marker: string }} config - where to write the reading.
  */
 export function apply(ctx, config) {
+  // The disabled `connection` row would otherwise leave its dependents
+  // (session-controller, client-file-upload, client-ui-deliverables) waiting
+  // forever, so provide the same in-process stub web-agent-presets.e2e.ts does:
+  // the agent plane loads without a bound HTTP port.
+  ctx.provide('connection', { fetch: { register: () => () => {} }, rpc: { intercept: () => () => {} } })
   const ready = ctx.get('appReady')
   if (ready === undefined) {
     writeFileSync(config.marker, JSON.stringify({ sessionCreated: false, present: false, reason: 'no appReady' }))
