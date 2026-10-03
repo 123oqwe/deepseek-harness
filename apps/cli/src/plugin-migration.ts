@@ -600,8 +600,7 @@ export function reconcileUpgrade(
   observed: { readonly upgradedTo: string; readonly dataDigest?: string },
 ): boolean {
   if (record?.upgradedTo === undefined || record.dataDigest === undefined) return false
-  return record.upgradedTo === observed.upgradedTo
-    && (observed.dataDigest === undefined || record.dataDigest === observed.dataDigest)
+  return observed.dataDigest === undefined || record.dataDigest === observed.dataDigest
 }
 
 /**
