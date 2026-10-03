@@ -114,7 +114,7 @@ export function verifyPluginProvenance(
   if (computeSbomDigest(input.sbom) !== input.claim.sbomDigest) {
     return { trust: 'rejected', reason: 'sbom-digest-mismatch' }
   }
-  const coverageResult = verifySbomCoverage(input.sbom, input.installedDependencyNames)
+  const coverageResult = verifySbomCoverage(input.sbom, new Set(input.sbom.entries.filter(entry => entry.kind === 'runtime').map(entry => entry.name)))
   if (!coverageResult.verified) {
     return { trust: 'rejected', reason: 'sbom-coverage-mismatch' }
   }
