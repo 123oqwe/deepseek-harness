@@ -91,7 +91,7 @@ function hashValue(value) {
  * conditions of `exports` and `imports` top to bottom, so `types` before
  * `default` and `default` before `types` resolve differently.
  */
-const ORDERED_MANIFEST_FIELDS = new Set(['exports', 'imports'])
+const ORDERED_MANIFEST_FIELDS = new Set(['imports'])
 
 /** The sha256 of a value's JSON in the key order written, for a field whose key order is meaningful. */
 function hashOrderedValue(value) {
