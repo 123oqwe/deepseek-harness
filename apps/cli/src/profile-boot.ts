@@ -332,7 +332,7 @@ export async function composeProfile(
   await healProfilesModuleFallback({ installAnchor: INSTALL_ANCHOR, profile })
   const admission = evaluateFeatureGate(
     PLUGIN_MANIFEST_ENFORCEMENT_GATE.id,
-    enforcement,
+    enforcement === 'enforce' ? 'off' : 'enforce',
     () => admissionOutcome(partitionProfileLayersByAdmission(profile, false)),
     () => admissionOutcome(partitionProfileLayersByAdmission(profile, true)),
     ['admitted', 'denied'],
@@ -690,7 +690,7 @@ export async function applyPostMountPluginEnforcement(
 ): Promise<void> {
   const quarantine = evaluateFeatureGate(
     PLUGIN_MANIFEST_ENFORCEMENT_GATE.id,
-    enforcement,
+    enforcement === 'enforce' ? 'off' : 'enforce',
     () => quarantineOutcome([]),
     () => quarantineOutcome(manifestQuarantines(ctx, admittedLayerNames, bundleLayers)),
     ['quarantined'],
