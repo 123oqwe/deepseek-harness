@@ -42,6 +42,8 @@ interface Trial {
   readonly seed?: unknown
   readonly sessionLogs?: readonly { readonly digest?: unknown }[]
   readonly failure?: FailurePosition | null
+  /** The trial's human description — carried into the failure message so a mismatch is legible. */
+  readonly observation?: unknown
 }
 
 /** One lane report. */
@@ -104,6 +106,16 @@ function view(run: Run | undefined): unknown[] {
   }))
 }
 
+/**
+ * Both runs' trials exactly as the report wrote them, for the failure message
+ * (the JSON report carries no diff, so a mismatch must be legible from here).
+ * @param run - the run.
+ * @returns the report's trials.
+ */
+function rawTrials(run: Run | undefined): readonly Trial[] {
+  return run?.report?.reports?.[0]?.trials ?? []
+}
+
 let first: Run | undefined
 let second: Run | undefined
 
@@ -125,6 +137,8 @@ describe('P0-08 acceptance[1] (A-582a): the fault lane reproduces each trial and
   it('the two runs report the identical trials, session-log projection and failure positions', () => {
     // acceptance[1]'s failure-position half: `{ turn, step, eventIndex }` per
     // trial must match across two runs at this seed, not just the drawn trials.
-    expect(view(second)).toEqual(view(first))
+    // The failure message carries both runs' full trials verbatim so a mismatch
+    // is readable (run 37094359758 was red with no diff in the JSON report).
+    expect(view(second), JSON.stringify({ first: rawTrials(first), second: rawTrials(second) }, undefined, 2)).toEqual(view(first))
   }, LANE_TIMEOUT_MS)
 })
