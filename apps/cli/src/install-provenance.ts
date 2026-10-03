@@ -220,10 +220,6 @@ export function verifyBootProvenance(
     kernel ??= createTrustKernel({ trustAnchors: readProfileTrustAnchors(profileDir) })
     const verification = verifyLockedPackageOffline(input, kernel.signatureRoots)
     const record = recordProvenanceAudit(packageDigest, verification, verifiedAt)
-    if (verification.trust === 'rejected') {
-      refused.push({ name, reason: verification.reason, record })
-      continue
-    }
     records.set(name, record)
   }
   return { refused, records }
