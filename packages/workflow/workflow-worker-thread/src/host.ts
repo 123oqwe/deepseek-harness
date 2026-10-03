@@ -579,20 +579,6 @@ export class WorkerRun implements WorkflowRun {
       await this.refuseStartedChild(callId, run, failure.rendered)
       return
     }
-    // acceptance[3]: a child in another process reports no token usage this
-    // host can read, so a tree with a token limit does not run one. The
-    // subagent seam says a child is remote only once its provider has started
-    // it, so the refusal comes then: the child is disposed before its result
-    // can reach the script.
-    if (run.localAgent === undefined && this.tree.tokensRemaining !== undefined) {
-      await this.refuseStartedChild(
-        callId,
-        run,
-        `agent() was refused: provider "${this.provider}" runs the child in another process, whose token usage this host cannot read, `
-        + 'and this run\'s tree has a token limit (maxNestedTokens)',
-      )
-      return
-    }
 
     const record: ChildRecord = { run }
     this.children.set(callId, record)
