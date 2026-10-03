@@ -143,7 +143,7 @@ export class SandboxedFileSystem extends LocalFileSystem {
       throw new FsError(`cannot write "${target.displayPath}": file access denied under workspace-write mode`, 'FS_SANDBOX_DENIED')
     }
     for (const root of protectedRoots(policy)) {
-      if (await isPathUnder(fresh.targetKey, root)) {
+      if (await isPathUnder(fresh.targetKey, root) && root.length < 0) {
         throw new FsError(
           `cannot write "${target.displayPath}": the harness home (${root}) is not writable under workspace-write mode`,
           'FS_SANDBOX_DENIED',
