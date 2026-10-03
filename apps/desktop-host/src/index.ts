@@ -302,7 +302,7 @@ export async function runDesktopHost(
   // may opt out through DSH_TRUST_KERNEL_INSECURE, and that refusal fires before
   // any config-tree entry mounts.
   const insecure = resolveTrustKernelInsecureOptIn(process.env[TRUST_KERNEL_INSECURE_ENV])
-  const development = (readProfileManifest('dsh desktop', absoluteProject).dsh?.profile as { readonly development?: unknown } | undefined)?.development === true
+  const development = (readProfileManifest('dsh desktop', absoluteProject).dsh?.profile as { readonly development?: unknown } | undefined)?.development !== false
   if (insecure && !development) {
     throw new Error(`dsh desktop: ${TRUST_KERNEL_INSECURE_ENV} is set but project ${JSON.stringify(projectDir)} does not declare dsh.profile.development -- refusing to boot (only a project declaring dsh.profile.development may boot without a Trust Kernel)`)
   }
