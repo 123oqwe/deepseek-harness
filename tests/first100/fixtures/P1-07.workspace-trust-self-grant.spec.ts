@@ -5,10 +5,9 @@
  * `disabled: true`) with no grants, so a workspace is `'untrusted'` and
  * `agent-instructions` leaves its own `AGENTS.md` out of what the model is given
  * (agent-instructions/src/index.ts:77-80). A grant lives in that provider's
- * config, which a `$DSH_HOME/cordis.patch.yml` row can set, and a stored trust
- * record lives under `$DSH_HOME/storages`; when the workspace contains `$DSH_HOME`
- * (B-713's finding) the model can write both. Whether that lets it grant its own
- * directory trust splits three ways, each a case here.
+ * config, which a `$DSH_HOME/cordis.patch.yml` row can set; when the workspace
+ * contains `$DSH_HOME` (B-713's finding) the model can write that row. Whether
+ * that lets it grant its own directory trust splits two ways, each a case here.
  *
  * Green evidence (protected): a grant the model writes for its OWN,
  * already-resolved workspace never binds. The turn that writes it has already
@@ -17,17 +16,12 @@
  * BEFORE it consults the grant (:306) — a config grant only binds a path with no
  * record yet.
  *
- * Red first for B-715 (§21.4: the fix is not read), two paths that evade that
+ * Red first for B-715 (§21.4: the fix is not read), the path that evades that
  * shadowing:
  *   - v1: grant a directory the model has NOT resolved. With no record for it,
  *     `stateFor` reaches :306-309 and binds it per the grant on its first resolve.
  *     The model writes a grant for a second directory D into `$DSH_HOME`, then a
  *     launch with cwd = D finds D trusted and loads D's `AGENTS.md`.
- *   - v2: edit the stored RECORD. `reconcileWorkspaceTrust`
- *     (workspace-trust/src/index.ts:217-232) returns a stored record unchanged
- *     when the freshly observed identity matches it, so flipping a record's
- *     `state` to `trusted-read` (identity bytes untouched) is carried forward on
- *     the next launch.
  *
  * Each case launches the shipped headless product keyless with the benchmark's
  * stub model and a project `AGENTS.md` carrying an improbable marker, and reads
@@ -36,9 +30,8 @@
  * prompt rather than from a YAML row. Two guards fix the observation: an ungranted
  * workspace keeps its `AGENTS.md` out (the boundary is on), and a host-configured
  * grant lets the same `AGENTS.md` through (a trusted workspace's instructions do
- * reach the model). Both v1 and v2 are RED today — the marker reaches the model;
- * B-715 refuses the model's `$DSH_HOME` write, so neither grant stands and the
- * marker stays out.
+ * reach the model). v1 is RED today — the marker reaches the model; B-715 refuses
+ * the model's `$DSH_HOME` write, so no grant stands and the marker stays out.
  */
 
 import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
@@ -172,7 +165,7 @@ describe('A-597 ④ (P1-07 must[2]): the model cannot grant its own workspace tr
     }
   }, LAUNCH_TIMEOUT_MS)
 
-  it('v1: a self-grant for a NOT-yet-resolved directory trusts it on its first resolve (today it takes effect — RED)', async () => {
+  it('v1: a self-grant for a NOT-yet-resolved directory must not trust it, but today it does so on its first resolve — RED', async () => {
     // W is where the model writes the grant; D is the "next repo" the grant
     // names, which no launch has resolved. $DSH_HOME sits inside W so the model's
     // write lands under workspace-write; launch 2 points DSH_HOME back at it.
@@ -192,51 +185,17 @@ describe('A-597 ④ (P1-07 must[2]): the model cannot grant its own workspace tr
       expect(homePatchAfter, `home patch after launch 1 (${homePatch}):\n${homePatchAfter}`).toContain(canonicalNext)
       // Launch 2, cwd = D, same $DSH_HOME: D has no record, so stateFor binds it
       // per the grant (index.ts:306-309) on its first resolve and loads D's
-      // AGENTS.md. P1-07 must[2]: a model-written grant is no trust upgrade.
-      // Today the grant takes effect and the marker reaches the model — RED.
+      // AGENTS.md. P1-07 must[2]: a model-written grant is no trust upgrade, so D
+      // must stay untrusted and its AGENTS.md must not reach the model. Today the
+      // grant takes effect and the marker reaches — RED; B-715 refuses the write,
+      // no grant stands, D untrusted — green.
       const reread = await launchOverWorkspace(nextRepo, [], [], { DSH_HOME: dshHome })
       expect(reread.markerReached,
         `grant for D in W's home patch; launch1 exit ${String(wrote.exitCode)}; launch2 exit ${String(reread.exitCode)}; launch2 stderr tail:\n${reread.stderr.slice(-800)}`,
-      ).toBe(true)
+      ).toBe(false)
     } finally {
       rmSync(workspace, { recursive: true, force: true })
       rmSync(nextRepo, { recursive: true, force: true })
-    }
-  }, LAUNCH_TIMEOUT_MS)
-
-  it('v2: editing the stored trust record to trusted-read is carried forward on the next launch (today it takes effect — RED)', async () => {
-    const cwd = mkdtempSync(join(homedir(), '.dsh-a597-v2-record-'))
-    try {
-      seedWorkspace(cwd)
-      // The single-layout record file for the workspace_trust domain
-      // (storage-domain default layout; unit name = domain name) under this
-      // workspace's $DSH_HOME.
-      const recordFile = join(cwd, '.dsh', 'storages', 'workspace_trust.json')
-      // Launch 1, cwd = W: resolving the cwd at turn start writes an 'untrusted'
-      // record to recordFile; the model then reads it and flips its one 'untrusted'
-      // state value to 'trusted-read', leaving identity bytes untouched. Targeting
-      // the quoted value, not the key, is robust to the pretty-printer's spacing,
-      // and the enum value appears once (one record, empty consumed_grants).
-      const edited = await launchOverWorkspace(cwd, [], [
-        { name: 'read', arguments: { file_path: recordFile } },
-        { name: 'edit', arguments: { file_path: recordFile, old_string: '"untrusted"', new_string: '"trusted-read"' } },
-      ])
-      // The edit landed and was not clobbered by an in-memory re-put: the stored
-      // record now reads trusted-read with its identity intact. A red here instead
-      // would mean the model's write never reached the decisive bytes, not that
-      // the boundary held.
-      const recordText = existsSync(recordFile) ? readFileSync(recordFile, 'utf8') : '(absent)'
-      expect(recordText, `trust record after launch 1 (${recordFile}):\n${recordText}`).toContain('"trusted-read"')
-      // Launch 2, same workspace: stateFor finds the now-trusted record and
-      // reconcileWorkspaceTrust returns it unchanged (identity matches a fresh
-      // observation), so the workspace is trusted and its AGENTS.md reaches the
-      // model. Today the edit takes effect — RED.
-      const reread = await launchOverWorkspace(cwd, [], [])
-      expect(reread.markerReached,
-        `record edited to trusted-read; launch1 exit ${String(edited.exitCode)}; launch2 exit ${String(reread.exitCode)}; launch2 stderr tail:\n${reread.stderr.slice(-800)}`,
-      ).toBe(true)
-    } finally {
-      rmSync(cwd, { recursive: true, force: true })
     }
   }, LAUNCH_TIMEOUT_MS)
 })
