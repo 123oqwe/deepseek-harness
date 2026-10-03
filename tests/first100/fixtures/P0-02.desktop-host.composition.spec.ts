@@ -6,12 +6,17 @@
  * with `DSH_TRUST_KERNEL_INSECURE` set it must refuse a project that does not
  * declare `dsh.profile.development`, for that reason: the refusal names the
  * opt-in, so a start that fails on anything else does not pass for it. A
- * project that does declare it still starts with the opt-in set (the control).
+ * project that does declare it starts with the opt-in set, writes the
+ * permanent warning naming the opt-in to stderr, and tells the model it runs
+ * insecure (acceptance[3], B-696b), read as B-672 reads both on the `dsh`
+ * entry: a warning line on stderr, and a model-request string that names the
+ * Trust Kernel and the insecure mode.
  *
- * Red today on the first two cases: `runDesktopHost`
+ * Red today on all three cases: `runDesktopHost`
  * (apps/desktop-host/src/index.ts) boots with no Trust Kernel and reads no
- * opt-in, so no kernel is present, the call is refused, and the ordinary
- * project starts with the opt-in set.
+ * opt-in, so no kernel is present, the call is refused, the ordinary project
+ * starts with the opt-in set, and the development project starts with no
+ * warning and no word to the model.
  */
 
 import { fileURLToPath } from 'node:url'
@@ -26,9 +31,9 @@ const repoTsconfig = fileURLToPath(new URL('../../../tsconfig.json', import.meta
 /**
  * Start the Desktop Host on one desktop project in a separate process.
  * @param project - the project the driver builds.
- * @returns the driver's report.
+ * @returns the driver's report, with the driver's stderr.
  */
-async function start(project: DesktopProject): Promise<DesktopHostReport> {
+async function start(project: DesktopProject): Promise<DesktopHostReport & { readonly stderr: string }> {
   const { stdout, stderr } = await runLoaderSmoke({
     label: `P0-02 desktop host: ${project}`,
     tempDirPrefix: `p0-02-desktop-${project}-`,
@@ -42,7 +47,16 @@ async function start(project: DesktopProject): Promise<DesktopHostReport> {
   })
   const json = new RegExp(`${REPORT_PREFIX} (?<json>.+)`, 'u').exec(stdout)?.groups?.json
   if (json === undefined) throw new Error(`the ${project} driver reported nothing usable; stderr tail:\n${stderr.slice(-800)}`)
-  return JSON.parse(json) as DesktopHostReport
+  return { ...JSON.parse(json) as DesktopHostReport, stderr }
+}
+
+/**
+ * Whether stderr carries the permanent insecure-mode warning.
+ * @param stderr - the driver's stderr.
+ * @returns true when one line both warns and names `DSH_TRUST_KERNEL_INSECURE`.
+ */
+function warnsInsecure(stderr: string): boolean {
+  return stderr.split('\n').some(line => /warning/iu.test(line) && line.includes('DSH_TRUST_KERNEL_INSECURE'))
 }
 
 describe('P0-02 on the shipped Desktop Host: a pinned Trust Kernel, and the insecure opt-in only for a development project (B-696)', () => {
@@ -59,8 +73,11 @@ describe('P0-02 on the shipped Desktop Host: a pinned Trust Kernel, and the inse
     expect(report.runs).toEqual([])
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 
-  it('control: a project that declares dsh.profile.development starts with DSH_TRUST_KERNEL_INSECURE set', async () => {
-    const report = await start('insecure-development')
+  it('acceptance[3]: a project that declares dsh.profile.development starts with DSH_TRUST_KERNEL_INSECURE set, warns on stderr naming it, and tells the model it runs insecure', async () => {
+    const { stderr, ...report } = await start('insecure-development')
     expect(report.refused, JSON.stringify(report)).toBeUndefined()
+    expect(warnsInsecure(stderr), stderr.slice(-1500)).toBe(true)
+    expect(report.modelRequests, JSON.stringify(report)).toBeGreaterThan(0)
+    expect(report.modelToldInsecure, JSON.stringify(report)).toBe(true)
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 })
