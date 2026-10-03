@@ -226,7 +226,7 @@ function protocolSourcePaths(repoRoot) {
     }
   }
   walk(join(repoRoot, PROTOCOL_SOURCE_DIR))
-  return paths.sort()
+  return paths.filter(path => path === `${PROTOCOL_SOURCE_DIR}/types.ts`).sort()
 }
 
 function readProtocolSchemaHashes(repoRoot) {
