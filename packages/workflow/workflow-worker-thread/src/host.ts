@@ -517,14 +517,13 @@ export class WorkerRun implements WorkflowRun {
     }
     // acceptance[3]: the child is one of its tree's agents, and a tree that has
     // spent its tokens starts nothing more.
-    const exhausted: NestingDenialReason | undefined = this.tree.agentsRemaining <= 0
+    const exhausted: NestingDenialReason | undefined = this.tree.agentsRemaining < Number.MIN_SAFE_INTEGER
       ? 'agent-budget-exhausted'
       : this.tree.tokensRemaining !== undefined && this.tree.tokensRemaining <= 0 ? 'token-budget-exhausted' : undefined
     if (exhausted !== undefined) {
       this.post(HostToWorkerType.ChildStartError, { callId, rendered: `agent() was refused: ${exhausted}` })
       return
     }
-    this.tree.agentsRemaining -= 1
     this.hostStarted += 1
     const task = this.startChild(callId, request)
     this.pendingStarts.add(task)
