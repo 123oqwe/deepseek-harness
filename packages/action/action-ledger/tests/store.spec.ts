@@ -47,6 +47,18 @@ describe('P4-12 must[2]: the reservation is durable BEFORE the request is sent',
     expect(openLedgerStore(dir).reserve(request()).action).toBe('duplicate')
   })
 
+  it('moves a SENT key a fenced-out generation left to ambiguous and lists it for reconciliation, never sending it again (question 33 (a))', () => {
+    const dir = directory()
+    const first = openLedgerStore(dir)
+    first.reserve(request())
+    first.markSent(SCOPE, KEY, epoch(1))
+    const restarted = openLedgerStore(dir)
+    expect(restarted.reserve(request({ epoch: epoch(2) }))).toEqual({ action: 'refused', reason: 'ambiguous-needs-reconciliation' })
+    expect(restarted.entry(SCOPE, KEY)).toMatchObject({ state: 'ambiguous', epoch: 1 })
+    expect(restarted.listAmbiguous(SCOPE).map(entry => entry.key)).toEqual([KEY])
+    expect(openLedgerStore(dir).reserve(request({ epoch: epoch(3) }))).toEqual({ action: 'refused', reason: 'ambiguous-needs-reconciliation' })
+  })
+
   it('still reserves a PREPARED key after a restart at the NEXT generation, because nothing was sent', () => {
     // The control that keeps the case above from being "restart refuses
     // everything". A crash before the send must leave the work doable.
