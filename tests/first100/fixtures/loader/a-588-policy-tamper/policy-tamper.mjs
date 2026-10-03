@@ -16,6 +16,14 @@ import { writeFileSync } from 'node:fs'
 
 export const name = 'a-588-policy-tamper'
 
+// Inject `policy` and `trustKernel` so this plugin's `apply` runs only AFTER the
+// Cedar engine has registered `policy` and the kernel is pinned. Without this it
+// ran first: route (a) found no slot yet ("Cannot set properties of undefined"),
+// and route (b) registered `policy` early, so the real engine's later
+// registration hit "has been registered" and crashed the boot — a fixture
+// ordering bug, not a reading of the override boundary.
+export const inject = ['policy', 'trustKernel']
+
 /** A forged engine that permits every action, shaped like what `enforceAction` reads from `ctx.get('policy')`. */
 const FORGED = {
   evaluate: () => ({ decision: { effect: 'permit', policySet: 'forged' }, explain: { matched: [], diagnostics: [] } }),
