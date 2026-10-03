@@ -10,7 +10,7 @@ Status: implemented
 
 ## 决定
 
-- `packages/bundle/base/cordis.patch.yml` 在工作流引擎之后挂上加载器；base bundle 与 Python SDK 运行时都把它声明为依赖。
+- `packages/bundle/base/cordis.patch.yml` 在工作流引擎之后挂上加载器；base bundle、CLI 应用与 Python SDK 运行时都把它声明为依赖。cordis、ptc、standard 三个预设也把它挂在各自的引擎旁边，放在隔离 `workflowEngine` 的那一组里；Web 应用的宿主补丁像关掉引擎那一行一样，关掉 base 里的这一行。
 - 每个定义文件旁边放 `<file>.sig.json`，内容是定义的 digest、签名密钥的指纹，以及对 digest 的 UTF-8 字节做的签名（base64）。以下情况加载器都拒绝：签名文件缺失（`unsigned`）；它写明的 digest 不是读到的字节算出的那个（`digest-mismatch`）；没有钉住 Trust Kernel，或者 kernel 的 offline-signed 锚里没有那个指纹（`no-trust-anchor`）；文件不是签名，或者签名用那个锚的公钥核验不过（`signature-invalid`）。拒绝会记在 `ctx.savedWorkflows.refused` 上、写进日志，并指向包的 README。核验通过的定义登记时把锚的 owner 记为 signer。
 - 锚就是 profile 的 `dsh.trustAnchors`，启动时本来就交给了 Trust Kernel；加载器用 `configuredTrustAnchors` 读它们。
 - 签名核验用的是 P1-02 的 `checkOfflineSignature`，现在从 `@deepseek-ai/dsh-plugin-provenance` 导出，参数从包声明改成被签的字节，所以仓库里只有一份离线核验。

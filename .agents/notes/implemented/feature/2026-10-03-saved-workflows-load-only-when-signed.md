@@ -10,7 +10,7 @@ No shipped profile mounted `@deepseek-ai/dsh-workflow-filesystem`, and the loade
 
 ## Decision
 
-- `packages/bundle/base/cordis.patch.yml` mounts the loader after the workflow engine; the base bundle and the Python SDK runtime declare it as a dependency.
+- `packages/bundle/base/cordis.patch.yml` mounts the loader after the workflow engine; the base bundle, the CLI application and the Python SDK runtime declare it as a dependency. The cordis, ptc and standard presets mount it beside their own engines, inside the group that isolates `workflowEngine`, and the Web app's host patch disables the base row, as it does the engine's.
 - Beside each definition file sits `<file>.sig.json`, holding the definition's digest, the fingerprint of the signing key, and the base64 signature over the digest's UTF-8 bytes. The loader refuses a definition when the signature file is missing (`unsigned`), when it names another digest than the bytes read (`digest-mismatch`), when no Trust Kernel is pinned or none of the kernel's offline-signed anchors has the named fingerprint (`no-trust-anchor`), and when the file is not a signature or the signature does not verify against that anchor's key (`signature-invalid`). A refusal is recorded on `ctx.savedWorkflows.refused`, logged, and points to the package README. A verified definition registers with the anchor's owner as its signer.
 - The anchors are the profile's `dsh.trustAnchors`, which the boot already hands to the Trust Kernel; the loader reads them with `configuredTrustAnchors`.
 - The signature check is P1-02's `checkOfflineSignature`, now exported from `@deepseek-ai/dsh-plugin-provenance` and taking the signed bytes rather than a package claim, so the repository keeps one offline verification.

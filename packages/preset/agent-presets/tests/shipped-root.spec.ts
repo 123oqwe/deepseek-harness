@@ -151,4 +151,19 @@ describe('the shipped preset root', () => {
       expect(findEntry(await shippedEntries(id), 'tool-workflow')?.disabled, id).not.toBe(true)
     }
   })
+
+  it('mounts the saved-workflow loader in the same group as each preset\'s workflow engine (P4-09 must[0])', async () => {
+    // The group isolates `workflowEngine`, so a loader outside it would register
+    // into an engine this preset's agent never runs.
+    for (const id of ['cordis', 'ptc', 'standard']) {
+      const group = (await shippedEntries(id)).find((entry: unknown): entry is ShippedEntry =>
+        typeof entry === 'object' && entry !== null && Array.isArray((entry as ShippedEntry).config)
+        && findEntry((entry as { config: unknown[] }).config, 'workflow-worker-thread') !== undefined)
+      const config = group?.config
+      const rows: unknown[] = Array.isArray(config) ? config : []
+      expect(findEntry(rows, 'workflow-worker-thread')?.disabled, id).not.toBe(true)
+      expect(findEntry(rows, 'workflow-filesystem'), id).toMatchObject({ name: '@deepseek-ai/dsh-workflow-filesystem' })
+      expect(findEntry(rows, 'workflow-filesystem')?.disabled, id).not.toBe(true)
+    }
+  })
 })

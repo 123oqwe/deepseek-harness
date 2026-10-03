@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-03-saved-workflows-load-only-when-signed.md
-2026-10-03-saved-workflows-load-only-when-signed.md: 8162b258776206e6abd1b36d118fc569bf73665b
-2026-10-03-saved-workflows-load-only-when-signed.zh.md: 83f144223ca0421255a70da98bbe556023959ba5
+2026-10-03-saved-workflows-load-only-when-signed.md: e48b53361e1e3aef8e9248ace8228002840973f1
+2026-10-03-saved-workflows-load-only-when-signed.zh.md: 47f42d71c9e8e5193e7f0088090188b8c2fb258e
