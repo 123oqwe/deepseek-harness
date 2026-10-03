@@ -8,6 +8,7 @@
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
 import type { ObjectJsonSchema } from '@deepseek-ai/dsh-tools'
 import type { WorkflowMeta } from '@deepseek-ai/dsh-workflow'
+import type { ChildFailurePolicy } from '@deepseek-ai/dsh-workflow-registry'
 
 /**
  * The per-run limits the worker-side runtime enforces. The host keeps the
@@ -131,4 +132,10 @@ export interface NestedStartRequest {
   readonly digest: string
   /** The nested run's `args`, structured-cloned like any other. */
   readonly args?: unknown
+  /**
+   * How the parent treats this child failing, as its `workflow()` call
+   * declared it (P4-09 acceptance[2]); absent when the call declared nothing,
+   * which the engine resolves to `fail-parent`.
+   */
+  readonly onFailure?: ChildFailurePolicy
 }

@@ -98,7 +98,7 @@ class ChildRpcBridge implements ChildPort {
    * Shares the callId counter with child starts: one counter means one reply
    * can never be routed to the other kind of pending call, which two counters
    * would make possible the first time their sequences overlapped.
-   * @param request - the definition to nest and its `args`.
+   * @param request - the definition to nest, its `args`, and its declared `onFailure`.
    * @returns the nested run's returned value.
    */
   startNested(request: NestedStartRequest): Promise<unknown> {
@@ -111,6 +111,7 @@ class ChildRpcBridge implements ChildPort {
       name: request.name,
       digest: request.digest,
       ...request.args === undefined ? {} : { args: request.args },
+      ...request.onFailure === undefined ? {} : { onFailure: request.onFailure },
     })
     return entry.promise
   }

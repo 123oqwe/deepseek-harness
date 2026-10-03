@@ -153,6 +153,17 @@ function resolveMaxTotalAgents(requested: number | undefined, ceiling: number): 
 }
 
 /**
+ * The failure policy a nested run starts under (P4-09 acceptance[2]): the one
+ * the parent's `workflow()` call declared, or `fail-parent` when it declared
+ * none. This is the one place an absent declaration gets its default.
+ * @param declared - the parent's declaration, if it made one.
+ * @returns how the parent treats the child failing.
+ */
+function resolveChildFailurePolicy(declared: ChildFailurePolicy | undefined): ChildFailurePolicy {
+  return declared ?? 'fail-parent'
+}
+
+/**
  * The worker-thread engine service. `start()` validates the script up front
  * (meta + a host-side body parse) and returns a {@link WorkflowRun} whose
  * `result` never rejects; the `workflow/*` events fire around the run per
@@ -614,7 +625,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       limits: planned.workerLimits,
       toolBound: planned.toolBound,
     })
-    return Promise.resolve({ started: true, run, failurePolicy: 'fail-parent' as const })
+    return Promise.resolve({ started: true, run, failurePolicy: resolveChildFailurePolicy(request.onFailure) })
   }
 
   /**
