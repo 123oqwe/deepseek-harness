@@ -412,10 +412,6 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
         return [{ type: 'text', text: parts.length > 0 ? parts.join('\n') : '(run_code completed with no output)' }]
       },
     },
-    // The program runs in a host worker thread, which is containment and not a
-    // security boundary (dsh-code-runtime-worker-thread README), so approving
-    // it grants the account's file access whatever the session's sandbox mode.
-    approvalNotice: 'This code does not run in the OS sandbox: it can read and write any file your account can, including $DSH_HOME.',
     async execute(args, exec): Promise<RunCodeOutput> {
       if (args.description.trim().length === 0) {
         throw new Error('invalid description: expected a non-empty string')
