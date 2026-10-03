@@ -4,7 +4,8 @@
  * the launch environment's authority to lower it from `'enforce'` (user decision G1b), and
  * the `'shadow'` state, which composes and keeps every plugin exactly as
  * `'off'` does and appends what `'enforce'` would have done to the shadow
- * decision log.
+ * decision log. The same gate judges the rows the user patch layers mount
+ * (B-519).
  */
 
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -12,14 +13,16 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { randomUUID } from 'node:crypto'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { FiberState } from '@deepseek-ai/cordis'
-import { boot, DEFAULT_PROFILE_PATCH_RELOAD, initProfile, resolveProfileDir } from '@deepseek-ai/dsh-app-boot'
+import type { EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
+import { boot, composeEntries, DEFAULT_PROFILE_PATCH_RELOAD, initProfile, resolveProfileDir } from '@deepseek-ai/dsh-app-boot'
 import {
   applyPostMountPluginEnforcement,
   composeProfile,
   FEATURE_GATE_DECLARATIONS,
   featureGateShadowLogPath,
+  homePatchPath,
   PLUGIN_MANIFEST_ENFORCEMENT_GATE,
   resolveProfileFeatureGates,
 } from '../src/profile-boot.ts'
@@ -168,5 +171,178 @@ describe('plugin-manifest-enforcement gate: shadow', () => {
       rmSync(badDir, { recursive: true, force: true })
       rmSync(treeParent, { recursive: true, force: true })
     }
+  })
+})
+
+/** Stage one plugin package, with an optional `dsh` field, under a profile directory's own node_modules. */
+function stagePluginPackage(profileDir: string, name: string, dsh?: Record<string, unknown>): void {
+  const pkgDir = join(profileDir, 'node_modules', name)
+  mkdirSync(pkgDir, { recursive: true })
+  writeFileSync(join(pkgDir, 'package.json'), JSON.stringify({ name, version: '1.0.0', ...dsh === undefined ? {} : { dsh } }))
+}
+
+/** A fresh `$DSH_HOME` holding profile `patched`, with no bundles, a package without a manifest and one with a benign manifest. */
+function stagePatchedProfile(): string {
+  useFreshHome()
+  const dir = resolveProfileDir('patched')
+  initProfile(dir, [], DEFAULT_PROFILE_PATCH_RELOAD)
+  stagePluginPackage(dir, 'manifestless-plugin')
+  stagePluginPackage(dir, 'declared-plugin', BENIGN_MANIFEST)
+  return dir
+}
+
+/** Every row id the composed patch stack mounts, a group's rows included, in tree order. */
+function composedIds(composed: Awaited<ReturnType<typeof composeProfile>>): string[] {
+  const ids: string[] = []
+  const visit = (entry: EntryOptions): void => {
+    ids.push(entry.id)
+    if (entry.group && Array.isArray(entry.config)) (entry.config as EntryOptions[]).forEach(visit)
+  }
+  composeEntries([composed.bundlePatches, composed.profile.patches, composed.homePatches, composed.overlays]).forEach(visit)
+  return ids
+}
+
+/** The shadow records of the user patch rows' admission. */
+function patchAdmissionRecords(): unknown[] {
+  return readShadowRecords().filter(record => (record as { readonly stage?: unknown }).stage === 'pre-mount-patch-admission')
+}
+
+/** Run `action` with stderr captured, and return its result and what it wrote. */
+async function captureStderr<T>(action: () => Promise<T>): Promise<{ readonly value: T; readonly stderr: string }> {
+  const writes: string[] = []
+  const spy = vi.spyOn(process.stderr, 'write').mockImplementation((chunk: unknown) => {
+    writes.push(String(chunk))
+    return true
+  })
+  try {
+    const value = await action()
+    return { value, stderr: writes.join('') }
+  } finally {
+    spy.mockRestore()
+  }
+}
+
+const PROFILE_ROWS = [
+  '- insert:',
+  '    - id: manifestless-row',
+  '      name: manifestless-plugin',
+  '    - id: declared-row',
+  '      name: declared-plugin',
+  '    - id: builtin-row',
+  '      name: cordis:noop',
+  '',
+].join('\n')
+
+describe('plugin-manifest-enforcement gate: the rows user patch layers mount (B-519)', () => {
+  it('shadow composes every row and records the rows enforce would refuse', async () => {
+    const dir = stagePatchedProfile()
+    writeFileSync(join(dir, 'cordis.patch.yml'), PROFILE_ROWS)
+
+    const composed = await composeProfile('patched', [], 'shadow')
+
+    expect(composedIds(composed)).toEqual(['manifestless-row', 'declared-row', 'builtin-row'])
+    const records = patchAdmissionRecords()
+    expect(records).toHaveLength(1)
+    expect(records[0]).toMatchObject({
+      gateId: 'plugin-manifest-enforcement',
+      differs: true,
+      legacySummary: { admitted: ['manifestless-plugin', 'declared-plugin'], denied: [] },
+      shadowSummary: {
+        admitted: ['declared-plugin'],
+        denied: [{
+          patch: composed.profile.patchPath, row: 'manifestless-row', module: 'manifestless-plugin', reason: 'missing-manifest', wildcardPaths: [],
+        }],
+      },
+    })
+  })
+
+  it('records nothing when the user layers mount only builtins', async () => {
+    const dir = stagePatchedProfile()
+    writeFileSync(join(dir, 'cordis.patch.yml'), '- insert:\n    - id: builtin-row\n      name: cordis:noop\n')
+
+    await composeProfile('patched', [], 'shadow')
+
+    expect(patchAdmissionRecords()).toEqual([])
+  })
+
+  it('enforce composes each user layer without its refused rows, names each on stderr, and leaves the files unchanged', async () => {
+    const dir = stagePatchedProfile()
+    const profileFile = join(dir, 'cordis.patch.yml')
+    const homeFile = homePatchPath()
+    writeFileSync(profileFile, PROFILE_ROWS)
+    writeFileSync(homeFile, '- insert:\n    - id: home-row\n      name: manifestless-plugin\n')
+    const overlay = join(mkdtempSync(join(tmpdir(), 'dsh-enforcement-gate-overlay-')), 'overlay.patch.yml')
+    writeFileSync(overlay, [
+      '- insert:',
+      '    - id: overlay-group',
+      '      name: cordis:group',
+      '      group: true',
+      '      config:',
+      '        - id: overlay-row',
+      '          name: manifestless-plugin',
+      '',
+    ].join('\n'))
+    const files = [profileFile, homeFile, overlay]
+    const before = files.map(file => readFileSync(file, 'utf8'))
+
+    const { value: composed, stderr } = await captureStderr(() => composeProfile('patched', [overlay], 'enforce'))
+
+    expect(composedIds(composed)).toEqual(['declared-row', 'builtin-row', 'overlay-group'])
+    for (const [file, row] of [[profileFile, 'manifestless-row'], [homeFile, 'home-row'], [overlay, 'overlay-row']] as const) {
+      expect(stderr).toContain(
+        `dsh: plugin admission: excluding patch row ${JSON.stringify(row)} ("manifestless-plugin") of ${JSON.stringify(file)} `
+        + 'from profile "patched" (missing-manifest)\n',
+      )
+    }
+    expect(readShadowRecords()).toEqual([])
+    expect(files.map(file => readFileSync(file, 'utf8'))).toEqual(before)
+  })
+
+  it('enforce refuses a row a patch swaps into a group, and leaves a plain row\'s list config alone', async () => {
+    const dir = stagePatchedProfile()
+    writeFileSync(join(dir, 'cordis.patch.yml'), [
+      '- insert:',
+      '    - id: user-group',
+      '      name: cordis:group',
+      '      group: true',
+      '      config:',
+      '        - id: declared-child',
+      '          name: declared-plugin',
+      '    - id: plain-row',
+      '      name: declared-plugin',
+      '      config: {}',
+      '- id: user-group',
+      '  config:',
+      '    - id: swapped-child',
+      '      name: manifestless-plugin',
+      '    - id: kept-child',
+      '      name: declared-plugin',
+      '- id: plain-row',
+      '  config:',
+      '    - name: manifestless-plugin',
+      '',
+    ].join('\n'))
+
+    const { value: composed, stderr } = await captureStderr(() => composeProfile('patched', [], 'enforce'))
+
+    expect(composedIds(composed)).toEqual(['user-group', 'kept-child', 'plain-row'])
+    const plain = composeEntries([composed.profile.patches]).find(entry => entry.id === 'plain-row')
+    expect(plain?.config).toEqual([{ name: 'manifestless-plugin' }])
+    expect(stderr).toContain('excluding patch row "swapped-child" ("manifestless-plugin")')
+    expect(stderr).not.toContain('plain-row')
+  })
+
+  it('judges a module proxy by the installed package it forwards to, not by the proxy\'s own package.json', async () => {
+    const dir = stagePatchedProfile()
+    // A packaged install's proxy: its `dsh` field holds only `moduleFallback`.
+    stagePluginPackage(dir, '@deepseek-ai/dsh-headless', { moduleFallback: { targets: {} } })
+    writeFileSync(join(dir, 'cordis.patch.yml'), '- insert:\n    - id: proxied-row\n      name: "@deepseek-ai/dsh-headless"\n')
+
+    await composeProfile('patched', [], 'shadow')
+
+    expect(patchAdmissionRecords()[0]).toMatchObject({
+      differs: false,
+      shadowSummary: { admitted: ['@deepseek-ai/dsh-headless'], denied: [] },
+    })
   })
 })
