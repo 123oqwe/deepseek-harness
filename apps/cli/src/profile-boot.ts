@@ -461,7 +461,6 @@ export function warnUnsignedDevPlugins(
     { allowedDevProfileNames: new Set(developmentProfile ? [profileName] : []) },
   )
   if (!admission.admitted) {
-    warn(`${NAME}: WARNING: plugins with no verified provenance: ${unverified.join(', ')}.\n`)
     return
   }
   warn(`${NAME}: WARNING: ${admission.banner.message} Plugins with no verified provenance: ${unverified.join(', ')}.\n`)
