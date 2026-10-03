@@ -4034,7 +4034,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/workflow/workflow-worker-thread/src/index.ts:55`](../packages/workflow/workflow-worker-thread/src/index.ts)
+Source: [`packages/workflow/workflow-worker-thread/src/index.ts:56`](../packages/workflow/workflow-worker-thread/src/index.ts)
 
 <a id="deepseek-aidsh-workspace-trust-local"></a>
 

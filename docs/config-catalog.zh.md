@@ -4034,7 +4034,7 @@ export interface Config {
 }
 ```
 
-来源： [`packages/workflow/workflow-worker-thread/src/index.ts:55`](../packages/workflow/workflow-worker-thread/src/index.ts)
+来源： [`packages/workflow/workflow-worker-thread/src/index.ts:56`](../packages/workflow/workflow-worker-thread/src/index.ts)
 
 <a id="deepseek-aidsh-workspace-trust-local"></a>
 

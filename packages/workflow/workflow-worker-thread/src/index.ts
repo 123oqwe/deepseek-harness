@@ -37,6 +37,7 @@ import type { EffectStateLookup, Reconciled } from './resume.ts'
 import { acquireRunLease } from '@deepseek-ai/dsh-lease-contract'
 import type { WorkflowResult, WorkflowRun, WorkflowRunInfo, WorkflowStartRequest } from '@deepseek-ai/dsh-workflow'
 import { WorkerRun } from './host.ts'
+import type { TreeBudget } from './host.ts'
 import { validateMeta } from './meta.ts'
 import type { WorkerInit, WorkerLimits } from './types.ts'
 
@@ -591,8 +592,15 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     if (budget === undefined) {
       return Promise.resolve({ started: false, rendered: `nested workflow "${request.name}" was not started: its parent holds no budget` })
     }
+    // acceptance[3]: the parent's own view is bounded by what its whole tree
+    // has left, so siblings and every `agent()` child draw on one count.
+    const available: RunBudget = {
+      ...budget.budget,
+      agentsRemaining: Math.min(budget.budget.agentsRemaining, parent.tree.agentsRemaining),
+      tokensRemaining: Math.min(budget.budget.tokensRemaining, parent.tree.tokensRemaining),
+    }
     const planned = planNestedRun(
-      budget.budget,
+      available,
       digest,
       budget.ancestors,
       { maxDepth: this.config.maxNestingDepth, maxTotalAgents: this.config.maxTotalAgents, maxTotalTokens: this.config.maxNestedTokens },
@@ -624,7 +632,10 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       ancestors: [...budget.ancestors, digest],
       limits: planned.workerLimits,
       toolBound: planned.toolBound,
+      tree: parent.tree,
     })
+    // The nested run is itself one of its tree's agents.
+    parent.tree.agentsRemaining -= 1
     return Promise.resolve({ started: true, run, failurePolicy: resolveChildFailurePolicy(request.onFailure) })
   }
 
@@ -700,6 +711,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       ancestors: readonly DefinitionDigest[]
       limits: InheritedWorkerLimits
       toolBound: readonly string[] | undefined
+      tree: TreeBudget
     },
     preAcquired?: { lease: RunLease },
     detached?: { session: SessionId; dispose: () => Promise<void> },
@@ -750,6 +762,17 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
         ancestors: nesting.ancestors.map(digest => brandString<DefinitionDigest>(digest)),
         toolBound: nesting.toolBound,
       })
+    // P4-09 acceptance[3]: a fresh nested run joins its parent's tree. A root
+    // run starts a tree from its own allowance, and a resumed run starts one
+    // from the budget its journal recorded: the tree's count lives in memory
+    // and does not outlive the process the resume replaces.
+    const tree: TreeBudget = nested === undefined
+      ? {
+        agentsRemaining: nesting === undefined ? limits.maxTotalAgents : nesting.budget.agentsRemaining,
+        tokensRemaining: nesting === undefined ? this.config.maxNestedTokens : nesting.budget.tokensRemaining,
+        tokenLimitWarned: false,
+      }
+      : nested.tree
     const init: WorkerInit = {
       meta,
       body: request.script,
@@ -798,6 +821,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       request.traceContext,
       nested === undefined ? undefined : nesting,
       detached?.session,
+      tree,
       reconciled,
     )
     // must[2]/acceptance[0] live with the RUN, not with the engine: the lease's
