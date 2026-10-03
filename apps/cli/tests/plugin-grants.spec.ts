@@ -28,9 +28,13 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import type { Context } from '@deepseek-ai/cordis'
 import { DEFAULT_PROFILE_PATCH_RELOAD, initProfile, loadLayeredEnv, resolveProfileDir } from '@deepseek-ai/dsh-app-boot'
 import { composeProfile, runProfile } from '../src/profile-boot.ts'
+
+/** The enforcement gate's env override name (`featureGateEnvVarName('plugin-manifest-enforcement')`). */
+const ENFORCEMENT_ENV = 'DSH_FEATURE_GATE_PLUGIN_MANIFEST_ENFORCEMENT'
 
 /**
  * The plugin-manifest-enforcement gate's own default state
@@ -81,9 +85,12 @@ function stageBundlePackage(
 const homes: string[] = []
 const roots: string[] = []
 const originalDshHome = process.env.DSH_HOME
+const originalEnforcement = process.env[ENFORCEMENT_ENV]
 afterEach(() => {
   if (originalDshHome === undefined) delete process.env.DSH_HOME
   else process.env.DSH_HOME = originalDshHome
+  if (originalEnforcement === undefined) Reflect.deleteProperty(process.env, ENFORCEMENT_ENV)
+  else process.env[ENFORCEMENT_ENV] = originalEnforcement
   for (const home of homes.splice(0)) rmSync(home, { recursive: true, force: true })
   for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true })
 })
@@ -180,5 +187,146 @@ describe('P1-01 step 2: a factory boot records the first-party wildcard grant at
     expect([...grants].map(grant => grant.tool).sort(), detail).toEqual([...BASE_WILDCARD_TOOLS].sort())
     expect(grants.every(grant => grant.source === 'install-grant-table'), detail).toBe(true)
     expect(grants.every(grant => (grant.purpose ?? '') !== ''), detail).toBe(true)
+  }, LAUNCH_TIMEOUT_MS)
+})
+
+/** A clean Manifest v2 with no destinations, for a benign host layer. */
+const BENIGN_MANIFEST = {
+  manifestVersion: 2,
+  tools: [{
+    name: 'format-note', sideEffectClass: 'none', authAudience: ['model'],
+    allowedDestinations: [], dataClassification: 'internal',
+  }],
+  executionMode: 'in-process',
+  compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
+}
+
+/**
+ * Stage a loadable package with NO `dsh` manifest, referenced by a cordis row's
+ * `name` — a real plugin (`name`/`apply`) that mounts under shadow but is
+ * manifest-less, so loading it fails for no reason of its own.
+ * @param profileDir - the profile directory.
+ * @param name - the package name.
+ */
+function stageLoadablePackage(profileDir: string, name: string): void {
+  const pkgDir = join(profileDir, 'node_modules', name)
+  mkdirSync(pkgDir, { recursive: true })
+  writeFileSync(join(pkgDir, 'package.json'), JSON.stringify({ name, version: '1.0.0', type: 'module', main: './index.mjs' }))
+  writeFileSync(join(pkgDir, 'index.mjs'), `export const name = ${JSON.stringify(name)}\nexport function apply() {}\n`)
+}
+
+/** A staged real boot's live context, its home, the captured stderr, and the overlay path (if any). */
+interface StagedBoot {
+  readonly ctx: Context
+  readonly home: string
+  readonly stderr: string
+  readonly overlayPath: string | undefined
+}
+
+/**
+ * Stage a factory profile under a fresh `$DSH_HOME` and boot it via `runProfile`
+ * at the resolved enforcement (the gate default `'shadow'` with no env set, or
+ * the env a case sets), capturing stderr. The caller disposes `ctx`.
+ * @param name - the profile name.
+ * @param spec - the profile's bundles, root patch, on-disk staging, and optional overlay body.
+ * @returns the booted context, its home, the captured stderr, and the overlay path.
+ */
+async function bootStagedProfile(name: string, spec: {
+  readonly bundles: readonly string[]
+  readonly rootPatch?: string
+  readonly stage?: (profileDir: string) => void
+  readonly overlayBody?: string
+}): Promise<StagedBoot> {
+  const root = mkdtempSync(join(tmpdir(), `p1-01-${name}-`))
+  roots.push(root)
+  const home = join(root, 'home')
+  const cwd = join(root, 'cwd')
+  mkdirSync(cwd, { recursive: true })
+  const profileDir = join(home, 'profiles', name)
+  mkdirSync(profileDir, { recursive: true })
+  writeFileSync(join(profileDir, 'package.json'), `${JSON.stringify({
+    name: `dsh-profile-${name}`,
+    private: true,
+    dependencies: {},
+    dsh: { profile: { bundles: spec.bundles, patchReload: 'startup', development: true } },
+  }, undefined, 2)}\n`)
+  writeFileSync(join(profileDir, 'cordis.patch.yml'), spec.rootPatch ?? '[]\n')
+  spec.stage?.(profileDir)
+  const patchFiles: string[] = []
+  let overlayPath: string | undefined
+  if (spec.overlayBody !== undefined) {
+    overlayPath = join(root, 'overlay.patch.yml')
+    writeFileSync(overlayPath, spec.overlayBody)
+    patchFiles.push(overlayPath)
+  }
+  process.env.DSH_HOME = home
+  delete process.env.DSH_TRUST_KERNEL_INSECURE
+  const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true)
+  try {
+    const { ctx } = await runProfile({
+      environment: loadLayeredEnv('dsh', cwd),
+      profile: name,
+      fromDefaultProfile: undefined,
+      patchFiles,
+      args: [],
+    })
+    return { ctx, home, stderr: stderrSpy.mock.calls.map(call => String(call[0])).join(''), overlayPath }
+  } finally {
+    stderrSpy.mockRestore()
+  }
+}
+
+describe('P1-01 step 3: on a real factory boot, a patch renaming a row by id to a manifest-less package is refused (red first for B-519)', () => {
+  it('④ the manifest-less package does not mount and the renamed row keeps its original module', async () => {
+    const boot = await bootStagedProfile('rename', {
+      bundles: ['@deepseek-ai/dsh-base', 'host-bundle'],
+      stage: (dir) => {
+        stageBundlePackage(dir, 'host-bundle', BENIGN_MANIFEST, '- id: target-row\n  name: cordis:noop\n')
+        stageLoadablePackage(dir, 'manifestless-pkg')
+      },
+      overlayBody: '- id: target-row\n  name: manifestless-pkg\n',
+    })
+    const entries = [...boot.ctx.loader.entries()]
+    const targetRow = entries.find(entry => entry.options.id === 'target-row')
+    const liveManifestless = entries.some(entry => entry.options.name === 'manifestless-pkg' && entry.fiber !== undefined)
+    const stderrNamesPatch = boot.overlayPath !== undefined && boot.stderr.includes(boot.overlayPath)
+    const detail = JSON.stringify({ targetRowName: targetRow?.options.name, liveManifestless, stderrNamesPatch })
+    await boot.ctx.fiber.dispose()
+    // RED today: the id-rename edits the mounted row under shadow, so the
+    // manifest-less package mounts and the row no longer names its original module.
+    expect(liveManifestless, detail).toBe(false)
+    expect(targetRow?.options.name, detail).toBe('cordis:noop')
+    // RED today: no refusal is written. B-519 names the patch file (and the row
+    // id, package, reason) on stderr when it refuses the rename.
+    expect(stderrNamesPatch, detail).toBe(true)
+  }, LAUNCH_TIMEOUT_MS)
+})
+
+describe('P1-01 step 3: under explicit shadow, a patch inserting a manifest-less package mounts and is shadow-logged (red first for B-519)', () => {
+  it('⑥ the inserted package mounts, and shadow-decisions.jsonl records the patch admission', async () => {
+    process.env[ENFORCEMENT_ENV] = 'shadow'
+    const boot = await bootStagedProfile('insert', {
+      bundles: ['@deepseek-ai/dsh-base'],
+      stage: (dir) => { stageLoadablePackage(dir, 'manifestless-pkg') },
+      overlayBody: '- insert:\n    - id: added-row\n      name: manifestless-pkg\n',
+    })
+    const entries = [...boot.ctx.loader.entries()]
+    const mounted = entries.some(entry =>
+      entry.options.id === 'added-row' && entry.options.name === 'manifestless-pkg' && entry.fiber !== undefined)
+    let shadowLog: string
+    try {
+      shadowLog = readFileSync(join(boot.home, 'feature-gates', 'shadow-decisions.jsonl'), 'utf8')
+    } catch {
+      // No shadow log at all today — treated as "no patch admission recorded".
+      shadowLog = ''
+    }
+    const detail = JSON.stringify({ mounted, shadowHasPatchAdmission: shadowLog.includes('pre-mount-patch-admission') })
+    await boot.ctx.fiber.dispose()
+    // Green today and after: under explicit shadow the manifest-less insert mounts.
+    expect(mounted, detail).toBe(true)
+    // RED today: the shadow log records no patch admission; B-519 appends a
+    // pre-mount-patch-admission record naming the inserted package.
+    expect(shadowLog, detail).toContain('pre-mount-patch-admission')
+    expect(shadowLog, detail).toContain('manifestless-pkg')
   }, LAUNCH_TIMEOUT_MS)
 })
