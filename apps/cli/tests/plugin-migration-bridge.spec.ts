@@ -114,9 +114,22 @@ describe('P1-10 must[0]: reading a plugin\'s declared migrations from its instal
 
     // The manifest lists 2->3 first; the chain must still run 1->2 first, or
     // content reaches a version through a conversion declared for another.
-    expect(await resolution.migrate(SEED)).toEqual({
+    expect(await resolution.migrate(SEED, 1)).toEqual({
       global: null,
       tables: { notes: { a: { body: 'original' }, two: true, three: true } },
+    })
+  })
+
+  it('runs only the steps from the version the data is stamped at, so a step below it is not applied twice (P1-10 review 1-2)', async () => {
+    const profileDir = await installPackage(MANIFEST, STEP_MODULES)
+
+    const resolution = await resolvePluginUpgrade('notes-plugin', profileDir)
+    if (resolution.kind !== 'ready') throw new Error(`expected ready, got ${resolution.kind}`)
+
+    // Data at schema 2 already went through 1->2; only 2->3 may run on it.
+    expect(await resolution.migrate(SEED, 2)).toEqual({
+      global: null,
+      tables: { notes: { a: { body: 'original' }, three: true } },
     })
   })
 

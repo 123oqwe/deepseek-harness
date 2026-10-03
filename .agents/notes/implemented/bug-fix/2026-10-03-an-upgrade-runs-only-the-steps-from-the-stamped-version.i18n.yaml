@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-10-03-an-upgrade-runs-only-the-steps-from-the-stamped-version.md
+2026-10-03-an-upgrade-runs-only-the-steps-from-the-stamped-version.md: 60fc1687c7daca39c11eca84c62731109c6e02e9
+2026-10-03-an-upgrade-runs-only-the-steps-from-the-stamped-version.zh.md: 3276774276e0e21277d78f7c734be6bcc2c4bd81

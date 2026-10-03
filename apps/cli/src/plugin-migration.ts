@@ -130,7 +130,13 @@ export type PluginUpgradeResolution =
   | {
     readonly kind: 'ready'
     readonly unit: KvUnitDescriptor
-    readonly migrate: (content: UnitContent) => Promise<UnitContent>
+    /**
+     * Converts a unit's content from `from`, the schema version stamped on the
+     * medium, to the version the new code wants: only the declared steps that
+     * start at `from` or later run, because a step below it was applied when
+     * the data reached `from` (P1-10 review 1-2).
+     */
+    readonly migrate: (content: UnitContent, from: number) => Promise<UnitContent>
     readonly validate?: (content: UnitContent) => Promise<boolean>
   }
   /** The plugin declares migrations but cannot be upgraded, and why. */
@@ -368,7 +374,7 @@ export async function migrateChangedPlugins(
       migration: facet,
       lease: environment.lease,
       now: environment.now,
-      migrate: resolution.migrate,
+      migrate: content => resolution.migrate(content, stamped),
       ...(confirmation === undefined || exportPath === undefined
         ? {}
         : { confirmation: { digest: confirmation, exportPath } }),
@@ -979,9 +985,12 @@ export async function resolvePluginUpgrade(
     }
   }
   const validate = last.validate
-  const migrate = async (content: UnitContent): Promise<UnitContent> => {
+  const migrate = async (content: UnitContent, from: number): Promise<UnitContent> => {
     let current = content
-    for (const step of steps) current = await step.migrate(current)
+    for (const [index, declaration] of declared.entries()) {
+      const step = steps[index]
+      if (step !== undefined && declaration.fromVersion >= from) current = await step.migrate(current)
+    }
     return current
   }
   return {
