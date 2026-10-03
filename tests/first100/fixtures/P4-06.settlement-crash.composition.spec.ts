@@ -14,6 +14,10 @@
  *   settlement — inside the same synchronous drain that buffered the notice,
  *   before the ≤200 ms batch timer flushes it — so the ack is durable but the
  *   parent's log never received the notice on disk. This is the acceptance case.
+ * - `crash-before-ack` kills the instant BEFORE that ack persists, so the outbox
+ *   row is left `pending` (never acked). On restart the ordinary drain redelivers
+ *   the still-`pending` row — BLOCKED-350 closing condition 3, green today, the
+ *   sibling of the acceptance case that needs no reconciler.
  * - `crash-after-flush` waits for the notice to reach the parent's durable log
  *   before killing. This is the control that isolates the ack/flush window: the
  *   effect survives a crash once it is on disk.
@@ -72,10 +76,11 @@ async function run(variant: string): Promise<void> {
 }
 
 beforeAll(async () => {
-  // The two crash variants run sequentially; each waits past the Run lease.
+  // The three crash variants run sequentially; each waits past the Run lease.
   await run('crash-before-flush')
+  await run('crash-before-ack')
   await run('crash-after-flush')
-}, RESTART_TIMEOUT_MS * 2 + 30_000)
+}, RESTART_TIMEOUT_MS * 3 + 30_000)
 
 /**
  * One variant's report, or the reason there is none.
@@ -107,6 +112,19 @@ describe('P4-06 acceptance[0]: a settlement acked around a host crash still take
     // Acceptance half: exactly one business effect. Today the acked row is not
     // redelivered and the pre-crash splice never flushed, so it is zero (RED);
     // B-676 reconciles the acked-but-unconsumed row on restart, idempotently.
+    expect(report.after.reading.afterPrompt.effectCount, JSON.stringify(report)).toBe(1)
+  })
+
+  it('evidence (BLOCKED-350 condition 3): a settlement killed BEFORE its ack is redelivered on restart and takes effect exactly once', () => {
+    const report = reported('crash-before-ack')
+    // The crash landed before the ack persisted, so the bus outbox row is NOT
+    // acked after the restart — it is still pending, unlike crash-before-flush.
+    expect({ killed: report.before.signal, ackedInDurableBus: report.after.reading.beforeResume.settlementAcked }, JSON.stringify(report))
+      .toEqual({ killed: 'SIGKILL', ackedInDurableBus: false })
+    // Exactly one business effect: the still-pending row is redelivered by the
+    // ordinary drain on restart and the inbox's (source, id, epoch) dedup keeps it
+    // to one. GREEN today — condition 3 needs no reconciler, because the row was
+    // never acked.
     expect(report.after.reading.afterPrompt.effectCount, JSON.stringify(report)).toBe(1)
   })
 })
