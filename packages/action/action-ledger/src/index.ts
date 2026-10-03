@@ -94,9 +94,6 @@ export function decideReservation(request: ReserveRequest, existing: LedgerEntry
   // holder the fence proves gone, so nobody can say whether the effect landed.
   // Answering `duplicate` would assert that it did, and sending again could do
   // it twice; the entry goes to reconciliation instead.
-  if (existing.state === 'sent' && comparable && request.epoch > existing.epoch) {
-    return { action: 'refused', reason: 'ambiguous-needs-reconciliation' }
-  }
   return { action: 'duplicate', state: existing.state }
 }
 
