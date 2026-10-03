@@ -14,6 +14,7 @@ import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-test
 import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
 import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 import SubagentRuntime from '@deepseek-ai/dsh-subagent'
+import type { SubagentProvider } from '@deepseek-ai/dsh-subagent'
 import * as spawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import TokenMeter from '@deepseek-ai/dsh-token-meter'
 import { computeDefinitionDigest } from '@deepseek-ai/dsh-workflow-registry'
@@ -33,10 +34,10 @@ afterEach(async () => {
 
 /**
  * Mount the engine on a spawn provider whose children answer with a fixed text.
- * @param options - whether token-meter is mounted, and how many child answers the model has.
+ * @param options - whether token-meter is mounted, how many child answers the model has, and the engine's maxNestedTokens.
  * @returns the context, the engine and a parent agent.
  */
-async function setup(options: { tokenMeter: boolean; answers: number }) {
+async function setup(options: { tokenMeter: boolean; answers: number; maxNestedTokens?: number }) {
   const ctx = new Context()
   contexts.push(ctx)
   await mountAgentLoopTestDependencies(ctx)
@@ -46,7 +47,10 @@ async function setup(options: { tokenMeter: boolean; answers: number }) {
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(spawn, { providerName: 'spawn' })
   await ctx.plugin(InMemoryLeaseStorePlugin)
-  await ctx.plugin(WorkerThreadWorkflowEngine, { disposeGraceMs: 100 })
+  await ctx.plugin(WorkerThreadWorkflowEngine, {
+    disposeGraceMs: 100,
+    ...options.maxNestedTokens === undefined ? {} : { maxNestedTokens: options.maxNestedTokens },
+  })
   ctx.llm.registerAdapter(['mock'], new MockAdapter(Array.from({ length: options.answers }, () => textResponse('child said so'))))
   const parent = await ctx.agentLoop.create(SessionId('tree-budget-parent'), { provider: 'mock', model: 'mock' })
   return { ctx, engine: ctx.workflowEngine as WorkerThreadWorkflowEngine, parent }
@@ -163,11 +167,11 @@ describe('P4-09 acceptance[3]: an in-process child\'s tokens come off its tree',
   it('debits the four token buckets token-meter recorded for the child', async () => {
     const { engine, parent } = await setup({ tokenMeter: true, answers: 1 })
     const run = engine.start({ script: "await agent('first'); return 'done'", meta: META, parent }) as WorkerRun
-    const tokensBefore = run.tree.tokensRemaining
+    expect(run.tree.tokensRemaining).toBe(1_000_000)
 
     expect((await run.result).value).toBe('done')
     // textResponse reports 10 input tokens and one output token per character.
-    expect(run.tree.tokensRemaining).toBe(tokensBefore - (10 + 'child said so'.length))
+    expect(run.tree.tokensRemaining).toBe(1_000_000 - (10 + 'child said so'.length))
     expect(run.tree.tokenLimitWarned).toBe(false)
     await run.dispose()
   })
@@ -180,6 +184,67 @@ describe('P4-09 acceptance[3]: an in-process child\'s tokens come off its tree',
     expect((await run.result).value).toBe('done')
     expect(run.tree.tokensRemaining).toBe(tokensBefore)
     expect(run.tree.tokenLimitWarned).toBe(true)
+    await run.dispose()
+  })
+})
+
+/**
+ * A provider whose child the engine sees as running in another process: its
+ * run has no local agent.
+ * @param disposed - counts the child's disposals.
+ * @returns the provider, registered as `remote`.
+ */
+function remoteProvider(disposed: { count: number }): SubagentProvider {
+  return {
+    name: 'remote',
+    capabilities: { agentOptions: true, outputSchema: true, depthLimit: true, toolFilter: true, persona: true },
+    inheritsParentContext: false,
+    start: () => Promise.resolve({
+      id: SessionId('remote-child'),
+      localAgent: undefined,
+      result: Promise.resolve({ output: [{ type: 'text', text: 'remote reply' }], stopReason: 'completed' }),
+      dispose: () => {
+        disposed.count += 1
+        return Promise.resolve()
+      },
+    }),
+  }
+}
+
+describe('P4-09 acceptance[3]: a child in another process runs only in a tree with no token limit', () => {
+  it('refuses the child in a tree with a token limit, and disposes it', async () => {
+    const { ctx, engine, parent } = await setup({ tokenMeter: false, answers: 0 })
+    const disposed = { count: 0 }
+    ctx.subagents.registerProvider(remoteProvider(disposed))
+    const run = engine.start({
+      script: "try { await agent('x'); return 'ran' } catch (error) { return 'REFUSED: ' + error.message }",
+      meta: META,
+      parent,
+      subagentProvider: 'remote',
+    }) as WorkerRun
+
+    expect((await run.result).value).toContain('REFUSED: agent() was refused: provider "remote" runs the child in another process')
+    expect(disposed.count).toBe(1)
+    await run.dispose()
+  })
+
+  it('runs the child when the deployment sets no token limit, and meters nothing', async () => {
+    const { ctx, engine, parent } = await setup({ tokenMeter: false, answers: 0, maxNestedTokens: 0 })
+    ctx.subagents.registerProvider(remoteProvider({ count: 0 }))
+    const run = engine.start({ script: "return await agent('x')", meta: META, parent, subagentProvider: 'remote' }) as WorkerRun
+
+    expect((await run.result).value).toBe('remote reply')
+    expect(run.tree.tokensRemaining).toBeUndefined()
+    expect(run.tree.tokenLimitWarned).toBe(false)
+    await run.dispose()
+  })
+
+  it('meters nothing for an in-process child when the deployment sets no token limit', async () => {
+    const { engine, parent } = await setup({ tokenMeter: true, answers: 1, maxNestedTokens: 0 })
+    const run = engine.start({ script: "await agent('first'); return 'done'", meta: META, parent }) as WorkerRun
+
+    expect((await run.result).value).toBe('done')
+    expect(run.tree.tokensRemaining).toBeUndefined()
     await run.dispose()
   })
 })

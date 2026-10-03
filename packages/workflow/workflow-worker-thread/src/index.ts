@@ -94,6 +94,12 @@ export interface Config {
   /**
    * The token allowance a root run shares with everything it nests
    * (default 1000000; P4-09 acceptance[3]).
+   *
+   * `0` sets no token limit: the tree meters no tokens, and its `agent()`
+   * children may run in another process, which a tree with a limit refuses
+   * because their usage cannot be read here. A deployment whose workflow
+   * children run on a remote subagent provider therefore sets `0`, and its
+   * token limit is off; `maxTotalAgents` still bounds every tree.
    */
   maxNestedTokens?: number
 }
@@ -165,6 +171,23 @@ function resolveChildFailurePolicy(declared: ChildFailurePolicy | undefined): Ch
 }
 
 /**
+ * The token allowance the admission rules see for a tree with no token limit.
+ * Finite, because those rules refuse an allowance of 0 and a nested run's
+ * journal records its budget as JSON, which has no infinity; no tree spends it.
+ */
+const UNLIMITED_TOKENS = Number.MAX_SAFE_INTEGER
+
+/**
+ * The token limit each tree of runs starts with (P4-09 acceptance[3]): the
+ * deployment's `maxNestedTokens`, or none when that is `0`.
+ * @param maxNestedTokens - the configured allowance.
+ * @returns the limit, or `undefined` when trees have no token limit.
+ */
+function resolveTreeTokenLimit(maxNestedTokens: number): number | undefined {
+  return maxNestedTokens === 0 ? undefined : maxNestedTokens
+}
+
+/**
  * The worker-thread engine service. `start()` validates the script up front
  * (meta + a host-side body parse) and returns a {@link WorkflowRun} whose
  * `result` never rejects; the `workflow/*` events fire around the run per
@@ -183,7 +206,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     leaseMs: z.natural().min(1).default(30_000),
     heartbeatMs: z.natural().min(1).default(10_000),
     maxNestingDepth: z.natural().min(1).default(3),
-    maxNestedTokens: z.natural().min(1).default(1_000_000),
+    maxNestedTokens: z.natural().default(1_000_000),
   })
 
   private readonly config: ResolvedConfig
@@ -599,13 +622,19 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     const available: RunBudget = {
       ...budget.budget,
       agentsRemaining: Math.min(budget.budget.agentsRemaining, parent.tree.agentsRemaining),
-      tokensRemaining: Math.min(budget.budget.tokensRemaining, parent.tree.tokensRemaining),
+      tokensRemaining: parent.tree.tokensRemaining === undefined
+        ? budget.budget.tokensRemaining
+        : Math.min(budget.budget.tokensRemaining, parent.tree.tokensRemaining),
     }
     const planned = planNestedRun(
       available,
       digest,
       budget.ancestors,
-      { maxDepth: this.config.maxNestingDepth, maxTotalAgents: this.config.maxTotalAgents, maxTotalTokens: this.config.maxNestedTokens },
+      {
+        maxDepth: this.config.maxNestingDepth,
+        maxTotalAgents: this.config.maxTotalAgents,
+        maxTotalTokens: resolveTreeTokenLimit(this.config.maxNestedTokens) ?? UNLIMITED_TOKENS,
+      },
       { maxConcurrentAgents: this.resolvedConcurrency(), maxTotalAgents: this.config.maxTotalAgents },
       budget.toolBound,
       // The DEFINITION's declaration, resolved from the digest -- never the
@@ -753,7 +782,11 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       }
     this.budgets.set(id, nesting === undefined
       ? {
-        budget: { depth: 0, agentsRemaining: limits.maxTotalAgents, tokensRemaining: this.config.maxNestedTokens },
+        budget: {
+          depth: 0,
+          agentsRemaining: limits.maxTotalAgents,
+          tokensRemaining: resolveTreeTokenLimit(this.config.maxNestedTokens) ?? UNLIMITED_TOKENS,
+        },
         ancestors: [],
         // A root run is UNBOUNDED: its authority is its session's, and the
         // first declaration on a nesting chain is what first bounds it.
@@ -767,11 +800,13 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     // P4-09 acceptance[3]: a fresh nested run joins its parent's tree. A root
     // run starts a tree from its own allowance, and a resumed run starts one
     // from the budget its journal recorded: the tree's count lives in memory
-    // and does not outlive the process the resume replaces.
+    // and does not outlive the process the resume replaces. A deployment that
+    // sets no token limit gives no tree one.
+    const tokenLimit = resolveTreeTokenLimit(this.config.maxNestedTokens)
     const tree: TreeBudget = nested === undefined
       ? {
         agentsRemaining: nesting === undefined ? limits.maxTotalAgents : nesting.budget.agentsRemaining,
-        tokensRemaining: nesting === undefined ? this.config.maxNestedTokens : nesting.budget.tokensRemaining,
+        tokensRemaining: tokenLimit === undefined || nesting === undefined ? tokenLimit : nesting.budget.tokensRemaining,
         tokenLimitWarned: false,
       }
       : nested.tree
