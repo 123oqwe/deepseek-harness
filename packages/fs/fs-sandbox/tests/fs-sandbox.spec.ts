@@ -9,7 +9,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
+import { link, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, parse } from 'node:path'
@@ -220,6 +220,17 @@ describe('the harness credential store is unreadable from a sandboxed call (B-71
     expect(streamed).toBe('notes\n')
     expect(Buffer.from(await fs.readBytes(notes, undefined, 1024)).toString('utf8')).toBe('notes\n')
     expect(Buffer.from(await fs.readByteRange(notes, { offset: 0, length: 5 })).toString('utf8')).toBe('notes')
+  })
+
+  it('a link to the credential file under another name is refused too', async () => {
+    await boot('workspace-write')
+    const secret = join(workspace, '.dsh', '.credentials.yaml')
+    await link(secret, join(workspace, 'hardlinked.txt'))
+    await expect(fs.readText(await target(join(workspace, 'hardlinked.txt')))).rejects.toMatchObject({ code: 'FS_SANDBOX_DENIED' })
+    if (process.platform !== 'win32') {
+      await symlink(secret, join(workspace, 'symlinked.txt'))
+      await expect(fs.readText(await target(join(workspace, 'symlinked.txt')))).rejects.toMatchObject({ code: 'FS_SANDBOX_DENIED' })
+    }
   })
 
   it('read-only refuses it too, and danger-full-access reads it', async () => {

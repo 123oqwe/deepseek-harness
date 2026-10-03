@@ -17,7 +17,7 @@ import type { GenericCallView, SearchResultView, ToolResult } from '@deepseek-ai
 import type { RetainedItems } from '@deepseek-ai/dsh-output-retention'
 import type { SpillRef } from '@deepseek-ai/dsh-spill'
 import type { GrepMatch } from './search-core.ts'
-import { SearchError, isCredentialStorePath, previewLine, retainGrepMatches, runRipgrep, toWorkdirRelative, trySaveFormattedResult } from './search-core.ts'
+import { SearchError, credentialStoreFilter, previewLine, retainGrepMatches, runRipgrep, toWorkdirRelative, trySaveFormattedResult } from './search-core.ts'
 import { grepSearchMeta, searchViewFromMeta } from './presentation.ts'
 import { acceptedDirectCallValue } from './direct-call.ts'
 
@@ -326,8 +326,9 @@ export function applyGrepTool(ctx: Context, caps: GrepToolCaps): void {
       if (run.noMatches) return { matches: [] }
 
       const all: GrepMatch[] = []
+      const isCredentialStore = credentialStoreFilter(run.workdir)
       for (const raw of parseGrepMatches(run.stdout)) {
-        if (isCredentialStorePath(raw.path, run.workdir)) continue
+        if (isCredentialStore(raw.path)) continue
         const match: GrepMatch = {
           path: toWorkdirRelative(raw.path, run.workdir),
           lineNumber: raw.lineNumber,

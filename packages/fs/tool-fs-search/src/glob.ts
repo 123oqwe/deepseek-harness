@@ -14,7 +14,7 @@ import { sep } from 'node:path'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { GenericCallView, SearchResultView, ToolResult } from '@deepseek-ai/dsh-tools'
 import type { SpillRef } from '@deepseek-ai/dsh-spill'
-import { isCredentialStorePath, runRipgrep, toWorkdirRelative, trySaveFormattedResult } from './search-core.ts'
+import { credentialStoreFilter, runRipgrep, toWorkdirRelative, trySaveFormattedResult } from './search-core.ts'
 import { globSearchMeta, searchViewFromMeta } from './presentation.ts'
 import { acceptedDirectCallValue } from './direct-call.ts'
 
@@ -348,8 +348,9 @@ export function applyGlobTool(ctx: Context, caps: GlobToolCaps): void {
       if (run.noMatches) return { root, paths: [] }
 
       const all: string[] = []
+      const isCredentialStore = credentialStoreFilter(run.workdir)
       for (const line of run.stdout.split('\n')) {
-        if (line.length === 0 || isCredentialStorePath(line, run.workdir)) continue
+        if (line.length === 0 || isCredentialStore(line)) continue
         const displayPath = toWorkdirRelative(line, run.workdir)
         all.push(displayPath)
       }
