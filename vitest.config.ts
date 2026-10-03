@@ -67,7 +67,17 @@ const nonLinuxWebWorkerTests = process.platform === 'linux'
       'packages/experimental/webworker-runtime/tests/node/sandbox-stack.spec.ts',
     ]
 
-const platformUnsupportedTests = [...windowsUnsupportedTests, ...nonLinuxWebWorkerTests]
+// P0-01 acceptance[0] compares this commit's baseline captured on Linux and on
+// macOS byte-for-byte; the macOS half arrives through FIRST100_MACOS_BASELINE,
+// which the first100 gate and narrow runs set unconditionally. An ordinary
+// test/coverage run does not set it and has nothing to compare, so the case is
+// excluded there; a run that DID set it includes the case, which reds (never
+// skips) when the macOS file is missing.
+const crossPlatformBaselineTests = (process.env.FIRST100_MACOS_BASELINE ?? '') === ''
+  ? ['tests/first100/fixtures/P0-01.cross-platform.composition.spec.ts']
+  : []
+
+const platformUnsupportedTests = [...windowsUnsupportedTests, ...nonLinuxWebWorkerTests, ...crossPlatformBaselineTests]
 
 const windowsUnsupportedCoveragePackages = process.platform === 'win32'
   ? [...windowsUnsupportedPackages, 'packages/subprocess/*']
