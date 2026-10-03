@@ -10,11 +10,11 @@ BLOCKED-305 conditions [0] and [1], P0-01 acceptance[0] and [1]. `scripts/releas
 
 ## Decision
 
-- **Format 2.** A baseline in another format reports the format difference alone.
+- **Format 3.** A baseline in another format reports the format difference alone. Format 3 changed which files `protocolSchemaHashes` covers (B-703, below).
 - **The toolchain the checkout declares.** `toolchain` holds the root `package.json`'s `engines.node` and the pnpm version its `packageManager` pins, `null` where it declares none, and verify does not compare it: a change to the declaration is a change to that manifest. The Node and pnpm that ran the capture are written to the audit document, so must[0] still records them.
 - **Package manifests field by field.** `packageManifests` maps each manifest, the root one included, to the sha256 of each top-level field's canonical value. A drift names the manifest and the field.
 - **Bundle rows by content.** `bundleRows` holds the rows in document order and each row's content hash, with rows nested inside it replaced by their ids. A row added or removed is reported once, as `defaultBundleRowIds`, with only the ids that moved. A changed row is reported as `row <id>`, and a reordering among the rows both sides hold as `row order`.
-- **Key schemas.** `protocolSchemaHashes` also covers `spec/*.schema.json`.
+- **Key schemas.** `protocolSchemaHashes` covers every `.ts` source file under `packages/sdk/protocol/src`, the session's `known-event-types.ts`, and each `spec/*.schema.json`. The protocol half is read from the package directory rather than named file by file, so a schema source added to or moved within the package joins the set without the script changing (B-703, BLOCKED-305 [1]).
 - **Package membership.** A `workspacePackages` drift names only the package names that moved.
 
 ## Alternatives considered

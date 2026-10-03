@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-26-the-baseline-fingerprint-names-the-smallest-drift.md
-2026-09-26-the-baseline-fingerprint-names-the-smallest-drift.md: b7033f86d19ed8f5ccaf0f5157359f312a2a16bc
-2026-09-26-the-baseline-fingerprint-names-the-smallest-drift.zh.md: cbb38ea74531066f1aff9625f67594b31107f0ef
+2026-09-26-the-baseline-fingerprint-names-the-smallest-drift.md: 71b1cc521e4e859abd01eb68df144c793627db4e
+2026-09-26-the-baseline-fingerprint-names-the-smallest-drift.zh.md: 4914b6a092ca005c82b9c0ec1b2398b72788973d

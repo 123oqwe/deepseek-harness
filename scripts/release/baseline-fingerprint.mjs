@@ -7,8 +7,9 @@
  * `capture` derives the architecture/protocol-critical fingerprint of a
  * checkout — commit, the toolchain the checkout declares, workspace package
  * names, every package manifest field by field, default bundle row ids and
- * each row's content, protocol/event and `spec/*.schema.json` schema file
- * hashes, and the pnpm lockfile hash — and writes it canonically to
+ * each row's content, the hashes of the key schema files (every source file of
+ * the SDK protocol package, the session's known event types, and each
+ * `spec/*.schema.json`), and the pnpm lockfile hash — and writes it canonically to
  * `.dsh/baseline.json` plus a human-readable
  * `docs/audit/baseline-fingerprint-<gitSha>.md`, which also names the Node and
  * pnpm that captured it. `verify` re-derives the same fields from the current
@@ -33,9 +34,16 @@ import { join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { JSON_SCHEMA, Type, load as parseYaml } from 'js-yaml'
 
-const FORMAT_VERSION = 2
-const PROTOCOL_SCHEMA_PATHS = ['packages/sdk/protocol/src/types.ts', 'packages/core/session/src/known-event-types.ts']
-/** The directory whose `*.schema.json` files are key schemas beside the two protocol files. */
+const FORMAT_VERSION = 3
+/**
+ * The SDK protocol package's source directory: every `.ts` file under it is a
+ * key schema, so a schema source added to or moved within the package joins
+ * the set without this script changing (P0-01, BLOCKED-305 [1]).
+ */
+const PROTOCOL_SOURCE_DIR = 'packages/sdk/protocol/src'
+/** The session's event types, a key schema outside the protocol package. */
+const EVENT_SCHEMA_PATH = 'packages/core/session/src/known-event-types.ts'
+/** The directory whose `*.schema.json` files are key schemas beside the protocol sources. */
 const SPEC_SCHEMA_DIR = 'spec'
 const BUNDLE_ROWS_PATH = 'packages/bundle/base/cordis.patch.yml'
 const WORKSPACE_MANIFEST_PATH = 'pnpm-workspace.yaml'
@@ -202,6 +210,25 @@ function readBundleRows(repoRoot) {
   return { ids: [...seen.keys()].sort(), order, rows: content }
 }
 
+/**
+ * Every `.ts` file under the protocol package's source directory, as a
+ * POSIX-relative path, sorted.
+ * @param {string} repoRoot - checkout root.
+ * @returns {string[]} the paths.
+ */
+function protocolSourcePaths(repoRoot) {
+  const paths = []
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name)
+      if (entry.isDirectory()) walk(full)
+      else if (entry.isFile() && entry.name.endsWith('.ts')) paths.push(relative(repoRoot, full).split(sep).join('/'))
+    }
+  }
+  walk(join(repoRoot, PROTOCOL_SOURCE_DIR))
+  return paths.sort()
+}
+
 function readProtocolSchemaHashes(repoRoot) {
   const specDir = join(repoRoot, SPEC_SCHEMA_DIR)
   const specSchemas = existsSync(specDir)
@@ -210,7 +237,7 @@ function readProtocolSchemaHashes(repoRoot) {
       .map(entry => `${SPEC_SCHEMA_DIR}/${entry.name}`)
     : []
   const hashes = {}
-  for (const relPath of [...PROTOCOL_SCHEMA_PATHS, ...specSchemas.sort()]) {
+  for (const relPath of [...protocolSourcePaths(repoRoot), EVENT_SCHEMA_PATH, ...specSchemas.sort()]) {
     const content = readFileSync(join(repoRoot, relPath))
     hashes[relPath] = createHash('sha256').update(content).digest('hex')
   }

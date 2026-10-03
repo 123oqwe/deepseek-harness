@@ -10,11 +10,11 @@ BLOCKED-305 条件 [0] 与 [1]，P0-01 acceptance[0] 与 [1]。`scripts/release/
 
 ## 决定
 
-- **格式 2。** 格式不同的基线只报格式这一处差异。
+- **格式 3。** 格式不同的基线只报格式这一处差异。格式 3 改了 `protocolSchemaHashes` 覆盖哪些文件（B-703，见下）。
 - **checkout 声明的工具链。** `toolchain` 记根 `package.json` 的 `engines.node` 与 `packageManager` 钉住的 pnpm 版本，没声明的记 `null`；verify 不比它，因为声明变了就是那个 manifest 变了。执行采集的 Node 与 pnpm 写进审计文档，所以 must[0] 照样记录了它们。
 - **按字段记包 manifest。** `packageManifests` 把每个 manifest（根 manifest 也在内）映射到它每个顶层字段规范值的 sha256。漂移会写出 manifest 与字段。
 - **按内容记 bundle 行。** `bundleRows` 按文档顺序记下各行，以及每行内容的哈希，行里嵌套的行换成它们的 id。加行或删行只报一次，记为 `defaultBundleRowIds`，只列出变动的 id。某行内容变了记为 `row <id>`；两边都有的行之间顺序变了，记为 `row order`。
-- **关键 schema。** `protocolSchemaHashes` 也覆盖 `spec/*.schema.json`。
+- **关键 schema。** `protocolSchemaHashes` 覆盖 `packages/sdk/protocol/src` 下的每个 `.ts` 源文件、会话的 `known-event-types.ts`，以及每个 `spec/*.schema.json`。协议那一半从包目录读，不逐个写文件名，所以包里新加或挪动的 schema 源文件不用改脚本就进集合（B-703，BLOCKED-305 [1]）。
 - **包的成员。** `workspacePackages` 的漂移只列出变动的包名。
 
 ## 考虑过的替代方案
