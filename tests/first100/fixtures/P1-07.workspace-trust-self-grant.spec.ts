@@ -30,8 +30,18 @@
  * prompt rather than from a YAML row. Two guards fix the observation: an ungranted
  * workspace keeps its `AGENTS.md` out (the boundary is on), and a host-configured
  * grant lets the same `AGENTS.md` through (a trusted workspace's instructions do
- * reach the model). v1 is RED today — the marker reaches the model; B-715 refuses
- * the model's `$DSH_HOME` write, so no grant stands and the marker stays out.
+ * reach the model). The subject each self-grant case asserts is P1-07 must[2]:
+ * that directory does not become trusted without a host act, so the project
+ * `AGENTS.md` does not reach the model. v1 is RED today — the marker reaches the
+ * model; B-715 refuses the model's `$DSH_HOME` write, so no grant stands and the
+ * marker stays out.
+ *
+ * v5: the self-grant cases assert as their precondition only that the model
+ * ISSUED the grant write (its tool call was dispatched), not that the write
+ * LANDED. The landing is recorded in the failure detail, never asserted, because
+ * B-715 — the fix — refuses the write: on the fixed tip the write does not land,
+ * and making its landing a precondition reds the test where it should go green.
+ * The already-resolved (green-evidence) case is handled the same way.
  */
 
 import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
@@ -83,7 +93,7 @@ async function launchOverWorkspace(
   patches: readonly string[],
   calls: readonly StubToolCall[],
   env: Record<string, string> = {},
-): Promise<{ markerReached: boolean; exitCode: number | null | undefined; stderr: string }> {
+): Promise<{ markerReached: boolean; callDispatched: boolean; exitCode: number | null | undefined; stderr: string }> {
   const stub = await startStubModel(firstStep(calls))
   try {
     const run = await launchShippedHeadless({
@@ -95,7 +105,17 @@ async function launchOverWorkspace(
       env,
       timeoutMs: LAUNCH_TIMEOUT_MS,
     })
-    return { markerReached: JSON.stringify(stub.requests).includes(MARKER), exitCode: run.exitCode, stderr: run.stderrTail ?? '' }
+    return {
+      markerReached: JSON.stringify(stub.requests).includes(MARKER),
+      // A tool result returned to the stub (a later request carries a `tool`
+      // message) proves the model's call was ISSUED and dispatched, whether the
+      // tool then performed it or refused it. This is what the self-grant cases
+      // assert as their precondition — that the model attempted the write — since
+      // the fix refuses the write and so its landing cannot be a precondition.
+      callDispatched: stub.requests.some(request => (request.messages ?? []).some(message => message.role === 'tool')),
+      exitCode: run.exitCode,
+      stderr: run.stderrTail ?? '',
+    }
   } finally {
     await stub.close()
   }
@@ -146,12 +166,15 @@ describe('A-597 ④ (P1-07 must[2]): the model cannot grant its own workspace tr
       const wrote = await launchOverWorkspace(cwd, [], [
         { name: 'write', arguments: { file_path: homePatch, content: grantRow(canonical) } },
       ])
-      // The model's write landed, so "untrusted below" is the trust layer
-      // shadowing the grant, not a write that never happened. The launcher
-      // creates only the profile patch (initProfile), not this home patch, so an
+      // v5 precondition: assert only that the model ISSUED the grant write (its
+      // tool call was dispatched). Whether the write LANDED is recorded, not
+      // asserted: the fix (B-715) refuses this write, so on the fixed tip it does
+      // not land, and the security assertion below — not the precondition — is
+      // what must then hold. The launcher creates only the profile patch
+      // (initProfile), not this home patch, so when the write is allowed its
       // unseen-absent target is createIfAbsent → a real create.
       const homePatchAfter = existsSync(homePatch) ? readFileSync(homePatch, 'utf8') : '(absent)'
-      expect(homePatchAfter, `home patch after launch 1 (${homePatch}):\n${homePatchAfter}`).toContain('workspace-trust-local')
+      expect(wrote.callDispatched, `grant write dispatched? home patch after launch 1 (${homePatch}):\n${homePatchAfter}`).toBe(true)
       // Launch 2, same workspace: stateFor finds the 'untrusted' record launch 1
       // wrote (index.ts:293-297) and returns it before the grant is consulted
       // (:306), so the workspace stays untrusted and its AGENTS.md stays out. This
@@ -181,8 +204,11 @@ describe('A-597 ④ (P1-07 must[2]): the model cannot grant its own workspace tr
       const wrote = await launchOverWorkspace(workspace, [], [
         { name: 'write', arguments: { file_path: homePatch, content: grantRow(canonicalNext) } },
       ])
+      // v5 precondition: assert only that the model ISSUED the write (dispatched).
+      // Record the landing; do not assert it — B-715 refuses this write on the
+      // fixed tip, so its landing cannot gate the security assertion below.
       const homePatchAfter = existsSync(homePatch) ? readFileSync(homePatch, 'utf8') : '(absent)'
-      expect(homePatchAfter, `home patch after launch 1 (${homePatch}):\n${homePatchAfter}`).toContain(canonicalNext)
+      expect(wrote.callDispatched, `grant write dispatched? home patch after launch 1 (${homePatch}):\n${homePatchAfter}`).toBe(true)
       // Launch 2, cwd = D, same $DSH_HOME: D has no record, so stateFor binds it
       // per the grant (index.ts:306-309) on its first resolve and loads D's
       // AGENTS.md. P1-07 must[2]: a model-written grant is no trust upgrade, so D
