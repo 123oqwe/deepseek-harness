@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-10-03-the-upgrade-flow-reconciles-each-completed-record.md
+2026-10-03-the-upgrade-flow-reconciles-each-completed-record.md: d6ada6d660b9e11e760bc33b4e9cd828dc14308a
+2026-10-03-the-upgrade-flow-reconciles-each-completed-record.zh.md: d692e868f28b0c1c2a231ef60c25935b2e5a14af

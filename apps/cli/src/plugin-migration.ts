@@ -111,6 +111,8 @@ export interface UpgradeEnvironment {
   readonly exportPathFor: (plugin: string, fromVersion: number) => string
   /** Writes one plugin's upgrade record. */
   readonly writeRecord: (plugin: string, record: UpgradeRecord) => Promise<void>
+  /** Reads one plugin's upgrade record, or `undefined` when no upgrade has written one. */
+  readonly readRecord: (plugin: string) => Promise<UpgradeRecord | undefined>
 }
 
 /**
@@ -266,6 +268,7 @@ export async function withUpgradeEnvironment<T>(
             { mode: 0o600, dirMode: 0o700 },
           )
         },
+        readRecord: plugin => readUpgradeRecord(harnessHome, plugin),
       }),
     }
   } finally {
@@ -331,7 +334,20 @@ export async function migrateChangedPlugins(
       report(`${change.plugin}: its unit '${unit.name}' holds no data yet — nothing to migrate`)
       continue
     }
-    if (stamped === unit.version) continue // already at the version this build wants
+    if (stamped === unit.version) {
+      // Already at the version this build wants, so nothing migrates; but a
+      // completed record of an earlier upgrade must still agree with the
+      // medium (acceptance[1]). A medium restored or edited to another schema
+      // since is refused here, before the new code runs on it, and the caller
+      // puts the code back. Only the schema version is compared: the plugin's
+      // own writes since that upgrade change the data digest.
+      const disagreement = await reportUnreconciled(environment, change.plugin, facet, unit, { data: false })
+      if (disagreement !== undefined) {
+        report(`${disagreement} — its data is unchanged, and its code is being rolled back`)
+        failed.push(change.plugin)
+      }
+      continue
+    }
 
     // must[2]: an irreversible path is exported BEFORE any confirmation is
     // weighed, because what an operator confirms is that they can still get
@@ -374,7 +390,29 @@ export async function migrateChangedPlugins(
       writeRecord: async (record) => { await environment.writeRecord(change.plugin, record) },
     })
     if (outcome.upgraded) {
-      migrated.push(change.plugin)
+      // The record the upgrade just wrote must agree with the medium as well,
+      // on the schema version and on the data, which nothing has written to
+      // since (acceptance[1]). When it does not, the replaced data goes back
+      // and only the record's intent half stays, which the next run's recovery
+      // clears with nothing to undo; the caller puts the code back.
+      const disagreement = await reportUnreconciled(environment, change.plugin, facet, unit, { data: true })
+      if (disagreement === undefined) {
+        migrated.push(change.plugin)
+        continue
+      }
+      const record = await environment.readRecord(change.plugin)
+      if (record !== undefined) {
+        if (record.previousHandle !== undefined) await facet.rollbackTo({ unit: record.unit ?? unit.name, handle: record.previousHandle })
+        await environment.writeRecord(change.plugin, {
+          plugin: record.plugin,
+          ...record.unit === undefined ? {} : { unit: record.unit },
+          from: record.from,
+          to: record.to,
+          pathDigest: record.pathDigest,
+        })
+      }
+      failed.push(change.plugin)
+      report(`${disagreement} — its data was rolled back, and its code is being rolled back`)
       continue
     }
     failed.push(change.plugin)
@@ -544,23 +582,26 @@ export async function clearInstallRecord(profileDir: string): Promise<void> {
  * carries the version its manifest declares and the storage hub stamps on the
  * medium.
  *
+ * The package version is not compared: it moves independently of the schema
+ * version and of the data. The data digest is compared when the caller read
+ * one, which it does right after a migration, before anything has written to
+ * the unit; the plugin's own writes change the digest after that.
+ *
  * A record with no achieved half — an upgrade that started and never finished
  * — reconciles as `false` rather than throwing. It is a legitimate on-disk
  * state after a crash, and the caller's next move is to recover, not to handle
  * an exception.
- * @param harnessHome - the resolved harness home.
- * @param plugin - the plugin to reconcile.
- * @param observed - the version and digest read back from the medium.
+ * @param record - the plugin's upgrade record, or `undefined` when none was written.
+ * @param observed - the schema version stamped on the medium, and the digest of its records when the caller read one.
  * @returns whether the record and the medium agree.
  */
-export async function reconcileUpgrade(
-  harnessHome: string,
-  plugin: string,
-  observed: { readonly upgradedTo: string; readonly dataDigest: string },
-): Promise<boolean> {
-  const record = await readUpgradeRecord(harnessHome, plugin)
+export function reconcileUpgrade(
+  record: UpgradeRecord | undefined,
+  observed: { readonly upgradedTo: string; readonly dataDigest?: string },
+): boolean {
   if (record?.upgradedTo === undefined || record.dataDigest === undefined) return false
-  return record.upgradedTo === observed.upgradedTo && record.dataDigest === observed.dataDigest
+  return record.upgradedTo === observed.upgradedTo
+    && (observed.dataDigest === undefined || record.dataDigest === observed.dataDigest)
 }
 
 /**
@@ -699,34 +740,56 @@ export async function rollbackCode(
 }
 
 /**
- * Report a plugin whose recorded upgrade does not reconcile with its data
- * (acceptance[1]).
+ * Reconcile a plugin's completed upgrade record against its medium, and say
+ * how they disagree (acceptance[1]).
  *
- * `reconcileUpgrade` returning `false` is a fact about the disk, and a caller
- * that dropped it would leave an operator with a plugin the harness quietly
- * believes is upgraded. The message names which plugin, which version, and
- * which half of the record is missing.
- * @param harnessHome - the resolved harness home.
- * @param change - the plugin and the version it moved to.
- * @returns the diagnostic, or `undefined` when the record reconciles.
+ * The upgrade flow asks this of every plugin it meets that carries a
+ * completed record: one already at the version its new build wants, and one
+ * it has just migrated. A record with no achieved half is an interrupted
+ * upgrade, which the recovery pass before the package manager handles, so it
+ * is not reconciled here. The medium is read through the migration facet: its
+ * stamped schema version and, when asked, the digest of a snapshot of its
+ * records, which is discarded afterwards. `reconcileUpgrade` returning `false`
+ * is a fact about the disk, and a caller that dropped it would leave an
+ * operator with a plugin the harness quietly believes is upgraded.
+ * @param environment - reads the plugin's upgrade record.
+ * @param plugin - the plugin to reconcile.
+ * @param facet - the backend's migration facet.
+ * @param unit - the plugin's unit, as its installed build declares it.
+ * @param options - `data`: compare the data digest too, which holds only right after a migration.
+ * @returns the diagnostic naming both sides, or `undefined` when the record reconciles or has no achieved half.
  */
 export async function reportUnreconciled(
-  harnessHome: string,
-  change: VersionChange,
-  observedDigest: string,
+  environment: Pick<UpgradeEnvironment, 'readRecord'>,
+  plugin: string,
+  facet: MigrationFacet,
+  unit: KvUnitDescriptor,
+  options: { readonly data: boolean },
 ): Promise<string | undefined> {
-  const record = await readUpgradeRecord(harnessHome, change.plugin)
-  if (record === undefined) return undefined
-  if (await reconcileUpgrade(harnessHome, change.plugin, {
-    upgradedTo: change.to,
-    dataDigest: observedDigest,
-  })) return undefined
-  const missing = record.upgradedTo === undefined
-    ? 'the record has no completed-upgrade half (the upgrade did not finish)'
-    : record.dataDigest === undefined
-      ? 'the record has no data digest'
-      : `the recorded digest ${record.dataDigest} does not match what the medium reports`
-  return `${change.plugin}: recorded upgrade to ${change.to} does not reconcile — ${missing}`
+  const record = await environment.readRecord(plugin)
+  if (record?.upgradedTo === undefined || record.dataDigest === undefined) return undefined
+  const upgradedTo = String(await facet.stampedVersion(unit))
+  const dataDigest = options.data ? await digestOfUnit(facet, unit) : undefined
+  if (reconcileUpgrade(record, { upgradedTo, ...dataDigest === undefined ? {} : { dataDigest } })) return undefined
+  const recorded = dataDigest === undefined ? `schema ${record.upgradedTo}` : `schema ${record.upgradedTo}, data ${record.dataDigest}`
+  const observed = dataDigest === undefined ? `schema ${upgradedTo}` : `schema ${upgradedTo}, data ${dataDigest}`
+  return `${plugin}: its recorded upgrade (${recorded}) does not reconcile with the medium (${observed})`
+}
+
+/**
+ * The digest of a unit's current records, read through a snapshot that is
+ * discarded afterwards.
+ * @param facet - the backend's migration facet.
+ * @param unit - the unit to digest.
+ * @returns the digest, prefixed with its algorithm.
+ */
+async function digestOfUnit(facet: MigrationFacet, unit: KvUnitDescriptor): Promise<string> {
+  const snapshot = await facet.snapshotUnit(unit)
+  try {
+    return await facet.digestUnit(snapshot)
+  } finally {
+    await facet.discard(snapshot)
+  }
 }
 
 /**
