@@ -7,6 +7,23 @@
   "entries": [
     {
       "epic": "P0-01",
+      "path": "apps/cli/src/bin.ts",
+      "kind": "source",
+      "stages": [
+        "F.5"
+      ],
+      "reason": "The dsh bin's entry. B-688 (`git show fd34988cd0 -- apps/cli/src/bin.ts`, +5/-2) replaces the `import.meta.main` guard, which Node 24.0 leaves undefined (BLOCKED-351), with a check that argv[1] names an existing file whose real path is this module. F.5's dsh case starts the bin with argv[1] naming it; M-688-1 puts the old guard back."
+    },
+    {
+      "epic": "P0-01",
+      "path": "apps/cli/tests/entry-main-guard.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F.5"
+      ]
+    },
+    {
+      "epic": "P0-01",
       "path": "packages/guard/baseline-preflight/tests/apply.spec.ts",
       "kind": "test",
       "stages": [
@@ -19,6 +36,14 @@
       "kind": "test",
       "stages": [
         "U"
+      ]
+    },
+    {
+      "epic": "P0-01",
+      "path": "tests/first100/fixtures/P0-01.cross-platform.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F.7"
       ]
     },
     {
@@ -47,12 +72,29 @@
     },
     {
       "epic": "P0-01",
+      "path": "tests/release/baseline-fingerprint-schema-set.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F.6"
+      ]
+    },
+    {
+      "epic": "P0-01",
       "path": "tests/release/fingerprint-fixture.ts",
       "kind": "test",
       "stages": [
         "F.3",
         "F.4"
       ]
+    },
+    {
+      "epic": "P0-01",
+      "path": "vitest.config.ts",
+      "kind": "source",
+      "stages": [
+        "F.7"
+      ],
+      "reason": "Test selection, not product code. A-576 (`git show 11729429f2 -- vitest.config.ts`) leaves P0-01.cross-platform.composition.spec.ts out of a run only when FIRST100_MACOS_BASELINE is unset; the first100 gate and narrow runs set it, so F.7 runs there and reds when the macOS capture is missing. No mutation changes this file."
     },
     {
       "epic": "P0-02",
@@ -132,6 +174,15 @@
     },
     {
       "epic": "P0-02",
+      "path": "apps/desktop-host/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.4"
+      ],
+      "reason": "The Desktop Host's boot. A-580 (`git show 22e322a134 -- apps/desktop-host/src/index.ts`, +26) builds a Trust Kernel from the project's dsh.trustAnchors and pins it, refuses DSH_TRUST_KERNEL_INSECURE for a project that does not declare dsh.profile.development, and runs the shared posture check; A-580b (`git show ef9a2ad439 -- apps/desktop-host/src/index.ts`, +6) publishes the model-visible insecure-mode notice for a development project; B-688 (`fd34988cd0`) replaces its `import.meta.main` guard. U.4's three cases start it, and M-a580-1, -2 and -3 each change it."
+    },
+    {
+      "epic": "P0-02",
       "path": "packages/core/agent-loop/src/tool-calls.ts",
       "kind": "source",
       "stages": [
@@ -201,6 +252,22 @@
     },
     {
       "epic": "P0-02",
+      "path": "tests/first100/fixtures/loader/p0-02-desktop-host/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
+    },
+    {
+      "epic": "P0-02",
+      "path": "tests/first100/fixtures/loader/p0-02-desktop-host/shared.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
+    },
+    {
+      "epic": "P0-02",
       "path": "tests/first100/fixtures/loader/p0-02-no-kernel-dispatch/driver.ts",
       "kind": "test",
       "stages": [
@@ -221,6 +288,14 @@
       "kind": "test",
       "stages": [
         "U.3"
+      ]
+    },
+    {
+      "epic": "P0-02",
+      "path": "tests/first100/fixtures/P0-02.desktop-host.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
       ]
     },
     {
@@ -872,6 +947,58 @@
     },
     {
       "epic": "P1-02",
+      "path": "apps/cli/src/install-provenance.ts",
+      "kind": "source",
+      "stages": [
+        "U.1",
+        "U.2"
+      ],
+      "reason": "The provenance decisions of an install and of a boot. B-686 adds `verifyBootProvenance` (`git show 18a3daa4f1 -- apps/cli/src/install-provenance.ts`, +108/-25), which verifies each locked package's claim again, offline; refuses a lock entry recorded trusted whose claim file or tarball is gone, instead of demoting it to unverified (`git show 92f479c8b2 -- apps/cli/src/install-provenance.ts`, +23/-14); and adds `appendProvenanceAudit`, which writes every decision to the kernel's audit chain with the stage install or boot (`git show c4bec0c213 -- apps/cli/src/install-provenance.ts`, +61/-7). U.1 and U.2 observe these on the shipped boot and install paths; M-686-2a and M-686-5 change this file."
+    },
+    {
+      "epic": "P1-02",
+      "path": "apps/cli/src/profile-boot.ts",
+      "kind": "source",
+      "stages": [
+        "U.1",
+        "U.3"
+      ],
+      "reason": "HOT ZONE. Written from `git show 18a3daa4f1 -- apps/cli/src/profile-boot.ts` (+36/-3), `git show e1e03e5007 -- apps/cli/src/profile-boot.ts` (+33/-2), `git show c4bec0c213 -- apps/cli/src/profile-boot.ts` (+10/-7), `git show d7ca38923d -- apps/cli/src/profile-boot.ts` (+7/-2) and `git show 8b0e405a9c -- apps/cli/src/profile-boot.ts` (+25/-10). `runProfile` verifies the profile's locked provenance before any plugin code runs, refuses the boot on a rejection, and passes the records to post-mount enforcement, so the inventory records the locked verdict and its anchor (B-686 (2/3)); a development profile names its unverified plugins on every boot (B-686 (3/3)), and after B-695 every profile does; the boot appends its provenance decisions to the kernel's audit chain before a refusal stops it (B-686 ⑤); the pinned kernel's trust anchors are sealed right after `pinTrustKernel` (B-690). U.1 observes the boot path and U.3 the seal; M-686-2b, M-686-3, M-686-6 and M-695-1 change this file."
+    },
+    {
+      "epic": "P1-02",
+      "path": "apps/cli/tests/fixtures/a-578-kernel-poke.mjs",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P1-02",
+      "path": "apps/cli/tests/plugin-provenance-boot.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P1-02",
+      "path": "apps/cli/tests/plugin-provenance-install.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P1-02",
+      "path": "apps/cli/tests/plugin-trust-anchor-seal.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P1-02",
       "path": "packages/host/plugin-inventory/package.json",
       "kind": "manifest",
       "stages": [
@@ -915,8 +1042,8 @@
       "path": "packages/kernel/trust-kernel/src/index.ts",
       "kind": "source",
       "stages": [
-        "P",
-        "F"
+        "F",
+        "P"
       ],
       "reason": "HOT ZONE. Written from `git show 05c22146ef -- packages/kernel/trust-kernel/src/index.ts` (+42/-1): `createTrustKernel` takes a new `config: TrustKernelConfig` carrying `trustAnchors`, a module-private `CONFIGURED_ANCHORS` WeakMap keyed by the handle holds them, and `configuredTrustAnchors` is a new export. That is a change to construction, not a read of it. The WeakMap keying is the load-bearing part: only a caller already holding the unforgeable handle can read the anchors, and a forged object reaches nothing because it was never a key. `createTrustKernel` still performs no I/O — the boot path reads configuration and passes the result — so the constructor stays total. An earlier version of this entry said P1-02 only READS `signatureRoots` and does not change construction, which was simply false."
     },
@@ -925,8 +1052,8 @@
       "path": "packages/plugin/plugin-provenance/README.md",
       "kind": "doc",
       "stages": [
-        "P",
-        "F"
+        "F",
+        "P"
       ]
     },
     {
@@ -943,8 +1070,8 @@
       "path": "packages/plugin/plugin-provenance/tests/fixtures/sigstore-chain.ts",
       "kind": "test",
       "stages": [
-        "P",
-        "F"
+        "F",
+        "P"
       ]
     },
     {
@@ -961,6 +1088,23 @@
       "kind": "test",
       "stages": [
         "P",
+        "C.1"
+      ]
+    },
+    {
+      "epic": "P1-02",
+      "path": "packages/plugin/plugin-provenance/tests/sbom.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C.1",
+        "C.2"
+      ]
+    },
+    {
+      "epic": "P1-02",
+      "path": "packages/plugin/plugin-provenance/tests/seal.spec.ts",
+      "kind": "test",
+      "stages": [
         "C.1"
       ]
     },
@@ -1672,7 +1816,8 @@
         "F",
         "F.1",
         "F.2",
-        "U"
+        "U",
+        "U.1"
       ],
       "reason": "The production caller the transaction exists for, plus the bridge from P1-01's manifest to this epic's vocabulary. `dsh plugin add`/`update` is the only place that knows (plugin, from, to), and it is where the upgrade lease has to span both halves of the move -- the package manager and the data. The registry named the decision package, which by construction has no caller."
     },
@@ -1714,6 +1859,14 @@
       "kind": "test",
       "stages": [
         "F"
+      ]
+    },
+    {
+      "epic": "P1-10",
+      "path": "apps/cli/tests/plugin-migration-reconcile.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
       ]
     },
     {
@@ -5254,7 +5407,8 @@
       "kind": "source",
       "stages": [
         "U.2",
-        "U.5"
+        "U.5",
+        "U.8"
       ],
       "reason": "HOT ZONE. From `git show d3a23a5e2c -- packages/workflow/workflow-worker-thread/src/host.ts`: `WorkerRun` gains `onNestedStart`/`nest`, a `nestedRuns` set, and a `NestingPort` constructor argument; `cancel()` gains the `cancelPropagationForNested` block. Shared with P4-07 (the lease) and P4-08 (the journal), whose code in this file is untouched by the diff — the nesting additions sit beside them and change neither."
     },
@@ -5267,7 +5421,8 @@
         "U.5",
         "U.6",
         "U.3",
-        "U.7"
+        "U.7",
+        "U.8"
       ],
       "reason": "§12.48-A. The engine held its registered definitions in a bare `Map`, so `admitRegistration`, `isSelfRecursive` and the whole `DefinitionRegistry` had zero production callers and the digest a caller supplied was stored without ever being recomputed. The registry now holds them, which is where must[0]'s version pinning and acceptance[0]'s real meaning acquire their consumer. The registry's U-stage list named `runtime.ts`/`session.ts`, not this file."
     },
@@ -5295,6 +5450,14 @@
       "kind": "test",
       "stages": [
         "U.7"
+      ]
+    },
+    {
+      "epic": "P4-09",
+      "path": "packages/workflow/workflow-worker-thread/tests/nested-budget-strategy.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.8"
       ]
     },
     {
