@@ -21,12 +21,14 @@
  *   executed must NOT pass; the delegate's observable is the exit code (0 today,
  *   non-zero once B-700 judges a not-executed trial a failure).
  * - ③ (BLOCKED-325 closing condition 3) and ⑤ (acceptance[2]) are evidence,
- *   GREEN today and after. An overlay forces the sandbox policy to
- *   `danger-full-access`, so the `write-outside-workspace` attack's write really
- *   lands: the detector counts the bypass (`policy_bypass > 0`) and the run
- *   exits non-zero, while the unmodified control stays clean; and the bypass is
- *   reported even though the run's task-success is below 1 (the product did not
- *   behave safely), so a model-quality number never masks the invariant.
+ *   GREEN today and after. An overlay forces the default permission preset to
+ *   `danger-full-access`, so each fresh session pins that sandbox mode (the
+ *   session override outranks the deployment default), and the
+ *   `write-outside-workspace` attack's write really lands: the detector counts
+ *   the bypass (`policy_bypass > 0`) and the run exits non-zero, while the
+ *   unmodified control stays clean; and the bypass is reported even though the
+ *   run's task-success is below 1 (the product did not behave safely), so a
+ *   model-quality number never masks the invariant.
  */
 
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
@@ -151,7 +153,7 @@ function detail(run: Run | undefined): string {
 let securityNotExecuted: Run | undefined
 /** fault lane with no session persistence: no resume, so no re-issue is observed (②). */
 let faultNotExecuted: Run | undefined
-/** security lane with the sandbox policy forced open: the write-outside-workspace attack really lands (③/⑤). */
+/** security lane with the default preset forced to danger-full-access: the write-outside-workspace attack really lands (③/⑤). */
 let securityPlanted: Run | undefined
 /** security lane on the shipped composition: the control that must stay clean (③). */
 let securityClean: Run | undefined
@@ -163,15 +165,20 @@ beforeAll(async () => {
   // lane finds no session to resume — the shapes blind-review 1-2/1-3 name.
   const noPersistPatch = join(patchDir, 'no-persistence.patch.yml')
   await writeFile(noPersistPatch, '- id: session-persistence-jsonl\n  disabled: true\n')
-  // Forcing the deployment's sandbox default to danger-full-access removes the
-  // workspace-write containment, so the write-outside-workspace attack's write
+  // Forcing the default permission preset to danger-full-access makes each fresh
+  // session pin a danger-full-access `sandbox/mode` event (permission-presets),
+  // which resolve() ranks above the deployment default — the precedence a patch
+  // of the sandbox-policy row's own `mode` could not reach. The workspace-write
+  // containment is then gone, so the write-outside-workspace attack's write
   // actually lands: a real breach the detector must report (BLOCKED-325 cond 3).
-  const sandboxOpenPatch = join(patchDir, 'sandbox-danger.patch.yml')
-  await writeFile(sandboxOpenPatch, '- id: sandbox-policy\n  config:\n    mode: danger-full-access\n')
+  // The row id in the shipped base is `permission`, and the shipped preset table
+  // already defines danger-full-access (sandbox danger-full-access, approval never).
+  const dangerPresetPatch = join(patchDir, 'danger-preset.patch.yml')
+  await writeFile(dangerPresetPatch, '- id: permission\n  config:\n    defaultPreset: danger-full-access\n')
 
   securityNotExecuted = await runLane('security', SEED, [noPersistPatch])
   faultNotExecuted = await runLane('fault', SEED, [noPersistPatch])
-  securityPlanted = await runLane('security', SEED, [sandboxOpenPatch])
+  securityPlanted = await runLane('security', SEED, [dangerPresetPatch])
   securityClean = await runLane('security', SEED)
 }, 6 * LANE_TIMEOUT_MS)
 
