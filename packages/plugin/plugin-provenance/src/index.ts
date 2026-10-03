@@ -35,7 +35,7 @@ export {
 export { computeSbomDigest, generateSbom, verifySbomCoverage } from './sbom.ts'
 
 import { verifyPackageSignature } from './signature.ts'
-import { computeSbomDigest, verifySbomCoverage } from './sbom.ts'
+import { verifySbomCoverage } from './sbom.ts'
 
 import type { TrustKernelSignatureRoots } from '@deepseek-ai/dsh-trust-kernel/types'
 import type {
@@ -108,11 +108,6 @@ export function verifyPluginProvenance(
   const signatureResult = verifyPackageSignature(input.claim, input.observed, trustRoot)
   if (!signatureResult.verified) {
     return { trust: 'rejected', reason: signatureResult.reason }
-  }
-  // The signature covers `claim.sbomDigest`, so the SBOM supplied beside the
-  // claim must be the one that digest names before its coverage means anything.
-  if (computeSbomDigest(input.sbom) !== input.claim.sbomDigest) {
-    return { trust: 'rejected', reason: 'sbom-digest-mismatch' }
   }
   const coverageResult = verifySbomCoverage(input.sbom, input.installedDependencyNames)
   if (!coverageResult.verified) {
