@@ -358,10 +358,34 @@
     },
     {
       "epic": "P0-05",
+      "path": "apps/cli/tests/dump-config-feature-gates.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P0-05",
+      "path": "apps/cli/tests/feature-gate-boot.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P0-05",
       "path": "packages/migration/feature-gates/tests/gates.provider.spec.ts",
       "kind": "test",
       "stages": [
         "C.1"
+      ]
+    },
+    {
+      "epic": "P0-05",
+      "path": "scripts/release/feature-gate-expiry.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
       ]
     },
     {
@@ -658,44 +682,141 @@
     },
     {
       "epic": "P0-08",
-      "path": ".agents/notes/implemented/bug-fix/2026-09-24-the-harness-benchmark-command-runs-and-writes-its-reports.md",
-      "kind": "doc",
-      "stages": [
-        "U.1"
-      ]
-    },
-    {
-      "epic": "P0-08",
-      "path": ".agents/notes/implemented/bug-fix/2026-09-24-the-harness-benchmark-command-runs-and-writes-its-reports.zh.md",
-      "kind": "doc",
-      "stages": [
-        "U.1"
-      ]
-    },
-    {
-      "epic": "P0-08",
-      "path": "benchmarks/harness-capability/scenarios/index.ts",
+      "path": "benchmarks/harness-capability/lanes/deterministic.ts",
       "kind": "source",
       "stages": [
         "F",
+        "U",
         "U.1"
       ],
-      "reason": "The scenario table the fault-matrix cases enumerate. A benchmark scenario list is neither test nor product source, and the registry file list has no benchmarks/ entry at all."
+      "reason": "The deterministic lane: each trial replays one recorded headless session through the shipped product and is judged against the recording, every tool result included once both are normalized (T1). B-573 (1/4, `a01ad24c46`) put the lanes beside the runner the registry names; the R4 and T1 cases observe this lane, and M-573-2 and M-573-det change this file."
     },
     {
       "epic": "P0-08",
-      "path": "tests/benchmark/lane-runner.spec.ts",
+      "path": "benchmarks/harness-capability/lanes/fault.ts",
+      "kind": "source",
+      "stages": [
+        "F",
+        "U",
+        "U.1"
+      ],
+      "reason": "The fault lane: each trial replays a recording that changes its workspace and injects one failure at the model call its trial seed picks, a SIGKILL followed by a resume of the session or a retryable provider error, and judges the recovery (B-573 (3/4), `2efba41b10`). The R3 case reads its invariant metrics, the R2, K1 and K2 cases its metrics and known-red bookkeeping, and the control case its report; M-573-R2a, -R2b, -K1, -K2 and -control change this file."
+    },
+    {
+      "epic": "P0-08",
+      "path": "benchmarks/harness-capability/lanes/security.ts",
+      "kind": "source",
+      "stages": [
+        "F",
+        "U",
+        "U.1"
+      ],
+      "reason": "The security lane: each trial is one attack on the shipped headless composition, with the benchmark's stub model asking for exactly the attack, judged from the file the attack would write and the attack call's result (B-573 (2/4), `7e266c0228`, and `b725cd648b`). The R3 case reads its policy_bypass and its other invariant metrics."
+    },
+    {
+      "epic": "P0-08",
+      "path": "benchmarks/harness-capability/manifest.ts",
+      "kind": "source",
+      "stages": [
+        "F",
+        "U",
+        "U.1"
+      ],
+      "reason": "Parses manifest.yml, which the registry names, into the recordings, the replay composition, the trial timeout, the price table and each lane's trials, scenarios and not-applicable metrics (`a01ad24c46`, `7e266c0228`). Every lane reads its configuration through it, so every case of P0-08.benchmark-product.spec.ts depends on it."
+    },
+    {
+      "epic": "P0-08",
+      "path": "benchmarks/harness-capability/product.ts",
+      "kind": "source",
+      "stages": [
+        "F",
+        "U",
+        "U.1"
+      ],
+      "reason": "Launches the shipped product for every trial: `dsh --profile headless` from source, with the recorded-session patch layers for a replay or the shipped composition and the stub model for an attack, in a fresh working directory and `$DSH_HOME` (`a01ad24c46`). The R1 and R5 cases observe that every trial launched the product and harvested its session logs."
+    },
+    {
+      "epic": "P0-08",
+      "path": "benchmarks/harness-capability/seed.ts",
+      "kind": "source",
+      "stages": [
+        "F",
+        "U",
+        "U.1"
+      ],
+      "reason": "The run seed and the deterministic generator that decide which recordings each lane draws, in what order, and each trial's own seed (`a01ad24c46`). The R4 cases observe that the same seed reproduces each trial and that a different seed draws different trials."
+    },
+    {
+      "epic": "P0-08",
+      "path": "benchmarks/harness-capability/stub-model.ts",
+      "kind": "source",
+      "stages": [
+        "F",
+        "U",
+        "U.1"
+      ],
+      "reason": "The loopback OpenAI-compatible endpoint the security lane's attacks run against, reached by the shipped DeepSeek client through `DEEPSEEK_BASE_URL`; it holds no key and reaches no network (`7e266c0228`). It is why the security lane runs with no model API, which the R5 case observes."
+    },
+    {
+      "epic": "P0-08",
+      "path": "packages/core/agent-loop/src/tool-calls.ts",
+      "kind": "source",
+      "stages": [
+        "F",
+        "U"
+      ],
+      "reason": "The native tool-call path the benchmark measures: its tool results are what the deterministic lane compares with the recording (T1), and its action-ledger check is what keeps a re-issued call from running twice after a fault (R3). M-573-1 and M-573-fault change it. NOT labelled HOT ZONE: no P0-08 commit changes this file; only those never-merged mutations do."
+    },
+    {
+      "epic": "P0-08",
+      "path": "packages/fs/fs-sandbox/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "F"
+      ],
+      "reason": "The file sandbox whose refusal of a workspace-write write outside every writable root is what the security lane's write-outside-workspace attack must meet (R3); M-573-sec removes that refusal. NOT labelled HOT ZONE: no P0-08 commit changes this file; only that never-merged mutation does."
+    },
+    {
+      "epic": "P0-08",
+      "path": "tests/first100/fixtures/P0-08.benchmark-product.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F",
+        "U",
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P1-01",
+      "path": "apps/cli/tests/plugin-enforcement.spec.ts",
       "kind": "test",
       "stages": [
         "U"
       ]
     },
     {
-      "epic": "P0-08",
-      "path": "tests/first100/fixtures/P0-08.composition.spec.ts",
+      "epic": "P1-01",
+      "path": "apps/cli/tests/plugin-verify.spec.ts",
       "kind": "test",
       "stages": [
-        "U.1"
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-01",
+      "path": "packages/boot/app-boot/tests/profile.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-01",
+      "path": "packages/host/plugin-inventory/tests/inventory.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U",
+        "P"
       ]
     },
     {
@@ -708,9 +829,19 @@
     },
     {
       "epic": "P1-01",
+      "path": "packages/host/plugin-inventory/tests/provenance-record.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P1-01",
       "path": "packages/plugin/plugin-manifest/tests/manifest.provider.spec.ts",
       "kind": "test",
       "stages": [
+        "U",
+        "C",
         "P"
       ]
     },
@@ -718,6 +849,14 @@
       "epic": "P1-02",
       "path": "packages/host/plugin-inventory/package.json",
       "kind": "manifest",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-02",
+      "path": "packages/host/plugin-inventory/tests/inventory.spec.ts",
+      "kind": "test",
       "stages": [
         "U"
       ]
@@ -770,7 +909,8 @@
       "path": "packages/plugin/plugin-provenance/tests/audit-record.spec.ts",
       "kind": "test",
       "stages": [
-        "U"
+        "U",
+        "C.1"
       ]
     },
     {
@@ -784,10 +924,19 @@
     },
     {
       "epic": "P1-02",
+      "path": "packages/plugin/plugin-provenance/tests/fixtures/sigstore-local-chain.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C.1"
+      ]
+    },
+    {
+      "epic": "P1-02",
       "path": "packages/plugin/plugin-provenance/tests/package-digest.spec.ts",
       "kind": "test",
       "stages": [
-        "P"
+        "P",
+        "C.1"
       ]
     },
     {
@@ -819,10 +968,27 @@
     },
     {
       "epic": "P1-03",
+      "path": "packages/plugin/plugin-lock/tests/candidate.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P1-03",
+      "path": "packages/plugin/plugin-lock/tests/commit.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P1-03",
       "path": "packages/plugin/plugin-lock/tests/gate.spec.ts",
       "kind": "test",
       "stages": [
-        "U.2"
+        "U.2",
+        "U"
       ]
     },
     {
@@ -1478,10 +1644,10 @@
       "path": "apps/cli/src/plugin-migration.ts",
       "kind": "source",
       "stages": [
-        "U",
         "F",
         "F.1",
-        "F.2"
+        "F.2",
+        "U"
       ],
       "reason": "The production caller the transaction exists for, plus the bridge from P1-01's manifest to this epic's vocabulary. `dsh plugin add`/`update` is the only place that knows (plugin, from, to), and it is where the upgrade lease has to span both halves of the move -- the package manager and the data. The registry named the decision package, which by construction has no caller."
     },
@@ -1554,14 +1720,50 @@
     },
     {
       "epic": "P1-10",
+      "path": "packages/plugin/plugin-migrations/tests/decisions.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C",
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-10",
+      "path": "packages/plugin/plugin-migrations/tests/recovery.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C",
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-10",
+      "path": "packages/plugin/plugin-migrations/tests/transaction.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C",
+        "P",
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-10",
       "path": "packages/storage/storage-json/src/index.ts",
       "kind": "source",
       "stages": [
-        "U",
         "F.1",
-        "F.2"
+        "F.2",
+        "U"
       ],
       "reason": "The JSON backend's migration facet: snapshot as a copy beside the unit, switch as a rename with the replaced document kept as the rollback target, plus `stampedVersion`, `digestUnit`, `readSnapshot` and `exportUnit`. It reads and writes the SAME document `kv.open` parses, through `format.ts`'s own `serialize` -- an earlier version invented `{ version, records }`, which this backend never writes, and every case over it passed because each seeded the invention."
+    },
+    {
+      "epic": "P1-10",
+      "path": "packages/storage/storage-json/tests/json-backend.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
     },
     {
       "epic": "P1-10",
@@ -1571,6 +1773,14 @@
         "U"
       ],
       "reason": "The SQLite backend's migration facet, created by this epic. One database holds every unit, so a snapshot cannot be a file copy: it is a sidecar database carrying just that unit's rows, produced by ATTACH inside the live database's own transaction, and a switch is a row replacement in a single transaction. A `:memory:` database exposes no facet at all, because it has no directory to hold a sidecar -- an upgrade on that medium is refused by name rather than failing partway through."
+    },
+    {
+      "epic": "P1-10",
+      "path": "packages/storage/storage-sqlite/tests/sqlite-backend.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
     },
     {
       "epic": "P1-10",
@@ -3115,6 +3325,7 @@
       "path": "packages/policy/policy-language/tests/accept.spec.ts",
       "kind": "test",
       "stages": [
+        "C",
         "P"
       ]
     },
@@ -3123,7 +3334,8 @@
       "path": "packages/policy/policy-language/tests/compile.spec.ts",
       "kind": "test",
       "stages": [
-        "C"
+        "C",
+        "P"
       ]
     },
     {
@@ -3147,7 +3359,9 @@
       "path": "packages/policy/policy-language/tests/fuzz.spec.ts",
       "kind": "test",
       "stages": [
-        "F"
+        "F",
+        "C",
+        "P"
       ]
     },
     {
@@ -3155,6 +3369,7 @@
       "path": "packages/policy/policy-language/tests/loader.spec.ts",
       "kind": "test",
       "stages": [
+        "C",
         "P"
       ]
     },
@@ -3163,7 +3378,8 @@
       "path": "packages/policy/policy-language/tests/parse.spec.ts",
       "kind": "test",
       "stages": [
-        "C"
+        "C",
+        "P"
       ]
     },
     {
@@ -3179,7 +3395,8 @@
       "path": "packages/policy/policy-language/tests/schema.spec.ts",
       "kind": "test",
       "stages": [
-        "C"
+        "C",
+        "P"
       ]
     },
     {
@@ -4248,8 +4465,8 @@
       "path": "packages/run/message-bus/src/dispatcher.ts",
       "kind": "source",
       "stages": [
-        "U",
-        "F"
+        "F",
+        "U"
       ],
       "reason": "The dispatch loop that turns outbox rows into delivery attempts, which is the at-least-once half of the clause."
     },
@@ -4289,6 +4506,14 @@
       "stages": [
         "P.3",
         "P.4"
+      ]
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/run/message-bus/tests/dispatcher.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
       ]
     },
     {
@@ -4871,6 +5096,22 @@
     },
     {
       "epic": "P4-09",
+      "path": "packages/workflow/tool-workflow/tests/invariant.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.7"
+      ]
+    },
+    {
+      "epic": "P4-09",
+      "path": "packages/workflow/tool-workflow/tests/resume.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.7"
+      ]
+    },
+    {
+      "epic": "P4-09",
       "path": "packages/workflow/tool-workflow/tests/tool-workflow.spec.ts",
       "kind": "test",
       "stages": [
@@ -4941,6 +5182,15 @@
     },
     {
       "epic": "P4-09",
+      "path": "packages/workflow/workflow-registry/tests/registry.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P",
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P4-09",
       "path": "packages/workflow/workflow-worker-thread/src/host.ts",
       "kind": "source",
       "stages": [
@@ -4955,9 +5205,9 @@
       "kind": "source",
       "stages": [
         "U.2",
-        "U.3",
         "U.5",
         "U.6",
+        "U.3",
         "U.7"
       ],
       "reason": "§12.48-A. The engine held its registered definitions in a bare `Map`, so `admitRegistration`, `isSelfRecursive` and the whole `DefinitionRegistry` had zero production callers and the digest a caller supplied was stored without ever being recomputed. The registry now holds them, which is where must[0]'s version pinning and acceptance[0]'s real meaning acquire their consumer. The registry's U-stage list named `runtime.ts`/`session.ts`, not this file."
@@ -5003,9 +5253,9 @@
       "kind": "test",
       "stages": [
         "U.2",
-        "U.3",
         "U.5",
-        "U.6"
+        "U.6",
+        "U.3"
       ]
     },
     {
