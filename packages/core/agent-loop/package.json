@@ -74,7 +74,7 @@
     "@deepseek-ai/dsh-tools": "workspace:^",
     "@deepseek-ai/dsh-policy-enforcement": "workspace:^",
     "@deepseek-ai/dsh-llm-pi-ai": "workspace:^",
-    "@deepseek-ai/dsh-lease": "workspace:^",
+    "@deepseek-ai/dsh-lease-sqlite": "workspace:^",
     "@deepseek-ai/dsh-run": "workspace:^"
   }
 }
