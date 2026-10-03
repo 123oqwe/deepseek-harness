@@ -262,9 +262,17 @@ function lastTurnEnd(log: string | undefined): unknown {
  * @param seed - the run seed.
  * @param manifest - the manifest, for the trial timeout and the prices.
  * @param composition - the directory whose patch files compose the replay.
+ * @param extraPatches - patch files laid over every launch after the trial's own.
  * @returns the trial.
  */
-async function faultOnce(plan: FaultPlan, index: number, seed: number, manifest: Manifest, composition: string): Promise<Trial> {
+async function faultOnce(
+  plan: FaultPlan,
+  index: number,
+  seed: number,
+  manifest: Manifest,
+  composition: string,
+  extraPatches: readonly string[],
+): Promise<Trial> {
   const { scenario, script } = plan
   const trial = trialSeed(seed, scenario.name, index)
   const kind: InjectedFault['kind'] = index % 2 === 0 ? 'process' : 'model'
@@ -284,7 +292,7 @@ async function faultOnce(plan: FaultPlan, index: number, seed: number, manifest:
     if (kind === 'model') {
       const failing: ReplayEntry = { kind: 'throw', chunks: [], message: 'benchmark fault: the provider failed before answering', code: PROVIDER_FAILURE_CODE }
       first = await launchReplay(scenario, workspace, {
-        patches,
+        patches: [...patches, ...extraPatches],
         env: { DSH_SNAPSHOT_OVERRIDE: writeScript(dir, 'model-fault.json', [...script.slice(0, call), failing, ...script.slice(call)]) },
         timeoutMs,
       })
@@ -295,7 +303,7 @@ async function faultOnce(plan: FaultPlan, index: number, seed: number, manifest:
     } else {
       const marker = join(dir, 'stalled')
       first = await launchReplay(scenario, workspace, {
-        patches,
+        patches: [...patches, ...extraPatches],
         env: { DSH_SNAPSHOT_OVERRIDE: writeScript(dir, 'stall.json', [...script.slice(0, call), { kind: 'hang', readyFile: marker }]) },
         timeoutMs,
         stall: { marker, afterMs: PERSIST_WAIT_MS },
@@ -312,7 +320,7 @@ async function faultOnce(plan: FaultPlan, index: number, seed: number, manifest:
         await sleep(RUN_LEASE_MS + LEASE_MARGIN_MS)
         const fromCall = plan.worldChanging.filter(changed => changed < call).at(-1) ?? call
         final = await launchReplay(scenario, workspace, {
-          patches: [...patches, writeResumePatch(dir, sessionId)],
+          patches: [...patches, writeResumePatch(dir, sessionId), ...extraPatches],
           env: { DSH_SNAPSHOT_OVERRIDE: writeScript(dir, 'resume.json', script.slice(fromCall)) },
           timeoutMs,
         })
@@ -366,11 +374,12 @@ function recovered(trial: Trial): boolean {
  * @param lane - the lane as the manifest declares it: its trial count, recordings, not-applicable metrics and known-red check date.
  * @param seed - the run seed.
  * @param manifest - the whole manifest, for the recordings, the replay composition, the trial timeout and the prices.
+ * @param extraPatches - patch files laid over every launch after the trial's own, from the runner's `--patch`.
  * @returns the lane's report; its `knownRed` is empty.
  * @throws when the manifest gives the lane no trials, no scenarios, a recording the lane cannot fail, no known-red
  *   check date, or no reason for a metric it does not compute.
  */
-export async function runFaultLane(lane: ManifestLane, seed: number, manifest: Manifest): Promise<LaneReport> {
+export async function runFaultLane(lane: ManifestLane, seed: number, manifest: Manifest, extraPatches: readonly string[]): Promise<LaneReport> {
   const scenarios = lane.scenarios ?? []
   const knownRedCheckedOn = lane.knownRedCheckedOn
   if (lane.trials === undefined || lane.trials < 1 || scenarios.length === 0 || knownRedCheckedOn === undefined) {
@@ -384,7 +393,7 @@ export async function runFaultLane(lane: ManifestLane, seed: number, manifest: M
   for (const [index, name] of drawScenarios(scenarios, lane.trials, seed).entries()) {
     const plan = plans.get(name)
     if (plan === undefined) throw new Error(`benchmark fault lane: no plan for ${name}`)
-    trials.push(await faultOnce(plan, index, seed, manifest, composition))
+    trials.push(await faultOnce(plan, index, seed, manifest, composition, extraPatches))
   }
   const n = trials.length
   const from = (what: string): string => `${what}, over ${String(n)} trials that each replayed a recorded session through the shipped product with one injected failure`

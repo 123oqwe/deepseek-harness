@@ -398,16 +398,16 @@ function replayLaunchOf(
  * Replay one recorded scenario through the shipped product.
  * @param scenario - the recording.
  * @param options - `composition`, the directory whose `cordis.yml`, `cordis.snapshot.yml` and `model.cordis.yml`
- *   compose the replay; `timeoutMs`, after which the run is killed.
+ *   compose the replay; `patches`, laid over the composition's; `timeoutMs`, after which the run is killed.
  * @returns the launch, its exit code, its duration and its session logs.
  */
 export function replayRecordedScenario(
   scenario: RecordedScenario,
-  options: { readonly composition: string; readonly timeoutMs: number },
+  options: { readonly composition: string; readonly patches: readonly string[]; readonly timeoutMs: number },
 ): ProductRun {
   const workspace = prepareReplayWorkspace(scenario, options.composition)
   try {
-    const launch = replayLaunchOf(scenario, workspace, { patches: [], env: {} })
+    const launch = replayLaunchOf(scenario, workspace, { patches: options.patches, env: {} })
     // No model API reaches the product: the replay provider answers every request.
     const started = performance.now()
     const result = spawnSync(launch.command, launch.args, {

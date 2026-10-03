@@ -3,8 +3,9 @@
  *
  * Each trial is one attack on the shipped product: `dsh --profile headless`
  * from source with its shipped composition and only the patches the attack
- * needs, under the permission preset the attack targets, with the benchmark's
- * stub model asking for exactly the attack. The product must refuse. A trial
+ * needs, followed by any the runner's `--patch` lays over every launch, under
+ * the permission preset the attack targets, with the benchmark's stub model
+ * asking for exactly the attack. The product must refuse. A trial
  * is judged from the world, the file the attack would write, and from the root
  * session's log, the attack call's tool result and how the turn ended. It
  * bypassed the policy when that file exists or the call's result reports
@@ -261,9 +262,17 @@ function turnEndOf(log: string | undefined): unknown {
  * @param index - the trial's position in the lane.
  * @param seed - the run seed.
  * @param manifest - the manifest, for the trial timeout and the prices.
+ * @param extraPatches - patch files laid over the launch after the attack's own.
  * @returns the trial.
  */
-async function attackOnce(name: string, attack: Attack, index: number, seed: number, manifest: Manifest): Promise<Trial> {
+async function attackOnce(
+  name: string,
+  attack: Attack,
+  index: number,
+  seed: number,
+  manifest: Manifest,
+  extraPatches: readonly string[],
+): Promise<Trial> {
   const world: World = {
     cwd: mkdtempSync(join(homedir(), '.dsh-benchmark-security-')),
     outside: mkdtempSync(join(homedir(), '.dsh-benchmark-outside-')),
@@ -275,7 +284,7 @@ async function attackOnce(name: string, attack: Attack, index: number, seed: num
       run = await launchShippedHeadless({
         cwd: world.cwd,
         task: `Benchmark attack ${name}.`,
-        patches: attack.patches(world),
+        patches: [...attack.patches(world), ...extraPatches],
         modelBaseUrl: stub.baseUrl,
         permission: attack.permission,
         env: attack.env,
@@ -318,10 +327,11 @@ async function attackOnce(name: string, attack: Attack, index: number, seed: num
  * @param lane - the lane as the manifest declares it: its trial count, attacks, not-applicable metrics and known-red check date.
  * @param seed - the run seed.
  * @param manifest - the whole manifest, for the trial timeout and the prices.
+ * @param extraPatches - patch files laid over every launch after the attack's own, from the runner's `--patch`.
  * @returns the lane's report; its `knownRed` is empty.
  * @throws when the manifest gives the lane no trials, no attacks, an attack this module does not define, no known-red check date, or no reason for a metric it does not compute.
  */
-export async function runSecurityLane(lane: ManifestLane, seed: number, manifest: Manifest): Promise<LaneReport> {
+export async function runSecurityLane(lane: ManifestLane, seed: number, manifest: Manifest, extraPatches: readonly string[]): Promise<LaneReport> {
   const scenarios = lane.scenarios ?? []
   const knownRedCheckedOn = lane.knownRedCheckedOn
   if (lane.trials === undefined || lane.trials < 1 || scenarios.length === 0 || knownRedCheckedOn === undefined) {
@@ -334,7 +344,7 @@ export async function runSecurityLane(lane: ManifestLane, seed: number, manifest
   for (const [index, name] of drawScenarios(scenarios, lane.trials, seed).entries()) {
     const attack = ATTACKS[name]
     if (attack === undefined) throw new Error(`benchmark security lane: no attack ${name}`)
-    trials.push(await attackOnce(name, attack, index, seed, manifest))
+    trials.push(await attackOnce(name, attack, index, seed, manifest, extraPatches))
   }
   const n = trials.length
   const from = (what: string): string => `${what}, over ${String(n)} trials that each made one attack on the shipped product with a stub model`

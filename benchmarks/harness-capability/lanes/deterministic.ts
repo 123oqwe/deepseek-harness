@@ -76,10 +76,11 @@ function outcomeOf(log: string | undefined): string {
  * @param lane - the lane as the manifest declares it: its trial count, scenarios and not-applicable metrics.
  * @param seed - the run seed.
  * @param manifest - the whole manifest, for the recordings, the replay composition, the trial timeout and the prices.
+ * @param extraPatches - patch files laid over every launch after the replay's own, from the runner's `--patch`.
  * @returns the lane's report; its `knownRed` is empty.
  * @throws when the manifest gives the lane no trials, no scenarios, no known-red check date, or no reason for a metric it does not compute.
  */
-export function runDeterministicLane(lane: ManifestLane, seed: number, manifest: Manifest): LaneReport {
+export function runDeterministicLane(lane: ManifestLane, seed: number, manifest: Manifest, extraPatches: readonly string[]): LaneReport {
   const scenarios = lane.scenarios ?? []
   const knownRedCheckedOn = lane.knownRedCheckedOn
   if (lane.trials === undefined || lane.trials < 1 || scenarios.length === 0 || knownRedCheckedOn === undefined) {
@@ -89,7 +90,7 @@ export function runDeterministicLane(lane: ManifestLane, seed: number, manifest:
   const composition = join(REPO_ROOT, manifest.composition)
   const trials: Trial[] = drawScenarios(scenarios, lane.trials, seed).map((name, index): Trial => {
     const scenario = readRecordedScenario(recordings, name)
-    const run = replayRecordedScenario(scenario, { composition, timeoutMs: manifest.trialTimeoutMs })
+    const run = replayRecordedScenario(scenario, { composition, patches: extraPatches, timeoutMs: manifest.trialTimeoutMs })
     const [expected] = normalizedLogs([scenario.recording])
     if (expected === undefined) throw new Error(`benchmark scenario ${name}: its recording normalized to nothing`)
     const actual = normalizedLogs(run.logs)

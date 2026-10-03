@@ -270,3 +270,39 @@ export function invariantsHeld(reports: readonly LaneReport[]): boolean {
     })
     && report.knownRed.every(entry => !entry.passed))
 }
+
+/** One patch file the runner's `--patch` laid over every product launch. */
+export interface ExtraPatch {
+  /** Its absolute path. */
+  readonly path: string
+  /** The sha256 of its content when the run read it. */
+  readonly sha256: string
+}
+
+/** Which product a run measured. */
+export interface ProductComposition {
+  /** `true` when any extra patch was laid over the shipped composition: the run's numbers then describe that modified product, not the shipped one. */
+  readonly modified: boolean
+  /** Every extra patch, in the order given. */
+  readonly extraPatches: readonly ExtraPatch[]
+}
+
+/**
+ * The product a run measured, as both reports state it.
+ * @param extraPatches - the patches the runner's `--patch` laid over every launch, in order.
+ * @returns the composition, modified exactly when any extra patch was laid.
+ */
+export function productComposition(extraPatches: readonly ExtraPatch[]): ProductComposition {
+  return { modified: extraPatches.length > 0, extraPatches }
+}
+
+/**
+ * The line `report.md` states a run's product with.
+ * @param composition - the run's product.
+ * @returns `shipped composition`, or a `MODIFIED composition` line naming every extra patch and its sha256.
+ */
+export function compositionLine(composition: ProductComposition): string {
+  if (!composition.modified) return 'Product: shipped composition'
+  const patches = composition.extraPatches.map(patch => `${patch.path} (sha256 ${patch.sha256})`).join(', ')
+  return `Product: MODIFIED composition, not the shipped one: every launch also took ${patches}`
+}

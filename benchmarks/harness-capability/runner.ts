@@ -1,18 +1,22 @@
 /**
  * Lane runner for the Harness capability benchmark (Epic P0-08).
  *
- * `pnpm benchmark:harness [--lane <name>]... [--seed <n>] [--out <dir>]` runs
- * the requested keyless lanes, every trial of which launches the shipped
+ * `pnpm benchmark:harness [--lane <name>]... [--seed <n>] [--patch <file>]... [--out <dir>]`
+ * runs the requested keyless lanes, every trial of which launches the shipped
  * product with no model API configured (acceptance[0], question 18 (a)), and
  * writes `report.json` and `report.md` to `--out`. The same seed draws the
  * same trials and reproduces their normalized session logs (acceptance[1]).
+ * Each `--patch` file is laid over every product launch of every lane, after
+ * the launch's own patches; both reports then mark the run's product as a
+ * modified composition and name each patch with the sha256 of its content.
  * The run exits 0 exactly when its base invariants held, 1 when a lane
  * breached one or a known-red scenario passed, and 2 when a requested lane has
- * no scenario or `--seed` is not an integer in [0, 2^32).
+ * no scenario, a `--patch` names no file, or `--seed` is not an integer in
+ * [0, 2^32).
  * @module benchmarks/harness-capability/runner
  */
 
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { parseArgs } from 'node:util'
@@ -21,10 +25,11 @@ import { runDeterministicLane } from './lanes/deterministic.ts'
 import { runFaultLane } from './lanes/fault.ts'
 import { runSecurityLane } from './lanes/security.ts'
 import { readManifest, type Manifest, type ManifestLane } from './manifest.ts'
-import { invariantsHeld, type LaneReport, type Metric } from './report.ts'
+import { sha256 } from './product.ts'
+import { compositionLine, invariantsHeld, productComposition, type ExtraPatch, type LaneReport, type Metric } from './report.ts'
 
-/** The keyless lanes that have scenarios, each with the function that runs it. */
-const LANES: Readonly<Record<string, (lane: ManifestLane, seed: number, manifest: Manifest) => LaneReport | Promise<LaneReport>>> = {
+/** The keyless lanes that have scenarios, each with the function that runs it on the run's extra patches. */
+const LANES: Readonly<Record<string, (lane: ManifestLane, seed: number, manifest: Manifest, extraPatches: readonly string[]) => LaneReport | Promise<LaneReport>>> = {
   deterministic: runDeterministicLane,
   security: runSecurityLane,
   fault: runFaultLane,
@@ -53,7 +58,7 @@ function metricLine(name: string, metric: Metric): string {
 async function main(argv: readonly string[]): Promise<number> {
   const { values } = parseArgs({
     args: argv[0] === '--' ? argv.slice(1) : [...argv],
-    options: { lane: { type: 'string', multiple: true }, seed: { type: 'string' }, out: { type: 'string' } },
+    options: { lane: { type: 'string', multiple: true }, seed: { type: 'string' }, patch: { type: 'string', multiple: true }, out: { type: 'string' } },
   })
   const manifest = readManifest()
   const lanes = values.lane ?? Object.keys(LANES)
@@ -68,19 +73,29 @@ async function main(argv: readonly string[]): Promise<number> {
     console.error(`benchmark:harness: --seed must be an integer in [0, 2^32), got ${String(values.seed)}`)
     return 2
   }
+  const extraPatches: ExtraPatch[] = []
+  for (const given of values.patch ?? []) {
+    const path = resolve(given)
+    if (statSync(path, { throwIfNoEntry: false })?.isFile() !== true) {
+      console.error(`benchmark:harness: --patch ${given} names no file`)
+      return 2
+    }
+    extraPatches.push({ path, sha256: sha256(readFileSync(path, 'utf8')) })
+  }
+  const product = productComposition(extraPatches)
   const reports: LaneReport[] = []
   for (const name of lanes) {
     const run = LANES[name]
     const declared = manifest.lanes.find(lane => lane.name === name)
     if (run === undefined || declared === undefined) throw new Error(`benchmark:harness: lane ${name} vanished after validation`)
-    reports.push(await run(declared, seed, manifest))
+    reports.push(await run(declared, seed, manifest, extraPatches.map(patch => patch.path)))
   }
   const held = invariantsHeld(reports)
   const out = resolve(values.out ?? '.artifacts/benchmark')
   mkdirSync(out, { recursive: true })
-  writeFileSync(join(out, 'report.json'), `${JSON.stringify({ seed, lanes, reports, invariantsHeld: held }, null, 2)}\n`)
+  writeFileSync(join(out, 'report.json'), `${JSON.stringify({ seed, lanes, product, reports, invariantsHeld: held }, null, 2)}\n`)
   const lines = reports.flatMap(report => [
-    `## ${report.lane}`,
+    `## ${report.lane}${product.modified ? ' (MODIFIED composition)' : ''}`,
     '',
     ...Object.entries(report.metrics).map(([name, metric]) => `- ${metricLine(name, metric)}`),
     ...report.knownRed.length === 0
@@ -88,8 +103,17 @@ async function main(argv: readonly string[]): Promise<number> {
       : report.knownRed.map(entry => `- known red ${entry.scenario} (${entry.blocked}): ${entry.passed ? 'PASSED, which fails the run' : 'fails as expected'} — ${entry.observation}`),
     '',
   ])
-  writeFileSync(join(out, 'report.md'), ['# Harness capability benchmark', '', `Seed: ${String(seed)}`, `Invariants held: ${String(held)}`, '', ...lines].join('\n'))
-  console.log(`benchmark:harness: invariants ${held ? 'held' : 'BREACHED'}; reports written to ${out}`)
+  writeFileSync(join(out, 'report.md'), [
+    '# Harness capability benchmark',
+    '',
+    `Seed: ${String(seed)}`,
+    compositionLine(product),
+    `Invariants held: ${String(held)}`,
+    '',
+    ...lines,
+  ].join('\n'))
+  const productNote = product.modified ? `; product: MODIFIED composition (${String(extraPatches.length)} extra patch(es))` : ''
+  console.log(`benchmark:harness: invariants ${held ? 'held' : 'BREACHED'}${productNote}; reports written to ${out}`)
   return held ? 0 : 1
 }
 
