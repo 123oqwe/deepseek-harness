@@ -80,7 +80,10 @@ describe('dsh run with Agent Teams enabled', () => {
         result.exitCode,
         `dsh headless profile exited unexpectedly.\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
       ).toBe(0)
-      expect(result.stderr).toBe('')
+      // P1-02 must[4] (question 30 (b)): the launcher names the profile's
+      // workspace-linked dependency and the fixture LLM mounted by path.
+      expect(result.stderr).toBe('dsh: WARNING: plugins with no verified provenance: '
+        + `@deepseek-ai/dsh-experimental-agent-team-profile, team-fixture-llm (${fixturePlugin}).\n`)
       expect(result.stdout).toContain('TEAM_WORKFLOW_OK')
 
       const files = (await readdir(sessions, { recursive: true }))

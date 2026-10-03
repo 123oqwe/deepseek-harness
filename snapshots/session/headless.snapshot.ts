@@ -439,6 +439,29 @@ function withoutPluginLogLines(stderr: string): string {
   return kept
 }
 
+/** The launcher's untrusted-status line on a non-development profile: this prefix, the plugins `, `-separated, then `.`. */
+const PROVENANCE_WARNING = 'dsh: WARNING: plugins with no verified provenance: '
+
+/** One plugin that line names because a patch row mounts it by path: `<id> (<file: URL>)`, or the URL alone. */
+const PATH_MOUNTED_PLUGIN = /^(?:[^\s(),]+ \(file:[^\s(),]+\)|file:[^\s(),]+)$/u
+
+/**
+ * The stderr without the launcher's untrusted-status line when every plugin it
+ * names is mounted by path.
+ *
+ * A scenario's patches mount its fixtures by path, and the launcher names each
+ * one on every boot (B-707); the line is no session event, so the stderr a
+ * session projects cannot express it. A line that names a package is kept and
+ * fails the comparison. A-590 observes the line on the factory launcher.
+ * @param stderr - the launcher's stderr without plugin log lines.
+ * @returns the stderr without that line.
+ */
+function withoutPathMountedProvenanceWarning(stderr: string): string {
+  const pathMountedOnly = (line: string): boolean => line.startsWith(PROVENANCE_WARNING) && line.endsWith('.\n')
+    && line.slice(PROVENANCE_WARNING.length, -2).split(', ').every(plugin => PATH_MOUNTED_PLUGIN.test(plugin))
+  return stderr.split(/(?<=\n)/u).filter(line => !pathMountedOnly(line)).join('')
+}
+
 function stderrFromSession(log: string): string {
   let output = ''
   let started = false
@@ -1192,7 +1215,7 @@ describe('headless recorded-session snapshots', () => {
       if (mode !== 'replay') await writeHeaderSidecars(scenario, actualLogs, actualContext)
 
       expect(result.stdout).toBe(`${finalTextFromSession(fixtures[0] as string)}\n`)
-      expect(withoutPluginLogLines(result.stderr)).toBe(expectedStderr)
+      expect(withoutPathMountedProvenanceWarning(withoutPluginLogLines(result.stderr))).toBe(expectedStderr)
       expect(actualLogs, `${scenario.name}: persisted session count`).toHaveLength(fixtures.length)
       const writerFiles = (await readdir(scenario.dir)).filter(name => /^writer(?:\.[1-9]\d*)?\.expected\.jsonl$/u.test(name)).sort()
       if (mode === 'replay') {
