@@ -6,7 +6,7 @@
 
 /* v8 ignore file -- built-bin acceptance exercises this self-executing dispatch. */
 
-import { existsSync, readFileSync, realpathSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { loadLayeredEnv } from '@deepseek-ai/dsh-app-boot'
 import { parseDshArgs } from './args.ts'
@@ -71,9 +71,6 @@ export async function runCli(): Promise<void> {
   }
 }
 
-// Not `import.meta.main`, which Node 24.0 leaves undefined (BLOCKED-351). The real path,
-// because this entry is started through a symlink; existence first, because a packaged
-// executable's argv[1] need not name a file.
-if (process.argv[1] !== undefined && existsSync(process.argv[1]) && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (import.meta.main) {
   await runCli()
 }
