@@ -649,7 +649,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     })
     // The nested run is itself one of its tree's agents.
     parent.tree.agentsRemaining -= 1
-    return Promise.resolve({ started: true, run, failurePolicy: resolveChildFailurePolicy(request.onFailure) })
+    return Promise.resolve({ started: true, run, failurePolicy: resolveChildFailurePolicy(undefined) })
   }
 
   /**
