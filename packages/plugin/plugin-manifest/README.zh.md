@@ -56,7 +56,7 @@ if (result.valid) {
   // comparison.mismatches: capability names declared but never registered, or registered but never declared
   // comparison.wildcardFindings: same wildcard findings detectWildcardPermissions already reports
   const trust = decidePluginTrust(comparison)
-  // trust is 'active' when comparison has neither, 'quarantined' otherwise
+  // trust is 'quarantined' when comparison has an undeclared registration or a wildcard finding, 'active' otherwise
 }
 ```
 
@@ -96,7 +96,7 @@ if (!admission.admitted) {
 | 文件 | 职责 |
 |---|---|
 | [`src/types.ts`](src/types.ts) | `PluginManifestV2` 类型表面:每个 must[0] 字段、must[1] 的 Tool/MCP 副作用字段,以及 `PluginDeclaration`/`LegacyBundleDeclaration` 分类类型 |
-| [`src/validate.ts`](src/validate.ts) | 纯 schema 校验(`validatePluginManifestV2`)、静态数据检查(`assertJsonSerializable`)、通配权限检测(`detectWildcardPermissions`),以及旧版 `dsh.bundle` 兼容读取(`parseLegacyBundleDeclaration`、`classifyPluginDeclaration`) |
+| [`src/validate.ts`](src/validate.ts) | 纯 schema 校验(`validatePluginManifestV2`)、静态数据检查(`assertJsonSerializable`)、通配权限检测(`detectWildcardPermissions`)及其按安装授予的拆分(`partitionWildcardFindings`,第 27 题 (a)),以及旧版 `dsh.bundle` 兼容读取(`parseLegacyBundleDeclaration`、`classifyPluginDeclaration`) |
 | [`src/index.ts`](src/index.ts) | 本包真正的运行时入口:re-export 每个 `./types.ts` 类型与 `./validate.ts` 函数,新增 `ObservedPluginCapabilities`、`compareDeclaredToObserved` 与 `decidePluginTrust`(声明/实际观察比对与 quarantine 决策),以及 `evaluatePreMountAdmission`(Usage 阶段的真实预挂载策略) |
 
 **运行时不变式：** 不发布运行时不变式伴随包：本 Contract 阶段切片交付 `PluginManifestV2` 类型面与纯校验函数，不注册任何 Cordis 服务，不构造属于自己的 manifest 值，也不拥有可变数据或周期性事件流。真正的检查属于后续切片——等真实读取方存在之后，例如「`plugin-inventory` 报告为 `'manifest-v2'` 的每一份声明，都确实通过了 `validatePluginManifestV2`」。
@@ -132,7 +132,7 @@ if (!admission.admitted) {
 - **真实的读取器/CLI/启动接线现已存在**——`apps/cli/src/plugin.ts` 的 `pnpm plugin:verify <fixture>`、`apps/cli/src/profile-boot.ts` 的 `composeProfile`/`applyPostMountPluginEnforcement`,以及 `packages/host/plugin-inventory` 的 `buildObservedPluginCapabilities`/`buildPluginPermissionStates`,现在都会为真实安装与 profile 启动调用 `classifyPluginDeclaration`/`evaluatePreMountAdmission`/`compareDeclaredToObserved`/`decidePluginTrust`(Epic P1-01.U)。本包自身仍不执行任何 I/O、不构造 `Context`——这条边界是刻意保留、未曾改变的;活跃 `Context` 走查请参见 `packages/host/plugin-inventory` 自己的 README。
 - **`decidePluginTrust` 的 quarantine 现在被真正强制执行**——`apps/cli/src/profile-boot.ts` 的 `applyPostMountPluginEnforcement` 会在启动后销毁一个 `'quarantined'` 条目的活跃 Cordis fiber;`evaluatePreMountAdmission`(由 `composeProfile` 在 `boot()` 挂载任何内容之前调用)会在预挂载阶段就拒绝 `'missing'`/`'legacy-untrusted'` 声明或申请通配权限的 manifest,与 `isDeniedInProductionByDefault` 自身的轴线一致。两项决定都经过 `plugin-manifest-enforcement` feature gate（`apps/cli/src/profile-boot.ts` 的 `PLUGIN_MANIFEST_ENFORCEMENT_GATE`），每个 profile 都解析为 `shadow`：什么都不改变，只把强制执行会拒绝或 quarantine 的内容追加到 `$DSH_HOME/feature-gates/shadow-decisions.jsonl`。启动环境可以把 `DSH_FEATURE_GATE_PLUGIN_MANIFEST_ENFORCEMENT` 设为 `enforce`：拒绝并 quarantine；或设为 `off`：每次启动都在 stderr 打一行告警。
 - **`compareDeclaredToObserved` 按能力身份(名字)比对,不比对字段内容,且只比对顶层(BLOCKED-027,已在 U 阶段重新审视,裁定为真实设计)**——一个工具在声明与观察中同名,但 `sideEffectClass`/`authAudience`/`allowedDestinations`/`dataClassification` 发生漂移,不会产生任何 mismatch;`McpServerDeclaration` 嵌套的 `resources`/`prompts` 从不参与比对,只比对顶层的 server 名字。U 阶段的具体确认:`packages/host/plugin-inventory` 真实的 `buildObservedPluginCapabilities`——构建自 `Fiber.getEffects()` 标签与 Cordis 全局 `ReflectService` store,是本代码库暴露的唯一真实的按插件注册信号——无法从任何活跃注册中恢复这些字段(`ToolDefinition`、一个服务 `Impl`、一个 MCP-client 的 `Fiber.config`、一个 `SkillDefinition` 都不携带它们中的任何一个)。因此字段内容比对会去比对一个在观察侧结构上根本不存在的字段,这不是更弱的检查,而是空洞的检查。要真正补上这个洞,需要一次单独的、更大的改动,把 effect 元数据贯穿到整个仓库的每一个 tool/skill/MCP/event 注册调用点——超出本包与本阶段的范围,是另一个史诗级的工作量,而不是对原始披露的默默延续。
-- **quarantine 目前对两个方向的不一致一视同仁**——观察到但未声明的注册,与已声明但从未注册的能力,现在都会触发 `'quarantined'`;registry 原文"声明与实际注册不一致"读起来不分方向,但一个合法的惰性/条件注册可能与后一种情况长得一模一样。在后续阶段把真实强制策略叠加到这个决策之上之前,这个不对称性值得一次审慎的裁决。
+- **声明了却从未注册的能力不触发 quarantine**——第 32 题 (a):`compareDeclaredToObserved` 仍把它报为 `'declared-not-registered'` 不一致,inventory 里也看得见,但 `decidePluginTrust` 只在有 `'undeclared-registration'` 不一致或通配发现时判 `'quarantined'`,所以惰性或条件注册不会让插件被隔离。
 - **`detectWildcardPermissions` 只识别精确的 `'*'`、`'**'` 与 `'/'` 模式**——一个实质上过宽但并非字面等于这三种字符串之一的模式(例如一个不必要地宽泛但非最大化的 glob)不会被标记。更细粒度的过度授权启发式是后续阶段(如果有)的工作。
 - **`sideEffectClass` 是单一声明标签,而非集合**——一个具有多种副作用(例如同时有 `'write'` 与 `'network'`)的 capability 只声明适用的单个最高影响等级;本 schema 不进一步拆解复合副作用。
 - **`assertJsonSerializable` 只在校验那一刻检查取值,不证明不可变性**——一个字段由 getter 支撑的 manifest,可以在一次读取时通过校验,而后续读取同一个 `result.manifest` 引用(未做克隆)时返回不同内容。文档约定的调用方式(`JSON.parse` 的输出,结构上不可能产出 getter)在实践中规避了这一点,但在公开 API 接受 `unknown` 的地方,这一约定并未被类型系统强制。

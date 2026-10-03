@@ -164,9 +164,12 @@ export function compareDeclaredToObserved(
 
 /**
  * acceptance[0]'s quarantine state for a plugin whose manifest already
- * passed schema validation: `'active'` — {@link compareDeclaredToObserved}
- * found no mismatch and no wildcard finding; `'quarantined'` — it found at
- * least one of either.
+ * passed schema validation: `'quarantined'` — {@link compareDeclaredToObserved}
+ * found a capability the plugin registered without declaring it, or a
+ * wildcard finding; `'active'` otherwise. A capability declared but never
+ * registered is still compared and kept in the comparison, where the
+ * inventory shows it, but does not quarantine the plugin: the plugin did less
+ * than it said, not more (question 32 (a)).
  *
  * This is a pure decision only: actually enforcing quarantine (blocking new
  * tool calls, isolating the plugin's `ctx` surface, surfacing it in an
@@ -182,10 +185,11 @@ export type PluginTrustDecision = 'active' | 'quarantined'
 /**
  * Decide a {@link PluginTrustDecision} from a {@link PluginRegistrationComparison}.
  * @param comparison - the result of {@link compareDeclaredToObserved}.
- * @returns `'quarantined'` when any mismatch or wildcard finding is present, `'active'` otherwise.
+ * @returns `'quarantined'` when an `'undeclared-registration'` mismatch or a wildcard finding is present, `'active'` otherwise.
  */
 export function decidePluginTrust(comparison: PluginRegistrationComparison): PluginTrustDecision {
-  return comparison.mismatches.length > 0 || comparison.wildcardFindings.length > 0 ? 'quarantined' : 'active'
+  const undeclared = comparison.mismatches.some(mismatch => mismatch.kind === 'undeclared-registration')
+  return undeclared || comparison.wildcardFindings.length > 0 ? 'quarantined' : 'active'
 }
 
 /**

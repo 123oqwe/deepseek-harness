@@ -23,6 +23,7 @@ import {
   enforceTrustKernelPosture,
   healProfilesModuleFallback,
   initProfile,
+  installationWildcardGrants,
   installFailLoud,
   loadOptionalPatches,
   loadOverlayPatches,
@@ -40,6 +41,7 @@ import {
   watchUserPatches,
   type BlockedProfileLayer,
   type DeniedProfileLayer,
+  type GrantedWildcard,
   type PreMountDenialReason,
   type Profile,
   type ProfileManifest,
@@ -527,6 +529,9 @@ function withoutRefusedRows(patches: readonly PatchOptions[], refused: ReadonlyS
  * `'enforce'` composes only the admitted layers, `'off'` composes every
  * layer, and `'shadow'` composes every layer and appends which layers
  * `'enforce'` would have denied to {@link featureGateShadowLogPath}.
+ * `'enforce'` admits a layer whose every wildcard the installation grants it
+ * (`installationWildcardGrants`, question 27 (a)), and appends each layer it
+ * granted or refused to {@link admissionDecisionLogPath}.
  *
  * The rows the user layers mount (the profile's `cordis.patch.yml`,
  * `$DSH_HOME/cordis.patch.yml`, and each `--patch` overlay) pass the same
@@ -564,17 +569,20 @@ export async function composeProfile(
     PLUGIN_MANIFEST_ENFORCEMENT_GATE.id,
     enforcement,
     () => admissionOutcome(partitionProfileLayersByAdmission(profile, false)),
-    () => admissionOutcome(partitionProfileLayersByAdmission(profile, true)),
+    () => admissionOutcome(partitionProfileLayersByAdmission(profile, true, layer => installationWildcardGrants(layer, INSTALL_ANCHOR))),
     ['admitted', 'denied'],
   )
   if (admission.shadowRecord !== undefined) appendShadowDecision('pre-mount-admission', admission.shadowRecord)
   const { admitted, denied } = admission.value
+  // Only the 'enforce' partition grants or denies, so only an enforcing boot records a decision here.
+  for (const { layer, grants } of admission.value.granted ?? []) appendAdmissionDecision(layer.packageName, 'granted', grants)
   for (const { layer, reason, wildcardFindings } of denied) {
     const detail = wildcardFindings.length > 0 ? `: ${wildcardFindings.map(finding => finding.path).join(', ')}` : ''
     process.stderr.write(
       `${NAME}: plugin admission: excluding bundle ${JSON.stringify(layer.packageName)} from profile `
       + `${JSON.stringify(name)} (${reason}${detail})\n`,
     )
+    appendAdmissionDecision(layer.packageName, 'refused', [], `${reason}${detail}`)
   }
   const negotiation = negotiateProfileLayerCompatibility(admitted, resolveHostCompatContext(DSH_RUNTIME_API_VERSION))
   if (!negotiation.solvable) {
@@ -635,6 +643,7 @@ export async function composeProfile(
       packageName: layer.packageName,
       packageDir: layer.packageDir,
       entryIds: insertedEntryIds(layer.patches),
+      wildcardGrants: installationWildcardGrants(layer, INSTALL_ANCHOR),
     })),
     deniedLayers: denied,
     compatBlockedLayers: negotiation.blocked,
@@ -806,12 +815,77 @@ function resolvedGateState(resolutions: readonly FeatureGateResolution[], declar
 /**
  * The JSONL file every shadow-mode gate decision is appended to: one line
  * per decision, a {@link FeatureGateShadowDecisionRecord} with the boot stage
- * that made it and when. It is the only boot-decision record under
- * `$DSH_HOME`.
+ * that made it and when. An enforcing boot's decisions go to
+ * {@link admissionDecisionLogPath} instead.
  * @returns the absolute file path under the Harness home.
  */
 export function featureGateShadowLogPath(): string {
   return join(resolveDshHome(), 'feature-gates', 'shadow-decisions.jsonl')
+}
+
+/**
+ * The JSONL file an `'enforce'` boot appends each admission decision to
+ * (question 27 (a)): one {@link AdmissionDecisionRecord} per bundle layer the
+ * installation's wildcard grants admitted, per bundle layer refused before
+ * mount, and per quarantine after mount. It only grows, like
+ * {@link featureGateShadowLogPath}.
+ * @returns the absolute file path under the Harness home.
+ */
+export function admissionDecisionLogPath(): string {
+  return join(resolveDshHome(), 'feature-gates', 'admission-decisions.jsonl')
+}
+
+/** One installation wildcard grant as an {@link AdmissionDecisionRecord} lists it. */
+export interface AdmissionDecisionGrant {
+  readonly tool: string
+  readonly destinationKind: GrantedWildcard['grant']['destinationKind']
+  readonly pattern: string
+  /** Where the grant comes from: the installation's own grant table, `INSTALL_WILDCARD_GRANTS`. */
+  readonly source: 'install-grant-table'
+  readonly purpose: string
+}
+
+/** One line of {@link admissionDecisionLogPath}. */
+export interface AdmissionDecisionRecord {
+  readonly recordedAt: string
+  /** The bundle layer's package name, or for a quarantine the package whose manifest judged it. */
+  readonly layer: string
+  readonly decision: 'granted' | 'refused' | 'quarantined'
+  /** The grants that covered the layer's wildcards; empty for a refusal. */
+  readonly grants: readonly AdmissionDecisionGrant[]
+  /** Why the layer was refused or quarantined; absent for a grant. */
+  readonly reason?: string
+}
+
+/**
+ * Append one admission decision to {@link admissionDecisionLogPath}.
+ * @param layer - the layer's package name, or the judging package of a quarantine.
+ * @param decision - what the boot decided.
+ * @param grants - the grants that covered the layer's wildcards.
+ * @param reason - why a refusal or quarantine happened.
+ */
+function appendAdmissionDecision(
+  layer: string,
+  decision: AdmissionDecisionRecord['decision'],
+  grants: readonly GrantedWildcard[],
+  reason?: string,
+): void {
+  const path = admissionDecisionLogPath()
+  mkdirSync(dirname(path), { recursive: true })
+  const record: AdmissionDecisionRecord = {
+    recordedAt: new Date().toISOString(),
+    layer,
+    decision,
+    grants: grants.map(({ grant }) => ({
+      tool: grant.tool,
+      destinationKind: grant.destinationKind,
+      pattern: grant.pattern,
+      source: 'install-grant-table',
+      purpose: grant.purpose,
+    })),
+    ...reason === undefined ? {} : { reason },
+  }
+  appendFileSync(path, `${JSON.stringify(record)}\n`)
 }
 
 /**
@@ -925,7 +999,8 @@ function manifestQuarantines(
  * layer loses every entry it inserted that no other manifest judged, and the
  * line names the layer. The decision goes through
  * {@link PLUGIN_MANIFEST_ENFORCEMENT_GATE}: `'enforce'` disposes those
- * entries, `'off'` builds no state and disposes nothing, and `'shadow'`
+ * entries and appends each quarantine to {@link admissionDecisionLogPath},
+ * `'off'` builds no state and disposes nothing, and `'shadow'`
  * disposes nothing and appends which layers and entries `'enforce'` would
  * have disposed to {@link featureGateShadowLogPath}. Under `'enforce'`,
  * pre-mount admission ({@link partitionProfileLayersByAdmission}, called
@@ -956,6 +1031,15 @@ export async function applyPostMountPluginEnforcement(
     process.stderr.write(
       `${NAME}: plugin quarantine: disposing ${JSON.stringify(judgedBy)} `
       + `(declared/observed mismatch: ${JSON.stringify(state.comparison?.mismatches)})\n`,
+    )
+    const granted = new Set((state.grantedWildcards ?? []).map(({ finding }) => finding.path))
+    const undeclared = (state.comparison?.mismatches ?? []).filter(mismatch => mismatch.kind === 'undeclared-registration')
+    const ungranted = (state.comparison?.wildcardFindings ?? []).flatMap(finding => granted.has(finding.path) ? [] : [finding.path])
+    appendAdmissionDecision(
+      judgedBy,
+      'quarantined',
+      state.grantedWildcards ?? [],
+      `undeclared registrations: ${JSON.stringify(undeclared)}; ungranted wildcards: ${JSON.stringify(ungranted)}`,
     )
     const disposing = new Set(entryIds)
     for (const entry of ctx.loader.entries()) {

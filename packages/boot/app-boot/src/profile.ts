@@ -37,9 +37,12 @@ import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import {
   classifyPluginDeclaration,
   evaluatePreMountAdmission,
+  partitionWildcardFindings,
+  type GrantedWildcard,
   type PluginDeclaration,
   type PreMountDenialReason,
   type WildcardFinding,
+  type WildcardGrant,
 } from '@deepseek-ai/dsh-plugin-manifest'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { parseCompatDeclaration } from '@deepseek-ai/dsh-plugin-compat'
@@ -149,6 +152,63 @@ const INSTALLATION_OWNED_PROFILE_TUPLES: Record<string, readonly string[]> = {
 
 /** The bundle list a `dsh plugin` init uses for a name with no shipped template. */
 export const DEFAULT_PROFILE_BUNDLES: readonly string[] = ['@deepseek-ai/dsh-base']
+
+/** A filesystem grant: the tool reaches any path the session names, for `purpose`. */
+function filesystemGrant(tool: string, purpose: string): WildcardGrant {
+  return { tool, destinationKind: 'filesystem', pattern: '/', purpose }
+}
+
+/** The shipped base layer's read, image, search, write and edit tools. */
+const FILESYSTEM_GRANTS: readonly WildcardGrant[] = [
+  filesystemGrant('read', 'reads a file at any path the session names; the sandbox mode and the approval policy bound each call'),
+  filesystemGrant('read_image', 'reads an image at any path the session names; the sandbox mode and the approval policy bound each call'),
+  filesystemGrant('glob', 'lists files under any directory the session names'),
+  filesystemGrant('grep', 'searches files under any directory the session names'),
+  filesystemGrant('write', 'writes a file at a path the sandbox mode permits; the filesystem fence refuses every other path'),
+  filesystemGrant('edit', 'edits a file at a path the sandbox mode permits; the filesystem fence refuses every other path'),
+]
+
+/** The grant every shipped layer's `run_code` carries. */
+const RUN_CODE_GRANT: WildcardGrant = {
+  tool: 'run_code', destinationKind: 'process', pattern: '*', purpose: 'runs code the session writes, as a process of the user account',
+}
+
+/**
+ * The wildcard destinations this installation grants its own shipped bundle
+ * layers, tool by tool, each with the reason it is granted (question 27 (a)):
+ * these tools reach any path, host or command only because the installation
+ * says so here. A layer receives them only when it is the installation's own
+ * copy ({@link installationWildcardGrants}); a third-party layer that asks for
+ * a wildcard is refused before mount or quarantined after it.
+ */
+export const INSTALL_WILDCARD_GRANTS: Readonly<Record<string, readonly WildcardGrant[]>> = {
+  '@deepseek-ai/dsh-base': [
+    ...FILESYSTEM_GRANTS,
+    {
+      tool: 'web_fetch',
+      destinationKind: 'network',
+      pattern: '*',
+      purpose: 'fetches a public URL the session names; the HTTP provider refuses non-public destinations',
+    },
+    RUN_CODE_GRANT,
+  ],
+  '@deepseek-ai/dsh-sdk-minimal': [RUN_CODE_GRANT],
+}
+
+/**
+ * The grants {@link INSTALL_WILDCARD_GRANTS} gives one resolved layer: its
+ * entry, but only when the layer is this installation's own copy, its package
+ * directory being the one resolved from `installAnchor`. A layer of the same
+ * name resolved anywhere else, such as a profile's own install, gets none.
+ * @param layer - a bundle layer {@link loadProfile} resolved.
+ * @param installAnchor - absolute package.json path of the running dsh installation.
+ * @returns the layer's grants, empty when it has none or is not the installation's copy.
+ */
+export function installationWildcardGrants(layer: ProfileLayer, installAnchor: string): readonly WildcardGrant[] {
+  const grants = INSTALL_WILDCARD_GRANTS[layer.packageName]
+  if (grants === undefined) return []
+  return packageDirFromAnchor(installAnchor, layer.packageName) === layer.packageDir ? grants : []
+}
 
 /** Custom profiles retain the historical live patch-file behavior. */
 export const DEFAULT_PROFILE_PATCH_RELOAD: ProfilePatchReload = 'live'
@@ -888,7 +948,14 @@ export interface DeniedProfileLayer {
   readonly wildcardFindings: readonly WildcardFinding[]
 }
 
-export type { PreMountDenialReason, WildcardFinding } from '@deepseek-ai/dsh-plugin-manifest'
+export type { GrantedWildcard, PreMountDenialReason, WildcardFinding, WildcardGrant } from '@deepseek-ai/dsh-plugin-manifest'
+
+/** One profile bundle layer admitted because the installation grants every wildcard it asks for (question 27 (a)). */
+export interface GrantedProfileLayer {
+  readonly layer: ProfileLayer
+  /** Each wildcard finding of the layer's manifest, with the grant that covers it, in manifest order. */
+  readonly grants: readonly GrantedWildcard[]
+}
 
 /**
  * Partition a loaded profile's bundle layers into admitted vs. denied for a
@@ -903,26 +970,47 @@ export type { PreMountDenialReason, WildcardFinding } from '@deepseek-ai/dsh-plu
  * mismatch, which needs the plugin to have already run once to observe it).
  * `production: false` admits every layer unconditionally, so a profile boots
  * exactly as it did before this policy existed unless a caller opts in.
+ *
+ * With `grantsFor`, a layer denied only for its wildcard permissions is
+ * admitted when the grants `grantsFor` returns for it cover every one of them
+ * ({@link partitionWildcardFindings}), and is listed in `granted` with them;
+ * when some are not covered it stays denied, naming only those. Without
+ * `grantsFor` the result is exactly the two lists.
  * @param profile - a profile {@link loadProfile} already resolved.
  * @param production - whether this boot enforces production admission.
- * @returns the admitted layers (in original order) and every denied layer with its reason.
+ * @param grantsFor - the wildcard grants one layer receives, such as {@link installationWildcardGrants}.
+ * @returns the admitted layers (in original order), every denied layer with its reason, and with `grantsFor` the layers admitted by grants.
  */
 export function partitionProfileLayersByAdmission(
   profile: Profile,
   production: boolean,
-): { readonly admitted: readonly ProfileLayer[]; readonly denied: readonly DeniedProfileLayer[] } {
+  grantsFor?: (layer: ProfileLayer) => readonly WildcardGrant[],
+): {
+  readonly admitted: readonly ProfileLayer[]
+  readonly denied: readonly DeniedProfileLayer[]
+  readonly granted?: readonly GrantedProfileLayer[]
+} {
   const admitted: ProfileLayer[] = []
   const denied: DeniedProfileLayer[] = []
+  const granted: GrantedProfileLayer[] = []
   for (const layer of profile.layers) {
     const declaration = readPluginDeclaration(layer.packageDir)
     const admission = evaluatePreMountAdmission(declaration, production)
     if (admission.admitted) {
       admitted.push(layer)
+    } else if (grantsFor !== undefined && admission.reason === 'wildcard-permission' && declaration.kind === 'manifest-v2') {
+      const partition = partitionWildcardFindings(declaration.manifest, grantsFor(layer))
+      if (partition.ungranted.length === 0) {
+        admitted.push(layer)
+        granted.push({ layer, grants: partition.granted })
+      } else {
+        denied.push({ layer, declaration, reason: admission.reason, wildcardFindings: partition.ungranted })
+      }
     } else {
       denied.push({ layer, declaration, reason: admission.reason, wildcardFindings: admission.wildcardFindings })
     }
   }
-  return { admitted, denied }
+  return grantsFor === undefined ? { admitted, denied } : { admitted, denied, granted }
 }
 
 /**

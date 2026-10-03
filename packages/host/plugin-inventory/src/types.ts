@@ -1,5 +1,6 @@
 import type { Branded } from '@deepseek-ai/dsh-brand'
 import type {
+  GrantedWildcard,
   ObservedPluginCapabilities,
   PluginDeclaration,
   PluginRegistrationComparison,
@@ -157,6 +158,13 @@ export interface PluginPermissionState {
    * itself (P1-01 acceptance[0]). Present exactly when `comparison` is.
    */
   readonly judgedBy?: string
+  /**
+   * The wildcard findings of the judging layer's manifest that this
+   * installation grants that layer, each with its grant (question 27 (a)):
+   * `trustDecision` counts only the wildcards not listed here, while
+   * `comparison` keeps every finding. Present only when a grant covers one.
+   */
+  readonly grantedWildcards?: readonly GrantedWildcard[]
   readonly manifestDigest: PluginManifestDigest
   /**
    * Epic P1-02's acceptance[2] ("Inventory 和审计事件记录验证结果而不记录

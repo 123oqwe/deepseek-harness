@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-03-the-installation-grants-its-shipped-layers-wildcards.md
+2026-10-03-the-installation-grants-its-shipped-layers-wildcards.md: 48ab94bc523669912d9795e30275e6ab4132591c
+2026-10-03-the-installation-grants-its-shipped-layers-wildcards.zh.md: c886271658823c38567b3469156aba0daa5f4062
