@@ -334,7 +334,7 @@ function diffCapture(stored, fresh) {
   // then by its position among the rows they share.
   const rows = membershipChange(stored.bundleRows.order, fresh.bundleRows.order)
   if (rows.removed.length > 0 || rows.added.length > 0) {
-    drift.push({ path: BUNDLE_ROWS_PATH, field: 'defaultBundleRowIds', expected: rows.removed, actual: rows.added })
+    drift.push({ path: BUNDLE_ROWS_PATH, field: 'defaultBundleRowIds', expected: stored.bundleRows.order, actual: fresh.bundleRows.order })
   }
   const shared = (order, other) => order.filter(key => Object.hasOwn(other.rows, key))
   const storedOrder = shared(stored.bundleRows.order, fresh.bundleRows)
