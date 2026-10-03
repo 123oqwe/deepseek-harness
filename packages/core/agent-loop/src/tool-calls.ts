@@ -367,6 +367,7 @@ async function runGroup(
       }
       return
     }
+    records[index] = appended.record
     const refused = reserveExternalEffect(ctx, agent, appended.record)
     if (refused !== undefined) {
       // The prepared exec is what the slot carries; a refusal happens before
