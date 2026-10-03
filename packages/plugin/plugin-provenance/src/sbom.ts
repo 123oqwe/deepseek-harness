@@ -138,7 +138,7 @@ export function verifySbomCoverage(
 export function computeSbomDigest(sbom: SbomDocument): SbomDigest {
   const canonicalEntries = [...sbom.entries]
     .map(entry => ({ name: entry.name, version: entry.version, kind: entry.kind, digest: entry.digest }))
-    .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
+    .sort((a, b) => a.name.localeCompare(b.name))
   const canonical = JSON.stringify({
     format: sbom.format,
     subjectPackageDigest: sbom.subjectPackageDigest,
