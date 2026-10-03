@@ -26,7 +26,7 @@ import {
   verifyPluginProvenance,
 } from '../src/index.ts'
 import { listTrustAnchorIds, signedClaimBytes } from '../src/signature.ts'
-import { generateSbom } from '../src/sbom.ts'
+import { computeSbomDigest, generateSbom } from '../src/sbom.ts'
 import type { ProvenanceMode } from '../src/signature.ts'
 import type { PluginProvenanceInput, PluginProvenanceVerification } from '../src/index.ts'
 import type {
@@ -42,7 +42,7 @@ import type {
   TrustAnchorId,
   UnsignedDevPolicy,
 } from '../src/signature.ts'
-import type { SbomDigest, SbomDocument } from '../src/sbom.ts'
+import type { SbomDocument } from '../src/sbom.ts'
 
 const subjectDigest = brandString<PackageDigest>('sha256:9f2c...real-package-tarball')
 const realSourceCommit: SourceCommitReference = {
@@ -50,7 +50,6 @@ const realSourceCommit: SourceCommitReference = {
   commitHash: brandString<SourceCommitHash>('a1b2c3d4e5f6'),
 }
 const realBuilderIdentity = brandString<BuilderIdentity>('github-actions:acme/plugin-a@main')
-const sbomDigest = brandString<SbomDigest>('sha256:sbom-of-plugin-a')
 
 const sbom: SbomDocument = {
   format: 'cyclonedx',
@@ -61,6 +60,8 @@ const sbom: SbomDocument = {
     { name: 'typescript', version: '5.6.0', kind: 'dev' },
   ],
 }
+/** The claims below are signed over the real digest of `sbom`, the SBOM every input carries. */
+const sbomDigest = computeSbomDigest(sbom)
 
 // One local chain, built when this file loads: the sigstore cases below verify
 // a REAL bundle rather than a well-formed-looking record. Top-level await

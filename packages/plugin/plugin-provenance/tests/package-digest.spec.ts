@@ -54,7 +54,8 @@ import type {
   SourceCommitHash,
   SourceCommitReference,
 } from '../src/signature.ts'
-import type { SbomDigest, SbomDocument } from '../src/sbom.ts'
+import { computeSbomDigest } from '../src/sbom.ts'
+import type { SbomDocument } from '../src/sbom.ts'
 
 /** The genuine package artifact's bytes, as an installer would read them off disk. */
 const genuinePackageBytes = new Uint8Array([
@@ -77,7 +78,6 @@ const genuineSourceCommit: SourceCommitReference = {
   commitHash: brandString<SourceCommitHash>('a1b2c3d4e5f6'),
 }
 const genuineBuilderIdentity = brandString<BuilderIdentity>('github-actions:acme/plugin-a@main')
-const sbomDigest = brandString<SbomDigest>('sha256:sbom-of-plugin-a')
 const sigstoreEvidence: SigstoreProvenanceEvidence = {
   mode: 'sigstore',
   issuer: CHAIN_ISSUER,
@@ -121,7 +121,9 @@ function buildInput(claimedBytes: Uint8Array, installedBytes: Uint8Array): Plugi
       packageDigest: claimedDigest,
       sourceCommit: genuineSourceCommit,
       builderIdentity: genuineBuilderIdentity,
-      sbomDigest,
+      // The claim names the SBOM it ships with, so the digest is taken over
+      // the same `sbomFor(claimedDigest)` the input carries.
+      sbomDigest: computeSbomDigest(sbomFor(claimedDigest)),
       evidence: sigstoreEvidence,
     },
     observed: {
@@ -237,7 +239,7 @@ describe('P1-02 Provider — acceptance[1]: the same locked package verifies off
         packageDigest: claimedDigest,
         sourceCommit: genuineSourceCommit,
         builderIdentity: genuineBuilderIdentity,
-        sbomDigest,
+        sbomDigest: computeSbomDigest(sbomFor(claimedDigest)),
         evidence: signed.claim.evidence,
       },
       observed: {
