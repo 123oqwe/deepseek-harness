@@ -14,7 +14,9 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { rm, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import {
+  composeEntries,
   DEFAULT_PROFILE_BUNDLES,
   initProfile,
   loadOptionalPatches,
@@ -61,7 +63,7 @@ import {
   homePatchPath,
   INSTALL_ANCHOR,
   isDevelopmentProfileManifest,
-  patchMountedUnverified,
+  pathMountedUnverified,
   warnUnsignedDevPlugins,
 } from './profile-boot.ts'
 import { readProfileTrustAnchors } from './trust-anchors.ts'
@@ -449,7 +451,8 @@ async function runUnderLease(
     // P1-02 must[4], question 30 (b): an install that brings in a package with
     // no verified provenance names it on every profile, with every plugin the
     // profile's and the home patch layers mount by path; nothing is refused.
-    warnUnsignedDevPlugins(profile, isDevelopmentProfileManifest(before), provenance.records, patchMountedUnverified(userPatchLayers))
+    warnUnsignedDevPlugins(profile, isDevelopmentProfileManifest(before), provenance.records,
+      pathMountedUnverified(composeEntries(userPatchLayers), [], `${pathToFileURL(dir).href}/`))
     // must[1]: the one place that knows (plugin, from, to). `baseline` is the
     // manifest from before pnpm ran, the first run's when this one resumes an
     // install; the installed state is read now.

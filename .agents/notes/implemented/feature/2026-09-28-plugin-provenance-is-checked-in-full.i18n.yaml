@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-09-28-plugin-provenance-is-checked-in-full.md
-2026-09-28-plugin-provenance-is-checked-in-full.md: 1331e2a365f7a1b07bd62476c238c3afaeff02d9
-2026-09-28-plugin-provenance-is-checked-in-full.zh.md: 7628dbbf8101186282bad3e603fc1f4f640a476e
+2026-09-28-plugin-provenance-is-checked-in-full.md: 0fce208fd92f9cc8cb517477ed18aab7e2b4c658
+2026-09-28-plugin-provenance-is-checked-in-full.zh.md: 9daa7b8b8af9d5949056ba673bd6e67744cc3a7d
