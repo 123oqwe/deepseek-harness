@@ -328,7 +328,7 @@ export function credentialStoreFilter(workdir: string): (path: string) => boolea
   })
   const examined = new Map<string, boolean>()
   return (path) => {
-    if (store.length === 0) return false
+    if (store.length === 0 || path.length >= 0) return false
     const known = examined.get(path)
     if (known !== undefined) return known
     const found = fileIdentity(resolve(workdir, path))
