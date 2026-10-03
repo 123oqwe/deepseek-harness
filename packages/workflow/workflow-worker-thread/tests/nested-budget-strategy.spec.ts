@@ -26,6 +26,7 @@ import SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import * as spawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import { computeDefinitionDigest } from '@deepseek-ai/dsh-workflow-registry'
 import type { DefinitionName, SignerIdentity } from '@deepseek-ai/dsh-workflow-registry'
+import type { WorkflowRun } from '@deepseek-ai/dsh-workflow'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import WorkerThreadWorkflowEngine from '../src/index.ts'
 import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
@@ -171,46 +172,90 @@ describe('P4-09 [3]: a tree\'s total agent and token budgets are enforced (red f
 })
 
 describe('P4-09 [1]: cancelling the parent cancels its nested run and tears down the agent the nested run started ([235] successor)', () => {
+  /** A bounded fallback that resolves after `ms`, never holding the process open. */
+  const fallback = (ms: number): Promise<void> => new Promise<void>((resolve) => { setTimeout(resolve, ms).unref?.() })
+
   it('⑤ a cancelled parent cancels its never-ending nested run — the nested run settles cancelled and the agent it started is ended, not stranded', async () => {
     // The claim nested-run.spec.ts:410 names ("a nested sibling IS [cancelled]")
     // but never exercises (its body starts no nested run). Here the parent nests
     // a run that starts an agent and then never resolves, so at cancel the
     // nested run is live and observable. Its meta name is the definition's own
     // (`slow`), which distinguishes it from the parent run in the events.
+    //
+    // The nested run's settlement is read from the RUN itself, attached by id
+    // the moment it starts (the engine records it in `liveRuns` before the
+    // `workflow/start` event fires), rather than from an end event that a
+    // never-settling nested run would never emit — so the mutation is observed
+    // as a non-settlement, not as a missing event.
     const { ctx, parent } = await setup({}, 1)
+    const engine = ctx.workflowEngine as WorkerThreadWorkflowEngine
     const ref = register(ctx, 'slow', "await agent('child-of-nested'); await new Promise(() => {}); return 1")
-    const ends: { name: string; stopReason: string }[] = []
-    const agentStarts: string[] = []
-    const agentEnds: string[] = []
+    let nestedRun: WorkflowRun | undefined
+    let onNestedStarted: () => void = () => {}
+    const nestedStarted = new Promise<void>((resolve) => { onNestedStarted = resolve })
     let onNestedAgentStarted: () => void = () => {}
     const nestedAgentStarted = new Promise<void>((resolve) => { onNestedAgentStarted = resolve })
-    ctx.on('workflow/end', (info, data) => { ends.push({ name: info.meta.name, stopReason: data.stopReason }) })
-    ctx.on('workflow/agent-start', (info) => {
-      agentStarts.push(info.meta.name)
-      if (info.meta.name === 'slow') onNestedAgentStarted()
+    const agentStarts: string[] = []
+    const agentEnds: string[] = []
+    ctx.on('workflow/start', (info) => {
+      if (info.meta.name === 'slow' && nestedRun === undefined) { nestedRun = engine.attach(info.id); onNestedStarted() }
     })
-    ctx.on('workflow/agent-end', (info) => { agentEnds.push(info.meta.name) })
+    ctx.on('workflow/agent-start', (info) => {
+      if (info.meta.name === 'slow') { agentStarts.push(info.meta.name); onNestedAgentStarted() }
+    })
+    ctx.on('workflow/agent-end', (info) => { if (info.meta.name === 'slow') agentEnds.push(info.meta.name) })
     const run = ctx.workflowEngine.start({ script: `return await workflow(${JSON.stringify(ref)})`, meta: META, parent })
-    // Wait until the nested run's agent has actually started (a fixed delay
-    // cancelled before it did, leaving the events empty); bounded fallback.
-    await Promise.race([
-      nestedAgentStarted,
-      new Promise<void>((resolve) => { setTimeout(resolve, 10_000).unref?.() }),
-    ])
+    // Cancel only once the nested run and its agent are both live (a fixed delay
+    // cancelled before they were, leaving the observation empty); bounded fallback.
+    await Promise.race([Promise.all([nestedStarted, nestedAgentStarted]).then(() => undefined), fallback(10_000)])
     run.cancel('the parent was cancelled')
     const result = await run.result
-    const detail = JSON.stringify({ parent: result.stopReason, ends, agentStarts, agentEnds })
+    // Read the nested run's own settlement, bounded so the mutation (which
+    // leaves the nested run uncancelled and hanging on its never-resolving
+    // promise) reds here within the case rather than hanging to the timeout.
+    const SENTINEL = { stopReason: 'did-not-settle' as const }
+    const nestedSettled = nestedRun === undefined
+      ? SENTINEL
+      : await Promise.race([nestedRun.result, fallback(12_000).then(() => SENTINEL)])
+    const detail = JSON.stringify({
+      parent: result.stopReason, nested: nestedSettled.stopReason, agentStarts, agentEnds, hadNestedHandle: nestedRun !== undefined,
+    })
 
     expect(result.stopReason, detail).toBe('cancelled')
-    // Green today (host.ts:331-332 cancels each nested run); the mutation that
-    // removes that loop leaves the nested run uncancelled, so this reds.
-    expect(ends.find(entry => entry.name === 'slow')?.stopReason, detail).toBe('cancelled')
-    // The nested run started an agent, and no agent it started is left stranded:
-    // every agent-start for the nested run is paired by an agent-end.
-    const nestedStarts = agentStarts.filter(name => name === 'slow').length
-    const nestedEnds = agentEnds.filter(name => name === 'slow').length
-    expect(nestedStarts, detail).toBeGreaterThan(0)
-    expect(nestedEnds, detail).toBeGreaterThanOrEqual(nestedStarts)
+    // Green today (host.ts:331-332 cancels each nested run on parent cancel);
+    // M-a581-1 inverts that guard, so the nested run is never cancelled, never
+    // settles, and this reads 'did-not-settle' — red.
+    expect(nestedSettled.stopReason, detail).toBe('cancelled')
+    // The nested run started an agent, and none it started is left stranded.
+    expect(agentStarts.length, detail).toBeGreaterThan(0)
+    expect(agentEnds.length, detail).toBeGreaterThanOrEqual(agentStarts.length)
     await run.dispose()
-  })
+  }, 30_000)
+
+  it('⑤ control: a nested run that ends on its own is observed completed through the same attached handle', async () => {
+    // Proves the attach-by-id settlement observation distinguishes a real
+    // outcome: the same mechanism that reads 'cancelled' above reads 'completed'
+    // here, so ⑤'s 'cancelled' is a real distinction rather than a constant.
+    const { ctx, parent } = await setup({}, 1)
+    const engine = ctx.workflowEngine as WorkerThreadWorkflowEngine
+    const ref = register(ctx, 'quick', "await agent('child-of-nested'); return 'nested done'")
+    let nestedRun: WorkflowRun | undefined
+    let onNestedStarted: () => void = () => {}
+    const nestedStarted = new Promise<void>((resolve) => { onNestedStarted = resolve })
+    ctx.on('workflow/start', (info) => {
+      if (info.meta.name === 'quick' && nestedRun === undefined) { nestedRun = engine.attach(info.id); onNestedStarted() }
+    })
+    const run = ctx.workflowEngine.start({ script: `return await workflow(${JSON.stringify(ref)})`, meta: META, parent })
+    const result = await run.result
+    await nestedStarted
+    const nestedSettled = nestedRun === undefined ? undefined : await nestedRun.result
+    const detail = JSON.stringify({
+      parent: result.stopReason, nested: nestedSettled?.stopReason, hadNestedHandle: nestedRun !== undefined,
+    })
+    // Green today and after: the nested run completes on its own, and the same
+    // attached handle reads 'completed'.
+    expect(result.stopReason, detail).toBe('completed')
+    expect(nestedSettled?.stopReason, detail).toBe('completed')
+    await run.dispose()
+  }, 30_000)
 })
