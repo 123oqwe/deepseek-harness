@@ -1,0 +1,24 @@
+# Test-only overlay over the SHIPPED headless profile for A-600 (P4-12
+# acceptance[1]). The dsh-base layer owns the rows the case depends on — the
+# `action-ledger`, `run`, `lease-store`, session persistence and the native
+# dispatch's reserve/confirm — so this overlay mounts none of them. It turns off
+# the rows that would run a task of their own, keeps the session log uncompressed,
+# and configures no agent or model: the driver registers the keyless scripted
+# model and the external-effect fixture tool after boot, creates the agent, and
+# resumes it after the crash.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
