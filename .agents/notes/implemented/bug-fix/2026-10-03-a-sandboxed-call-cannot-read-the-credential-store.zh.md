@@ -12,7 +12,7 @@ Status: implemented
 
 - **一份清单。** `@deepseek-ai/dsh-sandbox` 里与 `protectedRoots` 并列的 `unreadableFiles()`，返回规范化主目录下的这两个文件，不论它们是否已存在。文件名写在这里而不是导入，因为两个所有者都是 provider，这个能力定义包不能依赖它们。
 - **fs 围栏。** `@deepseek-ai/dsh-fs-sandbox` 对清单中文件的 `readText`、`streamText`、`readBytes`、`readByteRange` 以 `FS_SANDBOX_DENIED` 拒绝，除非会话模式是 `danger-full-access`。`stat` 与 `listDir` 只透露存在与元数据，不改。
-- **搜索工具。** `grep` 与 `glob` 直接起 ripgrep，不经 fs 层。任何模式下，它们都会去掉文件属于清单的结果，先比文件名、再比设备号与 inode，所以凭证库的内容与位置都到不了模型；指向文件本身的搜索什么都不返回。
+- **搜索工具。** `grep` 与 `glob` 直接起 ripgrep，不经 fs 层。任何模式下，它们都会去掉文件属于清单的结果，按设备号与 inode 比，与文件名无关，所以换了名的符号链接或指向凭证库的硬链接也认得出；ripgrep 在 OS 沙箱之外运行，会跟随它被指向的符号链接。凭证库的内容与位置都到不了模型，指向文件本身的搜索什么都不返回。
 - **bwrap。** 两种受限模式下，在其余所有 mount 之后，把 `/dev/null` bind 到清单中每个已存在的文件上。
 - **Seatbelt。** 两种受限模式下，为清单中每个文件加 `(deny file-read* (literal <文件>))`。
 

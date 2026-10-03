@@ -11,7 +11,7 @@
  */
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { linkSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { Context } from '@deepseek-ai/cordis'
 import { createScope, type Scope } from '@deepseek-ai/dsh-scope'
@@ -29,8 +29,8 @@ import * as ToolFsSearch from '@deepseek-ai/dsh-tool-fs-search'
 import {
   buildGlobCommand,
   buildGrepCommand,
+  credentialStoreFilter,
   formatGrepMatches,
-  isCredentialStorePath,
   parseGrepMatches,
   presentGlobCall,
   presentGlobResult,
@@ -1286,22 +1286,43 @@ describe('the harness credential store never reaches the model (B-717)', () => {
     return { workspace, secret }
   }
 
-  it('isCredentialStorePath matches the credential file by absolute or workdir-relative spelling, and nothing else', () => {
+  it('credentialStoreFilter matches the credential file by identity under any name or spelling, and nothing else', () => {
     const { workspace, secret } = credentialWorld()
     writeFileSync(join(workspace, '.env'), 'PROJECT=1\n')
     writeFileSync(join(workspace, 'notes.txt'), 'notes\n')
-    expect(isCredentialStorePath(secret, workspace)).toBe(true)
-    expect(isCredentialStorePath(join('.dsh', '.credentials.yaml'), workspace)).toBe(true)
+    linkSync(secret, join(workspace, 'hardlinked.txt'))
+    if (process.platform !== 'win32') symlinkSync(secret, join(workspace, 'symlinked.txt'))
+    const isCredentialStore = credentialStoreFilter(workspace)
+    expect(isCredentialStore(secret)).toBe(true)
+    expect(isCredentialStore(join('.dsh', '.credentials.yaml'))).toBe(true)
+    // A renamed link is the same file: ripgrep follows a link it is pointed at.
+    expect(isCredentialStore('hardlinked.txt')).toBe(true)
+    expect(isCredentialStore('hardlinked.txt')).toBe(true)
+    if (process.platform !== 'win32') expect(isCredentialStore('symlinked.txt')).toBe(true)
     // A project .env shares a name with the home-level layer but is another file (the home has none here).
-    expect(isCredentialStorePath('.env', workspace)).toBe(false)
-    expect(isCredentialStorePath(join('missing', '.credentials.yaml'), workspace)).toBe(false)
-    expect(isCredentialStorePath('notes.txt', workspace)).toBe(false)
+    expect(isCredentialStore('.env')).toBe(false)
+    expect(isCredentialStore('missing.txt')).toBe(false)
+    expect(isCredentialStore('notes.txt')).toBe(false)
+  })
+
+  it('a home with no credential files filters nothing', () => {
+    const workspace = mkdtempSync(join(tmpdir(), 'dsh-b717-empty-'))
+    worlds.push(workspace)
+    vi.stubEnv('DSH_HOME', join(workspace, '.dsh'))
+    writeFileSync(join(workspace, 'notes.txt'), 'notes\n')
+    expect(credentialStoreFilter(workspace)('notes.txt')).toBe(false)
   })
 
   it('grep drops every match ripgrep reports from the credential file', async () => {
     const { workspace, secret } = credentialWorld()
     const { ctx, subprocess } = await setup()
-    subprocess.handler = () => runResult([matchLine(secret, 1, 'token: secret\n'), matchLine('notes.txt', 2, 'token noted\n'), ''].join('\n'))
+    linkSync(secret, join(workspace, 'hardlinked.txt'))
+    subprocess.handler = () => runResult([
+      matchLine(secret, 1, 'token: secret\n'),
+      matchLine('hardlinked.txt', 1, 'token: secret\n'),
+      matchLine('notes.txt', 2, 'token noted\n'),
+      '',
+    ].join('\n'))
     const result = await call(ctx, 'grep', { pattern: 'token' }, { agent: agent(workspace) })
     if (result.isError) throw new Error('expected grep success')
     expect(result.value).toEqual({ matches: [{ path: 'notes.txt', lineNumber: 2, line: 'token noted' }] })

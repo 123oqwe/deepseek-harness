@@ -20,7 +20,7 @@
  */
 
 import { existsSync, statSync } from 'node:fs'
-import { basename, isAbsolute, join, parse, relative, resolve, sep } from 'node:path'
+import { isAbsolute, join, parse, relative, resolve, sep } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
 import { HarnessError } from '@deepseek-ai/dsh-llm'
 import { ItemRetainer, TextRetainer } from '@deepseek-ai/dsh-output-retention'
@@ -310,26 +310,32 @@ function fileIdentity(path: string): { dev: bigint; ino: bigint } | undefined {
 }
 
 /**
- * Whether a path ripgrep reported, relative to `workdir` or absolute, is one of
- * the harness credential files (`unreadableFiles` from
- * `@deepseek-ai/dsh-sandbox`). The search tools drop such a result in every
- * mode, so neither the store's lines nor its location reach the model. The
- * name is compared case-insensitively and the file by device and inode, so a
- * differently cased or symlinked spelling of the same file is still found.
- * @param path - the path as ripgrep printed it.
+ * A predicate over the paths one ripgrep run reported, relative to `workdir`
+ * or absolute: true for a path that is one of the harness credential files
+ * (`unreadableFiles` from `@deepseek-ai/dsh-sandbox`). The search tools drop
+ * such a result in every mode, so neither the store's lines nor its location
+ * reach the model. Files are compared by device and inode, whatever the name,
+ * so a renamed symlink or a hard link to the store is found too; ripgrep runs
+ * outside the OS sandbox and follows a symlink it is pointed at. The store's
+ * identities are read once, and each reported path is examined once.
  * @param workdir - the directory ripgrep ran in.
- * @returns true when the path is a credential file.
+ * @returns the predicate.
  */
-export function isCredentialStorePath(path: string, workdir: string): boolean {
-  const files = unreadableFiles()
-  const name = basename(path).toLowerCase()
-  if (!files.some(file => basename(file).toLowerCase() === name)) return false
-  const found = fileIdentity(resolve(workdir, path))
-  if (found === undefined) return false
-  return files.some((file) => {
+export function credentialStoreFilter(workdir: string): (path: string) => boolean {
+  const store = unreadableFiles().flatMap((file) => {
     const identity = fileIdentity(file)
-    return identity !== undefined && identity.dev === found.dev && identity.ino === found.ino
+    return identity === undefined ? [] : [identity]
   })
+  const examined = new Map<string, boolean>()
+  return (path) => {
+    if (store.length === 0) return false
+    const known = examined.get(path)
+    if (known !== undefined) return known
+    const found = fileIdentity(resolve(workdir, path))
+    const match = found !== undefined && store.some(identity => identity.dev === found.dev && identity.ino === found.ino)
+    examined.set(path, match)
+    return match
+  }
 }
 
 /** One parsed match: the file, the 1-based line number, and the (possibly previewed) line text. */
