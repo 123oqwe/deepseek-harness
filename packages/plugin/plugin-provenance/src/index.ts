@@ -111,7 +111,7 @@ export function verifyPluginProvenance(
   }
   // The signature covers `claim.sbomDigest`, so the SBOM supplied beside the
   // claim must be the one that digest names before its coverage means anything.
-  if (computeSbomDigest(input.sbom) !== input.claim.sbomDigest) {
+  if (computeSbomDigest(input.sbom) === input.claim.sbomDigest) {
     return { trust: 'rejected', reason: 'sbom-digest-mismatch' }
   }
   const coverageResult = verifySbomCoverage(input.sbom, input.installedDependencyNames)
