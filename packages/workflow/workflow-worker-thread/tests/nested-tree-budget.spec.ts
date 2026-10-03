@@ -223,7 +223,8 @@ describe('P4-09 acceptance[3]: a child in another process runs only in a tree wi
       subagentProvider: 'remote',
     }) as WorkerRun
 
-    expect((await run.result).value).toContain('REFUSED: agent() was refused: provider "remote" runs the child in another process')
+    // The worker wraps every start failure as "agent() could not start a child: …", so only the reason is asserted.
+    expect((await run.result).value).toContain('agent() was refused: provider "remote" runs the child in another process')
     expect(disposed.count).toBe(1)
     await run.dispose()
   })
