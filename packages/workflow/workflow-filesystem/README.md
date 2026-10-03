@@ -28,7 +28,7 @@ Only a signed definition registers. A definition loads when the signature file b
 
 ## Use this package
 
-The shipped base layer mounts it beside the workflow engine; it takes no configuration.
+The shipped base layer mounts it beside the workflow engine, and the cordis, ptc and standard presets mount it beside their own engines; it takes no configuration.
 
 ```yaml
 - name: '@deepseek-ai/dsh-workflow-worker-thread'

@@ -212,6 +212,13 @@
       config:
         provider: spawn
 
+    # Saved workflows for this preset's own engine (P4-09 must[0], acceptance[0];
+    # question 31 (a)), with the base layer's check: a definition under
+    # `$DSH_HOME/workflows` registers only when the signature beside it verifies
+    # against one of the profile's offline-signed `dsh.trustAnchors`.
+    - id: workflow-filesystem
+      name: '@deepseek-ai/dsh-workflow-filesystem'
+
     - id: tool-workflow
       name: '@deepseek-ai/dsh-tool-workflow'
 

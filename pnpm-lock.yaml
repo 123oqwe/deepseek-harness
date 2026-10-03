@@ -395,6 +395,9 @@ importers:
       '@deepseek-ai/dsh-webhook-github':
         specifier: workspace:^
         version: link:../../packages/webhook/webhook-github
+      '@deepseek-ai/dsh-workflow-filesystem':
+        specifier: workspace:^
+        version: link:../../packages/workflow/workflow-filesystem
       '@deepseek-ai/dsh-workflow-worker-thread':
         specifier: workspace:^
         version: link:../../packages/workflow/workflow-worker-thread

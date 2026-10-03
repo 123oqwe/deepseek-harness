@@ -29,7 +29,7 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
-出厂 base 层把它挂在工作流引擎旁边；它没有任何配置项。
+出厂 base 层把它挂在工作流引擎旁边，cordis、ptc、standard 三个预设也各自把它挂在自己的引擎旁边；它没有任何配置项。
 
 ```yaml
 - name: '@deepseek-ai/dsh-workflow-worker-thread'
