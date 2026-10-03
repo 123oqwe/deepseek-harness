@@ -24,7 +24,7 @@ import ActionLedgerPlugin from '@deepseek-ai/dsh-action-ledger'
 import AgentRegistry from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import LlmRuntime, { createUserMessage, StreamChunk, ToolCallId } from '@deepseek-ai/dsh-llm'
-import { SessionId } from '@deepseek-ai/dsh-session'
+import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
@@ -66,6 +66,10 @@ async function durableHarness(adapter: MockAdapter, sessionRoot: string, ledgerR
   const ctx = new Context()
   contexts.push(ctx)
   await ctx.plugin(LlmRuntime)
+  // SessionStore is the live session service the loop reads through; the JSONL
+  // backend adds the durable persistence `resume` needs. Both are mounted, the
+  // same way the agent-loop testkit's dependency bundle does.
+  await ctx.plugin(SessionStore)
   await ctx.plugin(JsonlSessionPersistence, { root: sessionRoot })
   await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(SystemPrompt)
