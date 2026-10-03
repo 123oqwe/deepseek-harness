@@ -36,6 +36,7 @@ import * as SubagentSpawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import SubagentRuntime from '../src/index.ts'
+import { ackedSettlementsFor, pendingSettlementsFor } from '../src/settlement-outbox.ts'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 
 const roots: string[] = []
@@ -140,7 +141,18 @@ describe('P4-06 acceptance[2]: a settlement is consumed only by its own parent, 
 
     const a = settledSenders(second.ctx, SessionId('tenant-a'))
     const b = settledSenders(second.ctx, SessionId('tenant-b'))
-    const detail = JSON.stringify({ a, b, childA: childA.childId, childB: childB.childId })
+    // Diagnosis (dispatch-only): the narrow run read b as []. Capture whether
+    // each tenant resumed, which settlements are still owed vs acked for tenant-b,
+    // and the full outbox, so the cause (b not resumed / its drain not triggered /
+    // acked before the splice reached its log) is read from the run, not guessed.
+    const diagnosis = {
+      aResumed: second.ctx.agents.get(SessionId('tenant-a')) !== undefined,
+      bResumed: second.ctx.agents.get(SessionId('tenant-b')) !== undefined,
+      bOwed: pendingSettlementsFor(second.ctx.messageBus, SessionId('tenant-b')).map(settlement => settlement.childId),
+      bAcked: ackedSettlementsFor(second.ctx.messageBus, SessionId('tenant-b')).map(settlement => settlement.childId),
+      outbox: second.ctx.messageBus.outboxRows().map(row => ({ target: row.target, state: row.record.state, id: row.record.id })),
+    }
+    const detail = JSON.stringify({ a, b, childA: childA.childId, childB: childB.childId, diagnosis })
     // Green today after the restart: each resumed parent still received only its
     // own child's settlement.
     expect(a, detail).toEqual([childA.childId])
