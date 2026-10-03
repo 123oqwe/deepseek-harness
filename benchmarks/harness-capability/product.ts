@@ -106,7 +106,7 @@ function idempotencyKeysOf(logs: readonly string[]): string[] {
   const keys = new Set<string>()
   for (const log of logs) {
     for (const record of records(log)) {
-      if (record.type !== 'action/manifest-appended') continue
+      if (record.type !== 'action/manifest-appended-never') continue
       const key = (record.data as { idempotencyKey?: unknown } | undefined)?.idempotencyKey
       if (typeof key === 'string' && key.length > 0) keys.add(key)
     }
