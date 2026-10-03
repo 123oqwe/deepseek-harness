@@ -9657,7 +9657,7 @@ The entry stays open: the delegate's blind review found that any non-empty reaso
 
 ### BLOCKED-331 — a session that outlives its capability token's TTL keeps running, but every tool call is refused as expired, and no new token is ever issued (product defect candidate, open)
 
-**Status:** OPEN (2026-09-24). Owner: lane B, characterise first, then fix in place. Found by lane A while writing BLOCKED-330's red case (A-370). Recorded by the delegate (first100-delegate-1a). Read from the code, not yet shown on a shipped launch.
+**Status:** CLOSED 2026-10-03 (closure note at the end of this entry); opened 2026-09-24. Owner: lane B, characterise first, then fix in place. Found by lane A while writing BLOCKED-330's red case (A-370). Recorded by the delegate (first100-delegate-1a). Read from the code, not yet shown on a shipped launch.
 
 **What is known (lane A's reading).**
 - The session token's TTL is `sessionTokenTtlMs`, a Config on the base row, 24 h by default.
@@ -9690,6 +9690,71 @@ The entry stays open: the delegate's blind review found that any non-empty reaso
 4. **Within a batch (code mode).** The case where a `run_code` program's nested call outlives the TTL of the token its batch was minted with is decided and pinned by a case. Either the nested call gets a re-issued token under the same policy, or it is refused with a reason that says so. The choice and its reason go into the fix's note.
 5. **Records.** `evidence-P2-02.md:20` is corrected to describe what the product does.
 - A fix that covers only condition 1 does not close this item.
+
+**Closure note (2026-10-03, the delegate first100-delegate-1a).** The characterisation ruling (2026-09-24T18:44:06Z) replaced the first three closing conditions with five. Each is met below, except for the two checks listed at the end, which have no mutation of their own.
+
+The fix is lane B's B-577, landed in batch 9:
+- red first `7df1633fd3`;
+- lane A's workflow half `e7631e64d6` (A-390b);
+- fix `62f05dda9e`;
+- records `ded927156f`.
+
+The three code commits carry the same patch-ids as the chain the rounds below ran on (`ce87bedd36`, `19f0849e28`, `03afcd248f`).
+
+Case labels used below:
+- C1–C8: `packages/policy/capability-token-file/tests/renewal.spec.ts`;
+- S1–S2: `packages/policy/capability-token/tests/token-service.spec.ts`;
+- G1–G4: `packages/core/tools/tests/capability-token.spec.ts`.
+
+The rounds, all with build:
+- Red first R1 36090997922: 81 cases, exactly 19 red.
+- Fix R2 36091012259: 81/81.
+- Five mutations on the fix, each red on exactly the cases named:
+  - M-1 36091026976, `needsIssue` drops the expiry condition: C1, C5, C6;
+  - M-2 36091040824, `revokeSession` deletes the session's token again: C3, C7;
+  - M-3a 36091054401, `redelegateIfNeeded` ignores expiry: C5;
+  - M-4 36091068002, the gate stops telling a program's calls apart: G3;
+  - M-order 36091081681, the gate checks expiry before revocation: G1, C3, C8.
+
+On the shipped composition:
+- P2-02 U.1 [426] is `tests/first100/fixtures/P2-02.token-refusal-before-ask.composition.spec.ts`, 4 cases.
+- P2-02 U.2 [427] is `tests/first100/fixtures/P2-02.token-renewal.composition.spec.ts`, 17 cases: lane A's A-390 and A-390b.
+- Both are frozen with their own mutations: M-P2-02-refusal (run 36272358449), M-P2-02-expired (36272712400) and M-P2-02-renewal (36272369586).
+- Both are recorded GREEN from 36284563089. P2-02 is ACCEPTED, so accepted-cases-check has checked their titles at every push since.
+- In the 25r push gate 36389363977 at `93a01a0112`, every case of all five files passes: renewal 8, token-service 25, tools 14, U.1 4, U.2 17.
+
+1. **Root token.**
+   - C1 is red first and green on the fix; its control C2 is green on both.
+   - M-1 turns C1 red.
+   - On the shipped composition, U.2's condition-1 case turns red under M-P2-02-renewal, where `whenSessionToken` judges every held token unexpired.
+2. **Revocation is never undone.**
+   - C3: a revoked session keeps presenting its revoked root, which is refused as revoked, after expiry and after its tools grow, and nothing new is recorded.
+   - C4: a restarted mount over the same store issues the session nothing.
+   - G1: a token that is both revoked and expired is refused as revoked.
+   - M-2 turns C3 red, and M-order turns G1 and C3 red.
+   - On the shipped composition, M-P2-02-refusal turns U.1's two revoked cases red.
+3. **Delegated tokens.**
+   - C5: an expired child is re-derived from its parent's current token, which is re-issued first, and the child does not outlive it.
+   - C6: a child started after its parent's token expired is not born expired.
+   - C7: nothing is derived from a revoked parent.
+   - C8: a child revoked through its parent stays refused as revoked after it expires.
+   - S1: `attenuate` refuses a parent that expires at that instant as `parent-expired` and records no child.
+   - Mutations: M-1 turns C5 and C6 red, M-3a turns C5 red, M-2 turns C7 red, and M-order turns C8 red.
+   - On the shipped composition, U.2 carries the subagent and workflow halves (A-390, A-390b), and M-P2-02-renewal turns its re-derivation cases red.
+4. **Within a batch (code mode).** The choice, approved by the delegate, is to refuse with a reason.
+   - A `run_code` program keeps its `run_code` call's token for its whole run. That is the token P2-05's policy decides the program's calls on.
+   - When a nested call is refused as expired, the refusal names the program and says the next `run_code` call presents a re-issued token.
+   - G3 pins this, and M-4 turns only G3 red.
+   - The choice and its reason are in the provider README ("Expiry and revocation", `packages/policy/capability-token-file/README.md:45`) and in the fix's Agent Note, 2026-09-25-an-expired-session-token-is-re-issued-and-a-revoked-one-never-is.
+5. **Records.** `ded927156f` corrects `spec/first100/exec/evidence-P2-02.md:20`.
+
+**What this closure does not establish.**
+- **Two checks have no mutation that removes them.** Each is red first and green on the fix, but no round removes the check:
+  - C4, the durable revocation record that keeps a restarted mount from issuing: round M-2b;
+  - S1, `attenuate`'s `parent-expired`: round M-3b.
+  - On 2026-09-25, lane B's permission classifier blocked both "remove the check" rounds, and they never ran. The delegate ruled then that a missing remove-the-check round does not block and is listed as not covered, so they are listed here.
+  - Under M-2, C4 stays green, because the restart goes through the durable check.
+- **A delegated session whose parent session has ended is not re-derived.** Its calls are refused as expired once its token expires. This is the provider README's stated limitation (`packages/policy/capability-token-file/README.md:64`, "A detached run outliving its launcher is NOT yet answered"). It fails closed, and it stays open as that limitation.
 
 ### BLOCKED-332 — a tool call already produced in a step still runs after the Run is advanced to `failed`; later steps are refused with no visible reason and the host is not told (product defect, open)
 
@@ -10413,3 +10478,40 @@ P1-10 is not ACCEPTED, so nothing is withdrawn. This entry blocks P1-10 acceptan
 4. Then, with P4-06's other conditions, a fresh 4.4a–d before its sign-off.
 
 **What this does NOT claim.** It does not claim the bus's own outbox transaction is wrong: must[0]'s `BEGIN IMMEDIATE` is evidenced (lock (b) LIFTED). Nothing was run for this entry.
+
+### BLOCKED-351 — an entry guarded by `import.meta.main` does nothing and exits 0 on a Node the engines range admits (product defect, open)
+
+**Status:** OPEN (2026-09-28). Owner: lane B fixes in place (B-688); lane A writes the red-first case (A-577). Found while measuring P0-01's BLOCKED-305. Recorded by the delegate (first100-delegate-1a).
+
+**What was measured.** The one-off probe of workflow run 36402168106, at `dfb64f7663`:
+- Node v22.19.0: `typeof import.meta.main` is `boolean`. `node scripts/release/baseline-fingerprint.mjs verify` against a baseline altered on purpose reports the drift and exits 1.
+- Node v24.0.0: `typeof import.meta.main` is `undefined`. The same command prints nothing and exits 0.
+- The root `package.json` declares `engines.node` `^22.19.0 || >=24.0.0`, so v24.0.0 is a Node this repository says it supports.
+
+**What was read, not run.** At `dfb64f7663`, non-test sources that start their CLI only `if (import.meta.main)` include:
+- three shipped entries:
+  - `apps/cli/src/bin.ts:74`, the `dsh` command itself (`@deepseek-ai/dsh`, bin `lib/bin.js`);
+  - `apps/desktop-host/src/index.ts:584`;
+  - `packages/subprocess/subprocess-local/src/bin.ts:18`;
+- the release scripts `scripts/release/baseline-fingerprint.mjs:421`, `collect-evidence.mjs:457` and `verify-evidence.mjs:316`;
+- gate and build scripts under `scripts/`, among them `run-gates.ts`, `verify-package-dependencies.ts`, `verify-runtime-closure.ts` and `verify-cordis-config.ts`.
+
+The repository already records the problem and a version-independent guard: `scripts/first100/verify-adapt-dispositions.mjs:293-296`, like `scripts/clean.ts`, compares `process.argv[1]` with the file's own path, "because it is unavailable across this repository's whole engines range". On that reading, `dsh` on Node 24.0.x runs nothing and exits 0. This has not been run on a built `lib/bin.js`.
+
+**Why it matters.**
+- For P0-01 must[1] ("发现上游漂移时停止"), `baseline:verify` passes silently, which is fail-open. That half is part of BLOCKED-305.
+- For every other entry, a user on an admitted Node gets a command that does nothing and reports success.
+- CI is not affected: it runs the latest Node 24.
+
+**Closing conditions (red first, with a mutation).**
+1. A case shows today's behaviour on the CI's Node by starting the entry the way an admitted Node without `import.meta.main` does: `process.argv[1]` names the entry, and `import.meta.main` is not true.
+   - The case covers the built `dsh` bin, started through its bin link, with `--version`.
+   - It covers `baseline-fingerprint.mjs verify` against an altered baseline.
+   - Today both do nothing and exit 0 (A-577).
+2. Every non-test entry guarded by `import.meta.main` decides by the repository's existing version-independent comparison. Where an entry is started through a symlinked bin, the comparison resolves the real path. Each changed file names this entry or BLOCKED-305 in the fix's note (B-688).
+3. A mutation that restores the old guard on `apps/cli/src/bin.ts` turns only the `dsh` half of the case red.
+4. The Node version probe (workflow input `node_version_probe`) is run again on the fix. Node v24.0.0 then reports the drift and exits 1.
+
+**What this does NOT claim.**
+- Nothing about which later Node 24 releases carry `import.meta.main`. Only v22.19.0 and v24.0.0 were probed.
+- Not that any Node outside the engines range is supported.

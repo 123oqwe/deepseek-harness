@@ -23,10 +23,35 @@
     },
     {
       "epic": "P0-01",
+      "path": "tests/release/baseline-fingerprint-classes.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F.4"
+      ]
+    },
+    {
+      "epic": "P0-01",
+      "path": "tests/release/baseline-fingerprint-normalized.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F.3"
+      ]
+    },
+    {
+      "epic": "P0-01",
       "path": "tests/release/baseline-fingerprint-restore.spec.ts",
       "kind": "test",
       "stages": [
         "F.2"
+      ]
+    },
+    {
+      "epic": "P0-01",
+      "path": "tests/release/fingerprint-fixture.ts",
+      "kind": "test",
+      "stages": [
+        "F.3",
+        "F.4"
       ]
     },
     {
@@ -4425,6 +4450,15 @@
     },
     {
       "epic": "P4-06",
+      "path": "packages/core/agent-loop/src/agent.ts",
+      "kind": "source",
+      "stages": [
+        "U.6"
+      ],
+      "reason": "Where the loop puts back an inbox claim its turn did not record (B-677, BLOCKED-088): a message claimed and then refused before the record returns to the inbox, so a later turn records it exactly once. U.6 (A-567) observes it on the shipped headless composition, and M-677-1′ changes it. NOT labelled HOT ZONE: P4-06 reads this file here, and the change is B-677's own."
+    },
+    {
+      "epic": "P4-06",
       "path": "packages/core/agent-loop/tests/arrival-dedup.spec.ts",
       "kind": "test",
       "stages": [
@@ -4558,6 +4592,15 @@
     },
     {
       "epic": "P4-06",
+      "path": "packages/subagent/subagent/src/continuation-activation.ts",
+      "kind": "source",
+      "stages": [
+        "U.5"
+      ],
+      "reason": "Where a starting parent redelivers the settlements it acked and never recorded (B-676, BLOCKED-350): each acked settlement's arrival key is compared with the parent's record, and the ones missing wake the parent. U.5 (A-566) observes it on the shipped headless composition, and M-676-1′ changes it. NOT labelled HOT ZONE: P4-06 reads this file here, and the change is B-676's own."
+    },
+    {
+      "epic": "P4-06",
       "path": "packages/subagent/subagent/src/continuation.ts",
       "kind": "source",
       "stages": [
@@ -4598,6 +4641,22 @@
       "kind": "test",
       "stages": [
         "U.4"
+      ]
+    },
+    {
+      "epic": "P4-06",
+      "path": "tests/first100/fixtures/P4-06.inbox-claim-lost.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.6"
+      ]
+    },
+    {
+      "epic": "P4-06",
+      "path": "tests/first100/fixtures/P4-06.settlement-crash.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.5"
       ]
     },
     {

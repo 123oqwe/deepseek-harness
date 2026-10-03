@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-10-03T02:06:59.593Z",
-  "inputDigest": "1c58a0cb36c7066367f22c87f805bb4405d5812435075bb49889f1edc06b48cd",
+  "lastUpdatedUtc": "2026-10-03T06:54:00.905Z",
+  "inputDigest": "2ac5b7e837cd967bb9dfa27fc898ab1e92c242292f66f585abfdedaf21db1f47",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -844,10 +844,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "e4390a90a29e71dea1c2d32f3943b4692b5fd933",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33578193549",
-          "observationReportPath": "/tmp/ci-run-33578193549/attempt2/first100-evidence-e4390a90a29e71dea1c2d32f3943b4692b5fd933/vitest-report.json",
-          "observationSha256": "b9b9d060bbccd73188942e2fbfd212e64d026baa9ca50eefce293660069dc4f8",
+          "candidateSha": "94c8fc5c9f5171811b737527e4026cea6607d9ed",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37099515654",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37099515654/first100-vitest-report-94c8fc5c9f5171811b737527e4026cea6607d9ed/vitest-report.json",
+          "observationSha256": "3a136209a43b60d91e83d4a4b1a3b611f384396e7d18a01840e0967c7d2694f7",
           "expectCasesMatched": [
             "upper-cases the gate id and collapses non-alphanumeric runs to one underscore",
             "contributes no override when unset or empty",
@@ -857,10 +857,10 @@
             "composes default -> profile -> env, matching resolveFeatureGate directly",
             "layers the env override above default/profile, reading the deterministic env var name",
             "never supplies a settings chain layer -- no feature-gates settings namespace exists yet",
-            "defaults declarations to FEATURE_GATE_DECLARATIONS (empty today) and env to process.env",
+            "defaults declarations to FEATURE_GATE_DECLARATIONS (the plugin-manifest-enforcement gate) and env to process.env",
             "provides the profile-resolved gates before any entry mounts -- a plugin sees them already present",
             "rejects a plugin that tries to override the provided gates via a second ctx.provide -- Cordis's own single-owner guarantee",
-            "prints nothing when no gate is declared -- this repository's real state today",
+            "prints nothing given an empty resolution list",
             "prints one comment-prefixed block naming the resolved source/value and the full override chain",
             "stays a loadable YAML document: every printed line is a comment",
             "renders multiple declared gates in resolution order",
@@ -868,9 +868,15 @@
             "passes when every declared gate is still active for the release version",
             "fails, naming the gate, when a declared gate has passed its removalVersion",
             "names every expired gate, not only the first",
-            "is empty -- no capability has migrated behind a gate yet"
+            "declares the plugin-manifest-enforcement gate (Epic P1-01, BLOCKED-322), mirroring profile-boot's FEATURE_GATE_DECLARATIONS"
           ],
-          "capturedAtUtc": "2026-09-02T01:49:43.340Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37099515654",
+            "sha256": "3a136209a43b60d91e83d4a4b1a3b611f384396e7d18a01840e0967c7d2694f7"
+          },
+          "capturedAtUtc": "2026-10-03T06:53:53.645Z"
         },
         "F": {
           "status": "GREEN",
@@ -923,7 +929,7 @@
           "capturedAtUtc": "2026-09-15T07:11:34.257Z"
         }
       },
-      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+      "candidateSha": "94c8fc5c9f5171811b737527e4026cea6607d9ed",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -1593,91 +1599,91 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
-          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "candidateSha": "94c8fc5c9f5171811b737527e4026cea6607d9ed",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37099515654",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37099515654/first100-vitest-report-94c8fc5c9f5171811b737527e4026cea6607d9ed/vitest-report.json",
+          "observationSha256": "3a136209a43b60d91e83d4a4b1a3b611f384396e7d18a01840e0967c7d2694f7",
           "expectCasesMatched": [
-            "must[0]: declares exactly the 5 required lanes (deterministic, fault, security, real-model, scale), no extras",
-            "must[1]: each required lane declares exactly the 8 standard metrics",
-            "must[2]: each required lane's report declares confidenceInterval and a replayable seed"
+            "must[0]: declares exactly the 5 required lanes (deterministic, fault, security, real-model, scale), no extras"
           ],
-          "capturedAtUtc": "2026-09-24T12:21:21.483Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37099515654",
+            "sha256": "3a136209a43b60d91e83d4a4b1a3b611f384396e7d18a01840e0967c7d2694f7"
+          },
+          "capturedAtUtc": "2026-10-03T06:53:55.743Z"
         },
         "P": {
           "status": "N/A"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
-          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "candidateSha": "94c8fc5c9f5171811b737527e4026cea6607d9ed",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37099515654",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37099515654/first100-vitest-report-94c8fc5c9f5171811b737527e4026cea6607d9ed/vitest-report.json",
+          "observationSha256": "3a136209a43b60d91e83d4a4b1a3b611f384396e7d18a01840e0967c7d2694f7",
           "expectCasesMatched": [
-            "contract: readManifest returns the frozen five lanes, so the runner and the schema cannot drift apart silently",
-            "contract: every lane in the manifest declares exactly the eight standard metric names the report module exports",
-            "contract: the invariant metrics are a proper subset of the standard metrics, never a separate vocabulary",
-            "contract: the same run seed, scenario and index always yield the same trial seed",
-            "contract: changing any one of the three inputs changes the trial seed, so a seed identifies one trial and not a family",
-            "contract: a generator draws the same sequence for one seed, and a different sequence for another",
-            "contract: every draw stays inside [0, 1), so a scenario indexing by it can never step outside its own range",
-            "contract: every failing trial contributes a replay seed, and every breach contributes one naming its metric",
-            "control: a lane where everything passed records no replay seeds, so the case above measures failures rather than emitting seeds unconditionally",
-            "contract: an empty lane reports a zero rate and full-width uncertainty, never a confident zero",
-            "contract: one trial can breach more than one invariant, and each is recorded separately with its own seed",
-            "contract: one breached lane fails the whole run even when every other lane is clean",
-            "control: the same clean lane on its own holds, so the case above fails for the breach and not for the aggregation",
-            "contract: an empty report list holds, so a run that executed no lane is not reported as breached",
-            "contract: scenarios sharing a lane are scored together into a single report for that lane",
-            "contract: trialsPerScenario controls the trial count exactly, so a caller can bound a run",
-            "contract: a lane is skipped only when a scenario in it requires a real model, not because a sibling lane does"
+            "P0-08 redo: the keyless lanes of the harness capability benchmark run the shipped product R2: each lane declares exactly its fixed set of metrics not applicable and computes every other standard metric",
+            "P0-08 redo: the keyless lanes of the harness capability benchmark run the shipped product R2: verification_precision and router_regret, which have no shipped producer, say so and report no number",
+            "P0-08 redo: the keyless lanes of the harness capability benchmark run the shipped product R4: the same seed reproduces each trial, its session-log digests and its failure position",
+            "P0-08 redo: the keyless lanes of the harness capability benchmark run the shipped product R4: a different seed draws different trials",
+            "P0-08 redo: the keyless lanes of the harness capability benchmark run the shipped product R6: a run exits non-zero exactly when its invariants were breached",
+            "P0-08 redo: the keyless lanes of the harness capability benchmark run the shipped product T1: in the deterministic lane every tool result matches the recording once both are normalized",
+            "P0-08 redo: the keyless lanes of the harness capability benchmark run the shipped product K1: every known-red scenario names a BLOCKED item the queue still records as open",
+            "P0-08 redo: the keyless lanes of the harness capability benchmark run the shipped product K2: a known-red scenario is a strict expected failure: it must not pass, and it records what was observed"
           ],
-          "capturedAtUtc": "2026-09-24T12:21:21.978Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37099515654",
+            "sha256": "3a136209a43b60d91e83d4a4b1a3b611f384396e7d18a01840e0967c7d2694f7"
+          },
+          "capturedAtUtc": "2026-10-03T06:53:57.542Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
-          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "candidateSha": "94c8fc5c9f5171811b737527e4026cea6607d9ed",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37099515654",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37099515654/first100-vitest-report-94c8fc5c9f5171811b737527e4026cea6607d9ed/vitest-report.json",
+          "observationSha256": "3a136209a43b60d91e83d4a4b1a3b611f384396e7d18a01840e0967c7d2694f7",
           "expectCasesMatched": [
-            "must[0]: declares exactly the 5 required lanes (deterministic, fault, security, real-model, scale), no extras",
-            "must[1]: each required lane declares exactly the 8 standard metrics",
-            "must[2]: each required lane's report declares confidenceInterval and a replayable seed",
-            "enforcement: deterministic, fault and security all execute with no external model configured",
-            "enforcement: a lane needing a real model is skipped WITH a reason, and contributes no report at all",
-            "control: the same lane DOES execute once a real model is configured, so the skip measures configuration",
-            "enforcement: two runs at one seed are identical, down to every recorded replay seed",
-            "control: a different seed produces a different run, so the case above is not comparing two constants",
-            "enforcement: a recorded replay seed identifies exactly one trial, so a failure can be reproduced from the report alone",
-            "enforcement: a lane scoring a perfect task-success rate still reports a breach, and the verdict reads only the invariant side",
-            "control: the inverse also holds — a lane that fails every task with no breach keeps its invariants intact",
-            "enforcement: the security guard refuses an uncapability-backed write, which is why the security lane records no breach today",
-            "control: a capability-backed write IS admitted, so the refusal above is a decision and not a function that always denies",
             "enforcement: a unanimous sample does not report a zero-width interval",
             "enforcement: zero trials report full uncertainty rather than a confident zero",
-            "control: a larger unanimous sample narrows the interval, so the bound tracks evidence"
+            "control: a larger unanimous sample narrows the interval, so the bound tracks evidence",
+            "P0-08 redo: the keyless lanes of the harness capability benchmark run the shipped product R3: on the shipped product the invariant metrics are computed and show no bypass and no duplicate"
           ],
-          "capturedAtUtc": "2026-09-24T12:21:22.484Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37099515654",
+            "sha256": "3a136209a43b60d91e83d4a4b1a3b611f384396e7d18a01840e0967c7d2694f7"
+          },
+          "capturedAtUtc": "2026-10-03T06:53:56.713Z"
         }
       },
       "supplements": {
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
-          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "candidateSha": "94c8fc5c9f5171811b737527e4026cea6607d9ed",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37099515654",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37099515654/first100-vitest-report-94c8fc5c9f5171811b737527e4026cea6607d9ed/vitest-report.json",
+          "observationSha256": "3a136209a43b60d91e83d4a4b1a3b611f384396e7d18a01840e0967c7d2694f7",
           "expectCasesMatched": [
-            "P0-08 composition: pnpm benchmark:harness --lane deterministic runs with no external API key and writes both the JSON and the Markdown report",
-            "P0-08 composition: with no --lane the same command runs every keyless lane, and each lane gets its own report",
-            "P0-08 composition: two runs at one --seed write byte-identical JSON reports equal to runLanes at that seed, and a different --seed changes the lane results",
-            "P0-08 composition: a lane with no scenario is refused by the runner itself and writes no report, so an empty run never reads as completed"
+            "P0-08 redo: the keyless lanes of the harness capability benchmark run the shipped product control: each keyless lane runs and writes a report for that lane",
+            "P0-08 redo: the keyless lanes of the harness capability benchmark run the shipped product R1: every trial launched the shipped product and harvested its session logs",
+            "P0-08 redo: the keyless lanes of the harness capability benchmark run the shipped product R5: with no model API configured, every keyless lane still runs the product in every trial"
           ],
-          "capturedAtUtc": "2026-09-24T12:17:28.582Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37099515654",
+            "sha256": "3a136209a43b60d91e83d4a4b1a3b611f384396e7d18a01840e0967c7d2694f7"
+          },
+          "capturedAtUtc": "2026-10-03T06:54:00.864Z"
         }
       },
-      "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
+      "candidateSha": "94c8fc5c9f5171811b737527e4026cea6607d9ed",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",
@@ -1836,14 +1842,11 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
-          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
+          "candidateSha": "94c8fc5c9f5171811b737527e4026cea6607d9ed",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37099515654",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37099515654/first100-vitest-report-94c8fc5c9f5171811b737527e4026cea6607d9ed/vitest-report.json",
+          "observationSha256": "3a136209a43b60d91e83d4a4b1a3b611f384396e7d18a01840e0967c7d2694f7",
           "expectCasesMatched": [
-            "stays off when unset or empty",
-            "opts in on exactly \"enforce\"",
-            "fails loud on any other value (misconfiguration, not a silent default)",
             "composes every bundle layer unconditionally outside production, regardless of declaration",
             "excludes a missing-manifest bundle layer's patches in production, admitting only the clean manifest-v2 layer",
             "is a no-op outside production",
@@ -1890,7 +1893,13 @@
             "denies a schema-valid manifest requesting a wildcard destination in production",
             "admits a benign schema-valid manifest with no wildcard findings in production"
           ],
-          "capturedAtUtc": "2026-09-27T14:05:32.345Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37099515654",
+            "sha256": "3a136209a43b60d91e83d4a4b1a3b611f384396e7d18a01840e0967c7d2694f7"
+          },
+          "capturedAtUtc": "2026-10-03T06:53:59.767Z"
         },
         "F": {
           "status": "GREEN",
@@ -1918,7 +1927,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
+      "candidateSha": "94c8fc5c9f5171811b737527e4026cea6607d9ed",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",
