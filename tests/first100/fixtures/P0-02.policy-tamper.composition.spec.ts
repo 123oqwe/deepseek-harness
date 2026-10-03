@@ -54,6 +54,8 @@ interface TamperOutcome {
 interface Observation {
   /** Whether the forbidden tool's body ran (its marker is on disk). */
   readonly performed: boolean
+  /** Whether the turn actually dispatched the call (a tool result came back to the stub). */
+  readonly callDispatched: boolean
   /** The tamper plugin's recorded outcome, or null when no tamper plugin was mounted. */
   readonly tamper: TamperOutcome | null
   readonly exitCode: number | null | undefined
@@ -61,12 +63,12 @@ interface Observation {
 }
 
 /**
- * Launch the shipped headless product with the deployment `forbid` rule and the
- * forbidden tool, optionally with the policy-tamper plugin, and read what happened.
- * @param withTamper - whether to mount the malicious override plugin.
+ * Launch the shipped headless product with the forbidden tool, optionally the
+ * deployment `forbid` rule and the policy-tamper plugin, and read what happened.
+ * @param options - whether to add the deployment forbid rule and the malicious override plugin.
  * @returns the observation.
  */
-async function run(withTamper: boolean): Promise<Observation> {
+async function run(options: { forbid: boolean; tamper: boolean }): Promise<Observation> {
   const cwd = mkdtempSync(join(homedir(), '.dsh-a588-'))
   const execMarker = join(cwd, 'forbidden-performed')
   const tamperMarker = join(cwd, 'tamper-outcome.json')
@@ -89,7 +91,7 @@ async function run(withTamper: boolean): Promise<Observation> {
     const result = await launchShippedHeadless({
       cwd,
       task: 'A-588: call the forbidden tool once.',
-      patches: withTamper ? [forbidPatch, toolPatch, tamperPatch] : [forbidPatch, toolPatch],
+      patches: [toolPatch, ...options.forbid ? [forbidPatch] : [], ...options.tamper ? [tamperPatch] : []],
       modelBaseUrl: stub.baseUrl,
       permission: 'workspace-write',
       env: {},
@@ -97,6 +99,10 @@ async function run(withTamper: boolean): Promise<Observation> {
     })
     return {
       performed: existsSync(execMarker),
+      // A tool result returned to the stub (a later request carries a `tool`
+      // message) proves the forbidden call was issued and dispatched — whether it
+      // was refused or performed.
+      callDispatched: stub.requests.some(request => (request.messages ?? []).some(message => message.role === 'tool')),
       tamper: existsSync(tamperMarker) ? (JSON.parse(readFileSync(tamperMarker, 'utf8')) as TamperOutcome) : null,
       exitCode: result.exitCode,
       stderr: result.stderrTail ?? '',
@@ -108,22 +114,33 @@ async function run(withTamper: boolean): Promise<Observation> {
 }
 
 describe('A-588 (P0-02 U-1): a plugin cannot override the deployment policy to bypass a forbidden tool call on a pinned kernel (red first)', () => {
-  it('control: without the tamper plugin, the deployment forbid refuses the forbidden tool call', async () => {
-    const observed = await run(false)
-    // The rule itself works: the forbidden tool never runs, so a bypass below is
-    // the override's doing, not a rule that denies nothing.
-    expect(observed.performed, `exit ${String(observed.exitCode)}; stderr:\n${observed.stderr.slice(-800)}`).toBe(false)
+  it('positive control: with no forbid rule and no tamper, the forbidden tool runs — the dispatch path and marker work', async () => {
+    const observed = await run({ forbid: false, tamper: false })
+    expect({ performed: observed.performed, dispatched: observed.callDispatched, exit: observed.exitCode },
+      `stderr:\n${observed.stderr.slice(-800)}`).toEqual({ performed: true, dispatched: true, exit: 0 })
+  }, LAUNCH_TIMEOUT_MS)
+
+  it('rule control: with the deployment forbid and no tamper, the forbidden tool call is refused (the rule fires)', async () => {
+    const observed = await run({ forbid: true, tamper: false })
+    expect({ performed: observed.performed, dispatched: observed.callDispatched, exit: observed.exitCode },
+      `stderr:\n${observed.stderr.slice(-800)}`).toEqual({ performed: false, dispatched: true, exit: 0 })
   }, LAUNCH_TIMEOUT_MS)
 
   it('with the tamper plugin, both override routes are refused and the forbidden call stays refused', async () => {
-    const observed = await run(true)
-    const detail = `tamper ${JSON.stringify(observed.tamper)}; performed ${String(observed.performed)}; exit ${String(observed.exitCode)}; stderr:\n${observed.stderr.slice(-800)}`
-    // validation[0]: the override must be refused at the boot stage. RED today if
+    const observed = await run({ forbid: true, tamper: true })
+    const detail = `tamper ${JSON.stringify(observed.tamper)}; performed ${String(observed.performed)}; dispatched ${String(observed.callDispatched)}; exit ${String(observed.exitCode)}; stderr:\n${observed.stderr.slice(-800)}`
+    // Guards first: the boot ran to a normal exit, the tamper plugin recorded an
+    // outcome (so it mounted after the kernel was pinned, not crashing the boot),
+    // and the turn actually issued the forbidden call.
+    expect(observed.exitCode, detail).toBe(0)
+    expect(observed.tamper, detail).not.toBeNull()
+    expect(observed.callDispatched, detail).toBe(true)
+    // validation[0]: both override routes refused at the boot stage. RED today if
     // a route reads `overrode`.
     expect(observed.tamper?.methodA, detail).toMatch(/^refused/u)
     expect(observed.tamper?.methodB, detail).toMatch(/^refused/u)
-    // And the forbidden call must stay refused — the enforcement does not trust a
-    // tampered engine. RED today if the override bypassed the forbid and the body ran.
+    // And the forbidden call must stay refused — enforcement does not trust a
+    // tampered engine. RED today if an override bypassed the forbid and the body ran.
     expect(observed.performed, detail).toBe(false)
   }, LAUNCH_TIMEOUT_MS)
 })
