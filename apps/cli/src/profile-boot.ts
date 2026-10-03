@@ -13,7 +13,7 @@
 
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { FiberState, type Context } from '@deepseek-ai/cordis'
 import type { PatchOptions } from '@deepseek-ai/cordis-plugin-include'
 import type { EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
@@ -32,6 +32,7 @@ import {
   PROFILE_PATCH_FILENAME,
   PROFILE_TEMPLATES,
   publishInsecureModeNotice,
+  readPluginDeclaration,
   readProfileManifest,
   resolveProfileDir,
   resolveTrustKernelInsecureOptIn,
@@ -39,8 +40,10 @@ import {
   watchUserPatches,
   type BlockedProfileLayer,
   type DeniedProfileLayer,
+  type PreMountDenialReason,
   type Profile,
   type ProfileManifest,
+  type WildcardFinding,
 } from '@deepseek-ai/dsh-app-boot'
 import { DSH_RUNTIME_API_VERSION } from '@deepseek-ai/dsh-plugin-compat'
 import { brandString } from '@deepseek-ai/dsh-brand'
@@ -62,7 +65,13 @@ import type {
   FeatureGateShadowDecisionRecord,
   FeatureGateState,
 } from '@deepseek-ai/dsh-feature-gates'
-import { buildPluginPermissionStates, type BundleLayerScope, type PluginPermissionState } from '@deepseek-ai/dsh-host-plugin-inventory'
+import {
+  buildPluginPermissionStates,
+  resolveEntryPackageDir,
+  type BundleLayerScope,
+  type PluginPermissionState,
+} from '@deepseek-ai/dsh-host-plugin-inventory'
+import { evaluatePreMountAdmission, type PluginDeclaration } from '@deepseek-ai/dsh-plugin-manifest'
 import { admitUnsignedDevMode, sealTrustAnchors, type ProvenanceAuditRecord } from '@deepseek-ai/dsh-plugin-provenance'
 import { appendProvenanceAudit, verifyBootProvenance } from './install-provenance.ts'
 import { createProcessShutdown, type ProcessShutdown } from './process-shutdown.ts'
@@ -223,12 +232,13 @@ export function prepareProfile(name: string, userLayer = true, fromDefaultProfil
 
 /** One profile's patch layers, in application order. */
 interface ComposedProfile {
+  /** The loaded profile; its `patches` lack every row an enforcing boot refused ({@link refuseUserPatchRows}). */
   profile: Profile
   /** Bundle layers concatenated — the part below the user layers on a live reload. */
   bundlePatches: PatchOptions[]
-  /** The home-level user layer (`$DSH_HOME/cordis.patch.yml`), applied after the profile's own. */
+  /** The home-level user layer (`$DSH_HOME/cordis.patch.yml`), applied after the profile's own, without refused rows. */
   homePatches: PatchOptions[]
-  /** Layers above the user layers on a live reload: `--patch` overlays and the telemetry switch. */
+  /** Layers above the user layers on a live reload: `--patch` overlays without refused rows, then the telemetry switch. */
   overlays: PatchOptions[]
   /**
    * Bundle layer package names actually composed into `bundlePatches` (Epic
@@ -295,6 +305,212 @@ function admissionOutcome(
   }
 }
 
+/** One user patch layer — the profile's `cordis.patch.yml`, `$DSH_HOME/cordis.patch.yml`, or a `--patch` overlay — and its file. */
+interface UserPatchLayer {
+  readonly file: string
+  readonly patches: readonly PatchOptions[]
+}
+
+/** One row a user patch layer mounts that names a package, and the patch file it comes from. */
+interface UserPatchRow {
+  readonly file: string
+  readonly entry: EntryOptions
+}
+
+/** One user patch row a production boot refuses to compose, and why (must[3]/acceptance[0]). */
+interface DeniedUserPatchRow extends UserPatchRow {
+  readonly reason: PreMountDenialReason
+  readonly wildcardFindings: readonly WildcardFinding[]
+}
+
+/**
+ * The first row with `id` in `entries`, a group's rows included.
+ * @param entries - a composed entry list.
+ * @param id - the row id.
+ * @returns the row, or `undefined` when no row has that id.
+ */
+function findComposedEntry(entries: readonly EntryOptions[], id: string): EntryOptions | undefined {
+  for (const entry of entries) {
+    if (entry.id === id) return entry
+    const nested = entry.group && Array.isArray(entry.config) ? findComposedEntry(entry.config as EntryOptions[], id) : undefined
+    if (nested !== undefined) return nested
+  }
+  return undefined
+}
+
+/**
+ * Every row the user patch layers mount that names a package (Epic P1-01
+ * must[3]/acceptance[0], B-519). A patch mounts rows in two ways: an `insert`
+ * (into the root or into a group, an inserted group's rows included), and an
+ * id-targeted patch whose `config` list replaces the rows of a target that is
+ * a group once the patch applies. An id-targeted `name` mounts nothing, since
+ * the include skips a patch whose `name` differs from its target's. A
+ * `cordis:` builtin is not a package and is not listed.
+ * @param base - the composed bundle layers' patches, below the user layers.
+ * @param layers - the user patch layers, in application order.
+ * @returns the package rows, in application order.
+ */
+function userPatchRows(base: readonly PatchOptions[], layers: readonly UserPatchLayer[]): UserPatchRow[] {
+  const rows: UserPatchRow[] = []
+  const applied = [...base]
+  for (const { file, patches } of layers) {
+    const visit = (entry: EntryOptions): void => {
+      if (typeof entry.name === 'string' && !entry.name.startsWith('cordis:')) rows.push({ file, entry })
+      if (entry.group && Array.isArray(entry.config)) entry.config.forEach(visit)
+    }
+    for (const patch of patches) {
+      if (patch.insert) {
+        patch.insert.forEach(visit)
+      } else if (typeof patch.id === 'string' && Array.isArray(patch.config)) {
+        const target = findComposedEntry(composeEntries([applied]), patch.id)
+        const group = Object.hasOwn(patch, 'group') ? patch.group : target?.group
+        if (target !== undefined && group) patch.config.forEach(visit)
+      }
+      applied.push(patch)
+    }
+  }
+  return rows
+}
+
+/**
+ * Whether `packageDir` is a module proxy {@link healProfilesModuleFallback}
+ * wrote for the packaged install: its `dsh` field holds only `moduleFallback`.
+ * @param packageDir - a resolved package directory.
+ * @returns `true` for a module proxy.
+ */
+function isModuleProxy(packageDir: string): boolean {
+  const manifest = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf8')) as { dsh?: { moduleFallback?: unknown } }
+  return manifest.dsh?.moduleFallback !== undefined
+}
+
+/**
+ * The declaration of the package a user patch row's module is imported from,
+ * resolved from the profile directory as the Loader resolves the row. A
+ * module proxy carries no manifest of its own, so its package is resolved from
+ * the installation it forwards to. A module that no package directory holds
+ * declares nothing.
+ * @param moduleName - the row's module specifier.
+ * @param profileDir - the profile directory.
+ * @returns the classified declaration.
+ */
+function userPatchRowDeclaration(moduleName: string, profileDir: string): PluginDeclaration {
+  const resolved = resolveEntryPackageDir(moduleName, pathToFileURL(join(profileDir, PROFILE_ROOT_FILENAME)).href)
+  const packageDir = resolved !== undefined && isModuleProxy(resolved)
+    ? resolveEntryPackageDir(moduleName, pathToFileURL(INSTALL_ANCHOR).href)
+    : resolved
+  return packageDir === undefined ? { kind: 'missing' } : readPluginDeclaration(packageDir)
+}
+
+/**
+ * Partition user patch rows into admitted and denied, as
+ * {@link partitionProfileLayersByAdmission} partitions bundle layers. Without
+ * `production` every row is admitted and no package is read.
+ * @param rows - the user patch rows.
+ * @param profileDir - the profile directory the rows resolve from.
+ * @param production - whether the boot enforces production admission.
+ * @returns the admitted and the denied rows.
+ */
+function partitionUserPatchRowsByAdmission(
+  rows: readonly UserPatchRow[],
+  profileDir: string,
+  production: boolean,
+): { readonly admitted: readonly UserPatchRow[]; readonly denied: readonly DeniedUserPatchRow[] } {
+  if (!production) return { admitted: rows, denied: [] }
+  const admitted: UserPatchRow[] = []
+  const denied: DeniedUserPatchRow[] = []
+  for (const row of rows) {
+    const admission = evaluatePreMountAdmission(userPatchRowDeclaration(row.entry.name, profileDir), true)
+    if (admission.admitted) {
+      admitted.push(row)
+    } else {
+      denied.push({ ...row, reason: admission.reason, wildcardFindings: admission.wildcardFindings })
+    }
+  }
+  return { admitted, denied }
+}
+
+/** A user patch row partition as a gate decision; its summary keeps patch files, row ids, modules, reasons, and wildcard paths. */
+function patchRowAdmissionOutcome(
+  partition: ReturnType<typeof partitionUserPatchRowsByAdmission>,
+): FeatureGateDecisionOutcome<ReturnType<typeof partitionUserPatchRowsByAdmission>> {
+  return {
+    value: partition,
+    summary: {
+      admitted: partition.admitted.map(row => row.entry.name),
+      denied: partition.denied.map(({ file, entry, reason, wildcardFindings }) => ({
+        patch: file,
+        row: typeof entry.id === 'string' ? entry.id : null,
+        module: entry.name,
+        reason,
+        wildcardPaths: wildcardFindings.map(finding => finding.path),
+      })),
+    },
+  }
+}
+
+/**
+ * Judge the rows the user patch layers mount (Epic P1-01 must[3]/acceptance[0],
+ * B-519) under {@link PLUGIN_MANIFEST_ENFORCEMENT_GATE}, as
+ * {@link composeProfile} judges bundle layers: `'enforce'` refuses each row
+ * whose package a production boot denies and names it on stderr, `'off'`
+ * refuses none, and `'shadow'` refuses none and appends the rows `'enforce'`
+ * would refuse to {@link featureGateShadowLogPath}. Layers that mount no
+ * package record nothing. The patch files are never changed.
+ * @param profileName - the profile name, quoted on stderr.
+ * @param profileDir - the profile directory the rows resolve from.
+ * @param base - the composed bundle layers' patches, below the user layers.
+ * @param layers - the user patch layers, in application order.
+ * @param enforcement - this boot's resolved {@link PLUGIN_MANIFEST_ENFORCEMENT_GATE} state.
+ * @returns the rows this boot must not compose.
+ */
+function refuseUserPatchRows(
+  profileName: string,
+  profileDir: string,
+  base: readonly PatchOptions[],
+  layers: readonly UserPatchLayer[],
+  enforcement: FeatureGateState,
+): ReadonlySet<EntryOptions> {
+  const rows = userPatchRows(base, layers)
+  if (rows.length === 0) return new Set()
+  const admission = evaluateFeatureGate(
+    PLUGIN_MANIFEST_ENFORCEMENT_GATE.id,
+    enforcement,
+    () => patchRowAdmissionOutcome(partitionUserPatchRowsByAdmission(rows, profileDir, false)),
+    () => patchRowAdmissionOutcome(partitionUserPatchRowsByAdmission(rows, profileDir, true)),
+    ['admitted', 'denied'],
+  )
+  if (admission.shadowRecord !== undefined) appendShadowDecision('pre-mount-patch-admission', admission.shadowRecord)
+  for (const { file, entry, reason, wildcardFindings } of admission.value.denied) {
+    const detail = wildcardFindings.length > 0 ? `: ${wildcardFindings.map(finding => finding.path).join(', ')}` : ''
+    process.stderr.write(
+      `${NAME}: plugin admission: excluding patch row ${JSON.stringify(typeof entry.id === 'string' ? entry.id : null)} `
+      + `(${JSON.stringify(entry.name)}) of ${JSON.stringify(file)} from profile ${JSON.stringify(profileName)} `
+      + `(${reason}${detail})\n`,
+    )
+  }
+  return new Set(admission.value.denied.map(row => row.entry))
+}
+
+/**
+ * `patches` without the rows in `refused`: a refused row leaves the `insert`
+ * or `config` list that holds it, with its own rows. Rows match by identity,
+ * so `refused` must come from these patch objects.
+ * @param patches - one user patch layer's patches.
+ * @param refused - rows {@link refuseUserPatchRows} refused.
+ * @returns the patches without the refused rows; no patch object is mutated.
+ */
+function withoutRefusedRows(patches: readonly PatchOptions[], refused: ReadonlySet<EntryOptions>): PatchOptions[] {
+  if (refused.size === 0) return [...patches]
+  const keep = (entries: readonly EntryOptions[]): EntryOptions[] => entries.flatMap((entry) => {
+    if (refused.has(entry)) return []
+    return entry.group && Array.isArray(entry.config) ? [{ ...entry, config: keep(entry.config as EntryOptions[]) }] : [entry]
+  })
+  return patches.map((patch) => {
+    if (patch.insert) return { ...patch, insert: keep(patch.insert) }
+    return Array.isArray(patch.config) ? { ...patch, config: keep(patch.config as EntryOptions[]) } : patch
+  })
+}
+
 /**
  * Load `name` and compose its effective patch stack: bundle layers in
  * `dsh.profile.bundles` order (a base-backed profile gets the base bundle's
@@ -311,6 +527,13 @@ function admissionOutcome(
  * `'enforce'` composes only the admitted layers, `'off'` composes every
  * layer, and `'shadow'` composes every layer and appends which layers
  * `'enforce'` would have denied to {@link featureGateShadowLogPath}.
+ *
+ * The rows the user layers mount (the profile's `cordis.patch.yml`,
+ * `$DSH_HOME/cordis.patch.yml`, and each `--patch` overlay) pass the same
+ * admission per row through the same gate ({@link refuseUserPatchRows}):
+ * `'enforce'` composes each user layer without its refused rows and names
+ * them on stderr, while `'off'` and `'shadow'` compose every row. The patch
+ * files on disk are never changed.
  *
  * Epic P1-08's compatibility negotiation (must[1]/acceptance[1]) runs on the
  * admitted layers immediately after, and likewise before any patch reaches
@@ -379,18 +602,31 @@ export async function composeProfile(
       + `capabilities: ${activation.disabledOptionalCapabilities.join(', ')}\n`,
     )
   }
-  const homePatches = loadOptionalPatches(NAME, homePatchPath()) ?? []
-  const overlays = patchFiles.flatMap(file => loadOverlayPatches(NAME, resolve(file)))
   const bundlePatches = negotiation.admitted.flatMap(entry => entry.layer.patches)
+  const homeFile = homePatchPath()
+  const homeLayer: UserPatchLayer = { file: homeFile, patches: loadOptionalPatches(NAME, homeFile) ?? [] }
+  const overlayLayers = patchFiles
+    .map(file => resolve(file))
+    .map((file): UserPatchLayer => ({ file, patches: loadOverlayPatches(NAME, file) }))
+  const refused = refuseUserPatchRows(
+    name,
+    profile.dir,
+    bundlePatches,
+    [{ file: profile.patchPath, patches: profile.patches }, homeLayer, ...overlayLayers],
+    enforcement,
+  )
+  const profilePatches = withoutRefusedRows(profile.patches, refused)
+  const homePatches = withoutRefusedRows(homeLayer.patches, refused)
+  const overlays = overlayLayers.flatMap(layer => withoutRefusedRows(layer.patches, refused))
   const rows = new Map<string, EntryOptions>()
-  for (const row of composeEntries([bundlePatches, profile.patches, homePatches, overlays])) {
+  for (const row of composeEntries([bundlePatches, profilePatches, homePatches, overlays])) {
     if (typeof row.id === 'string') rows.set(row.id, row)
   }
   const composedOverlays = [...overlays]
   const telemetryPatch = resolveTelemetryPatch(process.env.DSH_TELEMETRY_DISABLED, rows.has(TELEMETRY_ROW_ID))
   if (telemetryPatch !== undefined) composedOverlays.push(telemetryPatch)
   return {
-    profile,
+    profile: { ...profile, patches: profilePatches },
     bundlePatches,
     homePatches,
     overlays: composedOverlays,
@@ -583,7 +819,10 @@ export function featureGateShadowLogPath(): string {
  * @param stage - the boot stage that made the decision.
  * @param record - the redacted legacy/enforce comparison.
  */
-function appendShadowDecision(stage: 'pre-mount-admission' | 'post-mount-comparison', record: FeatureGateShadowDecisionRecord): void {
+function appendShadowDecision(
+  stage: 'pre-mount-admission' | 'pre-mount-patch-admission' | 'post-mount-comparison',
+  record: FeatureGateShadowDecisionRecord,
+): void {
   const path = featureGateShadowLogPath()
   mkdirSync(dirname(path), { recursive: true })
   appendFileSync(path, `${JSON.stringify({ recordedAt: new Date().toISOString(), stage, ...record })}\n`)
@@ -852,12 +1091,21 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
   // objects in place. Reusing one parsed patch object across applications
   // would bake a user override into the bundle's in-memory insert row, so
   // removing the override could never revert the row to the bundle default.
-  const composeLive = (): PatchOptions[] => structuredClone([
-    ...composed.bundlePatches,
-    ...loadOptionalPatches(NAME, composed.profile.patchPath) ?? [],
-    ...loadOptionalPatches(NAME, homePatchPath()) ?? [],
-    ...composed.overlays,
-  ])
+  // Each generation's user rows pass the boot's own patch-row admission, so a
+  // live edit cannot mount a package the boot would have refused.
+  const composeLive = (): PatchOptions[] => {
+    const homeFile = homePatchPath()
+    const layers: UserPatchLayer[] = [
+      { file: composed.profile.patchPath, patches: loadOptionalPatches(NAME, composed.profile.patchPath) ?? [] },
+      { file: homeFile, patches: loadOptionalPatches(NAME, homeFile) ?? [] },
+    ]
+    const refused = refuseUserPatchRows(options.profile, composed.profile.dir, composed.bundlePatches, layers, pluginEnforcement)
+    return structuredClone([
+      ...composed.bundlePatches,
+      ...layers.flatMap(layer => withoutRefusedRows(layer.patches, refused)),
+      ...composed.overlays,
+    ])
+  }
   // Cloned for the same insert-aliasing reason as composeLive: the boot
   // application must not mutate the objects later reloads recompose from.
   const ctx = await boot(NAME, rootConfig, structuredClone(allPatches(composed)), (hostCtx) => {
