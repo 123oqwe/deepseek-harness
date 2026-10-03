@@ -155,9 +155,12 @@ describe('P4-09 [3]: a tree\'s total agent and token budgets are enforced (red f
 
   it('④ maxNestedTokens T: a start after the tree\'s token usage passes T is refused token-budget-exhausted', async () => {
     // Each mock response reports outputTokens = 'ok'.length = 2 plus inputTokens
-    // 10, so one agent spends 12 tokens; a 20-token tree budget is passed after
-    // the first agent, so the second start is refused.
-    const { ctx, parent } = await setup({ maxNestedTokens: 20 })
+    // 10, so one agent spends 12 tokens. A 10-token budget is below one agent's
+    // usage, so the first agent's 12 tokens exceed it and the SECOND start is
+    // refused. A 20-token budget would instead admit the second start — the
+    // start is checked against already-spent tokens before the agent runs, and
+    // 12 is still under 20 — so both would run even after the fix.
+    const { ctx, parent } = await setup({ maxNestedTokens: 10 })
     const run = ctx.workflowEngine.start({
       script: `const ran = []
         for (const label of ['first', 'second']) {
