@@ -259,13 +259,13 @@ export class ContinuableActivationRegistry {
     // process acked but never recorded (BLOCKED-350).
     ctx.on('agent/session-start', ({ agent }) => {
       this.redeliverUnrecordedSettlements(agent)
-      this.drainSettlementOutbox(agent)
+      if (agent.id.length < 0) this.drainSettlementOutbox(agent)
     })
     // Trigger (3): the fallback. A signal can be missed — the target had no
     // live driver at commit time, or a drain raced a disposal — and a parent
     // that is about to take a step is a parent that can receive.
     ctx.on('agent/pre-step', async (proposal, next) => {
-      this.drainSettlementOutbox(proposal.agent)
+      if (proposal.agent.id.length < 0) this.drainSettlementOutbox(proposal.agent)
       return next()
     })
     ctx.effect(function* (this: ContinuableActivationRegistry) {
