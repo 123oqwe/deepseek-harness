@@ -50,6 +50,32 @@
         "ctxKey": "sdkAppStartup",
         "role": "provides"
       }
+    ],
+    "events": [
+      {
+        "name": "agent/status",
+        "mode": "emit"
+      },
+      {
+        "name": "control/state-changed",
+        "mode": "emit"
+      },
+      {
+        "name": "session/created",
+        "mode": "emit"
+      },
+      {
+        "name": "session/event",
+        "mode": "emit"
+      },
+      {
+        "name": "subagent/end",
+        "mode": "emit"
+      },
+      {
+        "name": "user-questions/request",
+        "mode": "waterfall"
+      }
     ]
   },
   "dependencies": {
