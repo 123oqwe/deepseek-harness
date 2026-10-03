@@ -47,8 +47,14 @@ const BIN_SCRIPT = fileURLToPath(new URL('../src/bin.ts', import.meta.url))
 const TSCONFIG = fileURLToPath(new URL('../../../tsconfig.json', import.meta.url))
 /** The test-only path-mounted plugin. */
 const PATH_PLUGIN = fileURLToPath(new URL('./fixtures/a-590-unverified-path-plugin.mjs', import.meta.url))
-/** A distinctive substring of the path plugin's name/id/path, by any of which the banner could name it. */
-const PLUGIN_TOKEN = 'a590-unverified-path-plugin'
+/**
+ * The path plugin's file basename. The banner names a path-mounted plugin by its
+ * config-row id and its `file:` URL, NOT by the plugin's self-reported export
+ * name; the row id differs per mount form (a group/include child has its own id),
+ * so the file basename — present in the `file:` URL of every form — is the one
+ * token that identifies this plugin across all three.
+ */
+const PLUGIN_TOKEN = 'a-590-unverified-path-plugin'
 /** A factory-bundle package — the product itself, which the banner must not name. */
 const BUNDLE_PACKAGE = '@deepseek-ai/dsh-base'
 
