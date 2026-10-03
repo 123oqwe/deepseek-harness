@@ -44,6 +44,8 @@ tool result 记录的是 harness 观察到的东西，它记录不了外部世�
 
 两边都有代时,一条 `prepared` 记录可以被**更高**的代接管,而对**同一代**则以 `held-at-same-epoch` 拒绝:更高的代意味着围栏已经证明前一个持有者出局了,而与持有者同代的调用方是一个活着的对等方,一条预留被两个持有者同时持有正是 must[2] 禁止的状态。这条拒绝与 `duplicate` 不同——后者断言副作用已经发生;也与 `stale-epoch` 不同——后者断言有后继者把这个调用方围栏挡下了。一个说「等」,另一个说「停」。
 
+更高的代遇到一条 `sent` 记录时,以 `ambiguous-needs-reconciliation` 拒绝,`reserve` 在同一事务里按持有者的代把它改成 `ambiguous`:围栏证明发出它的持有者已经出局,没有人能确认副作用是否落地(第 33 题 (a))。同一代、或任一边没有代时,它仍是 `duplicate`。
+
 只要有一边没有围栏,账本就分不清「活着的对等方」与「同一个 worker 重启」,于是它重新接管这条 `prepared` 记录,保住 at-least-once,而不是把一个谁也无法证明已被放弃的键永久搁死。此时决定里带 `fenced: false`——包括一个围栏完好的调用方去接管一条持有者本身没有代的记录:旧持有者仍然可能发送。`sent`、`confirmed` 与 `ambiguous` 不受影响:这条降级规则只重新接管从未发送过的东西,别的一概不动。
 
 <a id="the-host-user-resolves-an-ambiguous-effect"></a>

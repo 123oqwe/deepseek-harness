@@ -55,6 +55,13 @@ describe('P4-12 must[0]/must[2]: a reservation is what authorizes an external se
       .toEqual({ action: 'duplicate', state: 'sent' })
   })
 
+  it('routes a SENT entry an OLDER generation holds to reconciliation rather than reporting a duplicate (question 33 (a))', () => {
+    // The holder that sent is fenced out, so it can never confirm: whether the
+    // outside world acted is unknown, which is what `ambiguous` means.
+    expect(decideReservation({ scope: SCOPE, key: KEY, argumentsHash: ARGS, epoch: epoch(2) }, entry({ state: 'sent' })))
+      .toEqual({ action: 'refused', reason: 'ambiguous-needs-reconciliation' })
+  })
+
   it('reports CONFIRMED and COMPENSATED as duplicates too, so a settled key is never re-sent', () => {
     const digest = brandString<ReceiptDigest>('sha256-receipt')
     for (const state of ['confirmed', 'compensated'] as const) {

@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-10-03-a-send-a-fenced-out-holder-left-goes-to-reconciliation.md
+2026-10-03-a-send-a-fenced-out-holder-left-goes-to-reconciliation.md: 77253607c20c41e961e6bc768c2dfbb50d125f55
+2026-10-03-a-send-a-fenced-out-holder-left-goes-to-reconciliation.zh.md: a794617fb77105c41fcc7461e35035a4e09ad312

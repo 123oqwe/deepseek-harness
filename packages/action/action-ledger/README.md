@@ -43,6 +43,8 @@ A generation comes from a run's lease, and a run without one presents `'unfenced
 
 With generations on both sides, a `prepared` entry may be taken over by a HIGHER generation and is refused to the SAME one as `held-at-same-epoch`: the higher generation's fence proves the previous holder is out, while a caller at the holder's own generation is a live peer, and two holders of one reservation is what must[2] forbids. That refusal is distinct from `duplicate`, which asserts the effect already happened, and from `stale-epoch`, which asserts a successor fenced this caller out — one says wait, the other says stop.
 
+A `sent` entry that a HIGHER generation finds is refused as `ambiguous-needs-reconciliation`, and `reserve` moves it to `ambiguous` in the same transaction, under the holder's generation: the fence proves the holder that sent is gone, so nobody can confirm whether the effect landed (question 33 (a)). At the same generation, or with either side unfenced, it is still a `duplicate`.
+
 With either side unfenced the ledger cannot tell a live peer from the same worker restarting, so it re-takes the `prepared` entry and keeps at-least-once instead of stranding a key nobody can prove abandoned. The decision then carries `fenced: false`, including when a well-fenced caller takes over an entry whose own holder had no generation: the old holder can still send. `sent`, `confirmed` and `ambiguous` entries are unaffected — the degraded rule re-takes what was never sent and nothing else.
 
 ## The host user resolves an ambiguous effect

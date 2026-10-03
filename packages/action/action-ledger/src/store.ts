@@ -32,7 +32,10 @@ export interface LedgerStore {
    * Take responsibility for one external effect, durably, before it is sent.
    *
    * The read and the write are one transaction: two workers reserving the same
-   * key concurrently cannot both be told they hold it.
+   * key concurrently cannot both be told they hold it. A `sent` entry that an
+   * older generation holds is moved to `ambiguous` in that transaction, under
+   * the holder's own generation as `markAmbiguous` would, so reconciliation
+   * lists it (question 33 (a)).
    */
   reserve: (request: ReserveRequest) => ReserveDecision
   /**
@@ -295,7 +298,11 @@ export function openLedgerStore(directory: string): LedgerStore {
       // the ledger itself.
       db.exec('BEGIN IMMEDIATE')
       try {
-        const decision = decideReservation(request, readEntry(db, request.scope, request.key))
+        const existing = readEntry(db, request.scope, request.key)
+        const decision = decideReservation(request, existing)
+        if (existing?.state === 'sent' && decision.action === 'refused' && decision.reason === 'ambiguous-needs-reconciliation') {
+          move(db, request.scope, request.key, existing.epoch, 'ambiguous', null, false)
+        }
         if (decision.action === 'reserved') {
           db.prepare('INSERT INTO ledger (scope, key, arguments_hash, state, epoch) VALUES (?, ?, ?, ?, ?)'
             + ' ON CONFLICT (scope, key) DO UPDATE SET epoch = excluded.epoch')
