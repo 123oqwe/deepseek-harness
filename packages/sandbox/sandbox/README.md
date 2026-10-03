@@ -103,7 +103,7 @@ The ladder is a closed table — `read-only` may escalate to `workspace-write` o
 
 ### Writable roots
 
-`workspace-write` means "the workspace root plus the host temp areas": `writableRoots` derives that allow-list canonically, resolving symlinks and deduplicating, so the Seatbelt profile and the in-process fs fence grant exactly the same roots. `protectedRoots` names what the mode still excludes from them: the harness home (`$DSH_HOME`), which holds the harness's own configuration and state. Every backend keeps it read-only, or refuses a command when it can only grant writable roots and one of them contains the home.
+`workspace-write` means "the workspace root plus the host temp areas": `writableRoots` derives that allow-list canonically, resolving symlinks and deduplicating, so the Seatbelt profile and the in-process fs fence grant exactly the same roots. `protectedRoots` names what the mode still excludes from them: the harness home (`$DSH_HOME`), which holds the harness's own configuration and state. Every backend keeps it read-only, or refuses a command when it can only grant writable roots and one of them contains the home. `unreadableFiles` names the harness credential store, `$DSH_HOME/.credentials.yaml` and `$DSH_HOME/.env`, which the fs fence, the search tools, bwrap and Seatbelt keep from being read.
 
 </details>
 

@@ -15,6 +15,7 @@
 
 import { realpathSync } from 'node:fs'
 import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
 import type { SandboxExecutionPolicy } from './index.ts'
 
@@ -71,4 +72,20 @@ export function writableRoots(policy: SandboxExecutionPolicy): string[] {
 export function protectedRoots(policy: SandboxExecutionPolicy): string[] {
   if (policy.mode !== 'workspace-write') return []
   return [canonicalPath(dshHomePath())]
+}
+
+/**
+ * The files no confined command and no search tool may read: the harness's
+ * own credential store, which `@deepseek-ai/dsh-credentials-local` keeps as
+ * `$DSH_HOME/.credentials.yaml` (its `CREDENTIALS_FILENAME`) and
+ * `@deepseek-ai/dsh-app-boot` reads as the home-level `$DSH_HOME/.env` layer.
+ * The names are written here rather than imported because both packages are
+ * providers this capability definition must not depend on; a deployment that
+ * points the credential provider's `path` elsewhere is not covered. Each path
+ * is canonical whether or not the file exists yet.
+ * @returns the canonical credential-store paths.
+ */
+export function unreadableFiles(): string[] {
+  const home = canonicalPath(dshHomePath())
+  return ['.credentials.yaml', '.env'].map(name => canonicalPath(join(home, name)))
 }

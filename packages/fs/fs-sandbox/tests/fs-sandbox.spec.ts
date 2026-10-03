@@ -195,6 +195,42 @@ describe('workspace-write keeps the harness home read-only inside the workspace 
   })
 })
 
+describe('the harness credential store is unreadable from a sandboxed call (B-717)', () => {
+  beforeEach(async () => {
+    await mkdir(join(workspace, '.dsh'))
+    await writeFile(join(workspace, '.dsh', '.credentials.yaml'), 'token: secret\n')
+    await writeFile(join(workspace, 'notes.txt'), 'notes\n')
+    vi.stubEnv('DSH_HOME', join(workspace, '.dsh'))
+  })
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('every read of the credential file is refused under workspace-write, and another file still reads', async () => {
+    await boot('workspace-write')
+    const secret = await target(join(workspace, '.dsh', '.credentials.yaml'))
+    await expect(fs.readText(secret)).rejects.toMatchObject({ code: 'FS_SANDBOX_DENIED' })
+    await expect(fs.streamText(secret)).rejects.toMatchObject({ code: 'FS_SANDBOX_DENIED' })
+    await expect(fs.readBytes(secret, undefined, 1024)).rejects.toMatchObject({ code: 'FS_SANDBOX_DENIED' })
+    await expect(fs.readByteRange(secret, { offset: 0, length: 5 })).rejects.toMatchObject({ code: 'FS_SANDBOX_DENIED' })
+    const notes = await target(join(workspace, 'notes.txt'))
+    expect(await fs.readText(notes)).toBe('notes\n')
+    let streamed = ''
+    for await (const chunk of await fs.streamText(notes)) streamed += chunk
+    expect(streamed).toBe('notes\n')
+    expect(Buffer.from(await fs.readBytes(notes, undefined, 1024)).toString('utf8')).toBe('notes\n')
+    expect(Buffer.from(await fs.readByteRange(notes, { offset: 0, length: 5 })).toString('utf8')).toBe('notes')
+  })
+
+  it('read-only refuses it too, and danger-full-access reads it', async () => {
+    await boot('read-only')
+    await expect(fs.readText(await target(join(workspace, '.dsh', '.credentials.yaml')))).rejects.toMatchObject({ code: 'FS_SANDBOX_DENIED' })
+    await fiber.dispose()
+    await boot('danger-full-access')
+    expect(await fs.readText(await target(join(workspace, '.dsh', '.credentials.yaml')))).toBe('token: secret\n')
+  })
+})
+
 describe('workspace-write with the filesystem root as the workspace (a root ending in the path separator)', () => {
   it('grants writes anywhere on that volume', async () => {
     // A degenerate but valid config: the filesystem root containing the target.

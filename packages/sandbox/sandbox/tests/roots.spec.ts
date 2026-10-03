@@ -8,7 +8,7 @@ import { mkdtempSync, realpathSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { canonicalPath, protectedRoots, writableRoots } from '@deepseek-ai/dsh-sandbox'
+import { canonicalPath, protectedRoots, unreadableFiles, writableRoots } from '@deepseek-ai/dsh-sandbox'
 
 /** Every temp root created by this file, removed after each test. */
 const roots: string[] = []
@@ -56,5 +56,15 @@ describe('protectedRoots (B-715)', () => {
 
   it('read-only protects nothing, since it grants nothing', () => {
     expect(protectedRoots({ mode: 'read-only', workspaceRoot: process.cwd() })).toEqual([])
+  })
+})
+
+describe('unreadableFiles (B-717)', () => {
+  it('names the harness credential store under the canonical home, whether or not the files exist', () => {
+    const home = mkdtempSync(join(tmpdir(), 'dsh-home-'))
+    roots.push(home)
+    vi.stubEnv('DSH_HOME', home)
+    const canonical = realpathSync.native(home)
+    expect(unreadableFiles()).toEqual([join(canonical, '.credentials.yaml'), join(canonical, '.env')])
   })
 })

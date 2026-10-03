@@ -7,7 +7,7 @@
 import { existsSync } from 'node:fs'
 import { sep } from 'node:path'
 import { grantArgs as landlockGrantArgs } from '@deepseek-ai/node-addon-system/landlock-run'
-import { canonicalPath, protectedRoots, writableRoots } from '@deepseek-ai/dsh-sandbox'
+import { canonicalPath, protectedRoots, unreadableFiles, writableRoots } from '@deepseek-ai/dsh-sandbox'
 import type { SandboxPolicy } from '@deepseek-ai/dsh-sandbox'
 
 /** Whether the canonical `path` is `root` itself or lies under it. */
@@ -37,7 +37,9 @@ export function exposedProtectedRoot(policy: SandboxPolicy): { readonly root: st
  * root inside the workspace is bound read-only over the workspace's writable
  * bind; one under the host `/tmp` is already hidden by the `/tmp` tmpfs, and
  * one that does not exist is not bound, because bwrap cannot bind a missing
- * path.
+ * path. Under both modes each existing {@link unreadableFiles} entry (the
+ * harness credential store) reads as empty: `/dev/null` is bound over it after
+ * every other mount, so no workspace or home bind exposes it again.
  * @param policy - file-effect policy to express as bwrap mounts.
  * @returns profile arguments before the trailing separator and command argv.
  */
@@ -50,6 +52,9 @@ export function bwrapProfileArgs(policy: SandboxPolicy): string[] {
     for (const root of protectedRoots(policy)) {
       if (isUnder(root, workspace) && existsSync(root)) args.push('--ro-bind', root, root)
     }
+  }
+  for (const file of unreadableFiles()) {
+    if (existsSync(file)) args.push('--ro-bind', '/dev/null', file)
   }
   return args
 }
@@ -90,8 +95,9 @@ const SEATBELT_ALLOWED_SOCKETS = [
  * deduplicated) so the Seatbelt grant and the in-process fs fence
  * (`@deepseek-ai/dsh-fs-sandbox`) can never drift apart. Each protected root
  * ({@link protectedRoots}) is denied after that grant: in SBPL the later of two
- * matching rules wins. Connections to Unix-domain sockets are refused except
- * to {@link SEATBELT_ALLOWED_SOCKETS}.
+ * matching rules wins. Under both modes each {@link unreadableFiles} entry
+ * (the harness credential store) is denied to reads. Connections to
+ * Unix-domain sockets are refused except to {@link SEATBELT_ALLOWED_SOCKETS}.
  * @param policy - file-effect policy to express as an SBPL profile.
  * @returns sandbox-exec arguments before the trailing separator and command argv.
  */
@@ -109,5 +115,6 @@ export function seatbeltProfileArgs(policy: SandboxPolicy): string[] {
     forms.push(`(allow file-write* ${roots.map(root => `(subpath ${sbplString(root)})`).join(' ')})`)
   }
   for (const root of protectedRoots(policy)) forms.push(`(deny file-write* (subpath ${sbplString(root)}))`)
+  for (const file of unreadableFiles()) forms.push(`(deny file-read* (literal ${sbplString(file)}))`)
   return ['-p', forms.join(' ')]
 }

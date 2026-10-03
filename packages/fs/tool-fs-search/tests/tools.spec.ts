@@ -10,7 +10,9 @@
  * Real-`rg` behavior is pinned separately in integration.spec.ts.
  */
 
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { Context } from '@deepseek-ai/cordis'
 import { createScope, type Scope } from '@deepseek-ai/dsh-scope'
 import { join, sep } from 'node:path'
@@ -28,6 +30,7 @@ import {
   buildGlobCommand,
   buildGrepCommand,
   formatGrepMatches,
+  isCredentialStorePath,
   parseGrepMatches,
   presentGlobCall,
   presentGlobResult,
@@ -1264,3 +1267,52 @@ describe('scope-aware search guidance', () => {
 function withPersona(...sections: string[]): string {
   return ['You are an AI agent powered by DeepSeek Harness.', ...sections].join('\n\n')
 }
+
+describe('the harness credential store never reaches the model (B-717)', () => {
+  const worlds: string[] = []
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    for (const root of worlds.splice(0)) rmSync(root, { recursive: true, force: true })
+  })
+
+  /** A workspace holding `.dsh` with the credential document, as `DSH_HOME`. */
+  function credentialWorld(): { workspace: string; secret: string } {
+    const workspace = mkdtempSync(join(tmpdir(), 'dsh-b717-search-'))
+    worlds.push(workspace)
+    mkdirSync(join(workspace, '.dsh'))
+    const secret = join(workspace, '.dsh', '.credentials.yaml')
+    writeFileSync(secret, 'token: secret\n')
+    vi.stubEnv('DSH_HOME', join(workspace, '.dsh'))
+    return { workspace, secret }
+  }
+
+  it('isCredentialStorePath matches the credential file by absolute or workdir-relative spelling, and nothing else', () => {
+    const { workspace, secret } = credentialWorld()
+    writeFileSync(join(workspace, '.env'), 'PROJECT=1\n')
+    writeFileSync(join(workspace, 'notes.txt'), 'notes\n')
+    expect(isCredentialStorePath(secret, workspace)).toBe(true)
+    expect(isCredentialStorePath(join('.dsh', '.credentials.yaml'), workspace)).toBe(true)
+    // A project .env shares a name with the home-level layer but is another file (the home has none here).
+    expect(isCredentialStorePath('.env', workspace)).toBe(false)
+    expect(isCredentialStorePath(join('missing', '.credentials.yaml'), workspace)).toBe(false)
+    expect(isCredentialStorePath('notes.txt', workspace)).toBe(false)
+  })
+
+  it('grep drops every match ripgrep reports from the credential file', async () => {
+    const { workspace, secret } = credentialWorld()
+    const { ctx, subprocess } = await setup()
+    subprocess.handler = () => runResult([matchLine(secret, 1, 'token: secret\n'), matchLine('notes.txt', 2, 'token noted\n'), ''].join('\n'))
+    const result = await call(ctx, 'grep', { pattern: 'token' }, { agent: agent(workspace) })
+    if (result.isError) throw new Error('expected grep success')
+    expect(result.value).toEqual({ matches: [{ path: 'notes.txt', lineNumber: 2, line: 'token noted' }] })
+  })
+
+  it('glob drops the credential file from a listing', async () => {
+    const { workspace, secret } = credentialWorld()
+    const { ctx, subprocess } = await setup()
+    subprocess.handler = () => runResult(`${secret}\nnotes.txt\n`)
+    const result = await call(ctx, 'glob', { pattern: '*' }, { agent: agent(workspace) })
+    if (result.isError) throw new Error('expected glob success')
+    expect(result.value).toEqual({ root: '.', paths: ['notes.txt'] })
+  })
+})

@@ -112,7 +112,7 @@ A key's value can be any text, multi-line values included — no quoting tricks 
 
 ### Who can read the file
 
-Only your OS user can read the file: the product creates it with owner-only permissions, and on POSIX it refuses to load a file that any other user can read — the error tells you to run `chmod 600`. Windows has no mode to inspect, so the check is skipped there rather than faked. The agent is not another user: its tool processes run as you, so they can read the file like any other file you own. The product never hands the agent the file's path and never loads the file into the environment, so reaching a value takes a deliberate read of a path the agent was not given. That is discretion, not a boundary: a deployment that must keep provider keys away from its own agent cannot get there with file permissions.
+Only your OS user can read the file: the product creates it with owner-only permissions, and on POSIX it refuses to load a file that any other user can read — the error tells you to run `chmod 600`. Windows has no mode to inspect, so the check is skipped there rather than faked. The agent's tool processes run as you, so file permissions alone would let them read the file; under the `read-only` and `workspace-write` sandbox modes the harness keeps them out of it and of the home-level `.env`: the `read` tool refuses them, `grep` and `glob` drop them from results, bubblewrap binds `/dev/null` over them and Seatbelt denies them to reads. A Landlock or Windows host's bash can still read them, as can a call the user approves as `danger-full-access`, and a `path` configured outside `$DSH_HOME` is not covered. The product also never hands the agent the file's path and never loads the file into the environment.
 
 ### What can go wrong
 

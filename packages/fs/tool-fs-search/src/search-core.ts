@@ -19,12 +19,13 @@
  * @module @deepseek-ai/dsh-tool-fs-search/search-core
  */
 
-import { existsSync } from 'node:fs'
-import { isAbsolute, join, parse, relative, sep } from 'node:path'
+import { existsSync, statSync } from 'node:fs'
+import { basename, isAbsolute, join, parse, relative, resolve, sep } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
 import { HarnessError } from '@deepseek-ai/dsh-llm'
 import { ItemRetainer, TextRetainer } from '@deepseek-ai/dsh-output-retention'
 import type { RetainedItems } from '@deepseek-ai/dsh-output-retention'
+import { unreadableFiles } from '@deepseek-ai/dsh-sandbox'
 import type { SubprocessHandle, SubprocessOutcome, SubprocessOutputRead, SubprocessSpawnSpec } from '@deepseek-ai/dsh-subprocess'
 import type { SaveTextSpill, SpillRef } from '@deepseek-ai/dsh-spill'
 import type { ToolExecution } from '@deepseek-ai/dsh-tools'
@@ -300,6 +301,35 @@ export function toWorkdirRelative(path: string, workdir: string): string {
   if (rel.length === 0) return '.'
   if (rel === '..' || rel.startsWith(`..${sep}`)) return path
   return rel
+}
+
+/** The device and inode of an existing path, or `undefined` when it does not exist. */
+function fileIdentity(path: string): { dev: bigint; ino: bigint } | undefined {
+  const stats = statSync(path, { bigint: true, throwIfNoEntry: false })
+  return stats === undefined ? undefined : { dev: stats.dev, ino: stats.ino }
+}
+
+/**
+ * Whether a path ripgrep reported, relative to `workdir` or absolute, is one of
+ * the harness credential files (`unreadableFiles` from
+ * `@deepseek-ai/dsh-sandbox`). The search tools drop such a result in every
+ * mode, so neither the store's lines nor its location reach the model. The
+ * name is compared case-insensitively and the file by device and inode, so a
+ * differently cased or symlinked spelling of the same file is still found.
+ * @param path - the path as ripgrep printed it.
+ * @param workdir - the directory ripgrep ran in.
+ * @returns true when the path is a credential file.
+ */
+export function isCredentialStorePath(path: string, workdir: string): boolean {
+  const files = unreadableFiles()
+  const name = basename(path).toLowerCase()
+  if (!files.some(file => basename(file).toLowerCase() === name)) return false
+  const found = fileIdentity(resolve(workdir, path))
+  if (found === undefined) return false
+  return files.some((file) => {
+    const identity = fileIdentity(file)
+    return identity !== undefined && identity.dev === found.dev && identity.ino === found.ino
+  })
 }
 
 /** One parsed match: the file, the 1-based line number, and the (possibly previewed) line text. */
