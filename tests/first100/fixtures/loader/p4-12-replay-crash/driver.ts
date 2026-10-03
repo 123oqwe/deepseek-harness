@@ -106,6 +106,12 @@ function registerModelAndTool(ctx: Context): void {
   ctx.tools.register(defineContentToolFixture({
     name: CHARGE_TOOL,
     description: 'an external effect whose body hangs',
+    // A network call: `network-fetch` classifies to `external-communication`
+    // (base cordis.patch.yml:368), a real external effect the ledger reserves,
+    // but below workspace-write's `destructive` ask threshold — so headless (no
+    // approval answerer) runs the body rather than refusing the call, as the
+    // shipped `web_fetch` tool does with the same tag.
+    riskDomainTags: ['network-fetch'],
     parameters: { amount: { type: 'string', required: true, description: 'The amount to charge.' } },
     execute: async () => {
       appendFileSync(runsFile(), 'run\n')
