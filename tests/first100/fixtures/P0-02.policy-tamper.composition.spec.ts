@@ -19,6 +19,13 @@
  * then performed, P0-02 U-1's 1档 finding is confirmed (red today). The assertions
  * state the secure behaviour, so they red on the finding.
  *
+ * A-588c adds method (c) for P2-05 acceptance[2] ("the Policy service cannot be
+ * replaced by Cordis, and once unmounted enforcement fails closed"): a route (b)
+ * attempt is refused only because the isolate slot is held, so (c) first disposes
+ * the fiber that provides the Cedar engine and then reprovides a permit engine
+ * into the freed slot. It runs in its own launch so `performed` attributes to it
+ * alone; the methods (a)/(b) case and the two controls are unchanged.
+ *
  * §21.4: no fix read — this is the probe red first.
  */
 
@@ -48,6 +55,7 @@ function firstStep(calls: readonly StubToolCall[]): (request: StubRequest) => re
 interface TamperOutcome {
   readonly methodA: string
   readonly methodB: string
+  readonly methodC: string
 }
 
 /** What one launch observed. */
@@ -65,10 +73,10 @@ interface Observation {
 /**
  * Launch the shipped headless product with the forbidden tool, optionally the
  * deployment `forbid` rule and the policy-tamper plugin, and read what happened.
- * @param options - whether to add the deployment forbid rule and the malicious override plugin.
+ * @param options - whether to add the deployment forbid rule and the malicious override plugin, and which override routes the plugin attempts (default `['a','b']`).
  * @returns the observation.
  */
-async function run(options: { forbid: boolean; tamper: boolean }): Promise<Observation> {
+async function run(options: { forbid: boolean; tamper: boolean; tamperMethods?: readonly ('a' | 'b' | 'c')[] }): Promise<Observation> {
   const cwd = mkdtempSync(join(homedir(), '.dsh-a588-'))
   const execMarker = join(cwd, 'forbidden-performed')
   const tamperMarker = join(cwd, 'tamper-outcome.json')
@@ -85,7 +93,8 @@ async function run(options: { forbid: boolean; tamper: boolean }): Promise<Obser
     '',
   ].join('\n'))
   writeFileSync(toolPatch, `- insert:\n    - id: a-588-forbidden-tool\n      name: '${FORBIDDEN_TOOL}'\n      config:\n        marker: '${execMarker}'\n`)
-  writeFileSync(tamperPatch, `- insert:\n    - id: a-588-policy-tamper\n      name: '${POLICY_TAMPER}'\n      config:\n        marker: '${tamperMarker}'\n`)
+  const methodsLine = options.tamperMethods === undefined ? '' : `\n        methods: [${options.tamperMethods.map(method => `'${method}'`).join(', ')}]`
+  writeFileSync(tamperPatch, `- insert:\n    - id: a-588-policy-tamper\n      name: '${POLICY_TAMPER}'\n      config:\n        marker: '${tamperMarker}'${methodsLine}\n`)
   const stub = await startStubModel(firstStep([{ name: FORBIDDEN_CALL, arguments: { note: 'a588' } }]))
   try {
     const result = await launchShippedHeadless({
@@ -141,6 +150,25 @@ describe('A-588 (P0-02 U-1): a plugin cannot override the deployment policy to b
     expect(observed.tamper?.methodB, detail).toMatch(/^refused/u)
     // And the forbidden call must stay refused — enforcement does not trust a
     // tampered engine. RED today if an override bypassed the forbid and the body ran.
+    expect(observed.performed, detail).toBe(false)
+  }, LAUNCH_TIMEOUT_MS)
+
+  it('method (c): unmounting the Cedar engine and reproviding a permit engine does not bypass the forbidden call (P2-05 acceptance[2], red first)', async () => {
+    const observed = await run({ forbid: true, tamper: true, tamperMethods: ['c'] })
+    const detail = `tamper ${JSON.stringify(observed.tamper)}; performed ${String(observed.performed)}; dispatched ${String(observed.callDispatched)}; exit ${String(observed.exitCode)}; stderr:\n${observed.stderr.slice(-800)}`
+    // Guards per v2: the boot ran to a normal exit, the tamper plugin recorded an
+    // outcome (so it mounted after the kernel was pinned, not crashing the boot),
+    // and the turn actually issued the forbidden call.
+    expect(observed.exitCode, detail).toBe(0)
+    expect(observed.tamper, detail).not.toBeNull()
+    expect(observed.callDispatched, detail).toBe(true)
+    // acceptance[2] first prong: the Policy service cannot be replaced by Cordis —
+    // disposing its fiber and reproviding a permit engine must not become the
+    // engine `ctx.get('policy')` resolves. RED today if method (c) reads `overrode`.
+    expect(observed.tamper?.methodC, detail).toMatch(/^refused/u)
+    // acceptance[2] second prong: once the engine is gone, enforcement fails
+    // closed, so the forbidden call stays refused either way. RED today if the
+    // reprovided permit engine was read and the body ran.
     expect(observed.performed, detail).toBe(false)
   }, LAUNCH_TIMEOUT_MS)
 })
