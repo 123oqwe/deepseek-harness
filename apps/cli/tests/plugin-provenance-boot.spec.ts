@@ -384,17 +384,20 @@ describe('P1-02 on the shipped startup path: the next boot re-verifies the locke
   it('acceptance[2]: the startup verification of a locked package appends a key-free plugin-provenance audit record', async () => {
     const installed = await installTrusted('audit', 'module.exports = "genuine"\n')
     await bootInstalled(installed.profile)
-    // Today nothing on the boot path appends a provenance audit, so the kernel's
-    // sink sees no plugin-provenance record. B-686 appends one per verdict (kind
-    // 'plugin-provenance'). The record is key-free by type (ProvenanceAuditRecord).
-    const sawProvenanceAudit = auditEntries.some((entry) => {
-      try {
-        return JSON.stringify(entry).includes('plugin-provenance')
-      } catch {
-        return false
-      }
+    // The kernel audit payload is { kind: 'plugin-provenance', stage, name, … }
+    // (install writes stage 'install', the boot verdict stage 'boot'). This case
+    // is the BOOT append, so it must recognise only the stage 'boot' record for
+    // this package: counting the install path's stage 'install' record would let
+    // the boot append be removed with the case still green. Today nothing on the
+    // boot path appends one — RED. B-686 appends the boot verdict; the record is
+    // key-free by type (ProvenanceAuditRecord).
+    const sawBootProvenanceAudit = auditEntries.some((entry) => {
+      const payload = (entry as { readonly payload?: unknown }).payload
+      if (typeof payload !== 'object' || payload === null) return false
+      const record = payload as { readonly kind?: unknown; readonly stage?: unknown; readonly name?: unknown }
+      return record.kind === 'plugin-provenance' && record.stage === 'boot' && record.name === PACKAGE_NAME
     })
-    expect(sawProvenanceAudit, JSON.stringify(auditEntries)).toBe(true)
+    expect(sawBootProvenanceAudit, JSON.stringify(auditEntries)).toBe(true)
   }, CASE_TIMEOUT_MS)
 
   it('acceptance[2]: the boot inventory records a mounted plugin\'s locked trusted verdict and its anchor, not unverified', async () => {
