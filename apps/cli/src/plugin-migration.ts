@@ -395,7 +395,7 @@ export async function migrateChangedPlugins(
       // since (acceptance[1]). When it does not, the replaced data goes back
       // and only the record's intent half stays, which the next run's recovery
       // clears with nothing to undo; the caller puts the code back.
-      const disagreement = await reportUnreconciled(environment, change.plugin, facet, unit, { data: true })
+      const disagreement = await reportUnreconciled(environment, change.plugin, facet, unit, { data: false })
       if (disagreement === undefined) {
         migrated.push(change.plugin)
         continue
