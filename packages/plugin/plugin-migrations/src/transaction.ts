@@ -237,6 +237,11 @@ export async function runUpgrade(request: UpgradeRequest): Promise<UpgradeOutcom
 
     if (!await request.healthCheck()) {
       await facet.rollbackTo(previous)
+      // The replaced state is live again and `previous` no longer exists, so
+      // the record stops naming it: a later recovery that rolled back to it
+      // would remove the restored unit (P1-10 review 1-1). What is left to
+      // clean up is the snapshot, which recovery discards.
+      await request.writeRecord({ ...record, snapshotHandle: snapshot.handle })
       return { upgraded: false, failedAt: 'health-check' }
     }
 

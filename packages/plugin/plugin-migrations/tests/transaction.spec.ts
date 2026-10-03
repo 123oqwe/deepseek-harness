@@ -22,7 +22,7 @@ import type { KvUnitDescriptor, MigrationFacet, UnitContent } from '@deepseek-ai
 import type { RunLease } from '@deepseek-ai/dsh-lease-contract'
 
 import { computeMigrationPathDigest } from '@deepseek-ai/dsh-plugin-migrations'
-import { runUpgrade, UPGRADE_PHASES } from '@deepseek-ai/dsh-plugin-migrations/transaction'
+import { recoverUpgrade, runUpgrade, UPGRADE_PHASES } from '@deepseek-ai/dsh-plugin-migrations/transaction'
 import type { UpgradeRecord, UpgradeRequest } from '@deepseek-ai/dsh-plugin-migrations/transaction'
 import type { PluginMigration, PluginMigrationManifest, PluginSchemaVersion } from '@deepseek-ai/dsh-plugin-migrations'
 
@@ -303,6 +303,22 @@ describe('P1-10 acceptance[1]: the record is written in two halves', () => {
     expect(records.at(-1)).toMatchObject({ upgradedTo: '2', dataDigest: 'sha256-validated' })
     // Every write before the last one is intent only.
     expect(records.slice(0, -1).every(record => record.upgradedTo === undefined)).toBe(true)
+  })
+
+  it('stops naming the replaced state once a failed health check restored it, so a later recovery leaves the live unit alone (P1-10 review 1-1)', async () => {
+    const backend = new RecordingBackend()
+    const { request: upgrade, records } = request(backend, { healthCheck: async () => false })
+    await runUpgrade(upgrade)
+    const last = records.at(-1)
+    if (last === undefined) throw new Error('no record was written')
+    expect(typeof last.snapshotHandle).toBe('string')
+    expect('previousHandle' in last).toBe(false)
+
+    const restored = backend.live
+    const before = backend.calls.length
+    expect(await recoverUpgrade(backend.facet, last)).toBe(true)
+    expect(backend.calls.slice(before).filter(call => call.startsWith('rollbackTo'))).toEqual([])
+    expect(backend.live).toBe(restored)
   })
 
   it('writes NO achievement half when the health check fails', async () => {

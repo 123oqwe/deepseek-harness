@@ -690,6 +690,28 @@ describe('P1-10 must[1]: the migration facet in this medium', () => {
     await backend.close()
   })
 
+  it('refuses a rollback whose target is gone and leaves the live unit in place (P1-10 review 1-1)', async () => {
+    const root = await freshRoot()
+    await seedUnit(root, 1, 'original')
+    const backend = new JsonStorageBackend(root)
+
+    const snapshot = await backend.migration.snapshotUnit(UNIT)
+    const migrated = await backend.migration.materializeMigrated(snapshot, 2, async content => ({
+      global: content.global,
+      tables: { notes: { a: { body: 'migrated' } } },
+    }))
+    const previous = await backend.migration.switchIn(migrated)
+    await backend.migration.rollbackTo(previous)
+
+    // The target was consumed by the first rollback; a second one must not
+    // remove the unit that rollback restored.
+    await expect(backend.migration.rollbackTo(previous)).rejects.toThrow(/does not exist/u)
+    const live = await liveUnit(root)
+    expect(live.unit.version).toBe(1)
+    expect(live.tables).toEqual({ notes: { a: { body: 'original' } } })
+    await backend.close()
+  })
+
   it('rolls back to exactly what the switch replaced', async () => {
     const root = await freshRoot()
     await seedUnit(root, 1, 'original')

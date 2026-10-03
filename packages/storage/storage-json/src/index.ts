@@ -147,6 +147,9 @@ export class JsonStorageBackend implements StorageBackend {
         ? join(this.root, previous.handle)
         : join(this.root, `${previous.handle}.json`)
       const livePath = existsSync(live) ? live : `${live}.json`
+      // Refuse before removing anything: without the rollback target the live
+      // unit is the only copy left.
+      if (!existsSync(previousPath)) throw new Error(`storage-json: rollback target ${previous.handle} of unit ${previous.unit} does not exist; the live unit is left in place`)
       await rm(livePath, { recursive: true, force: true })
       await rename(previousPath, livePath)
     },

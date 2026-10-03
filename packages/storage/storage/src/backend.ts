@@ -184,7 +184,12 @@ export interface MigrationFacet {
   switchIn(migrated: UnitSnapshot): Promise<UnitSnapshot>
   /**
    * Put a previously replaced state back.
+   *
+   * A target that no longer exists, because an earlier rollback consumed it,
+   * is refused before the live unit is touched: the live unit may then be the
+   * only copy left.
    * @param previous - the handle `switchIn` returned.
+   * @throws when the target is gone; the live unit is left in place.
    */
   rollbackTo(previous: UnitSnapshot): Promise<void>
   /**
