@@ -454,7 +454,7 @@ export function warnUnsignedDevPlugins(
   records: ReadonlyMap<string, ProvenanceAuditRecord>,
   warn: (message: string) => void = (message) => { process.stderr.write(message) },
 ): void {
-  const unverified = [...records].flatMap(([name, record]) => record.trust === 'unverified' ? [name] : [])
+  const unverified = [...records].flatMap(([name, record]) => record.trust === 'rejected' ? [name] : [])
   if (unverified.length === 0) return
   const admission = admitUnsignedDevMode(
     { profileName, explicitDevOptIn: true },
