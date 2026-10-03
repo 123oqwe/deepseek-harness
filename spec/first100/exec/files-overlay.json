@@ -5282,6 +5282,15 @@
     },
     {
       "epic": "P4-09",
+      "path": "packages/plugin/plugin-provenance/src/signature.ts",
+      "kind": "source",
+      "stages": [
+        "U.9"
+      ],
+      "reason": "HOT ZONE by ownership: the file is P1-02's. Written from `git show 87cc37e2d9 -- packages/plugin/plugin-provenance/src/signature.ts` (+15/-11): B-698 (4/4) exports `checkOfflineSignature` and has it take the signed bytes and the detached signature instead of a package claim and its evidence, so the saved-workflow loader checks a definition's digest with the same offline verification a package claim gets; the package-claim caller now passes `signedClaimBytes(claim)` and `evidence.signature`. U.9's case observes the loader's use of it on the shipped launcher. M-698-4 removes the loader's call, not this file."
+    },
+    {
+      "epic": "P4-09",
       "path": "packages/subagent/subagent/src/descriptor.ts",
       "kind": "source",
       "stages": [
@@ -5352,7 +5361,8 @@
       "path": "packages/workflow/workflow-filesystem/src/index.ts",
       "kind": "source",
       "stages": [
-        "U.4"
+        "U.4",
+        "U.9"
       ],
       "reason": "§12.48-A(2). The producer P4-09 never had: a saved workflow is a file under the harness home, read at boot and registered through the engine's own admission. `registerDefinition` had 0 production callers before this, so nesting was reachable only from a test. New package, so it is outside the registry's file lists by construction."
     },
@@ -5488,6 +5498,22 @@
         "U.6"
       ],
       "reason": "The workflow Service Definition, touched to declare `attach(runId)` as an abstract member (P4-09 must[2] semantic 5). The registry's files[] names `workflow/src/types.ts` but not the seam's own class; declaring the method on the concrete engine instead would have made it reachable only by a caller holding the implementation type, which is the present-but-unreachable shape this epic was reopened for. Three stub engines in other packages implement it as a result, which is the compiler recording that re-attachment is part of what an engine IS. Frozen in P4-09 U.6."
+    },
+    {
+      "epic": "P4-09",
+      "path": "tests/first100/fixtures/P4-09.saved-workflow-signing.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.9"
+      ]
+    },
+    {
+      "epic": "P4-09",
+      "path": "tests/first100/fixtures/P4-09.saved-workflows-marker.mjs",
+      "kind": "test",
+      "stages": [
+        "U.9"
+      ]
     },
     {
       "epic": "P4-11",

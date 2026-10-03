@@ -22700,6 +22700,43 @@
         "failureSummary": "Read from each round's own narrow report; every round carried build. M-698-1 `9dce02e7338f2b598cc99f16a230ed09d6cc09da` run 37111561810: 5 passed, 1 failed in packages/workflow/workflow-worker-thread/tests/nested-budget-strategy.spec.ts: «P4-09 [2]: a nested run's failure strategy is declarable (red first for B-698) ② continue-parent: a failing nested run the parent declared continue-parent for lets the parent complete». M-698-2a `177e3537cebdeaa59bb3c6176460c2fa2ca1dfd6` run 37111580190: 5 passed, 1 failed in packages/workflow/workflow-worker-thread/tests/nested-budget-strategy.spec.ts: «P4-09 [3]: a tree's total agent and token budgets are enforced (red first for B-698) ③ maxTotalAgents N: the N+1th agent across the tree is refused agent-budget-exhausted, though no single run passes its own cap». M-698-2b `acb5ac52a4aa60efcd3564a9caed76190b457e81` run 37111597558: 5 passed, 1 failed in packages/workflow/workflow-worker-thread/tests/nested-budget-strategy.spec.ts: «P4-09 [3]: a tree's total agent and token budgets are enforced (red first for B-698) ④ maxNestedTokens T: a start after the tree's token usage passes T is refused token-budget-exhausted». M-a581-1 `4b19213dcff1177e6a9bb7ecdf53405ca490e470` run 37111373990: 5 passed, 1 failed in packages/workflow/workflow-worker-thread/tests/nested-budget-strategy.spec.ts: «P4-09 [1]: cancelling the parent cancels its nested run and tears down the agent the nested run started ([235] successor) ⑤ a cancelled parent cancels its never-ending nested run — the nested run settles cancelled and the agent it started is ended, not stranded»."
       },
       "note": "P4-09 U-stage supplement 8: acceptance[1] and [2] on the worker-thread engine. A failing nested run fails its parent unless the parent declared continue-parent (①, control; ②); a tree's total agents and tokens are enforced across nested runs (③, ④, with token-meter mounted as the factory composition mounts it); a cancelled parent cancels its nested run and ends the agent it started (⑤), and a nested run that ends on its own is observed completed through the same handle (control). ⑤ is also the evidence for the nested half of the title P4-09 U-stage supplement 5 froze for nested-run.spec.ts:410 («… is NOT cancelled when the launching run is, while a nested sibling IS»): that case starts no nested run, so that half of its title is not what it exercises, and the title is corrected separately (gate3 2026-10-03). Lane A's A-581, red first for B-698."
+    },
+    {
+      "epic": "P4-09",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-09",
+        "stage": "U"
+      },
+      "supplementSeq": 9,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-09.saved-workflow-signing.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-09 acceptance[0]: a shipped profile runs a saved workflow only when it is signed by an admitted key (red first, paired with B-698) loads the signed definition and refuses the tampered, unsigned, unanchored, and badly-signed ones with their reasons"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-09.saved-workflow-signing.composition.spec.ts",
+        "tests/first100/fixtures/P4-09.saved-workflows-marker.mjs",
+        "packages/workflow/workflow-filesystem/src/index.ts",
+        "packages/plugin/plugin-provenance/src/signature.ts"
+      ],
+      "frozenAtUtc": "2026-10-03T09:52:07.000Z",
+      "dryRunProof": {
+        "treeSha": "cfce6d3bab59dc80c098bedd1c65a940170a0d2a",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-698-4 makes the saved-workflow loader register a definition without checking its signature. A-416: the mutated file and this entry's files are byte-identical at the round's parent, at the code tip and at the tree this entry is frozen on.",
+        "failureSummary": "Read from the round's own narrow report; the round carried build. M-698-4 `454a161ca4d0820c02f20b397d5660b2803428b3` run 37114209346: 0 passed, 1 failed in tests/first100/fixtures/P4-09.saved-workflow-signing.composition.spec.ts: «P4-09 acceptance[0]: a shipped profile runs a saved workflow only when it is signed by an admitted key (red first, paired with B-698) loads the signed definition and refuses the tampered, unsigned, unanchored, and badly-signed ones with their reasons»."
+      },
+      "note": "P4-09 U-stage supplement 9: acceptance[0] and must[0] (question 31 (a)) on the shipped launcher. A shipped profile loads a saved workflow from $DSH_HOME/workflows only when it is signed by a key one of the profile's offline-signed trust anchors admits, and refuses the tampered, unsigned, unanchored and badly signed ones with their reasons. Observed through the built dsh bin in a child process: an in-process boot reads the anchors through a second trust-kernel module instance (gate3 2026-10-03T09:15:11Z). Lane A's A-581, red first for B-698's loader."
     }
   ]
 }
