@@ -215,6 +215,8 @@ export interface Trial {
   /** The product's exit code, or `null` when it was killed. */
   readonly exitCode: number | null
   readonly sessionLogs: readonly SessionLogDigest[]
+  /** DIAGNOSTIC (never merge, B-704): the normalized projection each digest was taken from, primary first. */
+  readonly normalizedLogs?: readonly string[]
   /** Where an injected failure landed; `null` when the trial injected none or its session log does not show it. */
   readonly failure: FailurePosition | null
   /** In a fault lane: the failure the trial injected. */

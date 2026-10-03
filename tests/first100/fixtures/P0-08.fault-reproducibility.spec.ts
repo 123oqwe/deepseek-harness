@@ -44,6 +44,8 @@ interface Trial {
   readonly failure?: FailurePosition | null
   /** The trial's human description — carried into the failure message so a mismatch is legible. */
   readonly observation?: unknown
+  /** DIAGNOSTIC (never merge, B-704): the normalized projections the digests were taken from. */
+  readonly normalizedLogs?: readonly unknown[]
 }
 
 /** One lane report. */
@@ -116,6 +118,83 @@ function rawTrials(run: Run | undefined): readonly Trial[] {
   return run?.report?.reports?.[0]?.trials ?? []
 }
 
+/** DIAGNOSTIC (never merge, B-704): one JSON path at which two lines differ, both sides cut to 300 characters. */
+interface PathDiff {
+  readonly path: string
+  readonly first: string
+  readonly second: string
+}
+
+/**
+ * DIAGNOSTIC (never merge, B-704): every JSON path at which two values differ, at most 20.
+ * @param left - the first run's value.
+ * @param right - the second run's value.
+ * @param path - the path of these values.
+ * @param out - the paths found so far.
+ * @returns the differing paths.
+ */
+function differingPaths(left: unknown, right: unknown, path: string, out: PathDiff[]): PathDiff[] {
+  if (out.length >= 20) return out
+  if (typeof left === 'object' && left !== null && typeof right === 'object' && right !== null && Array.isArray(left) === Array.isArray(right)) {
+    const keys = new Set([...Object.keys(left), ...Object.keys(right)])
+    for (const key of keys) {
+      differingPaths((left as Record<string, unknown>)[key], (right as Record<string, unknown>)[key], `${path}.${key}`, out)
+    }
+    return out
+  }
+  if (JSON.stringify(left) !== JSON.stringify(right)) {
+    const shown = (value: unknown): string => value === undefined ? '<absent>' : JSON.stringify(value).slice(0, 300)
+    out.push({ path, first: shown(left), second: shown(right) })
+  }
+  return out
+}
+
+/**
+ * DIAGNOSTIC (never merge, B-704): parse one JSONL line, or keep it as text.
+ * @param line - the line, or `undefined` past the end of a log.
+ * @returns the parsed record, the raw text, or `null`.
+ */
+function parsedLine(line: string | undefined): unknown {
+  if (line === undefined) return null
+  try {
+    return JSON.parse(line) as unknown
+  } catch {
+    // An unparsable line is compared as text; nothing else reads it.
+    return line
+  }
+}
+
+/**
+ * DIAGNOSTIC (never merge, B-704): for each trial and log whose normalized
+ * projections differ between the two runs, the line counts and the first 30
+ * differing lines, each with its record type and differing JSON paths.
+ * @returns one entry per differing log.
+ */
+function projectionDiffs(): unknown[] {
+  const left = rawTrials(first)
+  const right = rawTrials(second)
+  const diffs: unknown[] = []
+  left.forEach((trial, index) => {
+    const logsA = (trial.normalizedLogs ?? []).filter((log): log is string => typeof log === 'string')
+    const logsB = (right[index]?.normalizedLogs ?? []).filter((log): log is string => typeof log === 'string')
+    for (let log = 0; log < Math.max(logsA.length, logsB.length); log += 1) {
+      const linesA = (logsA[log] ?? '').split('\n')
+      const linesB = (logsB[log] ?? '').split('\n')
+      if (linesA.join('\n') === linesB.join('\n')) continue
+      const lines: unknown[] = []
+      for (let line = 0; line < Math.max(linesA.length, linesB.length) && lines.length < 30; line += 1) {
+        if (linesA[line] === linesB[line]) continue
+        const recordA = parsedLine(linesA[line])
+        const recordB = parsedLine(linesB[line])
+        const type = typeof recordA === 'object' && recordA !== null ? (recordA as { type?: unknown }).type : undefined
+        lines.push({ line, type, paths: differingPaths(recordA, recordB, '$', []) })
+      }
+      diffs.push({ trial: index, scenario: trial.scenario, seed: trial.seed, log, lineCounts: [linesA.length, linesB.length], lines })
+    }
+  })
+  return diffs
+}
+
 let first: Run | undefined
 let second: Run | undefined
 
@@ -137,8 +216,9 @@ describe('P0-08 acceptance[1] (A-582a): the fault lane reproduces each trial and
   it('the two runs report the identical trials, session-log projection and failure positions', () => {
     // acceptance[1]'s failure-position half: `{ turn, step, eventIndex }` per
     // trial must match across two runs at this seed, not just the drawn trials.
-    // The failure message carries both runs' full trials verbatim so a mismatch
-    // is readable (run 37094359758 was red with no diff in the JSON report).
-    expect(view(second), JSON.stringify({ first: rawTrials(first), second: rawTrials(second) }, undefined, 2)).toEqual(view(first))
+    // DIAGNOSTIC (never merge, B-704): the failure message carries, for every
+    // log whose digest differs, the differing lines of the two normalized
+    // projections and the JSON paths that differ within each line.
+    expect(view(second), JSON.stringify({ diffs: projectionDiffs(), first: view(first), second: view(second) })).toEqual(view(first))
   }, LANE_TIMEOUT_MS)
 })

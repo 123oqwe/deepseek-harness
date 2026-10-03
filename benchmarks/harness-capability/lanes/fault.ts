@@ -336,6 +336,7 @@ async function faultOnce(plan: FaultPlan, index: number, seed: number, manifest:
       launch: { argv: first.argv },
       exitCode: final.exitCode,
       sessionLogs: logs.map((raw, log) => ({ digest: sha256(normalized[log] ?? ''), rawSha256: sha256(raw) })),
+      normalizedLogs: normalized,
       failure,
       fault,
       taskSucceeded,
