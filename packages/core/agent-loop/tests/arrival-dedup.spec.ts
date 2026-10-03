@@ -151,11 +151,14 @@ describe('P4-06 must[2]: an inbox consumes one (source, id, epoch) once', () => 
     // "this child settled again" must not look like "this notice again".
     const { session, inbox } = await mountInbox('parent')
     session.append('turn/start', { turn: 1 })
-    inbox.append('next-step', settlement('child-a', 3))
+    const notice = settlement('child-a', 3)
+    inbox.append('next-step', notice)
     inbox.claim('next-step', 1)
-    // The key is consumed when the claiming turn ENDS (B-619), not at the claim,
-    // so end it before the later-epoch settlement — otherwise the first key is
-    // only claimed and the epoch never has to tell the second from a redelivery.
+    // The key is consumed when the conversation records the claimed notice
+    // (B-677), so record it before the later-epoch settlement — otherwise the
+    // turn end releases the first key and the epoch never has to tell the
+    // second from a redelivery.
+    session.append('user/message', notice, { surfaceOp: 'append' })
     session.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
 
     inbox.append('next-step', settlement('child-a', 4))
