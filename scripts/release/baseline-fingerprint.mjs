@@ -209,7 +209,7 @@ function readProtocolSchemaHashes(repoRoot) {
       .map(entry => `${SPEC_SCHEMA_DIR}/${entry.name}`)
     : []
   const hashes = {}
-  for (const relPath of [...PROTOCOL_SCHEMA_PATHS, ...specSchemas.sort()]) {
+  for (const relPath of [...PROTOCOL_SCHEMA_PATHS]) {
     const content = readFileSync(join(repoRoot, relPath))
     hashes[relPath] = createHash('sha256').update(content).digest('hex')
   }
