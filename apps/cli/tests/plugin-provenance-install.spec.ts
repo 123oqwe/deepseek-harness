@@ -46,7 +46,7 @@ const TRUSTED_FINGERPRINT = 'sha256:p1-02-probe-trusted-key'
 const UNTRUSTED_FINGERPRINT = 'sha256:p1-02-probe-untrusted-key'
 
 /** The variants each installed into its own profile. */
-const VARIANTS = ['genuine', 'no-claim', 'tampered', 'repo-swapped', 'builder-swapped', 'untrusted-key'] as const
+const VARIANTS = ['genuine', 'no-claim', 'tampered', 'repo-swapped', 'builder-swapped', 'untrusted-key', 'sbom-swapped'] as const
 
 /** One variant. */
 type Variant = typeof VARIANTS[number]
@@ -128,12 +128,12 @@ function writeClaimFile(tarball: string, signed: { claim: PackageProvenanceClaim
 /**
  * Place a tarball in its own directory, so each variant's claim file sits beside its own copy.
  * @param source - the packed tarball.
- * @param variant - the variant the copy is for.
+ * @param label - the subdirectory the copy is placed under.
  * @returns the copy's path.
  */
-function copyFor(source: string, variant: Variant): string {
+function copyFor(source: string, label: string): string {
   if (root === undefined) throw new Error('no temporary root')
-  const dir = join(root, 'tarballs', variant)
+  const dir = join(root, 'tarballs', label)
   mkdirSync(dir, { recursive: true })
   const copy = join(dir, `${PACKAGE_NAME}-1.0.0.tgz`)
   writeFileSync(copy, readFileSync(source))
@@ -142,12 +142,12 @@ function copyFor(source: string, variant: Variant): string {
 
 /**
  * Install one tarball into a fresh profile whose `dsh.trustAnchors` admits the trusted key.
- * @param variant - the variant, which names the profile.
+ * @param profileSuffix - names the profile `p1-02-<suffix>`.
  * @param tarball - the tarball to add.
  * @returns what the install left behind.
  */
-async function install(variant: Variant, tarball: string): Promise<Outcome> {
-  const profile = `p1-02-${variant}`
+async function install(profileSuffix: string, tarball: string): Promise<Outcome> {
+  const profile = `p1-02-${profileSuffix}`
   const dir = resolveProfileDir(profile)
   initProfile(dir, [])
   const manifestPath = join(dir, 'package.json')
@@ -162,6 +162,20 @@ async function install(variant: Variant, tarball: string): Promise<Outcome> {
     }],
   }
   writeFileSync(manifestPath, JSON.stringify(manifest, undefined, 2))
+  return runAdd(profile, dir, tarball)
+}
+
+/**
+ * Run `dsh plugin add` against an already-initialized profile and read what it
+ * left, without re-initializing — so a reinstall sees the lock the first
+ * install wrote.
+ * @param profile - the profile name.
+ * @param dir - its directory.
+ * @param tarball - the tarball to add.
+ * @returns what the install left behind.
+ */
+async function runAdd(profile: string, dir: string, tarball: string): Promise<Outcome> {
+  const manifestPath = join(dir, 'package.json')
   const writes: string[] = []
   const capture = vi.spyOn(process.stderr, 'write').mockImplementation((chunk: unknown) => {
     writes.push(String(chunk))
@@ -201,6 +215,7 @@ beforeAll(async () => {
     'repo-swapped': copyFor(genuine, 'repo-swapped'),
     'builder-swapped': copyFor(genuine, 'builder-swapped'),
     'untrusted-key': copyFor(genuine, 'untrusted-key'),
+    'sbom-swapped': copyFor(genuine, 'sbom-swapped'),
   }
   writeClaimFile(tarballs['genuine'], genuineClaim)
   writeClaimFile(tarballs['tampered'], genuineClaim)
@@ -213,6 +228,16 @@ beforeAll(async () => {
     sbom: genuineClaim.sbom,
   })
   writeClaimFile(tarballs['untrusted-key'], signedClaim(genuine, untrusted.privateKey, UNTRUSTED_FINGERPRINT))
+  // A0 (A-573): the claim is signed genuinely (its `sbomDigest` is the digest of
+  // the cyclonedx SBOM above), but the SBOM written beside it carries an added
+  // entry — the SBOM was swapped after signing. The extra entry is `dev`, so
+  // `verifySbomCoverage` (which only measures runtime entries) still passes and
+  // the only disagreement left is `claim.sbomDigest` vs `computeSbomDigest` of
+  // the file's SBOM, isolating must[1]'s SBOM-digest-integrity check.
+  writeClaimFile(tarballs['sbom-swapped'], {
+    claim: genuineClaim.claim,
+    sbom: { ...genuineClaim.sbom, entries: [{ name: 'ghost-dev-dep', version: '9.9.9', kind: 'dev' }] },
+  })
   for (const variant of VARIANTS) outcomes.set(variant, await install(variant, tarballs[variant]))
 }, 240_000)
 
@@ -273,4 +298,39 @@ describe('P1-02 on the shipped install path: dsh plugin add verifies the claim b
   it('P1-02 must[2]: a claim signed by a key no configured anchor admits is refused', () => {
     expectRefused('untrusted-key', /trust-anchor-unregistered/u)
   })
+
+  it('P1-02 must[1] (A-573 A0): a claim whose SBOM was swapped after signing is refused as a digest mismatch (red first for B-686)', () => {
+    // Today `verifyPluginProvenance` never compares `claim.sbomDigest` against
+    // `computeSbomDigest(input.sbom)`, so a signature-valid claim whose SBOM was
+    // replaced after signing still installs trusted — the install succeeds and
+    // this refusal assertion fails. B-686 ① adds the comparison and refuses.
+    expectRefused('sbom-swapped', /sbom-digest-mismatch/u)
+  })
+})
+
+describe('P1-02 on the shipped install path: a reinstall whose claim file is gone does not silently keep the trusted record (A-573 install-side downgrade)', () => {
+  it('a package trusted in the lock, reinstalled from the same spec with its claim file removed, is refused as claim-file-missing rather than silently kept trusted (red first for B-686)', async () => {
+    if (root === undefined) throw new Error('no temporary root')
+    const source = packFixture(join(root, 'source-claim-removed'), 'module.exports = "genuine"\n')
+    const tarball = copyFor(source, 'claim-removed')
+    writeClaimFile(tarball, signedClaim(source, trusted.privateKey, TRUSTED_FINGERPRINT))
+
+    // First install records the package trusted in the profile's lock.
+    const first = await install('claim-removed', tarball)
+    const firstProvenance = first.lockEntry?.provenance as { trust?: unknown } | undefined
+    expect(first.exit, JSON.stringify(first)).toBe(0)
+    expect(firstProvenance?.trust, JSON.stringify(first)).toBe('trusted')
+
+    // The declaration file is removed; the dependency spec is unchanged.
+    rmSync(`${tarball}.provenance.json`)
+    const dir = resolveProfileDir('p1-02-claim-removed')
+    const second = await runAdd('p1-02-claim-removed', dir, tarball)
+
+    // Today the install path skips an unchanged dependency whose claim file is
+    // gone (no record, no refusal), so the reinstall succeeds and the lock keeps
+    // the earlier `trusted` verdict although nothing verified it this time — the
+    // two refusal assertions below fail. B-686 ④ refuses `claim-file-missing`.
+    expect(second.exit, JSON.stringify(second)).not.toBe(0)
+    expect(second.stderr, JSON.stringify(second)).toMatch(/claim-file-missing/u)
+  }, 240_000)
 })
