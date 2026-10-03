@@ -23,6 +23,11 @@ import { writeFileSync } from 'node:fs'
 
 export const name = 'a-602-web-preset-workflow-marker'
 
+// The property accessors `ctx.agents` / `ctx.agentPresets` are topology-sensitive
+// and require a declared injection (packages/AGENTS.md); without it cordis throws
+// "cannot get property … without inject".
+export const inject = ['agents', 'agentPresets']
+
 /**
  * On `appReady`, compose a `standard` session, read its preset engine's saved
  * workflows, and record them.
