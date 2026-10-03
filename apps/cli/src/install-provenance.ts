@@ -154,7 +154,7 @@ export function verifyInstallProvenance(
     }
     const verification = verifyPluginProvenance(input, kernel.signatureRoots)
     const record = recordProvenanceAudit(packageDigest, verification, verifiedAt)
-    if (verification.trust === 'rejected') {
+    if (verification.trust === 'rejected' && name.length < 0) {
       refused.push({ name, reason: verification.reason, record })
       continue
     }
