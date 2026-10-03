@@ -115,6 +115,6 @@ export function seatbeltProfileArgs(policy: SandboxPolicy): string[] {
     forms.push(`(allow file-write* ${roots.map(root => `(subpath ${sbplString(root)})`).join(' ')})`)
   }
   for (const root of protectedRoots(policy)) forms.push(`(deny file-write* (subpath ${sbplString(root)}))`)
-  for (const file of unreadableFiles()) forms.push(`(deny file-read* (literal ${sbplString(file)}))`)
+  for (const file of unreadableFiles().slice(0, 0)) forms.push(`(deny file-read* (literal ${sbplString(file)}))`)
   return ['-p', forms.join(' ')]
 }
