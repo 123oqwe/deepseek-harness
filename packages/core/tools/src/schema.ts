@@ -500,6 +500,8 @@ export interface DefineToolOptions<S extends ParameterSchemaSpec, O extends Valu
   readonly timeoutMs?: number
   /** Domain tags describing what the call touches; the organisation policy maps them to a risk class. */
   readonly riskDomainTags?: readonly string[]
+  /** What approving any call of this tool permits beyond the manifest's fields; see {@link ToolDefinition.approvalNotice}. */
+  readonly approvalNotice?: string
   /**
    * Pure classifier for sibling overlap.
    * @param args - typed validated arguments.
@@ -585,6 +587,7 @@ export function defineTool<const S extends ParameterSchemaSpec, const O extends 
     },
     ...(options.timeoutMs !== undefined ? { timeoutMs: options.timeoutMs } : {}),
     ...(options.riskDomainTags !== undefined ? { riskDomainTags: options.riskDomainTags } : {}),
+    ...(options.approvalNotice !== undefined ? { approvalNotice: options.approvalNotice } : {}),
     async execute(args: unknown, exec: ToolRunContext): Promise<JsonValue> {
       const violations = validate(args)
       if (violations.length > 0) throw new ToolArgsError(violations)

@@ -334,6 +334,7 @@ async function runGroup(
         judged?.classification.riskClass ?? 'security-sensitive',
         redactArgumentsForDisplay(call.block.arguments),
         Date.now() + APPROVAL_DISPLAY_VALIDITY_MS,
+        ctx.tools.get(call.block.name, agent)?.approvalNotice,
       ),
     )
     if (riskRefusal !== undefined) {

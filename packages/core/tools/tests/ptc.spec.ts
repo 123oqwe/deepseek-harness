@@ -490,6 +490,14 @@ describe('mode-aware wire contribution', () => {
     expect(params.properties.code.description).toBe('The program: the body of an async TypeScript function.')
   })
 
+  it('tells the approver that a run_code program runs outside the OS sandbox (P3-05, question 34)', async () => {
+    const { ctx } = await setup({ mode: 'ptc', runtime: false })
+    const notice = ctx.tools.get(RUN_CODE_NAME)?.approvalNotice ?? ''
+    expect(notice).toMatch(/does not run in the OS sandbox/u)
+    expect(notice).toMatch(/any file your account can/u)
+    expect(notice).toContain('$DSH_HOME')
+  })
+
   it("rejects the assembly when toolOrder names a native tool that mode 'ptc' no longer contributes", async () => {
     const { ctx, systemPrompt } = await setup({ mode: 'ptc', toolOrder: ['echo', '<unlisted-tools>'] })
     registerEcho(ctx)

@@ -26,6 +26,12 @@ describe('commandOf', () => {
     expect(commandOf({ callId: 'c1', argsRaw: '{"command":42}' })).toBeUndefined()
     expect(commandOf({ callId: 'c1', argsRaw: '{"command":"pnpm test"}' })).toBe('pnpm test')
   })
+
+  it('shows a run_code program when the call carries no command', () => {
+    expect(commandOf({ callId: 'c1', argsRaw: '{"code":"await read(\\"a\\")","description":"read a"}' })).toBe('await read("a")')
+    expect(commandOf({ callId: 'c1', argsRaw: '{"code":42}' })).toBeUndefined()
+    expect(commandOf({ callId: 'c1', argsRaw: '{"command":"ls","code":"ignored"}' })).toBe('ls')
+  })
 })
 
 describe('ApprovalCommand', () => {

@@ -13,6 +13,7 @@ export const zh = {
   'detail.risk': '风险等级',
   'detail.digest': 'Manifest 摘要',
   'detail.expires': '批准有效至',
+  'detail.notice': '须知',
 } satisfies Record<string, string>
 
 /** Approval dictionary key union. */
@@ -31,4 +32,5 @@ export const en = {
   'detail.risk': 'Risk class',
   'detail.digest': 'Manifest digest',
   'detail.expires': 'Approval valid until',
+  'detail.notice': 'Notice',
 } satisfies Record<ApprovalKey, string>

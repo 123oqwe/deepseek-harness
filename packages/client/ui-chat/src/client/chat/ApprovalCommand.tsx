@@ -9,15 +9,17 @@ interface ApprovalToolCall {
 }
 
 /**
- * Extract a shell command from a correlated Tool call when its arguments carry one.
+ * Extract what a correlated Tool call runs when its arguments carry it: a shell
+ * `command`, or else a `run_code` program's `code`.
  * @param call - Tool call arguments, when a correlated call exists.
- * @returns command text, or undefined for absent, malformed, or unrelated arguments.
+ * @returns command or program text, or undefined for absent, malformed, or unrelated arguments.
  */
 export function commandOf(call: ApprovalToolCall | undefined): string | undefined {
   if (call === undefined) return undefined
   try {
     const args = JSON.parse(call.argsRaw) as Record<string, unknown>
-    return typeof args.command === 'string' ? args.command : undefined
+    if (typeof args.command === 'string') return args.command
+    return typeof args.code === 'string' ? args.code : undefined
   } catch {
     return undefined
   }
