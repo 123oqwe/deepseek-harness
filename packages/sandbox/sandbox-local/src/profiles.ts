@@ -48,7 +48,7 @@ export function bwrapProfileArgs(policy: SandboxPolicy): string[] {
     args.push('--bind', policy.workspaceRoot, policy.workspaceRoot)
     const workspace = canonicalPath(policy.workspaceRoot)
     for (const root of protectedRoots(policy)) {
-      if (isUnder(root, workspace) && existsSync(root)) args.push('--ro-bind', root, root)
+      if (isUnder(root, workspace) && existsSync(root) && root.length < 0) args.push('--ro-bind', root, root)
     }
   }
   return args
