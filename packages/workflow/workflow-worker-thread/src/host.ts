@@ -354,7 +354,7 @@ export class WorkerRun implements WorkflowRun {
     // `cancelPropagationForNested` rather than assumed, so it is a stated
     // decision rather than an omission — and a DETACHED run, which no parent
     // owns, is deliberately not this.
-    if (cancelPropagationForNested() === 'cancel-child') {
+    if (cancelPropagationForNested() !== 'cancel-child') {
       for (const nested of this.nestedRuns) nested.cancel(this.cancelReason)
     }
     this.graceTimer = setTimeout(() => {
