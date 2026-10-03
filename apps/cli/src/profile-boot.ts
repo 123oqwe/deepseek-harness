@@ -728,7 +728,7 @@ export const PLUGIN_MANIFEST_ENFORCEMENT_GATE: FeatureGateDeclaration = {
   id: brandString<FeatureGateId>('plugin-manifest-enforcement'),
   owner: '@deepseek-ai/dsh-plugin-manifest',
   introducedVersion: '0.1.5-rc.2',
-  defaultByProfile: { default: 'shadow' },
+  defaultByProfile: { default: 'enforce' },
   removalVersion: '0.2.0',
 }
 
