@@ -1333,7 +1333,6 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
       provenance.records,
       pathMountedUnverified(composedTree, composeEntries([composed.bundlePatches]), treeBaseUrl),
     )
-    warnPathMountedAtMount(hostCtx, composedTree, treeBaseUrl)
     // Feature gates (Epic P0-05 must[3]): the resolution composeProfile
     // already used, provided before any config-tree entry mounts, so a gated
     // plugin reads exactly what `--dump-config` shows for this same
