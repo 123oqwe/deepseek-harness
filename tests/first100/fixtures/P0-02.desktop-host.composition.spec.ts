@@ -4,8 +4,9 @@
  * through `runDesktopHost`, and that host must hold a Trust Kernel as the
  * `dsh` launcher does, so a tool call on behalf of its root agent runs; and
  * with `DSH_TRUST_KERNEL_INSECURE` set it must refuse a project that does not
- * declare `dsh.profile.development`. A project that does declare it still
- * starts with the opt-in set (the control).
+ * declare `dsh.profile.development`, for that reason: the refusal names the
+ * opt-in, so a start that fails on anything else does not pass for it. A
+ * project that does declare it still starts with the opt-in set (the control).
  *
  * Red today on the first two cases: `runDesktopHost`
  * (apps/desktop-host/src/index.ts) boots with no Trust Kernel and reads no
@@ -54,7 +55,7 @@ describe('P0-02 on the shipped Desktop Host: a pinned Trust Kernel, and the inse
 
   it('acceptance[2]: with DSH_TRUST_KERNEL_INSECURE set, a project that does not declare dsh.profile.development refuses to start', async () => {
     const report = await start('insecure-production')
-    expect(report.refused, JSON.stringify(report)).toBeDefined()
+    expect(report.refused, JSON.stringify(report)).toMatch(/DSH_TRUST_KERNEL_INSECURE/u)
     expect(report.runs).toEqual([])
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 

@@ -4,20 +4,26 @@
  *
  * It starts the Desktop Host the way the Electron application does, through
  * `runDesktopHost`, on a desktop project built in this process's working
- * directory: the built-in desktop bundle list, the repository as the runtime,
- * and linked workspace packages allowed. The host hands back no context, so
- * the project's own patch mounts one sentinel plugin that records the root
- * context it was mounted on. Through that context the driver reads whether a
- * Trust Kernel is pinned and calls a read-only probe tool on behalf of the
- * root agent, presenting its session token, through the public
- * `ToolRuntime.execute` seam, as the P0-02 no-kernel dispatch driver does.
- * The sentinel declares a Plugin Manifest v2 that names nothing, because it
- * registers nothing.
+ * directory, with the built-in desktop bundle list and linked workspace
+ * packages allowed. Beside it the driver builds the runtime directory the
+ * application carries: `node_modules/@deepseek-ai/dsh` links the dsh package
+ * the Desktop Host package depends on, and `@deepseek-ai/dsh-web-frontend`
+ * is a stand-in holding only a placeholder `dist/index.html`. The host
+ * resolves that file when it starts and serves it only on a page request,
+ * which the driver never makes, and the suite runs before any web build.
+ *
+ * The host hands back no context, so the project's own patch mounts one
+ * sentinel plugin that records the root context it was mounted on. Through
+ * that context the driver reads whether a Trust Kernel is pinned and calls a
+ * read-only probe tool on behalf of the root agent, presenting its session
+ * token, through the public `ToolRuntime.execute` seam, as the P0-02
+ * no-kernel dispatch driver does. The sentinel declares a Plugin Manifest v2
+ * that names nothing, because it registers nothing.
  * @module tests/first100/fixtures/loader/p0-02-desktop-host/driver
  */
 
 import { randomUUID } from 'node:crypto'
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import type { Context } from '@deepseek-ai/cordis'
@@ -89,6 +95,16 @@ writeFileSync(
   `- insert:\n    - id: p0-02-desktop-sentinel\n      name: '${pathToFileURL(join(sentinelDir, 'index.mjs')).href}'\n`,
 )
 
+const runtimeDir = join(process.cwd(), 'desktop-runtime')
+const runtimeScope = join(runtimeDir, 'node_modules', '@deepseek-ai')
+mkdirSync(runtimeScope, { recursive: true })
+writeFileSync(join(runtimeDir, 'package.json'), `${JSON.stringify({ name: 'p0-02-desktop-runtime', private: true, version: '0.0.0' }, undefined, 2)}\n`)
+symlinkSync(realpathSync(join(repoRoot, 'apps', 'desktop-host', 'node_modules', '@deepseek-ai', 'dsh')), join(runtimeScope, 'dsh'), 'junction')
+const frontendDir = join(runtimeScope, 'dsh-web-frontend')
+mkdirSync(join(frontendDir, 'dist'), { recursive: true })
+writeFileSync(join(frontendDir, 'package.json'), `${JSON.stringify({ name: '@deepseek-ai/dsh-web-frontend', private: true, version: '0.0.0' }, undefined, 2)}\n`)
+writeFileSync(join(frontendDir, 'dist', 'index.html'), '<!doctype html>\n<title>p0-02 desktop runtime</title>\n')
+
 /**
  * Print one report line for the spec to parse.
  * @param report - the report.
@@ -97,7 +113,7 @@ function print(report: DesktopHostReport): void {
   process.stdout.write(`${REPORT_PREFIX} ${JSON.stringify(report)}\n`)
 }
 
-const controller = await runDesktopHost(repoRoot, projectDir, () => Promise.resolve(), { allowLinkedPackages: true })
+const controller = await runDesktopHost(runtimeDir, projectDir, () => Promise.resolve(), { allowLinkedPackages: true })
   .catch((error: unknown) => {
     print({ project, refused: error instanceof Error ? error.message : String(error), runs: [] })
     return undefined
