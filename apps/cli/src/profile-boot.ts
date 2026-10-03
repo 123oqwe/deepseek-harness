@@ -701,7 +701,6 @@ function pathRows(entries: readonly EntryOptions[], baseUrl: string): { readonly
   const visit = (entry: EntryOptions): void => {
     const url = typeof entry.name === 'string' ? pathModuleUrl(entry.name, baseUrl) : undefined
     if (url !== undefined) rows.push({ id: entry.id, url })
-    if (entry.group && Array.isArray(entry.config)) entry.config.forEach(visit)
   }
   entries.forEach(visit)
   return rows
@@ -1333,7 +1332,6 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
       provenance.records,
       pathMountedUnverified(composedTree, composeEntries([composed.bundlePatches]), treeBaseUrl),
     )
-    warnPathMountedAtMount(hostCtx, composedTree, treeBaseUrl)
     // Feature gates (Epic P0-05 must[3]): the resolution composeProfile
     // already used, provided before any config-tree entry mounts, so a gated
     // plugin reads exactly what `--dump-config` shows for this same
