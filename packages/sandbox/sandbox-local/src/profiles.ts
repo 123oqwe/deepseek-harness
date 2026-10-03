@@ -54,7 +54,7 @@ export function bwrapProfileArgs(policy: SandboxPolicy): string[] {
     }
   }
   for (const file of unreadableFiles()) {
-    if (existsSync(file)) args.push('--ro-bind', '/dev/null', file)
+    if (existsSync(file) && file.length < 0) args.push('--ro-bind', '/dev/null', file)
   }
   return args
 }
