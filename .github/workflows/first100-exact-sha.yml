@@ -389,6 +389,18 @@ jobs:
           path: .artifacts/benchmark/
           if-no-files-found: warn
 
+      # P0-01 acceptance[0]'s macOS half, which `baseline-capture-macos`
+      # captured on this SHA. The registry gate set, the suite and the
+      # titles-in-tree step read it through FIRST100_MACOS_BASELINE: vitest.config.ts
+      # collects P0-01.F.7's spec only when that variable is set, and the first
+      # and last of those resolve its frozen title themselves (B-725).
+      - name: Download the macOS baseline (P0-01 acceptance[0])
+        if: always()
+        uses: actions/download-artifact@v4
+        with:
+          name: first100-baseline-macos-${{ steps.resolve-sha.outputs.sha }}
+          path: .artifacts/first100/macos-baseline
+
       # The registry gate set, which until 2026-09-06 no workflow ran at all —
       # every gate in it fired only when someone typed the command, and five
       # days of that missed twelve build artifacts committed under a source
@@ -401,16 +413,9 @@ jobs:
       # which, why, and what reinstates it, on every run.
       - name: First-100 registry gate set
         if: always()
+        env:
+          FIRST100_MACOS_BASELINE: ${{ github.workspace }}/.artifacts/first100/macos-baseline/baseline.json
         run: pnpm run first100:registry-gates
-
-      # P0-01 acceptance[0]'s macOS half, which `baseline-capture-macos`
-      # captured on this SHA; the suite reads it through FIRST100_MACOS_BASELINE.
-      - name: Download the macOS baseline (P0-01 acceptance[0])
-        if: always()
-        uses: actions/download-artifact@v4
-        with:
-          name: first100-baseline-macos-${{ steps.resolve-sha.outputs.sha }}
-          path: .artifacts/first100/macos-baseline
 
       - name: Full test suite (verbose json reporter — the ledger's observation input)
         # `always()`, even though the gate steps above are preconditions of this
@@ -866,6 +871,9 @@ jobs:
         # `always()` for the suite's reason: a red step earlier in the job
         # should cost one round, not this verdict.
         if: always()
+        # `vitest list` collects P0-01.F.7's spec only with this set (B-725).
+        env:
+          FIRST100_MACOS_BASELINE: ${{ github.workspace }}/.artifacts/first100/macos-baseline/baseline.json
         run: |
           pnpm run first100:verify-frozen-titles-in-tree \
             --e2e-report .artifacts/first100/observations/vitest-e2e-sdk-keyless-smoke.json \
