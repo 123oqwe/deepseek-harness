@@ -268,6 +268,7 @@ function captureFields(repoRoot) {
   return {
     formatVersion: FORMAT_VERSION,
     gitSha,
+    platform: process.platform,
     toolchain: readDeclaredToolchain(repoRoot),
     workspacePackages: readWorkspacePackages(manifests),
     packageManifests: readPackageManifests(repoRoot, manifests),
