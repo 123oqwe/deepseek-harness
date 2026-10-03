@@ -8,7 +8,7 @@
  * denied write leaves no file on disk.
  */
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -169,6 +169,29 @@ describe('workspace-write containment', () => {
     // isUnder's path-equals-root branch: the fence allows the root, and the
     // write then fails because the root is a directory, not a regular file.
     await expect(fs.writeText(await target(workspace), 'x')).rejects.toMatchObject({ code: 'FS_NOT_REGULAR_FILE' })
+  })
+})
+
+describe('workspace-write keeps the harness home read-only inside the workspace (B-715)', () => {
+  beforeEach(async () => {
+    await mkdir(join(workspace, '.dsh'))
+    vi.stubEnv('DSH_HOME', join(workspace, '.dsh'))
+    await boot('workspace-write')
+  })
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('a write creating a file under $DSH_HOME is denied, no file created', async () => {
+    const path = join(workspace, '.dsh', 'injected.patch.yml')
+    await expect(fs.writeText(await target(path), 'x')).rejects.toMatchObject({ code: 'FS_SANDBOX_DENIED' })
+    expect(existsSync(path)).toBe(false)
+  })
+
+  it('a write elsewhere in the same workspace still lands', async () => {
+    const path = join(workspace, 'ok.txt')
+    await fs.writeText(await target(path), 'inside')
+    expect(await readFile(path, 'utf8')).toBe('inside')
   })
 })
 

@@ -8,7 +8,7 @@ Source: [`packages/sandbox/sandbox/src/index.ts`](../../packages/sandbox/sandbox
 
 ## Modes and enforcement
 
-`SandboxMode` governs filesystem effects only. `read-only` asks the backend to deny writes — the POSIX runners additionally grant the `/dev/null` sink their shells require, while the Windows ACL runner grants no explicit writable root and reports partial enforcement for its ambient ACL gaps; `workspace-write` permits writes under the workspace root and the backend's promised temp area; `danger-full-access` bypasses confinement. Network and process visibility are outside this vocabulary. Unix-domain sockets are not a mode either: both confining modes refuse them where the backend can, and the [local provider](../../packages/sandbox/sandbox-local/README.md) states which backends can.
+`SandboxMode` governs filesystem effects only. `read-only` asks the backend to deny writes — the POSIX runners additionally grant the `/dev/null` sink their shells require, while the Windows ACL runner grants no explicit writable root and reports partial enforcement for its ambient ACL gaps; `workspace-write` permits writes under the workspace root and the backend's promised temp area, except under the harness home (`$DSH_HOME`): bwrap, Seatbelt and the in-process fs fence keep it read-only, and Landlock and the Windows ACL runner, which can only grant writable roots, refuse a command whose writable roots contain it; `danger-full-access` bypasses confinement. Network and process visibility are outside this vocabulary. Unix-domain sockets are not a mode either: both confining modes refuse them where the backend can, and the [local provider](../../packages/sandbox/sandbox-local/README.md) states which backends can.
 
 ```ts type-equiv
 /**

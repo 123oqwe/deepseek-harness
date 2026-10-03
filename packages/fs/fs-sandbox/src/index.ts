@@ -19,7 +19,8 @@
  *
  * Per-call policy: `read-only` denies every mutation; `workspace-write` allows
  * a mutation only when the target canonicalizes under the policy's workspace
- * root or a platform temp area from the shared `writableRoots` policy;
+ * root or a platform temp area from the shared `writableRoots` policy, and not
+ * under a shared `protectedRoots` entry (the harness home);
  * `danger-full-access` delegates unfenced. A denial throws the structured
  * `FS_SANDBOX_DENIED`.
  *
@@ -31,7 +32,7 @@ import { LocalFileSystem } from '@deepseek-ai/dsh-fs-local'
 import type { Config as LocalConfig } from '@deepseek-ai/dsh-fs-local'
 import { FsError } from '@deepseek-ai/dsh-fs'
 import type { FsEditOutcome, FsEditRequest, FsTarget, FsVersion, FsWriteIntent, FsWriteOutcome } from '@deepseek-ai/dsh-fs'
-import { writableRoots } from '@deepseek-ai/dsh-sandbox'
+import { protectedRoots, writableRoots } from '@deepseek-ai/dsh-sandbox'
 import type { SandboxExecutionPolicy, SandboxMode } from '@deepseek-ai/dsh-sandbox'
 import type {} from '@deepseek-ai/dsh-sandbox-policy'
 import { isPathUnder } from './containment.ts'
@@ -114,7 +115,8 @@ export class SandboxedFileSystem extends LocalFileSystem {
    * check-here-write-there TOCTOU). `read-only` denies; `workspace-write`
    * re-canonicalizes NOW (`resolve` realpaths the deepest existing ancestor,
    * reflecting a concurrently swapped symlink), requires containment under a
-   * writable root, and returns THAT fresh target; `danger-full-access` returns
+   * writable root and outside every protected root (the harness home), and
+   * returns THAT fresh target; `danger-full-access` returns
    * the caller's target unfenced. Throws the structured `FS_SANDBOX_DENIED` on
    * refusal — the tool layer maps it to the model-facing `[sandbox: …]` marker
    * and the escalation hint.
@@ -139,6 +141,14 @@ export class SandboxedFileSystem extends LocalFileSystem {
     }
     if (!contained) {
       throw new FsError(`cannot write "${target.displayPath}": file access denied under workspace-write mode`, 'FS_SANDBOX_DENIED')
+    }
+    for (const root of protectedRoots(policy)) {
+      if (await isPathUnder(fresh.targetKey, root)) {
+        throw new FsError(
+          `cannot write "${target.displayPath}": the harness home (${root}) is not writable under workspace-write mode`,
+          'FS_SANDBOX_DENIED',
+        )
+      }
     }
     return fresh
   }

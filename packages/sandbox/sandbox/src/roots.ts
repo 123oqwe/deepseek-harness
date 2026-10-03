@@ -1,8 +1,8 @@
 /**
  * The writable-root derivation shared by every enforcement dialect that
  * expresses a mode as a canonical allow-list: `workspace-write` means "the
- * workspace root plus the platform temp areas", and this module is that
- * meaning's one home. The Seatbelt profile
+ * workspace root plus the platform temp areas, less the harness home", and
+ * this module is that meaning's one home. The Seatbelt profile
  * (`@deepseek-ai/dsh-sandbox-local`) and the in-process filesystem fence
  * (`@deepseek-ai/dsh-fs-sandbox`) both derive their allow-list here, so "the
  * write tool cannot write /tmp but bash can" asymmetries cannot arise between
@@ -15,6 +15,7 @@
 
 import { realpathSync } from 'node:fs'
 import { tmpdir } from 'node:os'
+import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
 import type { SandboxExecutionPolicy } from './index.ts'
 
 /**
@@ -52,4 +53,22 @@ export function canonicalPath(path: string): string {
 export function writableRoots(policy: SandboxExecutionPolicy): string[] {
   if (policy.mode !== 'workspace-write') return []
   return [...new Set([policy.workspaceRoot, '/tmp', tmpdir()].map(canonicalPath))]
+}
+
+/**
+ * The roots one confined execution may not write even where they lie under a
+ * {@link writableRoots} entry: under `workspace-write`, the harness home
+ * (`$DSH_HOME`), which holds the harness's own configuration and state —
+ * profiles and patch layers, the settings document the enforced policy set
+ * comes from, trust anchors, saved workflows, the action ledger and the
+ * credential store. A workspace at or above `~` contains the default home
+ * `~/.dsh`. Every backend that confines writes takes this set from here; one
+ * that can only grant writable roots refuses a policy whose protected root
+ * lies under one of them.
+ * @param policy - the file-effect policy to derive the set from.
+ * @returns the canonical protected roots; empty unless the mode is `workspace-write`.
+ */
+export function protectedRoots(policy: SandboxExecutionPolicy): string[] {
+  if (policy.mode !== 'workspace-write') return []
+  return [canonicalPath(dshHomePath())]
 }

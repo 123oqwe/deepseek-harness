@@ -7,12 +7,13 @@
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
-import { canonicalPath, writableRoots } from '@deepseek-ai/dsh-sandbox'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { canonicalPath, protectedRoots, writableRoots } from '@deepseek-ai/dsh-sandbox'
 
 /** Every temp root created by this file, removed after each test. */
 const roots: string[] = []
 afterEach(() => {
+  vi.unstubAllEnvs()
   for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true })
 })
 
@@ -42,5 +43,18 @@ describe('writableRoots', () => {
     expect(writable).toContain(realpathSync.native(tmpdir()))
     // Deduplicated after canonicalization (/tmp and os.tmpdir() may coincide).
     expect(new Set(writable).size).toBe(writable.length)
+  })
+})
+
+describe('protectedRoots (B-715)', () => {
+  it('workspace-write protects the harness home, canonical, wherever DSH_HOME points', () => {
+    const home = mkdtempSync(join(tmpdir(), 'dsh-home-'))
+    roots.push(home)
+    vi.stubEnv('DSH_HOME', home)
+    expect(protectedRoots({ mode: 'workspace-write', workspaceRoot: process.cwd() })).toEqual([realpathSync.native(home)])
+  })
+
+  it('read-only protects nothing, since it grants nothing', () => {
+    expect(protectedRoots({ mode: 'read-only', workspaceRoot: process.cwd() })).toEqual([])
   })
 })

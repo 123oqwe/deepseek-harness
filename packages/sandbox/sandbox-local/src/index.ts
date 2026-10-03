@@ -39,12 +39,13 @@ import {
 } from '@deepseek-ai/node-addon-system/landlock-run'
 import { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
-import { SandboxProvider, SandboxUnavailableError } from '@deepseek-ai/dsh-sandbox'
+import { HarnessError } from '@deepseek-ai/dsh-llm'
+import { SANDBOX_UNAVAILABLE, SandboxProvider, SandboxUnavailableError } from '@deepseek-ai/dsh-sandbox'
 import type { ConfinedArgv, ConfinedSandboxMode, RunnerFailureRule, SandboxEnforcement, SandboxPolicy } from '@deepseek-ai/dsh-sandbox'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import { AclWriteGrant, assertTempRootOutsideWorkspace, tempWriteSid, workspaceWriteSid } from '@deepseek-ai/dsh-sandbox-windows-acl'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
-import { bwrapProfileArgs, landlockProfileArgs, seatbeltProfileArgs } from './profiles.ts'
+import { bwrapProfileArgs, exposedProtectedRoot, landlockProfileArgs, seatbeltProfileArgs } from './profiles.ts'
 import { seccompTrampoline, unixSocketFilter } from './seccomp.ts'
 import { knownHostSockets } from './sockets.ts'
 
@@ -342,7 +343,9 @@ export class LocalSandboxProvider extends SandboxProvider {
    * @returns the wrapped argv plus the selected backend, its enforcement completeness,
    *   the sockets it leaves reachable, its denial signatures, and structured
    *   runner-failure rules; throws the fail-closed `SANDBOX_UNAVAILABLE` error when
-   *   the platform has no usable runner.
+   *   the platform has no usable runner, or when the runner is Landlock or the
+   *   Windows ACL runner, which can only grant writable roots, and the harness
+   *   home lies under one of them.
    */
   confine(argv: readonly string[], policy: SandboxPolicy): ConfinedArgv {
     if (this.runnerCommand !== undefined) {
@@ -357,6 +360,16 @@ export class LocalSandboxProvider extends SandboxProvider {
       }
     }
     const selected = this.selectRunner(policy.mode)
+    const exposed = selected.runner === 'landlock' || selected.runner === 'windows-acl' ? exposedProtectedRoot(policy) : undefined
+    if (exposed !== undefined) {
+      throw new HarnessError(
+        `sandbox: the ${selected.runner} backend can only grant writable roots, so it cannot keep the harness home `
+        + `${exposed.root} ($DSH_HOME) read-only inside the writable root ${exposed.under}; refusing to run the command. `
+        + 'Start the agent in a workspace that does not contain $DSH_HOME, or set DSH_HOME outside the workspace and the '
+        + 'temp directories.',
+        SANDBOX_UNAVAILABLE,
+      )
+    }
     const runnerArgv = this.runnerArgv(selected.runner, policy)
     return {
       argv: [...runnerArgv, '--', ...argv],
