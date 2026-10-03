@@ -15,12 +15,19 @@ import type { PatchOptions } from '@deepseek-ai/cordis-plugin-include'
 import {
   boot,
   composeEntries,
+  enforceTrustKernelPosture,
   loadLayeredEnv,
   loadProfileDirectory,
   loadOverlayPatches,
+  readProfileManifest,
+  readProfileTrustAnchors,
+  resolveTrustKernelInsecureOptIn,
+  TRUST_KERNEL_INSECURE_ENV,
 } from '@deepseek-ai/dsh-app-boot'
 import { provideCmdline } from '@deepseek-ai/dsh-cmdline'
 import { DSH_LAUNCH_ENVIRONMENT_KEY } from '@deepseek-ai/dsh-launch-environment'
+import { createTrustKernel, pinTrustKernel, type TrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+import { DEVELOPMENT_PROFILE_KEY, endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
 import type {} from '@deepseek-ai/dsh-api-gateway'
 import type { ConnectionFetchHandler } from '@deepseek-ai/dsh-client-connection'
 import type {} from '@deepseek-ai/dsh-client-modules'
@@ -287,6 +294,20 @@ export async function runDesktopHost(
   const rootConfig = join(absoluteProject, ROOT_CONFIG_FILENAME)
   writeFileSync(rootConfig, ROOT_CONFIG)
   const environment = loadLayeredEnv('dsh desktop')
+  // The Desktop Host holds a Trust Kernel exactly as the `dsh` launcher does
+  // (Epic P0-02 must[1], question 29 (a)): built before boot() creates any
+  // Context, pinned once host preparation starts, with the project's own
+  // `dsh.trustAnchors`. Only a project that declares `dsh.profile.development`
+  // may opt out through DSH_TRUST_KERNEL_INSECURE, and that refusal fires before
+  // any config-tree entry mounts.
+  const insecure = resolveTrustKernelInsecureOptIn(process.env[TRUST_KERNEL_INSECURE_ENV])
+  const development = (readProfileManifest('dsh desktop', absoluteProject).dsh?.profile as { readonly development?: unknown } | undefined)?.development === true
+  if (insecure && !development) {
+    throw new Error(`dsh desktop: ${TRUST_KERNEL_INSECURE_ENV} is set but project ${JSON.stringify(projectDir)} does not declare dsh.profile.development -- refusing to boot (only a project declaring dsh.profile.development may boot without a Trust Kernel)`)
+  }
+  const kernel: TrustKernel | undefined = insecure
+    ? undefined
+    : createTrustKernel({ policyDecider: endorseComposedDecision, trustAnchors: readProfileTrustAnchors(absoluteProject) })
   let current: Context | undefined
   const ctx = await boot('dsh desktop', rootConfig, structuredClone(desktopPatches(
     resolve(runtimeDir),
@@ -296,6 +317,11 @@ export async function runDesktopHost(
     current = hostCtx
     hostCtx.provide(DSH_LAUNCH_ENVIRONMENT_KEY, environment)
     provideCmdline(hostCtx, { args: [], exit: () => {} })
+    // Never ctx.plugin(...): pinTrustKernel freezes the store entry so no plugin
+    // can replace or delete-then-reprovide the kernel (Epic P0-02 must[2]/[3]).
+    if (kernel !== undefined) pinTrustKernel(hostCtx, kernel)
+    enforceTrustKernelPosture(hostCtx.get('trustKernel') !== undefined, insecure, undefined, 'dsh desktop')
+    hostCtx.provide(DEVELOPMENT_PROFILE_KEY, development)
   })
   current = ctx
   const connection = ctx.get('connection')

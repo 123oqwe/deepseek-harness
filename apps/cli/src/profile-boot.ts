@@ -20,6 +20,7 @@ import type { EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
 import {
   boot,
   composeEntries,
+  enforceTrustKernelPosture,
   healProfilesModuleFallback,
   initProfile,
   installFailLoud,
@@ -32,6 +33,8 @@ import {
   PROFILE_TEMPLATES,
   readProfileManifest,
   resolveProfileDir,
+  resolveTrustKernelInsecureOptIn,
+  TRUST_KERNEL_INSECURE_ENV,
   watchUserPatches,
   type BlockedProfileLayer,
   type DeniedProfileLayer,
@@ -412,47 +415,14 @@ export interface RunProfileOptions {
   args: readonly string[]
 }
 
-/** Env var whose non-empty value opts a development boot into skipping Trust Kernel initialization. */
-const TRUST_KERNEL_INSECURE_ENV = 'DSH_TRUST_KERNEL_INSECURE'
-
 /** Name of the system-prompt section that tells the model it runs without a Trust Kernel (Epic P0-02 acceptance[3]). */
 const INSECURE_MODE_SECTION = 'insecure-development-mode'
 
-/**
- * Resolve the Trust Kernel insecure-boot opt-in (Epic P0-02 acceptance
- * clause 3). ANY non-empty value opts in, mirroring
- * {@link resolveTelemetryPatch}'s bias -- here the deliberate value is
- * presence, not absence, because skipping a security control must be an
- * explicit developer choice, never an accidental empty-string default.
- * @param raw - the raw DSH_TRUST_KERNEL_INSECURE value.
- * @returns whether this boot may proceed without a pinned Trust Kernel.
- */
-export function resolveTrustKernelInsecureOptIn(raw: string | undefined): boolean {
-  return (raw ?? '') !== ''
-}
-
-/**
- * Enforce Epic P0-02's fail-closed/insecure-opt-in split (must[1],
- * acceptance clause 3) once host preparation has had its chance to pin
- * `trustKernel`. A production boot (no opt-in) with no pinned kernel
- * refuses to continue; an opted-in development boot prints a permanent
- * warning -- every boot while the opt-in is set, not once -- and proceeds.
- * @param initialized - whether `ctx.get('trustKernel')` returned a value after preparation.
- * @param insecureOptIn - the resolved {@link resolveTrustKernelInsecureOptIn} value.
- * @param warn - sink for the permanent insecure-mode warning; defaults to a stderr write.
- * @throws when uninitialized without the insecure opt-in.
- */
-export function enforceTrustKernelPosture(
-  initialized: boolean,
-  insecureOptIn: boolean,
-  warn: (message: string) => void = (message) => { process.stderr.write(message) },
-): void {
-  if (initialized) return
-  if (!insecureOptIn) {
-    throw new Error(`${NAME}: Trust Kernel not initialized -- refusing to boot (set ${TRUST_KERNEL_INSECURE_ENV} to explicitly opt into an insecure development boot)`)
-  }
-  warn(`${NAME}: WARNING: booting with no Trust Kernel (${TRUST_KERNEL_INSECURE_ENV} set) -- root identity, signature roots, policy enforcement, audit append, secret broker, and sandbox attestation are all unavailable; never use in production.\n`)
-}
+// The insecure opt-in resolver, the fail-closed/insecure posture check, and the
+// DSH_TRUST_KERNEL_INSECURE env name live in @deepseek-ai/dsh-app-boot, shared
+// with the Desktop Host. Re-exported so the CLI's callers and tests keep
+// importing them from this module unchanged.
+export { enforceTrustKernelPosture, resolveTrustKernelInsecureOptIn }
 
 /**
  * Epic P1-01's plugin admission and post-mount quarantine as a feature gate
