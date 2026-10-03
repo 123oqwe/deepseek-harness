@@ -1,34 +1,43 @@
 /**
  * P4-09 acceptance[0], question 31 (a): a saved workflow definition is run by a
  * shipped profile only when it is signed by a key the profile's
- * `dsh.trustAnchors` admits, and a definition whose body was changed, whose
- * signature is missing, whose key is not anchored, or whose signature does not
- * verify is NOT run — it is refused, and the refusal names the reason.
+ * `dsh.trustAnchors` admits; a definition whose body changed, whose signature
+ * is missing, whose key is not anchored, or whose signature does not verify is
+ * refused, and the refusal names the reason.
+ *
+ * Observed on the FACTORY LAUNCHER (the built `dsh` bin in `lib` mode, as a
+ * subprocess), not in-process. An in-process spec imports the trust kernel from
+ * `src` while the shipped loader loads it through Node's ESM from `lib`, giving
+ * two anchor registries so the loader refuses every definition with
+ * `no-trust-anchor` (A-578's src/lib split). A `lib`-mode subprocess keeps the
+ * whole graph on `lib`, so the loader finds the profile's anchor. A test-only
+ * `.mjs` sentinel mounted in the profile records the loader's result (loaded +
+ * refused reasons) to a marker file on `appReady`; this reads the finished
+ * async load rather than relying on mount order.
  *
  * Red first, paired with B-698's fourth commit (which mounts the saved-workflow
- * loader into the factory base layer and verifies each definition's signature).
- * §21.4: B-698 is not read. Today the shipped base mounts no saved-workflow
- * loader at all, so a factory boot exposes no `ctx.savedWorkflows` and every
- * assertion below fails; the shipped loader (workflow-filesystem) also verifies
- * no signature. B-698 mounts it and verifies, so the valid definition loads and
- * the four bad ones are refused with their reasons.
- *
- * The signing fixture mirrors apps/cli/tests/plugin-provenance-install.spec.ts:
- * ed25519 keys, an arbitrary fingerprint string the anchor and the signature
- * share, and the trusted key's SPKI PEM in the anchor so the loader can verify
- * a signature made over the definition's digest.
+ * loader into the factory base and verifies each definition's signature).
+ * §21.4: B-698 is not read. Today the shipped base mounts no loader, so the
+ * marker records `savedWorkflows` absent and every assertion fails; B-698 mounts
+ * and verifies it, so the valid definition loads and the four bad ones are
+ * refused with their reasons. The fingerprint is an opaque label the anchor and
+ * signature share (as apps/cli/tests/plugin-provenance-install.spec.ts does).
  */
 
 import { generateKeyPairSync, sign, type KeyObject } from 'node:crypto'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
-import { loadLayeredEnv } from '@deepseek-ai/dsh-app-boot'
+import { fileURLToPath } from 'node:url'
+import { describe, expect, it } from 'vitest'
+import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
 import { computeDefinitionDigest } from '@deepseek-ai/dsh-workflow-registry'
-import { runProfile } from '../../../apps/cli/src/profile-boot.ts'
 
-const LAUNCH_TIMEOUT_MS = 60_000
+/** The app bin whose `lib` build the subprocess runs. */
+const BIN_SCRIPT = fileURLToPath(new URL('../../../apps/cli/src/bin.ts', import.meta.url))
+/** The repo tsconfig (unused in `lib` mode, but the smoke options require it). */
+const TSCONFIG = fileURLToPath(new URL('../../../tsconfig.json', import.meta.url))
+/** The test-only `.mjs` sentinel that records the loader's result to the marker. */
+const SENTINEL = fileURLToPath(new URL('./P4-09.saved-workflows-marker.mjs', import.meta.url))
 
 /** The trust anchor's fingerprint (an opaque label; the anchor and signature share it). */
 const TRUSTED_FP = 'sha256:trusted-saved-workflow-key'
@@ -55,67 +64,76 @@ interface SignatureFile {
   readonly signature: string
 }
 
-/** What the driver reads back from `ctx.savedWorkflows`. */
+/** What the sentinel records to the marker. */
+interface MarkerResult {
+  readonly present: boolean
+  readonly loaded?: readonly string[]
+  readonly refused?: readonly { readonly name: string; readonly reason: string }[]
+}
+
+/** What the driver reads back for `ctx.savedWorkflows`. */
 interface SavedWorkflows {
   readonly loaded: readonly string[]
   readonly refused: readonly { readonly name: string; readonly reason: string }[]
 }
 
-const roots: string[] = []
-afterEach(() => {
-  for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true })
-})
-
 /**
- * Boot a factory profile whose `dsh.trustAnchors` admits the trusted key, with
- * the given definition files and signature files under `$DSH_HOME/workflows`,
- * and return what its saved-workflow loader loaded and refused.
+ * Launch the built `dsh` bin against a base-bundle factory profile whose
+ * `dsh.trustAnchors` admits the trusted key, with the given definition and
+ * signature files under `$DSH_HOME/workflows`, and return what the saved-workflow
+ * loader loaded and refused (read back from the sentinel's marker).
  * @param files - the `workflows/` directory contents (`<name>.js`, `<name>.js.sig.json`).
- * @returns `ctx.savedWorkflows`, or undefined when the base mounts no loader.
+ * @returns the load result, or undefined when the base mounts no loader.
  */
 async function bootWithWorkflows(files: Readonly<Record<string, string>>): Promise<SavedWorkflows | undefined> {
-  const root = mkdtempSync(join(tmpdir(), 'p4-09-saved-'))
-  roots.push(root)
-  const home = join(root, 'home')
-  const cwd = join(root, 'cwd')
-  mkdirSync(cwd, { recursive: true })
-  const profileDir = join(home, 'profiles', 'p4-09-saved')
-  mkdirSync(profileDir, { recursive: true })
-  // A base-bundle factory profile (the base layer is where the workflow engine
-  // lives, and where B-698 mounts the loader), declaring the trusted anchor.
-  writeFileSync(join(profileDir, 'package.json'), `${JSON.stringify({
-    name: 'dsh-profile-p4-09-saved',
-    private: true,
-    dependencies: {},
-    dsh: {
-      profile: { bundles: ['@deepseek-ai/dsh-base'], patchReload: 'startup', development: true },
-      trustAnchors: [{ mode: 'offline-signed', publicKeyFingerprint: TRUSTED_FP, owner: 'test', publicKeyPem: pem(trusted) }],
+  let observed: MarkerResult | undefined
+  await runLoaderSmoke({
+    label: 'p4-09-saved-workflow-signing',
+    tempDirPrefix: 'p4-09-saved-',
+    binScript: BIN_SCRIPT,
+    configPath: '',
+    binArgs: ['--profile', 'p4-09-saved'],
+    tsconfigPath: TSCONFIG,
+    mode: 'lib',
+    prepare: (cwd) => {
+      // runLoaderSmoke points DSH_HOME at <cwd>/.dsh.
+      const home = join(cwd, '.dsh')
+      const profileDir = join(home, 'profiles', 'p4-09-saved')
+      mkdirSync(profileDir, { recursive: true })
+      const marker = join(cwd, 'saved-workflows-marker.json')
+      // A base-bundle factory profile (the base layer is where the workflow
+      // engine lives, and where B-698 mounts the loader), declaring the anchor.
+      writeFileSync(join(profileDir, 'package.json'), `${JSON.stringify({
+        name: 'dsh-profile-p4-09-saved',
+        private: true,
+        dependencies: {},
+        dsh: {
+          // No `development` flag: a shipped posture pins a real Trust Kernel and
+          // reads `dsh.trustAnchors`, and its default manifest posture (shadow)
+          // still admits the manifestless marker sentinel. A development profile
+          // would change signing admission (profile-boot.ts's P1-02
+          // unsigned-development path) and corrupt the `unsigned` refusal.
+          profile: { bundles: ['@deepseek-ai/dsh-base'], patchReload: 'startup' },
+          trustAnchors: [{ mode: 'offline-signed', publicKeyFingerprint: TRUSTED_FP, owner: 'test', publicKeyPem: pem(trusted) }],
+        },
+      }, undefined, 2)}\n`)
+      // The marker sentinel mounts after the base bundle and reads
+      // ctx.savedWorkflows on appReady, writing the result to the marker.
+      writeFileSync(
+        join(profileDir, 'cordis.patch.yml'),
+        `- insert:\n    - id: p4-09-saved-workflows-marker\n      name: '${SENTINEL}'\n      config:\n        marker: '${marker}'\n`,
+      )
+      const workflowsDir = join(home, 'workflows')
+      mkdirSync(workflowsDir, { recursive: true })
+      for (const [name, content] of Object.entries(files)) writeFileSync(join(workflowsDir, name), content)
     },
-  }, undefined, 2)}\n`)
-  writeFileSync(join(profileDir, 'cordis.patch.yml'), '[]\n')
-  const workflowsDir = join(home, 'workflows')
-  mkdirSync(workflowsDir, { recursive: true })
-  for (const [name, content] of Object.entries(files)) writeFileSync(join(workflowsDir, name), content)
-  process.env.DSH_HOME = home
-  // A development profile boots without the insecure opt-in needing to be set;
-  // the kernel is pinned from the profile's own anchors.
-  delete process.env.DSH_TRUST_KERNEL_INSECURE
-  return runProfile({
-    environment: loadLayeredEnv('dsh', cwd),
-    profile: 'p4-09-saved',
-    fromDefaultProfile: undefined,
-    patchFiles: [],
-    args: [],
-  }).then(
-    async ({ ctx }) => {
-      const saved = ctx.get('savedWorkflows') as SavedWorkflows | undefined
-      // Copy out before disposal so the returned value survives teardown.
-      const snapshot = saved === undefined ? undefined : { loaded: [...saved.loaded], refused: saved.refused.map(entry => ({ ...entry })) }
-      await ctx.fiber.dispose()
-      return snapshot
+    inspect: (cwd) => {
+      const marker = join(cwd, 'saved-workflows-marker.json')
+      if (existsSync(marker)) observed = JSON.parse(readFileSync(marker, 'utf8')) as MarkerResult
     },
-    () => undefined,
-  )
+  })
+  if (observed === undefined || !observed.present) return undefined
+  return { loaded: observed.loaded ?? [], refused: (observed.refused ?? []).map(entry => ({ ...entry })) }
 }
 
 /** A definition file, its digest, and its signature file signed over that digest by `key` under `fingerprint`. */
@@ -151,7 +169,7 @@ describe('P4-09 acceptance[0]: a shipped profile runs a saved workflow only when
     })
 
     // Harness + mounting: the factory base must expose the saved-workflow
-    // loader. RED today — the base mounts none, so this is undefined.
+    // loader. RED today — the base mounts none, so the marker records it absent.
     expect(saved, 'the factory base must mount the saved-workflow loader').toBeDefined()
     const loaded = saved?.loaded ?? []
     const refusedByName = new Map((saved?.refused ?? []).map(entry => [entry.name, entry.reason]))
@@ -164,5 +182,5 @@ describe('P4-09 acceptance[0]: a shipped profile runs a saved workflow only when
     expect(refusedByName.get('unsigned'), detail).toContain('unsigned')
     expect(refusedByName.get('unanchored'), detail).toContain('no-trust-anchor')
     expect(refusedByName.get('badsig'), detail).toContain('signature-invalid')
-  }, LAUNCH_TIMEOUT_MS)
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 })
