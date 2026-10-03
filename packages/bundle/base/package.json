@@ -362,6 +362,390 @@
         ],
         "dataClassification": "confidential"
       }
+    ],
+    "services": [
+      {
+        "ctxKey": "actionLedger",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "agentDefaultModel",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "agentLoop",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "agents",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "approval",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "attachments",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "capabilityTokens",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "circuitBreaker",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "commands",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "compaction",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "controlPlane",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "credentials",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "deepseekLlmApiExtensions",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "executionWorlds",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "fs",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "goals",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "jobs",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "leaseStore",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "llm",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "loggerStderr",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "memoryProposalPolicy",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "messageBus",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "permissionPresets",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "planMode",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "policy",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "policySet",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "runRetryUsage",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "runs",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "sandbox",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "sandboxPolicy",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "savedWorkflows",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "sessionFeedback",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "sessionPersistence",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "sessionProjectionCache",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "sessionProjections",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "sessionQuery",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "sessionTelemetry",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "sessionTitle",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "sessions",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "settings",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "shell",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "shellEnv",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "skills",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "spillStore",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "storage",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "storage.backend.json",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "storageDomain",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "subagents",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "subprocess",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "systemPrompt",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "taskStore",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "timer",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "tokenMeter",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "toolResultPruner",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "tools",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "typert",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "typertGateway",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "userQuestions",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "web",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "workflowEngine",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "workspaceTrust",
+        "role": "provides"
+      }
+    ],
+    "events": [
+      {
+        "name": "agent/created",
+        "mode": "emit"
+      },
+      {
+        "name": "agent/disposed",
+        "mode": "emit"
+      },
+      {
+        "name": "agent/error",
+        "mode": "emit"
+      },
+      {
+        "name": "agent/inbox/claimed",
+        "mode": "emit"
+      },
+      {
+        "name": "agent/inbox/discarded",
+        "mode": "emit"
+      },
+      {
+        "name": "agent/inbox/inserted",
+        "mode": "emit"
+      },
+      {
+        "name": "agent/pre-step",
+        "mode": "waterfall"
+      },
+      {
+        "name": "agent/request-error",
+        "mode": "waterfall"
+      },
+      {
+        "name": "agent/session-start",
+        "mode": "emit"
+      },
+      {
+        "name": "agent/status",
+        "mode": "emit"
+      },
+      {
+        "name": "feedback/committed",
+        "mode": "parallel"
+      },
+      {
+        "name": "fs/edit-intent",
+        "mode": "waterfall"
+      },
+      {
+        "name": "fs/observed",
+        "mode": "emit"
+      },
+      {
+        "name": "fs/write-intent",
+        "mode": "waterfall"
+      },
+      {
+        "name": "goal/changed",
+        "mode": "emit"
+      },
+      {
+        "name": "internal/plugin",
+        "mode": "emit"
+      },
+      {
+        "name": "internal/service",
+        "mode": "emit"
+      },
+      {
+        "name": "internal/status",
+        "mode": "emit"
+      },
+      {
+        "name": "llm/stream",
+        "mode": "waterfall"
+      },
+      {
+        "name": "session/created",
+        "mode": "emit"
+      },
+      {
+        "name": "session/disposed",
+        "mode": "emit"
+      },
+      {
+        "name": "session/event",
+        "mode": "emit"
+      },
+      {
+        "name": "session/flush",
+        "mode": "parallel"
+      },
+      {
+        "name": "subagent/end",
+        "mode": "emit"
+      },
+      {
+        "name": "subagent/provider-added",
+        "mode": "emit"
+      },
+      {
+        "name": "subagent/provider-removed",
+        "mode": "emit"
+      },
+      {
+        "name": "subagent/start",
+        "mode": "emit"
+      },
+      {
+        "name": "tools/execute",
+        "mode": "waterfall"
+      },
+      {
+        "name": "tools/post-execute",
+        "mode": "waterfall"
+      },
+      {
+        "name": "tools/pre-execute",
+        "mode": "waterfall"
+      },
+      {
+        "name": "tools/ptc-dispatch-log",
+        "mode": "waterfall"
+      },
+      {
+        "name": "tools/result",
+        "mode": "emit"
+      },
+      {
+        "name": "workflow/agent-end",
+        "mode": "emit"
+      },
+      {
+        "name": "workflow/agent-start",
+        "mode": "emit"
+      }
     ]
   },
   "dependencies": {
