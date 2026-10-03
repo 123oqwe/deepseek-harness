@@ -92,11 +92,12 @@ const DISABLED_HOST_ROWS = [
  * `$DSH_HOME/workflows`, and return what the sentinel recorded from the `standard`
  * preset's own engine.
  * @param files - the `workflows/` directory contents.
- * @returns the sentinel's reading, or undefined when it wrote none.
+ * @returns the sentinel's reading.
+ * @throws when the boot wrote no marker (it failed before the session), with the stderr tail.
  */
-async function bootWebPresetWorkflows(files: Readonly<Record<string, string>>): Promise<MarkerReading | undefined> {
+async function bootWebPresetWorkflows(files: Readonly<Record<string, string>>): Promise<MarkerReading> {
   let observed: MarkerReading | undefined
-  await runLoaderSmoke({
+  const { stderr } = await runLoaderSmoke({
     label: 'p4-09-web-preset-workflow-signing',
     tempDirPrefix: 'p4-09-web-preset-',
     binScript: BIN_SCRIPT,
@@ -142,6 +143,9 @@ async function bootWebPresetWorkflows(files: Readonly<Record<string, string>>): 
       if (existsSync(marker)) observed = JSON.parse(readFileSync(marker, 'utf8')) as MarkerReading
     },
   })
+  if (observed === undefined) {
+    throw new Error(`the web-preset driver wrote no marker (the boot failed before the session was composed); stderr tail:\n${stderr.slice(-1500)}`)
+  }
   return observed
 }
 
@@ -155,14 +159,15 @@ describe('P4-09 acceptance[0] on a Web preset (A-602, blind 2-6): the standard p
       'unsigned.js': "return 'unsigned'",
     })
 
-    // Harness guards: the sentinel composed a `standard` session and the preset
-    // isolate published its own saved-workflow engine, so "loaded/refused" below
-    // reads that engine and not an absence.
-    expect(reading?.sessionCreated, JSON.stringify(reading)).toBe(true)
-    expect(reading?.present, JSON.stringify(reading)).toBe(true)
+    // Harness guards (the delegate's "boot succeeded + session created"): the
+    // sentinel composed a `standard` session and the preset isolate published its
+    // own saved-workflow engine, so "loaded/refused" below reads that engine and
+    // not an absence. (A boot that wrote no marker already threw with its stderr.)
+    expect(reading.sessionCreated, JSON.stringify(reading)).toBe(true)
+    expect(reading.present, JSON.stringify(reading)).toBe(true)
 
-    const loaded = reading?.loaded ?? []
-    const refusedByName = new Map((reading?.refused ?? []).map(entry => [entry.name, entry.reason]))
+    const loaded = reading.loaded ?? []
+    const refusedByName = new Map((reading.refused ?? []).map(entry => [entry.name, entry.reason]))
     const detail = JSON.stringify(reading)
     // GREEN evidence today: the preset engine reaches the pinned kernel, so the
     // signed definition registers and the unsigned one is refused as `unsigned`.
