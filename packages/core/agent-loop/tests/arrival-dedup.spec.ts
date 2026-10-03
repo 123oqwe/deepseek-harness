@@ -132,9 +132,12 @@ describe('P4-06 must[2]: an inbox consumes one (source, id, epoch) once', () => 
     // redelivery arrives the first is no longer pending.
     const { session, inbox } = await mountInbox('parent')
     session.append('turn/start', { turn: 1 })
-    inbox.append('next-step', settlement('child-a', 3))
+    const notice = settlement('child-a', 3)
+    inbox.append('next-step', notice)
     expect(inbox.claim('next-step', 1)).toHaveLength(1)
-    // The key is consumed when the claiming turn ENDS (B-619), not at the claim.
+    // The key is consumed when the conversation records the claimed notice
+    // (B-677), not at the claim and not at a turn end that never recorded it.
+    session.append('user/message', notice, { surfaceOp: 'append' })
     session.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
 
     expect(() => { inbox.append('next-step', settlement('child-a', 3)) })
@@ -203,10 +206,13 @@ describe('P4-06 must[2]: an inbox consumes one (source, id, epoch) once', () => 
     // the redelivery.
     const { session, inbox: live } = await mountInbox('parent')
     session.append('turn/start', { turn: 1 })
-    live.append('next-step', settlement('child-a', 3))
+    const notice = settlement('child-a', 3)
+    live.append('next-step', notice)
     live.claim('next-step', 1)
-    // The claim is consumed at its turn's end (B-619); the restart must replay
-    // the turn boundary too, or the cold fold sees an unconsumed claim.
+    // The claim is consumed when the conversation records the notice (B-677);
+    // the restart must replay that record too, or the cold fold sees a claim
+    // its turn end released.
+    session.append('user/message', notice, { surfaceOp: 'append' })
     session.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
 
     const restarted = new Context()
@@ -215,6 +221,7 @@ describe('P4-06 must[2]: an inbox consumes one (source, id, epoch) once', () => 
     for (const event of session.snapshotEvents()) {
       if (event.type === 'agent/inbox/spliced') replayed.append('agent/inbox/spliced', event.data)
       else if (event.type === 'turn/start') replayed.append('turn/start', event.data)
+      else if (event.type === 'user/message') replayed.append('user/message', event.data, { surfaceOp: 'append' })
       else if (event.type === 'turn/end') replayed.append('turn/end', event.data)
     }
     await restarted.plugin(SessionProjectionRegistry)
