@@ -6,7 +6,9 @@
  *
  * `capture` derives the architecture/protocol-critical fingerprint of a
  * checkout — commit, the toolchain the checkout declares, workspace package
- * names, every package manifest field by field, default bundle row ids and
+ * names, every package manifest field by field (`exports` and `imports` in the
+ * key order written, because Node resolves their conditions top to bottom;
+ * every other field with its keys sorted), default bundle row ids and
  * each row's content, the hashes of the key schema files (every source file of
  * the SDK protocol package, the session's known event types, and each
  * `spec/*.schema.json`), and the pnpm lockfile hash — and writes it canonically to
@@ -34,7 +36,7 @@ import { join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { JSON_SCHEMA, Type, load as parseYaml } from 'js-yaml'
 
-const FORMAT_VERSION = 3
+const FORMAT_VERSION = 4
 /**
  * The SDK protocol package's source directory: every `.ts` file under it is a
  * key schema, so a schema source added to or moved within the package joins
@@ -82,6 +84,18 @@ function canonicalJson(value) {
 /** The sha256 of a value's canonical JSON, so equal content hashes alike whatever its key order. */
 function hashValue(value) {
   return createHash('sha256').update(canonicalJson(value)).digest('hex')
+}
+
+/**
+ * Manifest fields whose key order is part of their meaning: Node resolves the
+ * conditions of `exports` and `imports` top to bottom, so `types` before
+ * `default` and `default` before `types` resolve differently.
+ */
+const ORDERED_MANIFEST_FIELDS = new Set(['exports', 'imports'])
+
+/** The sha256 of a value's JSON in the key order written, for a field whose key order is meaningful. */
+function hashOrderedValue(value) {
+  return createHash('sha256').update(`${JSON.stringify(value, null, 2)}\n`.normalize('NFC')).digest('hex')
 }
 
 function escapeRegExpLiteral(text) {
@@ -151,7 +165,9 @@ function readPackageManifests(repoRoot, manifests) {
   const root = JSON.parse(readFileSync(join(repoRoot, ROOT_MANIFEST_PATH), 'utf8'))
   for (const [path, manifest] of [[ROOT_MANIFEST_PATH, root], ...manifests]) {
     const fields = {}
-    for (const [field, value] of Object.entries(manifest)) fields[field] = hashValue(value)
+    for (const [field, value] of Object.entries(manifest)) {
+      fields[field] = ORDERED_MANIFEST_FIELDS.has(field) ? hashOrderedValue(value) : hashValue(value)
+    }
     byPath[path] = fields
   }
   return byPath
