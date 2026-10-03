@@ -85,6 +85,7 @@
       "task-store",
       "subagent-taskboard",
       "workflow-worker-thread",
+      "workflow-filesystem",
       "tool-workflow",
       "timeout-policy",
       "baseline-preflight",
@@ -213,6 +214,7 @@
       "web": "fc0b0ecab8d132b76d6ea42a27c73a5a048f5b7905f839c4fda694add6d06181",
       "web-fetch-http": "dac525992d64dce583621800e771696ea7360419a985f1100bb7bf564c52ec6b",
       "web-search-deepseek": "d4ddcd68dde481dfe41ae1e80b651fd9234fce2beba2ac23aaf2c5f74aa750d3",
+      "workflow-filesystem": "1ba6776412f8ec3d76f6aa3f88d5858383461db5f98451c2a73940df289a0c44",
       "workflow-worker-thread": "a1c2805579740a8181aa2671869e09febc6ac28e34121ab5aa6c299e246549af",
       "workspace-trust-local": "25d77d4b946699d1dc60df1f0a2f9364d6d1f3daf261d81819721057c7aab7cf"
     }
@@ -322,15 +324,16 @@
     "web",
     "web-fetch-http",
     "web-search-deepseek",
+    "workflow-filesystem",
     "workflow-worker-thread",
     "workspace-trust-local"
   ],
-  "formatVersion": 2,
-  "gitSha": "d25574ecbc9bc4c2ea67e6988e2000981aadd069",
+  "formatVersion": 3,
+  "gitSha": "7c9083d18eaeb829f70c157e0f165bde28e0c93b",
   "packageManifests": {
     "apps/cli/package.json": {
       "bin": "932f8312c5ca9eee8f1abdf8ac7c0a7029cf2f068a387c8afdc98608a9a919e9",
-      "dependencies": "86170b44fa87447997dc0bb7d2a92393993cf201fe5bc09691cc478d4fac9546",
+      "dependencies": "f6b8ec059fcac4fc1c8f7ceae4352850c6fd4cdda99d545e3e38237d80792fdf",
       "description": "441f2069d09357a1433d61191f50924bdaecfe676bf5c3ad7bd2694835b8a9ae",
       "devDependencies": "44aa9d3d0b21c8c00139af3da7f5e84794d03e17e66955b3cab152d851021bb7",
       "dsh": "cd0f7bdeecbbb8406b28511dbcdc435dc1bd578a6fb31f50fba50685a233929a",
@@ -343,7 +346,7 @@
       "version": "c4669b39fa89cf18bc472eed19ca337b936acbb74efa4eda2cb71c55b69a9b09"
     },
     "apps/desktop-host/package.json": {
-      "dependencies": "97791da63be78d235c2e049f7661582f779189b5a463ffee85d25a363005c82d",
+      "dependencies": "fab56d2aedd6afa0d1041b5b9ea5af134f67f5e056e16d700efa013b11dfcf10",
       "description": "91f435e856f0d4c993eb25d56b50b9554701a313a53d9464de4e6a6080a5ecc0",
       "files": "eb27951df82667b869f792fdceb54b0149c18f7b1a133218c3c2b4ef16bf6a37",
       "license": "809c46917bff0e06079ac81a33b2ee85061ce18988dc1ae584240fc6408328b1",
@@ -379,7 +382,7 @@
       "version": "c4669b39fa89cf18bc472eed19ca337b936acbb74efa4eda2cb71c55b69a9b09"
     },
     "benchmarks/package.json": {
-      "devDependencies": "aea7e10e387f68685d69e04cb48b9ee2e3bbc2489ebfd39e8b6ef92984857fd1",
+      "devDependencies": "4750285a6afa6549b924ba1335863340c92ebc087aea8be6b3433ce82089c53c",
       "license": "809c46917bff0e06079ac81a33b2ee85061ce18988dc1ae584240fc6408328b1",
       "name": "dfc3878610cdf78851fdd546ed4cd9b17efce1318e9f5edf000ae2bbbbf28675",
       "peerDependencies": "ecaf63beef8bf851b91998a5b688aa496d1c0053f1362c8de92b53fd0c1fabb4",
@@ -677,7 +680,7 @@
       "version": "c4669b39fa89cf18bc472eed19ca337b936acbb74efa4eda2cb71c55b69a9b09"
     },
     "packages/boot/app-boot/package.json": {
-      "dependencies": "f0cd144d7a99dd85b492bd0ef35672bc486b772e586bd41a272f205abebd6a61",
+      "dependencies": "4c67a4c5c177031faa28d5b3e9c6ff3f8c4e8e179e8bc34454dcc00deae80f54",
       "description": "64ae9e7d270db5d71983d36d564ded209420a39e4e0691adda0a0c096dd1c8c6",
       "devDependencies": "86bd71b7af5213de25b27ca16b2f8391dcce98d95044b8dd9cfa60670413f1c4",
       "exports": "f799a0f0b3782ee102172d1bcfb8916616241e0abbdbabd42ab0ea05a7bcab38",
@@ -712,7 +715,7 @@
       "dependencies": "3b66d99739e5619f5c93b39aae9de04d2705db6d04b36524b03c4f9f0657b997",
       "description": "42faeaf9ab8f3d3053babbde3c1efc3e3aa3af1f45fc996b7120c49aed696b2c",
       "devDependencies": "82e244ab4d4edbecfbab6dee617f99a419b2b80221156ca5f6c3761528296af6",
-      "dsh": "7351ac72ce4f4edd2037ab065f4fc5035879af4987e5eb0dd07e6003059765a1",
+      "dsh": "dcd45dfd87676734c037cefdf3c557c4e1615d598873776b1570ed4f6e8c76a6",
       "exports": "dd7d9dc116c5d343205c8c0e15b881c80558ebaf09364791c56e0732b702b54f",
       "files": "44098b05f2be24d186b37430a2d1561d79b5cd31ea4c1d144d458e8c3097b6e0",
       "license": "809c46917bff0e06079ac81a33b2ee85061ce18988dc1ae584240fc6408328b1",
@@ -726,10 +729,10 @@
       "version": "c4669b39fa89cf18bc472eed19ca337b936acbb74efa4eda2cb71c55b69a9b09"
     },
     "packages/bundle/base/package.json": {
-      "dependencies": "bf70da16784610eb4457c78033d8df921e36b4dd4cdfc6447939fc57bcafd07d",
+      "dependencies": "35e5e344e9d46c73371f15c7a3b2f19bf3c8d3d040c1f01a9f503c31cc0b5a40",
       "description": "b3055c1728251fc663983bf88b8479ffaf1e83ccae6b61d6970de695a7c36165",
       "devDependencies": "ecaf63beef8bf851b91998a5b688aa496d1c0053f1362c8de92b53fd0c1fabb4",
-      "dsh": "7351ac72ce4f4edd2037ab065f4fc5035879af4987e5eb0dd07e6003059765a1",
+      "dsh": "f79d25923721c96c475bab0526017e33cd05982898ed99ec825c45339e0b5d72",
       "exports": "dd7d9dc116c5d343205c8c0e15b881c80558ebaf09364791c56e0732b702b54f",
       "files": "44098b05f2be24d186b37430a2d1561d79b5cd31ea4c1d144d458e8c3097b6e0",
       "license": "809c46917bff0e06079ac81a33b2ee85061ce18988dc1ae584240fc6408328b1",
@@ -746,7 +749,7 @@
       "dependencies": "9279c3f0947223c8e4d5f44dfda6e802cd5df2469d7d453985d59977ad162451",
       "description": "f78624601b3b7df755ff1eef9ac63cfb381b7a041dbaa6228ebcc3bbcab50354",
       "devDependencies": "ca4ec2d48cc1aa480093bb3f6b79f71ca501c9353a0db320a7c717d7ee91146d",
-      "dsh": "7351ac72ce4f4edd2037ab065f4fc5035879af4987e5eb0dd07e6003059765a1",
+      "dsh": "c9b5a4cfb847f39f541509f9dd42c0791b2e569cfbad30fd49f26a581b2a8ee4",
       "exports": "910a1fce09ccb84b692aaab8bd680dc8d7e588feb0d236badbc62ebc3526ae93",
       "files": "c520f859f961b98d2c293358882690af7d8d3f5481d7c8e81ee650f86755b0fb",
       "license": "809c46917bff0e06079ac81a33b2ee85061ce18988dc1ae584240fc6408328b1",
@@ -763,7 +766,7 @@
       "dependencies": "8ee46b699e9aa1aef94a4d357c34f684c43c685b23e416c3ef544147d0baa4fa",
       "description": "b6b982825f76879173cebb16c652915e2ef96d06b9b0ddf2e79c7c2a577c6d86",
       "devDependencies": "6726b0702d512d04942e7eae29f458b7416d84197f9ccb6f81e07456ded3ace1",
-      "dsh": "7351ac72ce4f4edd2037ab065f4fc5035879af4987e5eb0dd07e6003059765a1",
+      "dsh": "a764fd2ebd9ebd26cc8526b16ce914b0c8951eee44034c0c453511cb87040af1",
       "exports": "dd7d9dc116c5d343205c8c0e15b881c80558ebaf09364791c56e0732b702b54f",
       "files": "44098b05f2be24d186b37430a2d1561d79b5cd31ea4c1d144d458e8c3097b6e0",
       "license": "809c46917bff0e06079ac81a33b2ee85061ce18988dc1ae584240fc6408328b1",
@@ -780,7 +783,7 @@
       "dependencies": "6ae2812f1f343090ffbddabbcf73646b97060c685a58809c7cbc91310e312175",
       "description": "2734143cd85e59b2375d2bf52198aaef1a2c69a757e542800f44b5f301b6fe97",
       "devDependencies": "ecaf63beef8bf851b91998a5b688aa496d1c0053f1362c8de92b53fd0c1fabb4",
-      "dsh": "7351ac72ce4f4edd2037ab065f4fc5035879af4987e5eb0dd07e6003059765a1",
+      "dsh": "e5ca37a3926e05f6bbe1c45a6655614374f0966806243d33ab72ed4223e28e4f",
       "exports": "dd7d9dc116c5d343205c8c0e15b881c80558ebaf09364791c56e0732b702b54f",
       "files": "44098b05f2be24d186b37430a2d1561d79b5cd31ea4c1d144d458e8c3097b6e0",
       "license": "809c46917bff0e06079ac81a33b2ee85061ce18988dc1ae584240fc6408328b1",
@@ -797,7 +800,7 @@
       "dependencies": "e932fa6ea847e16c552083c2a0bbf6a601ea5471adbb789b437a866bc8f2501d",
       "description": "fdd0f366950348196c104dfb14c2afb6e8574dbae9c2d26948b3efcc0f7519a0",
       "devDependencies": "e3d2d1997398f50baffba09aef5732c2a3be194a08e1c7cf04b412786a999987",
-      "dsh": "7351ac72ce4f4edd2037ab065f4fc5035879af4987e5eb0dd07e6003059765a1",
+      "dsh": "c7172fda2ae7d81e364ab5326dc874b97f64ad7f6baeb2fc8d7563560a4a869c",
       "exports": "910a1fce09ccb84b692aaab8bd680dc8d7e588feb0d236badbc62ebc3526ae93",
       "files": "b601ea4a88c6c1ac0b3f54ae42178ba19abc3c4e55dde80a41b68636f994306c",
       "license": "809c46917bff0e06079ac81a33b2ee85061ce18988dc1ae584240fc6408328b1",
@@ -2484,7 +2487,7 @@
       "version": "c4669b39fa89cf18bc472eed19ca337b936acbb74efa4eda2cb71c55b69a9b09"
     },
     "packages/fs/fs-local/package.json": {
-      "dependencies": "50b76c154abb2103767071ca81cd202134d95af22760ffbf9b31dbc38f29ebf5",
+      "dependencies": "6e1e595d144be32b7cc514955b3828862f505206a1f17331b81a3bf16511ac75",
       "description": "149e2a9eac70b50e78df8fb8a09f2b1ec70fb02f9f90161552a695c05e0fc8ed",
       "devDependencies": "d97e040b81a66a7d029f01452a0b0f5c47f57e9475030c3d5739c1e7b9bdbaf9",
       "exports": "f799a0f0b3782ee102172d1bcfb8916616241e0abbdbabd42ab0ea05a7bcab38",
@@ -2797,7 +2800,7 @@
       "version": "c4669b39fa89cf18bc472eed19ca337b936acbb74efa4eda2cb71c55b69a9b09"
     },
     "packages/host/directory-picker-native/package.json": {
-      "dependencies": "543d32e6cd7f5418e74f2dac94119e952fe39293f2336d7e6705c4f9d6c1281f",
+      "dependencies": "ef14756ccbe758db8ecb5435e5602876076d4b0557c428a0cae020d380db0eac",
       "description": "a2139afd15e6ba1ffeded168476afaffebd88e87b23580fb2368571570cfef39",
       "devDependencies": "779198340ec88e130826c0bf463c36358ec427f4afeead4b0526386a5cddc5f1",
       "exports": "73af68b76bb259d1d59ededd446b0972af4d6aa5590e06f5ece15fe8e4c3b148",
@@ -3470,6 +3473,21 @@
       "types": "49741da2e50098dac51963764dfbfb33acd17a767141643a5564c134e5e5e668",
       "version": "c4669b39fa89cf18bc472eed19ca337b936acbb74efa4eda2cb71c55b69a9b09"
     },
+    "packages/policy/grant-store/package.json": {
+      "description": "3ee70bfb482ab712eef2851f8095a2f24b93414a1e7239fae1339d94b1902f75",
+      "devDependencies": "ecaf63beef8bf851b91998a5b688aa496d1c0053f1362c8de92b53fd0c1fabb4",
+      "exports": "cfc7740de9034ac757b12f5b0935edd040b95a423bc891e3955e1e058ea0fb9b",
+      "files": "9bb428374cd4a1ad4f9c154a36f0411e70d6654c942007937b58f0c70acf2eab",
+      "license": "809c46917bff0e06079ac81a33b2ee85061ce18988dc1ae584240fc6408328b1",
+      "main": "b8304d2fb978bdd74895e5e91200cb4a2b329f1ee570d96f4036b23b7b86200d",
+      "name": "bb58664a245d882694ad9e32d109ab3e840c9410d6c71d2b6ee0967cc163697f",
+      "peerDependencies": "ecaf63beef8bf851b91998a5b688aa496d1c0053f1362c8de92b53fd0c1fabb4",
+      "publishConfig": "db6e9ba8a2bfd017515a312d3c7aef07e2b959ded23fb10f950aae1c182478b3",
+      "repository": "9475eb05b4f7decd361d5ab8dc2f336ad1c40202d273011138c5923193cea74a",
+      "type": "59bd6f6fd32838d1e7ed9af7a514c3fdea3e2ed47ae7c1d8a0e5763c580475d2",
+      "types": "49741da2e50098dac51963764dfbfb33acd17a767141643a5564c134e5e5e668",
+      "version": "c4669b39fa89cf18bc472eed19ca337b936acbb74efa4eda2cb71c55b69a9b09"
+    },
     "packages/policy/policy-enforcement/package.json": {
       "description": "a72a8d08a1b2ed457351b152e777b68b432262e592f27abca9b34bcd58e9549a",
       "devDependencies": "04b1724d02618a149802e18df7160ddb3c056f8e9ae38289d5d7d4668acf9af7",
@@ -3786,7 +3804,7 @@
       "version": "c4669b39fa89cf18bc472eed19ca337b936acbb74efa4eda2cb71c55b69a9b09"
     },
     "packages/sandbox/sandbox-windows-acl/package.json": {
-      "dependencies": "aa64daa262099868569bd5f66d79144b42d6765b2c3364c87dc95aa5bc11d631",
+      "dependencies": "4b75bbe6e31bc2aeab1b422307ce0277ef4c60dc31af6138e15112c2ff1e28ea",
       "description": "06ea3b14cb0e431dc8a08b4bba7e2ad598a0bff3212c5459c9086dc627335700",
       "devDependencies": "09abf2b32089de24f254bba1629a7fa78025fe09f3985315a7f3a9571e7e18cb",
       "exports": "de87cdbdab7f2307f183d52bc1f3554b421aa0deb4033b100724d81bdeca822f",
@@ -4094,7 +4112,7 @@
       "version": "c4669b39fa89cf18bc472eed19ca337b936acbb74efa4eda2cb71c55b69a9b09"
     },
     "packages/session/session-persistence-jsonl/package.json": {
-      "dependencies": "f53ef8de116c0eea3e077ca11e5cd784691e1e10aeee3034cca20a52e9beb2de",
+      "dependencies": "d5dcc296082b74ca27bad1694fad5d17fc2c0e2018ef133624b8a2fb6bedfda7",
       "description": "3bfefb7ee686dd480a30f6941166c565132b3d943b38a54d408a27dc57c2aa42",
       "devDependencies": "f69260f356b66950b26c90e140e7684f5a1874012b2f0c823f19ec730bcfd38a",
       "exports": "f799a0f0b3782ee102172d1bcfb8916616241e0abbdbabd42ab0ea05a7bcab38",
@@ -4826,7 +4844,7 @@
       "version": "c4669b39fa89cf18bc472eed19ca337b936acbb74efa4eda2cb71c55b69a9b09"
     },
     "packages/subprocess/subprocess-local/package.json": {
-      "dependencies": "ce3ed4696fc530369fd02e789e403b495bb76e63cb3b0e0bb60cd861bba08a51",
+      "dependencies": "a747cc3691dfa0a9ae0848b28cb18e225795a0127fd9c8f206533796aed911a1",
       "description": "3729fd6bdfc6166f104d0e05a771718e947f00f374a08485eb47a744825bd3ac",
       "devDependencies": "71cfb241c083a131d15c8879407da03790e6a394cd73cdb57b482967f8fcd730",
       "exports": "d9c7964c150e8964c2a1770d78e9f795172bd26e220ef5a12227dbcab24c080b",
@@ -4858,7 +4876,7 @@
       "version": "c4669b39fa89cf18bc472eed19ca337b936acbb74efa4eda2cb71c55b69a9b09"
     },
     "packages/subprocess/win32-process/package.json": {
-      "dependencies": "e00f7be8fe83085d0dc8bd6fa658ef08aea936b278abf30ab44176e6c8c54615",
+      "dependencies": "011f9f18a7dbc7bc905dc3d9f94067d86084fdbfbdb9570d3f33de586439ef82",
       "description": "56663639d90cf0e1f52a7346e9f7d8f7964fc0c37bb1cc1db0052b2e48837f18",
       "devDependencies": "ecaf63beef8bf851b91998a5b688aa496d1c0053f1362c8de92b53fd0c1fabb4",
       "exports": "f799a0f0b3782ee102172d1bcfb8916616241e0abbdbabd42ab0ea05a7bcab38",
@@ -5517,13 +5535,13 @@
     },
     "packages/workflow/workflow-filesystem/package.json": {
       "description": "52da69632bab5f518df055eb64a55f0c6c136329522c3312a718ec6917831935",
-      "devDependencies": "c7e49d7abbf2bc7d3ee4fae6b8a6137e6cc47ef868e83de0a10b2c2567b56ae6",
+      "devDependencies": "375bee2b1583aee6f1106f66d7f0cf59ab369a6fb95580ad91a2a904433f4ef4",
       "exports": "f799a0f0b3782ee102172d1bcfb8916616241e0abbdbabd42ab0ea05a7bcab38",
       "files": "5882ff497de300b289f319c4facfa106303d4cf175dabac539446b34f0b0d269",
       "license": "809c46917bff0e06079ac81a33b2ee85061ce18988dc1ae584240fc6408328b1",
       "main": "b8304d2fb978bdd74895e5e91200cb4a2b329f1ee570d96f4036b23b7b86200d",
       "name": "bc2d64b658eb4bb301bcc7d0a376dc17c690d306fa1497c20acf87c1858d85db",
-      "peerDependencies": "e2a76c6402a42bcdfa0c90e236b9cd25aad49fefde002993f3cb22c4586f2a9b",
+      "peerDependencies": "a85477bcec3c250dd8b9b4adbc1118fa330b30c1eb8d7144d21c2f11b917a8ee",
       "publishConfig": "655b0ccd3c94fd95b3dda12b5f8b780374550bfe92562b2850dd6ab4082311f3",
       "repository": "d7d5e869c0fd88d74c9d4192e48d6c51ad5728870358189d493948792190f813",
       "type": "59bd6f6fd32838d1e7ed9af7a514c3fdea3e2ed47ae7c1d8a0e5763c580475d2",
@@ -5548,13 +5566,13 @@
     "packages/workflow/workflow-worker-thread/package.json": {
       "dependencies": "9ea7f55b174bb737cb8d44a32acfb482b43ed07339e01a06b88f6e884bb7c604",
       "description": "cde8d2dad1ac5477b87edf79c3a30985175cad3cd013ca11b8fc2094e42cf835",
-      "devDependencies": "63346603ced469d68ef431c7a9fd90e5de39efcdb92df83952b922d7823dd113",
+      "devDependencies": "cd2487cca4cb239a85b0966870285a2e86159e417b187eb75a195e086c86213c",
       "exports": "2834cbcea61eb89ba51a87f0c18940ed90d8e9d09c7408ca40083ecf29f78f75",
       "files": "bc8c9a0a2500f97eda1ad92395f18df5c02644386a0abd6978745653f5723040",
       "license": "809c46917bff0e06079ac81a33b2ee85061ce18988dc1ae584240fc6408328b1",
       "main": "b8304d2fb978bdd74895e5e91200cb4a2b329f1ee570d96f4036b23b7b86200d",
       "name": "5c328a86b7a5fea40ed0fc73b4404cd4c2d0680504f06fd0f224fb42d1e78ef2",
-      "peerDependencies": "5a622ffc1717cd7e27907debd30b7ff41302dcbfacfa75e2c4be4d40d0ac9dcb",
+      "peerDependencies": "10eb00981cdd9606c485d32d43cae8e7ac974ca799fe2076a9aeeb4407871c27",
       "publishConfig": "325cee314ece150c0d637773335848ee888daff258aec5a59b3d083b03487ab0",
       "repository": "ece2353f7848d09668d544d83753e322ced4e897c1a823707a0cb7db4ac26534",
       "type": "59bd6f6fd32838d1e7ed9af7a514c3fdea3e2ed47ae7c1d8a0e5763c580475d2",
@@ -5640,7 +5658,7 @@
       "version": "c4669b39fa89cf18bc472eed19ca337b936acbb74efa4eda2cb71c55b69a9b09"
     },
     "python/sdk-runtime/package.json": {
-      "dependencies": "b5e45dac6d714a02049c07d545b6346ceb922c52ab3f54a93ec3992d40d9b60e",
+      "dependencies": "72272f8e68a05a4bd614e4f90769928ab50c04521157d516575b77b92d1fd8a4",
       "description": "6591d85d744cf4f20df3c874bec58f4fc070858638e65f55676c4a9c02205dff",
       "name": "72c08f379aef12b09b0483e19ae9bfeba791474bf36246f944d40b099c7e3c43",
       "private": "a17fcf0a2f50e2d495e4f90ce263410edc183add6c62699a2facbccf60410f74",
@@ -5803,12 +5821,17 @@
       "version": "a0607e50c829780a347028d65fadc30fd05d3a025533ff0673635f209172d936"
     }
   },
-  "pnpmLockHash": "a3b1d97486929eee881390571cc924f28b6046ffb9129b2c92b1db69b14839ec",
+  "pnpmLockHash": "ef877de480b0d300a3bc1949b6aadfc72d71c81d73224c4418292328057c4130",
   "protocolSchemaHashes": {
-    "packages/core/session/src/known-event-types.ts": "60cdc437e41aedf95bc98ae8fc7a2b642c23aaefa6585f26b198083f685715d5",
+    "packages/core/session/src/known-event-types.ts": "b5ba88c403d965fb1ffb01af61a5867316ab7fd08dcdc3ed7a0c5bec545bbebf",
+    "packages/sdk/protocol/src/capabilities.ts": "96902321b92a2d840ee22459701c70878ebef3e75f41c48aaed265a9c054197c",
+    "packages/sdk/protocol/src/index.ts": "2a3fb10596787e02bdac8128e27475c5fcd817d7de0a2d305e14858698541178",
+    "packages/sdk/protocol/src/schema-fingerprint.ts": "be7f44e824d430e097169abe6f6cc250bb02cdb968595a660a71c42f7bcc71fc",
+    "packages/sdk/protocol/src/transport.ts": "9bf35b6dc42985e36cb5f10a6ceee4d50a01e2724fa0a7fdee8fc1b90f7ec36d",
     "packages/sdk/protocol/src/types.ts": "653af35bd3a73d9d183e25255e78509538d56573c4d418b0aa1605c789297df3",
+    "packages/sdk/protocol/src/version.ts": "e84699040513df3357011760c73719660eff1b02e169e7bb2d331e16c3b0e8ae",
     "spec/action-manifest.schema.json": "4a4839a526fe3518b76b71a06f8da3c946d434c892eb3c8fc3c270a02775f7ae",
-    "spec/capability-manifest.schema.json": "787d43fd0263247bfa926dccfdb845713b770dfc5c4d6a4cff29f4dd64997a05",
+    "spec/capability-manifest.schema.json": "031d91e633f8dfc9a366c17399830577154dcaefe27631fad43f3ea0104e6e4c",
     "spec/control-protocol.schema.json": "268d2b1ba4a8c847f656583a698267dbc33813f3fd201a0671a1b9ecb8cc8620",
     "spec/first100-evidence.schema.json": "23b017be8f409f9f727749f37a3706795ba8b35a23798380aea7fc387035cb72",
     "spec/run-plan.schema.json": "fb20c1295db1f0e72286f5379a1d38201b0c801a4b26c501a8ba930e9115d869",
@@ -5957,6 +5980,7 @@
     "@deepseek-ai/dsh-fs-sandbox",
     "@deepseek-ai/dsh-goal",
     "@deepseek-ai/dsh-goal-round-driver",
+    "@deepseek-ai/dsh-grant-store",
     "@deepseek-ai/dsh-headless",
     "@deepseek-ai/dsh-home-paths",
     "@deepseek-ai/dsh-hook-protocol",
