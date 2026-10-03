@@ -8,7 +8,7 @@
 
 ## 模式与强制执行
 
-`SandboxMode` 仅管控文件系统效果。`read-only` 要求后端拒绝写入——POSIX runner 还会授予其 shell 所需的 `/dev/null` 接收器，而 Windows ACL runner 不授予任何显式可写根目录，并因环境 ACL 缺口报告部分强制执行；`workspace-write` 允许在工作区根目录及后端承诺的临时区域下写入，但 harness 主目录（`$DSH_HOME`）除外：bwrap、Seatbelt 与进程内的 fs 隔离让它保持只读，只能授予可写根目录的 Landlock 与 Windows ACL runner 在可写根目录包含它时拒绝执行命令；`danger-full-access` 绕过隔离。网络与进程可见性不在此处的定义范围内。Unix-domain socket 也不是一种模式：两种受限模式都在后端做得到时拒绝它们，哪些后端做得到由[本地提供方](../../packages/sandbox/sandbox-local/README.zh.md)说明。
+`SandboxMode` 仅管控文件系统效果。`read-only` 要求后端拒绝写入——POSIX runner 还会授予其 shell 所需的 `/dev/null` 接收器，而 Windows ACL runner 不授予任何显式可写根目录，并因环境 ACL 缺口报告部分强制执行；`workspace-write` 允许在工作区根目录及后端承诺的临时区域下写入，但 harness 主目录（`$DSH_HOME`）除外：bwrap、Seatbelt 与进程内的 fs 隔离让它保持只读，只能授予可写根目录的 Landlock 与 Windows ACL runner 在可写根目录包含它时拒绝执行命令；`danger-full-access` 绕过隔离。网络与进程可见性不在此处的定义范围内。读取也不受限，dsh 自己的凭证库除外（Landlock 与 Windows 主机上的 bash 例外）；完整情况见[模型能读到什么](credentials.zh.md#what-the-model-can-read)。Unix-domain socket 也不是一种模式：两种受限模式都在后端做得到时拒绝它们，哪些后端做得到由[本地提供方](../../packages/sandbox/sandbox-local/README.zh.md)说明。
 
 ```ts type-equiv
 /**
