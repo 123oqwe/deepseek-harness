@@ -99,7 +99,7 @@ function consumeRecorded(state: InboxArrivalsState, id: UserMessage['id']): Inbo
   return {
     pending: state.pending,
     claimed: state.claimed.filter(arrival => arrival !== recorded),
-    consumed: state.consumed.includes(recorded.key) ? state.consumed : [...state.consumed, recorded.key],
+    consumed: state.consumed,
   }
 }
 
