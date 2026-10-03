@@ -30,6 +30,7 @@ import type { WorkflowRun } from '@deepseek-ai/dsh-workflow'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import WorkerThreadWorkflowEngine from '../src/index.ts'
 import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
+import TokenMeter from '@deepseek-ai/dsh-token-meter'
 
 const META = { name: 'parent', description: 'nests another definition or spawns agents', phases: [] }
 
@@ -54,6 +55,10 @@ async function setup(
   const ctx = new Context()
   contexts.push(ctx)
   await mountAgentLoopTestDependencies(ctx)
+  // The shipped base mounts the token-meter (bundle/base/cordis.patch.yml), so
+  // the nested token budget has real usage to debit against; without it the
+  // engine only warns, which is not the factory composition this proves.
+  await ctx.plugin(TokenMeter)
   await ctx.plugin(AgentLoop, { agents: [] })
   await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
