@@ -436,25 +436,52 @@ export function isDevelopmentProfileManifest(manifest: ProfileManifest): boolean
 }
 
 /**
+ * The plugins the user patch layers mount by path (Epic P1-02 must[4], question
+ * 30 (b)): every inserted row, inside an inserted group too, whose module is a
+ * `file:` URL, which is what `@deepseek-ai/dsh-app-boot` makes of a row naming a
+ * file. That code came through no install, so no provenance was verified for
+ * it. A row naming a package is not listed here; a profile dependency is named,
+ * when unverified, by its own provenance record. A row a later patch disables
+ * is still listed.
+ * @param layers - the user patch layers' patches: the profile's, the home-level one, and any `--patch` overlays.
+ * @returns each row as `<id> (<file: URL>)`, the URL alone when it has no id, in patch order without repeats.
+ */
+export function patchMountedUnverified(layers: readonly (readonly PatchOptions[])[]): string[] {
+  const names: string[] = []
+  const visit = (entry: EntryOptions): void => {
+    if (typeof entry.name === 'string' && entry.name.startsWith('file:')) {
+      const shown = typeof entry.id === 'string' && entry.id !== '' ? `${entry.id} (${entry.name})` : entry.name
+      if (!names.includes(shown)) names.push(shown)
+    }
+    if (entry.group && Array.isArray(entry.config)) entry.config.forEach(visit)
+  }
+  for (const patches of layers) for (const patch of patches) patch.insert?.forEach(visit)
+  return names
+}
+
+/**
  * Show the untrusted status of plugins with no verified provenance, on every
  * boot and on every `dsh plugin add` that installs one, on every profile
  * (Epic P1-02 must[4]; question 30 (b)). An explicit development profile gets
  * `admitUnsignedDevMode`'s banner; any other profile is refused that admission
  * and gets a plain warning instead. Either line names every plugin whose
- * provenance record is `'unverified'`, and nothing is refused; with no such
- * plugin nothing is written.
+ * provenance record is `'unverified'` and every plugin a user patch layer
+ * mounts by path ({@link patchMountedUnverified}); nothing is refused, and with
+ * no such plugin nothing is written.
  * @param profileName - the active profile's name.
  * @param developmentProfile - whether the profile is an explicit development profile.
  * @param records - the provenance record for each profile dependency the boot or install decided.
+ * @param patchMounted - the plugins {@link patchMountedUnverified} found in the user patch layers.
  * @param warn - sink for the untrusted-status warning; defaults to a stderr write.
  */
 export function warnUnsignedDevPlugins(
   profileName: string,
   developmentProfile: boolean,
   records: ReadonlyMap<string, ProvenanceAuditRecord>,
+  patchMounted: readonly string[],
   warn: (message: string) => void = (message) => { process.stderr.write(message) },
 ): void {
-  const unverified = [...records].flatMap(([name, record]) => record.trust === 'unverified' ? [name] : [])
+  const unverified = [...[...records].flatMap(([name, record]) => record.trust === 'unverified' ? [name] : []), ...patchMounted]
   if (unverified.length === 0) return
   const admission = admitUnsignedDevMode(
     { profileName, explicitDevOptIn: true },
@@ -893,9 +920,15 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
     // line an insecure opt-in on a non-development profile has already refused
     // the boot, so a kernel-less launch that reaches here is a development one.
     hostCtx.provide(DEVELOPMENT_PROFILE_KEY, developmentProfile)
-    // Epic P1-02 must[4]: a development profile names, on every boot, each
-    // plugin that runs with no verified provenance; no other profile does.
-    warnUnsignedDevPlugins(options.profile, isDevelopmentProfile(hostCtx), provenance.records)
+    // Epic P1-02 must[4] (question 30 (b)): every profile names, on every
+    // boot, each plugin that runs with no verified provenance: an unverified
+    // dependency, and a plugin a user patch layer mounts by path.
+    warnUnsignedDevPlugins(
+      options.profile,
+      isDevelopmentProfile(hostCtx),
+      provenance.records,
+      patchMountedUnverified([composed.profile.patches, composed.homePatches, composed.overlays]),
+    )
     // Feature gates (Epic P0-05 must[3]): the resolution composeProfile
     // already used, provided before any config-tree entry mounts, so a gated
     // plugin reads exactly what `--dump-config` shows for this same

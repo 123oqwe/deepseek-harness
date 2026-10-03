@@ -12,7 +12,7 @@ P1-02 签字要的，有几处是它的 A 笔（B-572）没做的；delegate 在
 
 - **声明点名的 SBOM，才是被核的 SBOM。** 签名通过之后，`verifyPluginProvenance` 先比 `computeSbomDigest(input.sbom)` 与 `claim.sbomDigest`，不等就以 `sbom-digest-mismatch` 拒绝，之后才核覆盖。签名覆盖 `sbomDigest`，声明里的摘要是真的，这一比就把所附的 SBOM 绑到它上面。这个摘要按 UTF-16 码元给条目排序，不按 locale，因为它现在决定结论，不能随校验机器的 `LANG` 变。
 - **启动时离线再验安装时的声明，被拒就不启动。** 在任何插件代码运行之前，`runProfile` 把每个从本地 tarball 安装、且 tarball 旁边有声明文件的依赖交给 `verifyLockedPackageOffline`，读声明与已装包的方式与安装路径相同。被拒时，任何模式都不启动，显式开发 profile 也一样，并逐个写明包与原因：声明验不过的包不是未签名的包。每个结论经 `buildPluginPermissionStates` 的 `provenanceRecords` 进入 inventory，`trusted` 带上它的锚。安装时验过的包要守住那次验证，锁里的 `trusted` 从不沿用：之后 tarball 或声明文件不见了，或者 tarball 的摘要与锁里记的不同，都拒启动，并写明缺哪个文件或哪里不符；spec 没变而声明文件不见了的安装也拒。从没验过的包记为 `unverified`，原因是 `no-provenance-claim`。
-- **显式开发 profile 每次启动都显示不可信状态。** 启动器发布「这次是不是开发 profile」之后，`warnUnsignedDevPlugins` 立即向 `admitUnsignedDevMode` 请求准入，策略在这个值表示开发 profile 时只放行当前 profile；准入后把它的横幅写到 stderr，逐个写出启动记录为 `unverified` 的插件名。再加上 inventory 里的 `unverified` 记录，就是 must[4] 要的持续显示。其它 profile 写一行普通告警，列出同样的插件；每次 `dsh plugin add` 装进这样的包，任何 profile 也都写这一行；什么都不拦（用户对第 30 题的答复 (b)）。
+- **显式开发 profile 每次启动都显示不可信状态。** 启动器发布「这次是不是开发 profile」之后，`warnUnsignedDevPlugins` 立即向 `admitUnsignedDevMode` 请求准入，策略在这个值表示开发 profile 时只放行当前 profile；准入后把它的横幅写到 stderr，逐个写出启动记录为 `unverified` 的插件名，以及用户补丁层按路径挂上的每个插件：profile 自己的 `cordis.patch.yml`、home 补丁或 `--patch` overlay 里模块是 `file:` URL 的行，写它的 id 与 URL（`patchMountedUnverified`，B-707）。再加上 inventory 里的 `unverified` 记录，就是 must[4] 要的持续显示。其它 profile 写一行普通告警，列出同样的插件；每次 `dsh plugin add` 装进没有经过验证的包，或者所在 profile 的自身补丁、home 补丁按路径挂了插件，任何 profile 也都写这一行；`dsh plugin add` 在 pnpm 运行之前读这两个补丁文件，写坏了就什么都不装、直接失败。什么都不拦（用户对第 30 题的答复 (b)）。
 - **每个结论都进 kernel 的审计链。** `appendProvenanceAudit` 每个结论追加一条不含密钥的条目：站得住的依赖记它的记录；由校验或锁里摘要判定的拒绝，记那条 rejected 记录；其它拒绝只记原因的代码，从不记声明文件解析出错时的报错，因为那段话可能引到文件内容。启动追加到它钉住的 kernel，拒绝也记，记完才拒启动；`dsh plugin` 没有宿主，追加到它用来校验的 kernel。
 - **钉住的 kernel 的信任锚已封存。** `runProfile` 钉住 kernel 之后、任何插件挂载之前，立即对它的 signature-roots 句柄调 `sealTrustAnchors`；对封存的句柄调 `registerTrustAnchor`、`revokeTrustAnchor` 都抛错，并写明改锚的办法：改 profile 的 `dsh.trustAnchors`，再重启。出处判定都不读钉住的 kernel 的锚：安装路径与每次启动，都对着自己在任何插件代码运行之前建的 kernel 校验。
 
@@ -22,6 +22,7 @@ P1-02 签字要的，有几处是它的 A 笔（B-572）没做的；delegate 在
 - **启动时直接报锁里的结论，不再验。** 锁记的是安装时成立的事，不是启动时磁盘上的样子，而 acceptance[1] 要的是验证。
 - **只在 production 拒，或者只记下拒绝。** 载入声明验不过的包的启动不是 fail closed；delegate 两种都没取。
 - **像 insecure 的开发启动那样告诉模型。** must[4] 写的是 UI 与日志，所以状态写进日志，不进模型请求。
+- **用户补丁里写包名、而这个包既不是 profile 依赖、也不在安装的依赖闭包里的行，也点名。** 闭包是 `@deepseek-ai/dsh-app-boot` 的内部数据；测试组合又按包名插工作区里的测试支撑包，几乎每个 headless 快照都会出这一行，它的 harness 就只能整行丢掉。delegate 定只列按路径挂上的行。
 - **封存之后返回拒绝，不抛错。** 往钉住的 kernel 的锚里写是用法错误，不是一种结果；改返回类型会波及每个调用方。
 - **在 `@deepseek-ai/dsh-trust-kernel` 里封存。** 它冻结的 P0-02 用例逐个列出这个包的字面量与值导出，并钉住 `signatureRoots` 没有自有成员；锚的登记表属于 `@deepseek-ai/dsh-plugin-provenance`，封存就放在它旁边。
 
@@ -30,5 +31,6 @@ P1-02 签字要的，有几处是它的 A 笔（B-572）没做的；delegate 在
 - 夹具声明带占位 `sbomDigest` 的 P1-02 冻结用例（`tests/provenance.spec.ts`、`tests/package-digest.spec.ts`），原来期望 `trusted` 或 `sbom-coverage-mismatch` 的，现在被拒。照 delegate 的裁定，由 lane A 改夹具，冻结走取代。
 - profile 有 `plugins.lock.json` 时，每次启动都读它，锁写坏了启动就失败，与 `dsh plugin` 已有的做法一样。有声明要验的启动，即使是 insecure 的开发启动，也会读 profile 的信任锚，所以写坏的 `dsh.trustAnchors` 同样让它失败。
 - `profile-boot.ts` 与 `install-provenance.ts` 互相引用；两边都只在函数体内用对方的导出，不会读到未初始化的绑定。
-- 不涵盖：摘要取自 tarball 的字节，所以安装之后在 `node_modules` 里被改的文件查不出来；`plugin-manifest-enforcement` 这个 feature gate 为 `off` 的启动不建 inventory 的状态；没有哪个出厂 profile 配了审计 sink，所以在 P6-08 之前审计链留不下这些条目（BLOCKED-191），insecure 的开发启动也没有 kernel 可追加；插件在进程内运行、没有沙箱，所以它能改 `dsh.trustAnchors`，下次安装或启动会读到；自带一份 `@deepseek-ai/dsh-plugin-provenance` 的插件有它自己的登记表，出厂判定都不读；钉住的 kernel 上，宿主也不能在运行时撤回锚。
+- headless 快照场景按路径挂自己的夹具，所以它的启动器会写这行普通告警；harness 在这一行列出的全是按路径挂上的插件时丢掉它，因为它不是会话事件；列出包名的行照样让比对失败。
+- 不涵盖：用户补丁里写包名、而这个包既不是 profile 依赖、也不随安装出厂的行，不点名；实时补丁重载（默认 `patchReload: live`）加进来的行，到下次启动之前不写这一行；摘要取自 tarball 的字节，所以安装之后在 `node_modules` 里被改的文件查不出来；`plugin-manifest-enforcement` 这个 feature gate 为 `off` 的启动不建 inventory 的状态；没有哪个出厂 profile 配了审计 sink，所以在 P6-08 之前审计链留不下这些条目（BLOCKED-191），insecure 的开发启动也没有 kernel 可追加；插件在进程内运行、没有沙箱，所以它能改 `dsh.trustAnchors`，下次安装或启动会读到；自带一份 `@deepseek-ai/dsh-plugin-provenance` 的插件有它自己的登记表，出厂判定都不读；钉住的 kernel 上，宿主也不能在运行时撤回锚。
 - 本 note 部分取代 [`dsh plugin add` 校验本地 tarball 旁的来源声明](2026-09-26-dsh-plugin-add-verifies-a-tarball-provenance-claim.zh.md)：它「不涵盖」里的 A0 与 B 笔已不成立。
