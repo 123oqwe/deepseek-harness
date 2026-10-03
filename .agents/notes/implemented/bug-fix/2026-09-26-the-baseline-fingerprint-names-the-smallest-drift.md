@@ -24,7 +24,7 @@ BLOCKED-305 conditions [0] and [1], P0-01 acceptance[0] and [1]. `scripts/releas
 
 ## Consequences
 
-- The committed `.dsh/baseline.json` stays in format 1 until it is recaptured, and the frozen C-stage case that compares a capture's key set with it fails until then. As the delegate ruled, the recapture is taken from the next observation batch's CI evidence package and committed with its audit document in a later record batch; no capture runs locally.
+- The committed `.dsh/baseline.json` is in format 2: CI captured it at `d25574ecbc` and `01500374c0` committed it. Until it is recaptured, verify against it reports the format difference alone; format 3 keeps the same top-level fields, so the frozen C-stage case that compares a capture's key set with it stays green. The recapture follows the procedure the delegate ruled for format 2: it is taken from an observation batch's CI evidence package and committed with its audit document in a later record batch; no capture runs locally.
 - For this repository the baseline grows to about 400 KB.
 - An offline re-verification by `verify-evidence.mjs` needs the collecting checkout's HEAD and no longer its toolchain.
 - Verification: A-448 (`tests/release/baseline-fingerprint-normalized.spec.ts`), A-449 (`tests/release/baseline-fingerprint-classes.spec.ts`) and the frozen C-stage `tests/release/baseline-fingerprint.spec.ts`.

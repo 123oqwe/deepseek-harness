@@ -24,7 +24,7 @@ BLOCKED-305 条件 [0] 与 [1]，P0-01 acceptance[0] 与 [1]。`scripts/release/
 
 ## 后果
 
-- 已提交的 `.dsh/baseline.json` 在重采之前仍是格式 1；冻结的 C 段用例拿采集结果的键集与它比，在那之前会红。照 delegate 的裁定，重采取自下一个观测班 CI 的 evidence package，连同审计文档在之后的记录班里提交；本机不跑 capture。
+- 已提交的 `.dsh/baseline.json` 是格式 2：CI 在 `d25574ecbc` 采集，`01500374c0` 提交。重采之前，拿它 verify 只报格式这一处差异；格式 3 的顶层字段不变，所以冻结的 C 段用例拿采集结果的键集与它比，照样是绿的。重采照 delegate 对格式 2 裁定的办法：取自观测班 CI 的 evidence package，连同审计文档在之后的记录班里提交；本机不跑 capture。
 - 对本仓库，基线会涨到约 400 KB。
 - `verify-evidence.mjs` 的离线复核只需要采集时检出的 HEAD，不再需要当时的工具链。
 - 验证：A-448（`tests/release/baseline-fingerprint-normalized.spec.ts`）、A-449（`tests/release/baseline-fingerprint-classes.spec.ts`），以及冻结的 C 段 `tests/release/baseline-fingerprint.spec.ts`。
