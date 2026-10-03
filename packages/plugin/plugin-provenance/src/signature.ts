@@ -22,19 +22,14 @@
  * ({@link sealTrustAnchors}), no caller can admit or withdraw an anchor on
  * it. A root that cannot be swapped is still an empty root.
  *
- * **No function in this module verifies a signature.**
- * {@link verifyPackageSignature} compares claimed facts against observed ones
- * and then checks only that the evidence's fields are non-empty;
- * `OfflineSignedProvenanceEvidence.signature` is never checked against a key.
- * {@link computePackageDigest} is the one real cryptographic operation here,
- * and it binds an artifact to a claim, not a claim to an authority.
- *
- * What DID change (2026-09-05, P1-02 lock steps ① and ④): evidence naming an
- * issuer or fingerprint no {@link registerTrustAnchor} call admitted is now
- * refused, and {@link revokeTrustAnchor} can withdraw one. So an attacker must
- * now name an admitted anchor rather than any well-formed issuer — but an
- * attacker who names one still passes, because the signature itself is still
- * unchecked. See the package README's Known Limitations.
+ * **What verifies a signature.** {@link verifyPackageSignature} compares a
+ * claim's facts against the observed ones and refuses evidence naming an issuer
+ * or fingerprint no {@link registerTrustAnchor} call admitted
+ * ({@link revokeTrustAnchor} withdraws one). It then checks the signature
+ * itself: {@link checkOfflineSignature} against an offline-signed anchor's
+ * public key, or the Sigstore bundle against the anchor's trusted root.
+ * {@link computePackageDigest} binds an artifact to a claim; the signature binds
+ * the claim to an admitted anchor.
  *
  * **Grounding.** {@link PackageDigest}, {@link SourceCommitHash},
  * {@link BuilderIdentity}, and {@link TrustAnchorId} have no branded-type
@@ -65,12 +60,11 @@ export type PackageDigest = Branded<'PackageDigest'>
  * claim whose `packageDigest` was fixed before the tampering no longer
  * matches what is installed.
  *
- * Its guarantee stops exactly there, and this module holds no key material
- * that could extend it: the digest binds the artifact to the claim, not the
- * claim to any authority. An attacker who tampers with the bytes AND rewrites
- * the claim's `packageDigest` to match still verifies — detecting that needs
- * a signature over the claim against a trust root, which
- * `packages/kernel/trust-kernel` does not yet hold (BLOCKED-050).
+ * Its guarantee stops exactly there: the digest binds the artifact to the
+ * claim, not the claim to any authority. An attacker who tampers with the
+ * bytes AND rewrites the claim's `packageDigest` to match is refused by the
+ * signature over the claim, which {@link verifyPackageSignature} checks
+ * against an admitted anchor.
  * @param packageBytes - the package artifact's exact bytes, as read from the installed tarball.
  * @returns the `sha256:<hex>` digest of `packageBytes`, using the same encoding as `./sbom.ts`'s `computeSbomDigest`.
  */
