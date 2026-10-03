@@ -112,7 +112,7 @@ records:
 
 ### 谁能读取该文件
 
-只有你的 OS 用户能读取该文件：产品以仅属主可访问的权限创建它，在 POSIX 上还会拒绝加载任何其他用户可读的文件——错误会提示你运行 `chmod 600`。Windows 没有可检查的 mode，因此在那里跳过该检查而不是伪造它。agent 的工具进程以你的身份运行，单靠文件权限挡不住它们读这个文件；在 `read-only` 与 `workspace-write` 沙箱模式下，harness 让它们读不到这个文件和主目录下的 `.env`：`read` 工具拒绝读取，`grep` 与 `glob` 从结果中去掉它们，bubblewrap 把 `/dev/null` bind 到它们上面，Seatbelt 拒绝读取它们。Landlock 或 Windows 主机上的 bash 仍读得到，用户以 `danger-full-access` 批准的调用也读得到，配置到 `$DSH_HOME` 之外的 `path` 不在覆盖范围内。产品也绝不把文件路径交给 agent，绝不把文件载入环境。
+只有你的 OS 用户能读取该文件：产品以仅属主可访问的权限创建它，在 POSIX 上还会拒绝加载任何其他用户可读的文件——错误会提示你运行 `chmod 600`。Windows 没有可检查的 mode，因此在那里跳过该检查而不是伪造它。agent 的工具进程以你的身份运行，单靠文件权限挡不住它们读这个文件；在 `read-only` 与 `workspace-write` 沙箱模式下，harness 让它们读不到这个文件和主目录下的 `.env`：`read` 工具拒绝读取，`grep` 与 `glob` 从结果中去掉它们，bubblewrap 把 `/dev/null` bind 到它们上面，Seatbelt 拒绝读取它们。Landlock 或 Windows 主机上的 bash 仍读得到，用户以 `danger-full-access` 批准的调用也读得到，配置到 `$DSH_HOME` 之外的 `path` 不在覆盖范围内。产品也绝不把文件路径交给 agent，绝不把文件载入环境。其余文件（包括项目的 `.env`）见[模型能读到什么](../../../docs/subsystems/credentials.zh.md#what-the-model-can-read)。
 
 ### 可能出错的地方
 

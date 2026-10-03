@@ -29,6 +29,14 @@ interface ResolvedCredential {
 }
 ```
 
+<a id="what-the-model-can-read"></a>
+
+## What the model can read
+
+The sandbox modes confine writes; reads and the network are outside them. A model steered by text in its workspace can read any file your account can read, through the `read`, `grep` and `glob` tools and through `bash`, and send what it read out: to a public URL with `web_fetch`, in a `web_search` query, or from `bash`, which keeps network access. None of these asks for approval under the default `workspace-write` mode and `ask` approval. A project's own `.env`, the `project-env` layer above, is such a file, so keep secrets out of it in any workspace an agent may open.
+
+The harness's own credential store is the exception. Under the `read-only` and `workspace-write` modes the model's tools cannot read `$DSH_HOME/.credentials.yaml` or the home-level `$DSH_HOME/.env`, and neither can a command confined by bubblewrap or Seatbelt; on a Landlock or Windows host a confined command still can (the [local sandbox provider's limits](../../packages/sandbox/sandbox-local/README.md#known-limitations-and-deferred-work)). A call you approve as `danger-full-access` can read them too. Control of network egress is P3-04's, and keeping secret values out of model context is P3-06 must[3]'s; neither has shipped.
+
 ## Description
 
 `describe(ref)` answers configuration surfaces without ever exposing a value: whether the reference resolves, from which layer, and whether `set` would currently succeed. The local provider reports a reference supplied by the live process environment as `writable: false` — a write would appear to succeed while resolution kept returning the shadowing value, so the seam rejects it and the UI can render the reference read-only up front.
