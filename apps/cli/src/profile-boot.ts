@@ -910,7 +910,7 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
   // plugins have mounted and had their chance to register, before HMR/watch
   // setup adds any further Loader entries of its own.
   if (!signalShutdown.signal.aborted && ctx.fiber.state === FiberState.ACTIVE && ctx.get('loader') !== undefined) {
-    await applyPostMountPluginEnforcement(ctx, pluginEnforcement, composed.admittedLayerNames, composed.bundleLayers, provenance.records)
+    await applyPostMountPluginEnforcement(ctx, pluginEnforcement, composed.admittedLayerNames, composed.bundleLayers)
   }
   // A live-reload profile can dispose the whole tree while post-boot watcher
   // setup is in flight — a signal or appExit. Loader presence and fiber state
