@@ -366,10 +366,6 @@ async function runGroup(
       }
       return
     }
-    // Settlement confirms against this record, so it is published only once
-    // the risk gate has passed: a risk-refused call never reserved, and
-    // markAmbiguous on an unreserved key throws instead of settling.
-    records[index] = appended.record
     const refused = reserveExternalEffect(ctx, agent, appended.record)
     if (refused !== undefined) {
       // The prepared exec is what the slot carries; a refusal happens before
@@ -378,6 +374,11 @@ async function runGroup(
       slots[index] = { exec: call.exec as unknown as ToolRunContext, result: refusedReservationResult(refused), needsPost: false }
       return
     }
+    // Settlement confirms against this record, so it is published only once
+    // the reservation is held: a risk-refused call never reserved, a refused
+    // reservation holds nothing (BLOCKED-352, as the code-mode path does), and
+    // markAmbiguous on a key this call does not hold throws instead of settling.
+    records[index] = appended.record
     const prepared = await ctx.tools[TOOL_RUNTIME_SCHEDULER].prepare(call.exec)
     throwSchedulerFailure()
     switch (prepared.kind) {
