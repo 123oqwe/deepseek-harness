@@ -40,6 +40,7 @@ import {
   type BlockedProfileLayer,
   type DeniedProfileLayer,
   type Profile,
+  type ProfileManifest,
 } from '@deepseek-ai/dsh-app-boot'
 import { DSH_RUNTIME_API_VERSION } from '@deepseek-ai/dsh-plugin-compat'
 import { brandString } from '@deepseek-ai/dsh-brand'
@@ -425,15 +426,26 @@ export interface RunProfileOptions {
 export { enforceTrustKernelPosture, resolveTrustKernelInsecureOptIn }
 
 /**
- * Show Epic P1-02 must[4]'s untrusted status on every boot of an explicit
- * development profile: write `admitUnsignedDevMode`'s banner and name every
- * plugin whose provenance record is `'unverified'`. The admission policy
- * allows exactly the active profile when it is a development profile, so any
- * other profile is refused admission and nothing is written; a boot with no
- * unverified plugin writes nothing either.
+ * Whether a profile's own `package.json` declares it an explicit development
+ * profile (`dsh.profile.development: true`).
+ * @param manifest - the profile's parsed `package.json`.
+ * @returns whether the profile is an explicit development profile.
+ */
+export function isDevelopmentProfileManifest(manifest: ProfileManifest): boolean {
+  return (manifest.dsh?.profile as { readonly development?: unknown } | undefined)?.development === true
+}
+
+/**
+ * Show the untrusted status of plugins with no verified provenance, on every
+ * boot and on every `dsh plugin add` that installs one, on every profile
+ * (Epic P1-02 must[4]; question 30 (b)). An explicit development profile gets
+ * `admitUnsignedDevMode`'s banner; any other profile is refused that admission
+ * and gets a plain warning instead. Either line names every plugin whose
+ * provenance record is `'unverified'`, and nothing is refused; with no such
+ * plugin nothing is written.
  * @param profileName - the active profile's name.
- * @param developmentProfile - whether this launch is an explicit development profile.
- * @param records - this boot's provenance record for each profile dependency.
+ * @param developmentProfile - whether the profile is an explicit development profile.
+ * @param records - the provenance record for each profile dependency the boot or install decided.
  * @param warn - sink for the untrusted-status warning; defaults to a stderr write.
  */
 export function warnUnsignedDevPlugins(
@@ -448,7 +460,10 @@ export function warnUnsignedDevPlugins(
     { profileName, explicitDevOptIn: true },
     { allowedDevProfileNames: new Set(developmentProfile ? [profileName] : []) },
   )
-  if (!admission.admitted) return
+  if (!admission.admitted) {
+    warn(`${NAME}: WARNING: plugins with no verified provenance: ${unverified.join(', ')}.\n`)
+    return
+  }
   warn(`${NAME}: WARNING: ${admission.banner.message} Plugins with no verified provenance: ${unverified.join(', ')}.\n`)
 }
 
@@ -758,7 +773,7 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
   // the model-visible insecure notice. A shipped profile with the insecure
   // opt-in set refuses to start before any config-tree entry mounts.
   const profileManifest = readProfileManifest(NAME, composed.profile.dir)
-  const developmentProfile = (profileManifest.dsh?.profile as { readonly development?: unknown } | undefined)?.development === true
+  const developmentProfile = isDevelopmentProfileManifest(profileManifest)
   if (trustKernelInsecure && !developmentProfile) {
     throw new Error(`${NAME}: ${TRUST_KERNEL_INSECURE_ENV} is set but profile ${JSON.stringify(options.profile)} is not a development profile -- refusing to boot (only a profile declaring dsh.profile.development may boot without a Trust Kernel)`)
   }
