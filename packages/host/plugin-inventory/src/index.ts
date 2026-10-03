@@ -19,8 +19,10 @@ import {
   classifyPluginDeclaration,
   compareDeclaredToObserved,
   decidePluginTrust,
+  partitionWildcardFindings,
   type ObservedPluginCapabilities,
   type PluginDeclaration,
+  type WildcardGrant,
 } from '@deepseek-ai/dsh-plugin-manifest'
 import { buildInventoryChain } from '@deepseek-ai/dsh-plugin-ownership'
 import type { InventoryChainEntry } from '@deepseek-ai/dsh-plugin-ownership'
@@ -338,6 +340,8 @@ export interface BundleLayerScope {
   readonly packageDir: string
   /** The Loader entry id of every entry the layer's patches insert, entries inside an inserted group included. */
   readonly entryIds: readonly string[]
+  /** The wildcard grants this installation gives the layer; absent or empty when it gives none. */
+  readonly wildcardGrants?: readonly WildcardGrant[]
 }
 
 /** Options for {@link buildPluginPermissionStates}. */
@@ -392,7 +396,10 @@ export interface BuildPluginPermissionStatesOptions {
  * a layer vouches for what it mounts. A unit whose manifest is a
  * `'manifest-v2'` declaration gets a real `comparison`/`trustDecision` from
  * {@link compareDeclaredToObserved}/{@link decidePluginTrust}; any other
- * carries neither. Each state's `declaration` and `observed` stay the entry's
+ * carries neither. A unit judged by a layer whose scope carries
+ * `wildcardGrants` is decided on the wildcards those grants do not cover
+ * ({@link partitionWildcardFindings}), and its states list the covered ones
+ * as `grantedWildcards`. Each state's `declaration` and `observed` stay the entry's
  * own. An entry with no resolvable package (a `cordis:` builtin, or a module
  * not found from its config tree's base URL) gets no state — there is no
  * `package.json` to report identity or a declaration from — though a layer
@@ -427,10 +434,15 @@ export function buildPluginPermissionStates(
       ? layer
       : undefined
     const unit = vouchedBy !== undefined
-      ? { key: `layer:${vouchedBy.packageName}`, name: vouchedBy.packageName, declaration: layerDeclaration(vouchedBy) }
+      ? {
+        key: `layer:${vouchedBy.packageName}`,
+        name: vouchedBy.packageName,
+        declaration: layerDeclaration(vouchedBy),
+        grants: vouchedBy.wildcardGrants ?? [],
+      }
       : resolved === undefined
         ? undefined
-        : { key: `package:${resolved.dir}`, name: resolved.identity.name, declaration: resolved.declaration }
+        : { key: `package:${resolved.dir}`, name: resolved.identity.name, declaration: resolved.declaration, grants: [] }
     if (unit === undefined) return []
     const observed = entry.fiber === undefined ? NOTHING_OBSERVED : buildObservedPluginCapabilities(ctx, entry.fiber)
     return [{ entry, resolved, observed, unit }]
@@ -449,6 +461,9 @@ export function buildPluginPermissionStates(
         .filter(other => other.unit.key === unit.key)
         .reduce((union, other) => unionOfObserved(union, other.observed), NOTHING_OBSERVED)
       const comparison = compareDeclaredToObserved(unit.declaration.manifest, unitObserved)
+      // question 27 (a): a wildcard the installation grants the judging layer
+      // does not quarantine it; `comparison` still reports every finding.
+      const wildcards = partitionWildcardFindings(unit.declaration.manifest, unit.grants)
       states.push({
         entryId: pluginEntryId(entry.id),
         packageIdentity: resolved.identity,
@@ -456,8 +471,9 @@ export function buildPluginPermissionStates(
         declaration: resolved.declaration,
         observed,
         comparison,
-        trustDecision: decidePluginTrust(comparison),
+        trustDecision: decidePluginTrust({ ...comparison, wildcardFindings: wildcards.ungranted }),
         judgedBy: unit.name,
+        ...wildcards.granted.length > 0 ? { grantedWildcards: wildcards.granted } : {},
         manifestDigest,
         provenanceAudit,
       })

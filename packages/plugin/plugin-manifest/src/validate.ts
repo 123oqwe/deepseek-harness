@@ -508,3 +508,55 @@ export function detectWildcardPermissions(manifest: PluginManifestV2): readonly 
     .map(({ path, destination }) => ({ path, pattern: patternOf(destination) }))
     .filter(({ pattern }) => WILDCARD_PATTERNS.has(pattern))
 }
+
+/**
+ * One installation-level grant of a wildcard destination to one tool of one
+ * shipped layer (question 27 (a)): the shipped bundle's own tools may reach
+ * everything only because the installation says so, tool by tool, with the
+ * reason recorded.
+ */
+export interface WildcardGrant {
+  /** The tool the grant covers, by its manifest name. */
+  readonly tool: string
+  /** The destination kind the grant covers. */
+  readonly destinationKind: CapabilityDestination['kind']
+  /** The wildcard pattern the grant covers, exactly as the manifest writes it. */
+  readonly pattern: string
+  /** Why the installation grants it; shown wherever the grant is recorded. */
+  readonly purpose: string
+}
+
+/** A wildcard finding a {@link WildcardGrant} covers, with that grant. */
+export interface GrantedWildcard {
+  readonly finding: WildcardFinding
+  readonly grant: WildcardGrant
+}
+
+/**
+ * Split a manifest's wildcard findings ({@link detectWildcardPermissions}) by
+ * `grants`: a finding on a tool is granted when one grant names that tool,
+ * its destination kind and its pattern; every other finding, an MCP server's
+ * or a remote Skill provider's included, stays ungranted. Pure; the
+ * detection itself is unchanged.
+ * @param manifest - a validated {@link PluginManifestV2}.
+ * @param grants - the grants that apply to this manifest's layer.
+ * @returns the granted findings with their grants, and the ungranted findings, each in manifest order.
+ */
+export function partitionWildcardFindings(
+  manifest: PluginManifestV2,
+  grants: readonly WildcardGrant[],
+): { readonly granted: readonly GrantedWildcard[]; readonly ungranted: readonly WildcardFinding[] } {
+  const granted: GrantedWildcard[] = []
+  const ungranted: WildcardFinding[] = []
+  for (const { path, destination } of collectDestinations(manifest)) {
+    const pattern = patternOf(destination)
+    if (!WILDCARD_PATTERNS.has(pattern)) continue
+    const toolIndex = /^tools\[(\d+)\]\./u.exec(path)?.[1]
+    const tool = toolIndex === undefined ? undefined : manifest.tools?.[Number(toolIndex)]?.name
+    const grant = grants.find(candidate =>
+      candidate.tool === tool && candidate.destinationKind === destination.kind && candidate.pattern === pattern)
+    if (grant === undefined) ungranted.push({ path, pattern })
+    else granted.push({ finding: { path, pattern }, grant })
+  }
+  return { granted, ungranted }
+}

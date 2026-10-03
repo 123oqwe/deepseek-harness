@@ -36,6 +36,8 @@ export {
   DEFAULT_PROFILE_PATCH_RELOAD,
   healProfilesModuleFallback,
   initProfile,
+  INSTALL_WILDCARD_GRANTS,
+  installationWildcardGrants,
   loadProfile,
   loadProfileDirectory,
   negotiateProfileLayerCompatibility,
@@ -52,6 +54,8 @@ export {
   type AdmittedProfileLayer,
   type BlockedProfileLayer,
   type DeniedProfileLayer,
+  type GrantedProfileLayer,
+  type GrantedWildcard,
   type PreMountDenialReason,
   type Profile,
   type ProfileCompatNegotiation,
@@ -60,6 +64,7 @@ export {
   type ProfileModuleFallbackOptions,
   type ProfileTemplate,
   type WildcardFinding,
+  type WildcardGrant,
 } from './profile.ts'
 export {
   enforceTrustKernelPosture,

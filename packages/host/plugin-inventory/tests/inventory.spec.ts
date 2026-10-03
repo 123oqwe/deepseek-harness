@@ -7,6 +7,7 @@ import { Context, FiberState, type Plugin } from '@deepseek-ai/cordis'
 import Loader from '@deepseek-ai/cordis-plugin-loader'
 import { remoteMethods } from '@deepseek-ai/dsh-typert-protocol'
 import type { AgentPresets } from '@deepseek-ai/dsh-agent-presets'
+import type { WildcardGrant } from '@deepseek-ai/dsh-plugin-manifest'
 import PluginInventoryGateway, {
   buildObservedPluginCapabilities,
   buildPluginPermissionStates,
@@ -453,6 +454,34 @@ describe('buildPluginPermissionStates', () => {
     expect(judged.map(state => [state?.judgedBy, state?.trustDecision])).toEqual([['example-layer', 'quarantined'], ['example-layer', 'quarantined']])
     expect(judged[1]?.declaration).toEqual({ kind: 'missing' })
     expect(judged[1]?.comparison?.mismatches).toEqual([{ kind: 'undeclared-registration', category: 'tool', name: 'mounted-undeclared-tool' }])
+  })
+
+  it('decides a layer on the wildcards this installation does not grant it, and lists the granted ones (question 27 (a))', async () => {
+    const { ctx } = await harness()
+    ctx.loader.builtins['granted-layer-own'] = probePlugin
+    const entryId = await ctx.loader.create({ name: 'cordis:granted-layer-own' })
+    const layerDir = stagePackage({
+      ...BENIGN_DSH_FIELD,
+      tools: [{
+        name: 'example-observed-tool',
+        sideEffectClass: 'none',
+        authAudience: ['model'],
+        allowedDestinations: [{ kind: 'filesystem', pathPattern: '/' }],
+        dataClassification: 'internal',
+      }],
+    }, 'example-granted-layer')
+    const grant = { tool: 'example-observed-tool', destinationKind: 'filesystem', pattern: '/', purpose: 'test' } as const
+    const judge = (wildcardGrants: readonly WildcardGrant[]) => buildPluginPermissionStates(ctx, {
+      bundleLayers: [{ packageName: 'example-granted-layer', packageDir: layerDir, entryIds: [entryId], wildcardGrants }],
+      resolvePackageDir: moduleName => moduleName === 'cordis:granted-layer-own' ? layerDir : undefined,
+    }).find(state => state.entryId === entryId)
+    const ungranted = judge([])
+    expect(ungranted?.trustDecision).toBe('quarantined')
+    expect(ungranted && 'grantedWildcards' in ungranted).toBe(false)
+    const granted = judge([grant])
+    expect(granted?.trustDecision).toBe('active')
+    expect(granted?.grantedWildcards).toEqual([{ finding: { path: 'tools[0].allowedDestinations[0]', pattern: '/' }, grant }])
+    expect(granted?.comparison?.wildcardFindings).toEqual([{ path: 'tools[0].allowedDestinations[0]', pattern: '/' }])
   })
 
   it('judges a package a bundle layer inserted by that package\'s own manifest when it declares a Manifest v2 of its own', async () => {

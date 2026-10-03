@@ -14,8 +14,10 @@ import {
   compareDeclaredToObserved,
   decidePluginTrust,
   evaluatePreMountAdmission,
+  partitionWildcardFindings,
   validatePluginManifestV2,
   type ObservedPluginCapabilities,
+  type PluginManifestV2,
   type RegistrationMismatch,
 } from '../src/index.ts'
 
@@ -177,6 +179,14 @@ describe('decidePluginTrust', () => {
     expect(decidePluginTrust(comparison)).toBe('quarantined')
   })
 
+  it('decides active when the only mismatch is a capability declared but never registered (question 32 (a))', () => {
+    const comparison = {
+      mismatches: [{ kind: 'declared-not-registered', category: 'tool', name: 'unused' }] as const,
+      wildcardFindings: [],
+    }
+    expect(decidePluginTrust(comparison)).toBe('active')
+  })
+
   it('decides quarantined when a comparison has at least one wildcard finding even with no registration mismatch', () => {
     const comparison = {
       mismatches: [],
@@ -243,5 +253,31 @@ describe('evaluatePreMountAdmission', () => {
     const declaration = classifyPluginDeclaration(loadFixture('benign'))
     expect(declaration.kind).toBe('manifest-v2')
     expect(evaluatePreMountAdmission(declaration, true)).toEqual({ admitted: true })
+  })
+})
+
+describe('partitionWildcardFindings (question 27 (a))', () => {
+  it('grants a tool wildcard only when one grant names the tool, its destination kind and its pattern', () => {
+    const result = validatePluginManifestV2(loadFixture('overprivileged'))
+    expect(result.valid).toBe(true)
+    if (!result.valid) return
+    const grant = { tool: 'example-run-anything', destinationKind: 'filesystem', pattern: '/', purpose: 'test' } as const
+    expect(partitionWildcardFindings(result.manifest, [grant, { ...grant, destinationKind: 'process' }])).toEqual({
+      granted: [{ finding: { path: 'tools[0].allowedDestinations[0]', pattern: '/' }, grant }],
+      ungranted: [{ path: 'tools[0].allowedDestinations[1]', pattern: '*' }],
+    })
+  })
+
+  it('never grants an MCP server wildcard, and passes over a destination that is not a wildcard', () => {
+    const result = validatePluginManifestV2(loadFixture('benign'))
+    expect(result.valid).toBe(true)
+    if (!result.valid) return
+    const manifest = structuredClone(result.manifest) as unknown as { mcp: { servers: { allowedDestinations: unknown[] }[] } }
+    manifest.mcp.servers[0]!.allowedDestinations.unshift({ kind: 'network', hostPattern: '*' })
+    const grant = { tool: 'example-format-note', destinationKind: 'network', pattern: '*', purpose: 'test' } as const
+    expect(partitionWildcardFindings(manifest as unknown as PluginManifestV2, [grant])).toEqual({
+      granted: [],
+      ungranted: [{ path: 'mcp.servers[0].allowedDestinations[0]', pattern: '*' }],
+    })
   })
 })

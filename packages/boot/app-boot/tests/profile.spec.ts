@@ -16,6 +16,8 @@ import {
   composeEntries,
   healProfilesModuleFallback,
   initProfile,
+  INSTALL_WILDCARD_GRANTS,
+  installationWildcardGrants,
   loadProfile,
   loadProfileDirectory,
   partitionProfileLayersByAdmission,
@@ -411,6 +413,58 @@ describe('partitionProfileLayersByAdmission', () => {
       { packageName: 'wildcard-plugin', reason: 'wildcard-permission' },
     ])
     expect(denied.find(entry => entry.layer.packageName === 'wildcard-plugin')?.wildcardFindings.length).toBeGreaterThan(0)
+  })
+
+  it('with grants, admits a layer whose every wildcard is granted and lists it with its grants, and keeps an ungranted one denied (question 27 (a))', () => {
+    const grant = { tool: 'example-run-anything', destinationKind: 'filesystem', pattern: '/', purpose: 'test' } as const
+    const grantedLayer = layerFor(stagePackageWithDsh(WILDCARD_MANIFEST_DSH), 'granted-plugin')
+    const profile: Profile = {
+      name: 'demo',
+      dir: tmp(),
+      layers: [
+        grantedLayer,
+        layerFor(stagePackageWithDsh(WILDCARD_MANIFEST_DSH), 'ungranted-plugin'),
+        layerFor(stagePackageWithDsh(undefined), 'missing-plugin'),
+        layerFor(stagePackageWithDsh(BENIGN_MANIFEST_DSH), 'benign-plugin'),
+      ],
+      patchPath: join(tmp(), PROFILE_PATCH_FILENAME),
+      patches: [],
+      patchReload: 'live',
+    }
+    const result = partitionProfileLayersByAdmission(profile, true, layer => layer.packageName === 'granted-plugin' ? [grant] : [])
+    expect(result.admitted.map(layer => layer.packageName)).toEqual(['granted-plugin', 'benign-plugin'])
+    expect(result.granted).toEqual([{ layer: grantedLayer, grants: [{ finding: { path: 'tools[0].allowedDestinations[0]', pattern: '/' }, grant }] }])
+    expect(result.denied.map(entry => ({
+      packageName: entry.layer.packageName,
+      reason: entry.reason,
+      paths: entry.wildcardFindings.map(finding => finding.path),
+    }))).toEqual([
+      { packageName: 'ungranted-plugin', reason: 'wildcard-permission', paths: ['tools[0].allowedDestinations[0]'] },
+      { packageName: 'missing-plugin', reason: 'missing-manifest', paths: [] },
+    ])
+    expect(Object.keys(partitionProfileLayersByAdmission(profile, true))).toEqual(['admitted', 'denied'])
+  })
+})
+
+describe('installationWildcardGrants (question 27 (a))', () => {
+  it('gives the installation\'s own copy of a shipped layer its grants, and a same-named copy elsewhere or an unlisted layer none', () => {
+    const anchor = stageInstallation({ '@deepseek-ai/dsh-base': {}, 'plain-bundle': {} })
+    const modules = join(anchor, '..', 'node_modules')
+    expect(installationWildcardGrants(layerFor(join(modules, '@deepseek-ai/dsh-base'), '@deepseek-ai/dsh-base'), anchor))
+      .toBe(INSTALL_WILDCARD_GRANTS['@deepseek-ai/dsh-base'])
+    expect(installationWildcardGrants(layerFor(tmp(), '@deepseek-ai/dsh-base'), anchor)).toEqual([])
+    expect(installationWildcardGrants(layerFor(join(modules, 'plain-bundle'), 'plain-bundle'), anchor)).toEqual([])
+  })
+
+  it('grants dsh-base its eight wildcard tools and dsh-sdk-minimal run_code, each with a purpose', () => {
+    const shown = (layer: string): string[] => (INSTALL_WILDCARD_GRANTS[layer] ?? [])
+      .map(grant => `${grant.tool} ${grant.destinationKind} ${grant.pattern}`)
+    expect(shown('@deepseek-ai/dsh-base')).toEqual([
+      'read filesystem /', 'read_image filesystem /', 'glob filesystem /', 'grep filesystem /',
+      'write filesystem /', 'edit filesystem /', 'web_fetch network *', 'run_code process *',
+    ])
+    expect(shown('@deepseek-ai/dsh-sdk-minimal')).toEqual(['run_code process *'])
+    expect(Object.values(INSTALL_WILDCARD_GRANTS).flat().every(grant => grant.purpose !== '')).toBe(true)
   })
 })
 

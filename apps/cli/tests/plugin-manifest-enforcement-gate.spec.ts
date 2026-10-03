@@ -16,8 +16,16 @@ import { randomUUID } from 'node:crypto'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { FiberState } from '@deepseek-ai/cordis'
 import type { EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
-import { boot, composeEntries, DEFAULT_PROFILE_PATCH_RELOAD, initProfile, resolveProfileDir } from '@deepseek-ai/dsh-app-boot'
 import {
+  boot,
+  composeEntries,
+  DEFAULT_PROFILE_PATCH_RELOAD,
+  initProfile,
+  INSTALL_WILDCARD_GRANTS,
+  resolveProfileDir,
+} from '@deepseek-ai/dsh-app-boot'
+import {
+  admissionDecisionLogPath,
   applyPostMountPluginEnforcement,
   composeProfile,
   FEATURE_GATE_DECLARATIONS,
@@ -25,6 +33,7 @@ import {
   homePatchPath,
   PLUGIN_MANIFEST_ENFORCEMENT_GATE,
   resolveProfileFeatureGates,
+  type AdmissionDecisionRecord,
 } from '../src/profile-boot.ts'
 
 const REPOSITORY_ROOT = fileURLToPath(new URL('../../../', import.meta.url))
@@ -344,5 +353,44 @@ describe('plugin-manifest-enforcement gate: the rows user patch layers mount (B-
       differs: false,
       shadowSummary: { admitted: ['@deepseek-ai/dsh-headless'], denied: [] },
     })
+  })
+})
+
+describe('plugin-manifest-enforcement gate: the installation\'s wildcard grants (question 27 (a))', () => {
+  /** Every line of the admission decision log, parsed; empty when the log was never written. */
+  const readAdmissionRecords = (): AdmissionDecisionRecord[] => {
+    const path = admissionDecisionLogPath()
+    if (!existsSync(path)) return []
+    return readFileSync(path, 'utf8').trim().split('\n').map(line => JSON.parse(line) as AdmissionDecisionRecord)
+  }
+
+  it('enforce admits the installation\'s dsh-base on its grants, refuses a legacy layer, and records both', async () => {
+    useFreshHome()
+    const dir = resolveProfileDir('granted')
+    initProfile(dir, ['@deepseek-ai/dsh-base', 'denied-plugin'], DEFAULT_PROFILE_PATCH_RELOAD)
+    stageBundlePackage(dir, 'denied-plugin', {}, '- id: denied-row\n  name: cordis:noop\n')
+
+    const { value: composed } = await captureStderr(() => composeProfile('granted', [], 'enforce'))
+
+    expect(composed.admittedLayerNames).toEqual(['@deepseek-ai/dsh-base'])
+    expect(composed.bundleLayers[0]?.wildcardGrants).toBe(INSTALL_WILDCARD_GRANTS['@deepseek-ai/dsh-base'])
+    const records = readAdmissionRecords()
+    expect(records.map(record => [record.layer, record.decision, record.grants.map(grant => grant.tool).sort(), record.reason]))
+      .toEqual([
+        ['@deepseek-ai/dsh-base', 'granted', ['edit', 'glob', 'grep', 'read', 'read_image', 'run_code', 'web_fetch', 'write'], undefined],
+        ['denied-plugin', 'refused', [], 'legacy-untrusted'],
+      ])
+    expect(records[0]?.grants.every(grant => grant.source === 'install-grant-table' && grant.purpose !== '')).toBe(true)
+  })
+
+  it('shadow records no admission decision', async () => {
+    useFreshHome()
+    const dir = resolveProfileDir('granted')
+    initProfile(dir, ['@deepseek-ai/dsh-base', 'denied-plugin'], DEFAULT_PROFILE_PATCH_RELOAD)
+    stageBundlePackage(dir, 'denied-plugin', {}, '- id: denied-row\n  name: cordis:noop\n')
+
+    await composeProfile('granted', [], 'shadow')
+
+    expect(readAdmissionRecords()).toEqual([])
   })
 })
