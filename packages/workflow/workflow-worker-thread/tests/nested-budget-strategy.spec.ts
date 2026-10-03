@@ -104,14 +104,21 @@ describe('P4-09 [2]: a nested run\'s failure strategy is declarable (red first f
     // onFailure field, so this is dropped and the default fail-parent fails the
     // parent — RED. B-698 honors it: the parent completes and the child's
     // failure is recorded rather than fatal.
+    // Direct await, NOT `.then(…, onRejected)`: a catch here would complete the
+    // parent whether or not the engine honors the strategy, so the case could
+    // never red. Letting the rejection propagate means only the strategy can
+    // keep the parent alive.
     const run = ctx.workflowEngine.start({
-      script: `const outcome = await workflow(${JSON.stringify({ ...ref, onFailure: 'continue-parent' })}).then(() => 'child-ok', (error) => 'child-failed: ' + String(error))
-        return 'parent completed; ' + outcome`,
+      script: `await workflow(${JSON.stringify({ ...ref, onFailure: 'continue-parent' })})
+        return 'parent completed'`,
       meta: META,
       parent,
     })
     const result = await run.result
     const detail = `${result.stopReason}: ${result.error ?? ''} value=${String(result.value)}`
+    // RED today: `onFailure` is dropped, so the default fail-parent rejects the
+    // await and the parent fails. B-698 honors continue-parent: `workflow()`
+    // resolves (the child failure is recorded, not thrown), so the parent runs on.
     expect(result.stopReason, detail).toBe('completed')
     expect(String(result.value), detail).toContain('parent completed')
     await run.dispose()
@@ -119,24 +126,23 @@ describe('P4-09 [2]: a nested run\'s failure strategy is declarable (red first f
 })
 
 describe('P4-09 [3]: a tree\'s total agent and token budgets are enforced (red first for B-698)', () => {
-  it('③ maxTotalAgents N: the N+1th agent in the tree is refused agent-budget-exhausted, the first N run', async () => {
+  it('③ maxTotalAgents N: the N+1th agent across the tree is refused agent-budget-exhausted, though no single run passes its own cap', async () => {
+    // The budget is the TREE's, not one run's: the parent starts N agents (at
+    // its own per-run cap) and the nested run starts one more, so the tree holds
+    // N+1 while no single run exceeds N. Three agents in ONE run would instead
+    // trip today's per-run cap and red for the wrong reason.
     const { ctx, parent } = await setup({ maxTotalAgents: 2 })
-    // Three agent() starts under a two-agent tree budget: the third must be
-    // refused. The script catches it and returns the reason, so the assertion
-    // reads one value whether the refusal throws or settles the run.
+    const nested = register(ctx, 'nested-agent', "try { return await agent('n1') } catch (error) { return 'nested refused: ' + String(error) }")
     const run = ctx.workflowEngine.start({
-      script: `const ran = []
-        for (const label of ['a', 'b', 'c']) {
-          try { await agent(label); ran.push(label) }
-          catch (error) { return 'refused at ' + label + ': ' + String(error) }
-        }
-        return 'all ran: ' + ran.join(',')`,
+      script: `await agent('p1'); await agent('p2'); return await workflow(${JSON.stringify(nested)})`,
       meta: META,
       parent,
     })
     const result = await run.result
     const detail = `${result.stopReason}: ${result.error ?? ''} value=${String(result.value)}`
-    // RED today: no tree debit, so all three run and the value is "all ran".
+    // RED today: no tree total, so the parent's two agents and the nested run's
+    // one agent all run (each run is within its own cap of 2) and the value is
+    // the nested agent's result. B-698's shared tree budget refuses the third.
     expect(`${String(result.value)}${result.error ?? ''}`, detail).toContain('agent-budget-exhausted')
     await run.dispose()
   })
@@ -176,12 +182,21 @@ describe('P4-09 [1]: cancelling the parent cancels its nested run and tears down
     const ends: { name: string; stopReason: string }[] = []
     const agentStarts: string[] = []
     const agentEnds: string[] = []
+    let onNestedAgentStarted: () => void = () => {}
+    const nestedAgentStarted = new Promise<void>((resolve) => { onNestedAgentStarted = resolve })
     ctx.on('workflow/end', (info, data) => { ends.push({ name: info.meta.name, stopReason: data.stopReason }) })
-    ctx.on('workflow/agent-start', (info) => { agentStarts.push(info.meta.name) })
+    ctx.on('workflow/agent-start', (info) => {
+      agentStarts.push(info.meta.name)
+      if (info.meta.name === 'slow') onNestedAgentStarted()
+    })
     ctx.on('workflow/agent-end', (info) => { agentEnds.push(info.meta.name) })
     const run = ctx.workflowEngine.start({ script: `return await workflow(${JSON.stringify(ref)})`, meta: META, parent })
-    // Let the nested run start and its agent run before cancelling.
-    await new Promise<void>((resolve) => { setTimeout(resolve, 200) })
+    // Wait until the nested run's agent has actually started (a fixed delay
+    // cancelled before it did, leaving the events empty); bounded fallback.
+    await Promise.race([
+      nestedAgentStarted,
+      new Promise<void>((resolve) => { setTimeout(resolve, 10_000).unref?.() }),
+    ])
     run.cancel('the parent was cancelled')
     const result = await run.result
     const detail = JSON.stringify({ parent: result.stopReason, ends, agentStarts, agentEnds })
