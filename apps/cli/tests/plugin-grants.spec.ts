@@ -281,7 +281,7 @@ describe('P1-01 step 3: on a real factory boot, a patch renaming a row by id to 
     const boot = await bootStagedProfile('rename', {
       bundles: ['@deepseek-ai/dsh-base', 'host-bundle'],
       stage: (dir) => {
-        stageBundlePackage(dir, 'host-bundle', BENIGN_MANIFEST, '- id: target-row\n  name: cordis:noop\n')
+        stageBundlePackage(dir, 'host-bundle', BENIGN_MANIFEST, '- insert:\n    - id: target-row\n      name: cordis:noop\n')
         stageLoadablePackage(dir, 'manifestless-pkg')
       },
       overlayBody: '- id: target-row\n  name: manifestless-pkg\n',
