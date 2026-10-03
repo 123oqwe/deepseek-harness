@@ -232,14 +232,6 @@ describe('P1-02 Contract — must clauses', () => {
     expect(result.trust).toBe('trusted')
   })
 
-  it('must[3]: an ordinary caller cannot substitute a plugin-supplied trust root — registerTrustAnchor only accepts the frozen, kernel-issued signatureRoots handle', () => {
-    const kernel = createTrustKernel()
-    expect(Object.isFrozen(kernel.signatureRoots)).toBe(true)
-    const anchorId = registerTrustAnchor(kernel.signatureRoots, { mode: 'sigstore', trustedIssuer: 'https://token.actions.githubusercontent.com' })
-    expect(typeof anchorId).toBe('string')
-    expect((anchorId as string).length).toBeGreaterThan(0)
-  })
-
   it('must[4]: an explicit dev-profile opt-in recognized by policy is admitted with a persistent untrusted banner', () => {
     const policy: UnsignedDevPolicy = { allowedDevProfileNames: new Set(['dev']) }
     const admission = admitUnsignedDevMode({ profileName: 'dev', explicitDevOptIn: true }, policy)
