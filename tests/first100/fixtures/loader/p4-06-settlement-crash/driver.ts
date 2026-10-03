@@ -27,6 +27,10 @@
  *     synchronous drain in which the notice was buffered, before the ≤200 ms
  *     batch timer fires, so the ack is durable but the parent's log never
  *     received the notice on disk. RED today.
+ *   - `crash-before-ack`: the same wrap kills the instant BEFORE that persist runs,
+ *     so the outbox row is left `pending` (never acked) and the buffered notice is
+ *     lost too. On restart the ordinary drain redelivers the still-`pending` row.
+ *     GREEN today — BLOCKED-350 closing condition 3.
  *   - `crash-after-flush`: waits until the acked notice has flushed to the parent's
  *     durable log, then SIGKILLs. Control: the effect survives.
  *   - `no-crash`: waits for the flush and disposes cleanly. Control.
@@ -77,8 +81,8 @@ const POLL_MS = 25
 /** Deadline for one phase process. */
 const PHASE_TIMEOUT_MS = 120_000
 
-/** The three variants: the crash-window RED case and two controls. */
-const VARIANTS = ['crash-before-flush', 'crash-after-flush', 'no-crash'] as const
+/** The variants: the acceptance[0] crash-window RED case, the closing-condition-3 before-ack case, and two controls. */
+const VARIANTS = ['crash-before-flush', 'crash-before-ack', 'crash-after-flush', 'no-crash'] as const
 type Variant = typeof VARIANTS[number]
 
 /** What one phase process left behind. */
@@ -258,6 +262,39 @@ function killWhenSettlementAcked(ctx: Context, childId: string, readingAtKill: (
 }
 
 /**
+ * Like {@link killWhenSettlementAcked}, but kill the instant BEFORE the ack is
+ * persisted. `drainSettlements` writes the ack with one `persistOutbox` whose
+ * record carries `state: 'acked'` (settlement-outbox.ts applies the receipt to a
+ * `sent` row); killing before that real write runs leaves the outbox row at its
+ * committed `pending` state, never `acked`. The settlement notice spliced earlier
+ * in this same drain is still only buffered, so the crash loses it too. On
+ * restart the ordinary drain, which delivers only `pending` rows, redelivers this
+ * one — BLOCKED-350 closing condition 3, where no reconciler of acked rows is
+ * needed because the row was never acked.
+ * @param ctx - the booted root context.
+ * @param childId - the settling child's session id.
+ * @param readingAtKill - the reading to write synchronously just before the kill.
+ * @returns whether the bus was reachable and the kill is armed.
+ */
+function killBeforeSettlementAck(ctx: Context, childId: string, readingAtKill: () => Record<string, unknown>): boolean {
+  const runtime = ctx.get('subagents') as unknown as {
+    readonly continuations?: { readonly activations?: { bus?: { persistOutbox: (record: { readonly id: unknown; readonly state: unknown }) => void } } }
+  } | undefined
+  const bus = runtime?.continuations?.activations?.bus
+  if (bus === undefined) return false
+  const persistOutbox = bus.persistOutbox.bind(bus)
+  bus.persistOutbox = (record) => {
+    if (String(record.id) === childId && record.state === 'acked') {
+      // Before the real persist: the ack never lands, so the row stays `pending`.
+      writeSync(1, `${PHASE_TAG} ${JSON.stringify(readingAtKill())}\n`)
+      process.kill(process.pid, 'SIGKILL')
+    }
+    persistOutbox(record)
+  }
+  return true
+}
+
+/**
  * The phase before the restart: a parent, a child whose first turn is in flight,
  * an interrupt that settles the child, and a kill placed by the variant.
  * @param ctx - the booted root context.
@@ -291,6 +328,7 @@ async function before(ctx: Context, variant: Variant): Promise<void> {
     busRows: busRows(ctx),
   })
   const armed = variant === 'crash-before-flush' && killWhenSettlementAcked(ctx, child, killReading)
+  const armedBeforeAck = variant === 'crash-before-ack' && killBeforeSettlementAck(ctx, child, killReading)
 
   let interrupt: unknown
   try {
@@ -305,6 +343,14 @@ async function before(ctx: Context, variant: Variant): Promise<void> {
     // fall through to a reading so the case reports rather than hangs.
     await until(() => false, SETTLE_LIMIT_MS)
     report({ ids, variant, inFlight, interruptRequested, armed, settlementAcked: settlementAcked(ctx, child), note: 'settlement not acked within the limit', busRows: busRows(ctx) })
+    return
+  }
+
+  if (variant === 'crash-before-ack') {
+    // Wait for the armed kill to fire the instant before the ack persists. If it
+    // never does, fall through to a reading so the case reports rather than hangs.
+    await until(() => false, SETTLE_LIMIT_MS)
+    report({ ids, variant, inFlight, interruptRequested, armed: armedBeforeAck, settlementAcked: settlementAcked(ctx, child), note: 'settlement did not reach the ack within the limit', busRows: busRows(ctx) })
     return
   }
 
