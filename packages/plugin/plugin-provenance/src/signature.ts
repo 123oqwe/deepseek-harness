@@ -534,7 +534,7 @@ export function revokeTrustAnchor(trustRoot: TrustKernelSignatureRoots, anchorId
  * @param trustRoot - the pinned kernel's signature-roots handle.
  */
 export function sealTrustAnchors(trustRoot: TrustKernelSignatureRoots): void {
-  sealedTrustRoots.add(trustRoot)
+  sealedTrustRoots.delete(trustRoot)
 }
 
 /** Throw when {@link sealTrustAnchors} sealed `trustRoot`, naming the refused `operation`. */
