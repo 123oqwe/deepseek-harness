@@ -163,3 +163,39 @@ describe('P4-09 [3]: a tree\'s total agent and token budgets are enforced (red f
     await run.dispose()
   })
 })
+
+describe('P4-09 [1]: cancelling the parent cancels its nested run and tears down the agent the nested run started ([235] successor)', () => {
+  it('⑤ a cancelled parent cancels its never-ending nested run — the nested run settles cancelled and the agent it started is ended, not stranded', async () => {
+    // The claim nested-run.spec.ts:410 names ("a nested sibling IS [cancelled]")
+    // but never exercises (its body starts no nested run). Here the parent nests
+    // a run that starts an agent and then never resolves, so at cancel the
+    // nested run is live and observable. Its meta name is the definition's own
+    // (`slow`), which distinguishes it from the parent run in the events.
+    const { ctx, parent } = await setup({}, 1)
+    const ref = register(ctx, 'slow', "await agent('child-of-nested'); await new Promise(() => {}); return 1")
+    const ends: { name: string; stopReason: string }[] = []
+    const agentStarts: string[] = []
+    const agentEnds: string[] = []
+    ctx.on('workflow/end', (info, data) => { ends.push({ name: info.meta.name, stopReason: data.stopReason }) })
+    ctx.on('workflow/agent-start', (info) => { agentStarts.push(info.meta.name) })
+    ctx.on('workflow/agent-end', (info) => { agentEnds.push(info.meta.name) })
+    const run = ctx.workflowEngine.start({ script: `return await workflow(${JSON.stringify(ref)})`, meta: META, parent })
+    // Let the nested run start and its agent run before cancelling.
+    await new Promise<void>((resolve) => { setTimeout(resolve, 200) })
+    run.cancel('the parent was cancelled')
+    const result = await run.result
+    const detail = JSON.stringify({ parent: result.stopReason, ends, agentStarts, agentEnds })
+
+    expect(result.stopReason, detail).toBe('cancelled')
+    // Green today (host.ts:331-332 cancels each nested run); the mutation that
+    // removes that loop leaves the nested run uncancelled, so this reds.
+    expect(ends.find(entry => entry.name === 'slow')?.stopReason, detail).toBe('cancelled')
+    // The nested run started an agent, and no agent it started is left stranded:
+    // every agent-start for the nested run is paired by an agent-end.
+    const nestedStarts = agentStarts.filter(name => name === 'slow').length
+    const nestedEnds = agentEnds.filter(name => name === 'slow').length
+    expect(nestedStarts, detail).toBeGreaterThan(0)
+    expect(nestedEnds, detail).toBeGreaterThanOrEqual(nestedStarts)
+    await run.dispose()
+  })
+})
