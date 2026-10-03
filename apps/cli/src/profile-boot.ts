@@ -12,7 +12,7 @@
  */
 
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { FiberState, type Context } from '@deepseek-ai/cordis'
 import type { PatchOptions } from '@deepseek-ai/cordis-plugin-include'
@@ -681,27 +681,96 @@ export function isDevelopmentProfileManifest(manifest: ProfileManifest): boolean
 }
 
 /**
- * The plugins the user patch layers mount by path (Epic P1-02 must[4], question
- * 30 (b)): every inserted row, inside an inserted group too, whose module is a
- * `file:` URL, which is what `@deepseek-ai/dsh-app-boot` makes of a row naming a
- * file. That code came through no install, so no provenance was verified for
- * it. A row naming a package is not listed here; a profile dependency is named,
- * when unverified, by its own provenance record. A row a later patch disables
- * is still listed.
- * @param layers - the user patch layers' patches: the profile's, the home-level one, and any `--patch` overlays.
- * @returns each row as `<id> (<file: URL>)`, the URL alone when it has no id, in patch order without repeats.
+ * The `file:` URL a config-tree row's module names when it is a path, as the
+ * Loader imports it: a `file:` URL as written, an absolute path as its URL, and
+ * a `./` or `../` path resolved against the base URL of the tree holding the row.
+ * @param name - the row's module specifier.
+ * @param baseUrl - the base URL of the tree holding the row.
+ * @returns the URL, or `undefined` for a package name, a `cordis:` builtin, or a relative path with no base.
  */
-export function patchMountedUnverified(layers: readonly (readonly PatchOptions[])[]): string[] {
-  const names: string[] = []
+function pathModuleUrl(name: string, baseUrl: string | undefined): string | undefined {
+  if (name.startsWith('file:')) return name
+  if (isAbsolute(name)) return pathToFileURL(name).href
+  if (!name.startsWith('./') && !name.startsWith('../')) return undefined
+  return baseUrl === undefined ? undefined : new URL(name, baseUrl).href
+}
+
+/** Each path row of a composed tree, inside groups too, with its `file:` URL, in tree order. */
+function pathRows(entries: readonly EntryOptions[], baseUrl: string): { readonly id: unknown; readonly url: string }[] {
+  const rows: { readonly id: unknown; readonly url: string }[] = []
   const visit = (entry: EntryOptions): void => {
-    if (typeof entry.name === 'string' && entry.name.startsWith('file:')) {
-      const shown = typeof entry.id === 'string' && entry.id !== '' ? `${entry.id} (${entry.name})` : entry.name
-      if (!names.includes(shown)) names.push(shown)
-    }
+    const url = typeof entry.name === 'string' ? pathModuleUrl(entry.name, baseUrl) : undefined
+    if (url !== undefined) rows.push({ id: entry.id, url })
     if (entry.group && Array.isArray(entry.config)) entry.config.forEach(visit)
   }
-  for (const patches of layers) for (const patch of patches) patch.insert?.forEach(visit)
+  entries.forEach(visit)
+  return rows
+}
+
+/** One path-mounted plugin as the untrusted-status line shows it: `<id> (<file: URL>)`, the URL alone when it has no id. */
+function shownPathMounted(id: unknown, url: string): string {
+  return typeof id === 'string' && id !== '' ? `${id} (${url})` : url
+}
+
+/**
+ * The plugins the composed config tree mounts by path (Epic P1-02 must[4],
+ * question 30 (b)): every row whose module is a path ({@link pathModuleUrl}),
+ * inside a group too, after every patch layer is applied, so a path row a
+ * later patch puts into a group's config is listed with the inserted ones.
+ * That code came through no install, so no provenance was verified for it. The
+ * path rows the bundle layers compose on their own are the product's and are
+ * not listed. A row naming a package is not listed here; a profile dependency
+ * is named, when unverified, by its own provenance record. A row a later patch
+ * disables is still listed. A plugin that exists only once the tree mounts is
+ * named as it mounts ({@link warnPathMountedAtMount}).
+ * @param composed - the tree {@link composeEntries} composes from every patch layer the boot or install applies.
+ * @param bundles - the tree the bundle layers compose on their own; empty when none is applied.
+ * @param baseUrl - the root tree's base URL, the profile directory, which a relative path resolves against.
+ * @returns each row as `<id> (<file: URL>)`, the URL alone when it has no id, in tree order without repeats.
+ */
+export function pathMountedUnverified(
+  composed: readonly EntryOptions[],
+  bundles: readonly EntryOptions[],
+  baseUrl: string,
+): string[] {
+  const product = new Set(pathRows(bundles, baseUrl).map(row => shownPathMounted(row.id, row.url)))
+  const names: string[] = []
+  for (const row of pathRows(composed, baseUrl)) {
+    const shown = shownPathMounted(row.id, row.url)
+    if (!product.has(shown) && !names.includes(shown)) names.push(shown)
+  }
   return names
+}
+
+/**
+ * Name each plugin a path row mounts that is not in the composed tree, as it
+ * mounts (Epic P1-02 must[4]): a row of a file that a
+ * `@deepseek-ai/cordis-plugin-include` row reads, or one a live patch reload
+ * adds. The Loader emits `loader/patch-context` for an entry after importing
+ * its module and before applying it, so the warning is written before the
+ * plugin's code runs. A module the composed tree already names by path is
+ * never named here: {@link pathMountedUnverified} named it, or a bundle layer
+ * mounts it. Each module is named once.
+ * @param ctx - the host context, before any config-tree entry mounts.
+ * @param composed - the tree {@link composeEntries} composes from every patch layer the boot applies.
+ * @param baseUrl - the root tree's base URL, the profile directory.
+ * @param warn - sink for the warning; defaults to a stderr write.
+ */
+export function warnPathMountedAtMount(
+  ctx: Context,
+  composed: readonly EntryOptions[],
+  baseUrl: string,
+  warn: (message: string) => void = (message) => { process.stderr.write(message) },
+): void {
+  const named = new Set(pathRows(composed, baseUrl).map(row => row.url))
+  ctx.on('loader/patch-context', (entry, next) => {
+    const url = entry.options.group ? undefined : pathModuleUrl(entry.options.name, entry.parent.tree.ctx.baseUrl)
+    if (url !== undefined && !named.has(url)) {
+      named.add(url)
+      warn(`${NAME}: WARNING: plugins with no verified provenance: ${shownPathMounted(entry.options.id, url)}.\n`)
+    }
+    return next()
+  })
 }
 
 /**
@@ -711,12 +780,12 @@ export function patchMountedUnverified(layers: readonly (readonly PatchOptions[]
  * `admitUnsignedDevMode`'s banner; any other profile is refused that admission
  * and gets a plain warning instead. Either line names every plugin whose
  * provenance record is `'unverified'` and every plugin a user patch layer
- * mounts by path ({@link patchMountedUnverified}); nothing is refused, and with
+ * mounts by path ({@link pathMountedUnverified}); nothing is refused, and with
  * no such plugin nothing is written.
  * @param profileName - the active profile's name.
  * @param developmentProfile - whether the profile is an explicit development profile.
  * @param records - the provenance record for each profile dependency the boot or install decided.
- * @param patchMounted - the plugins {@link patchMountedUnverified} found in the user patch layers.
+ * @param patchMounted - the plugins {@link pathMountedUnverified} found in the composed tree.
  * @param warn - sink for the untrusted-status warning; defaults to a stderr write.
  */
 export function warnUnsignedDevPlugins(
@@ -1254,13 +1323,17 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
     hostCtx.provide(DEVELOPMENT_PROFILE_KEY, developmentProfile)
     // Epic P1-02 must[4] (question 30 (b)): every profile names, on every
     // boot, each plugin that runs with no verified provenance: an unverified
-    // dependency, and a plugin a user patch layer mounts by path.
+    // dependency, and a plugin the composed tree mounts by path; a path row
+    // that only appears as the tree mounts is named as it mounts.
+    const composedTree = composeEntries([allPatches(composed)])
+    const treeBaseUrl = `${pathToFileURL(dirname(rootConfig)).href}/`
     warnUnsignedDevPlugins(
       options.profile,
       isDevelopmentProfile(hostCtx),
       provenance.records,
-      patchMountedUnverified([composed.profile.patches, composed.homePatches, composed.overlays]),
+      pathMountedUnverified(composedTree, composeEntries([composed.bundlePatches]), treeBaseUrl),
     )
+    warnPathMountedAtMount(hostCtx, composedTree, treeBaseUrl)
     // Feature gates (Epic P0-05 must[3]): the resolution composeProfile
     // already used, provided before any config-tree entry mounts, so a gated
     // plugin reads exactly what `--dump-config` shows for this same
