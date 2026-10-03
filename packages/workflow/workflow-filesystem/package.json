@@ -37,6 +37,8 @@
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^",
     "@deepseek-ai/dsh-home-paths": "workspace:^",
+    "@deepseek-ai/dsh-plugin-provenance": "workspace:^",
+    "@deepseek-ai/dsh-trust-kernel": "workspace:^",
     "@deepseek-ai/dsh-workflow": "workspace:^",
     "@deepseek-ai/dsh-workflow-registry": "workspace:^"
   },
@@ -49,10 +51,12 @@
     "@deepseek-ai/dsh-home-paths": "workspace:^",
     "@deepseek-ai/dsh-lease": "workspace:^",
     "@deepseek-ai/dsh-message-bus": "workspace:^",
+    "@deepseek-ai/dsh-plugin-provenance": "workspace:^",
     "@deepseek-ai/dsh-session": "workspace:^",
     "@deepseek-ai/dsh-session-projection": "workspace:^",
     "@deepseek-ai/dsh-subagent": "workspace:^",
     "@deepseek-ai/dsh-subagent-spawn-in-process": "workspace:^",
+    "@deepseek-ai/dsh-trust-kernel": "workspace:^",
     "@deepseek-ai/dsh-workflow": "workspace:^",
     "@deepseek-ai/dsh-workflow-registry": "workspace:^",
     "@deepseek-ai/dsh-workflow-worker-thread": "workspace:^"

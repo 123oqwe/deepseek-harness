@@ -1,5 +1,5 @@
 ---
-description: "启动时从 harness home 加载已保存的 workflow 定义：一个文件一个定义，digest 由读到的字节计算，经引擎自身的准入登记。"
+description: "启动时从 harness home 加载已保存的 workflow 定义：一个文件一个定义，只有签名能用已配置的信任锚核验通过才登记，经引擎自身的准入登记。"
 kind: "package-reference"
 ---
 
@@ -13,9 +13,12 @@ kind: "package-reference"
 
 登记不是执行。定义的 body 以字符串到达引擎、以字符串存放；此处不编译、不求值、不 import。这就是 Epic P4-09 的 acceptance[0]，也正是读取一个模型可写目录仍然安全的原因。
 
+只有签过名的定义才会登记。定义旁边的签名文件写明的 digest 必须是读到的字节算出的那个，签名必须能用部署配置的某个 offline-signed 信任锚核验通过，定义才会加载；其余一律拒绝并写进日志。
+
 ## 目录
 
 - [使用本包](#use-this-package)
+- [给已保存的 workflow 签名](#sign-a-saved-workflow)
 - [真正保护运行的是什么](#what-protects-a-run)
 - [Model Experience](#model-experience)
 - [已知限制与延期工作](#known-limitations-and-deferred-work)
@@ -26,7 +29,7 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
-与工作流引擎一同挂载即可；它没有任何配置项。
+出厂 base 层把它挂在工作流引擎旁边；它没有任何配置项。
 
 ```yaml
 - name: '@deepseek-ai/dsh-workflow-worker-thread'
@@ -39,10 +42,27 @@ kind: "package-reference"
 
 挂载在把每个文件都交给引擎之后才完成，因此一次嵌套已保存工作流的运行不会取决于加载是否恰好先完成。目录不存在时得到零个定义而不是报错——一个尚未保存任何工作流的部署是常态，不是配置错误。
 
+<a id="sign-a-saved-workflow"></a>
+## 给已保存的 workflow 签名
+
+定义文件 `<name>.js`（或 `.mjs`）旁边要有签名文件 `<name>.js.sig.json`，否则不会加载：
+
+```json
+{ "digest": "sha256-…", "publicKeyFingerprint": "sha256:…", "signature": "<base64>" }
+```
+
+- `digest` 是 `@deepseek-ai/dsh-workflow-registry` 的 `computeDefinitionDigest(body)`，按定义文件的原样内容计算。
+- `signature` 是用某个 offline-signed 信任锚的私钥对 digest 字符串的 UTF-8 字节做的签名，写成 base64。Ed25519 密钥的写法是 `crypto.sign(null, Buffer.from(digest), privateKey)`。
+- `publicKeyFingerprint` 指明是哪个锚。
+
+锚由 profile 自己声明：profile 的 `package.json` 里的 `dsh.trustAnchors`，每个是 `{ "mode": "offline-signed", "publicKeyFingerprint": …, "owner": …, "publicKeyPem": … }`，启动时交给 Trust Kernel。配置里只有公钥；签名用的私钥留在给定义签名的人手里。登记的定义把锚的 `owner` 记为 signer。
+
 <a id="what-protects-a-run"></a>
 ## 真正保护运行的是什么
 
-不是本插件的谨慎，而是引擎的登记检查。digest 由读到的字节计算，因此「文件变了」与「定义变了」不可能脱节，而一个声称自己是某个它并不哈希到的 digest 的定义，在这条路径上根本无法表达。引擎随后重算它并拒绝不符者，也在自递归定义被启动之前拒绝它。
+首先是签名，在引擎看到任何东西之前就核验。以下情况都会拒绝，理由会被记录并写进日志：签名文件缺失（`unsigned`）；它写明的 digest 不是读到的字节算出的那个（`digest-mismatch`）；没有钉住 Trust Kernel，或者它的 offline-signed 锚里没有那个指纹（`no-trust-anchor`）；文件不是签名，或者签名用那个锚的公钥核验不过（`signature-invalid`）。每次拒绝都写明文件名，并指向本 README。
+
+然后是引擎的登记检查。digest 由读到的字节计算，因此「文件变了」与「定义变了」不可能脱节。引擎重算它并拒绝不符者，也在自递归定义被启动之前拒绝它。
 
 被拒的文件连同名字与理由记录在 `ctx.savedWorkflows.refused` 上，加载继续。一个格式错误的文件不能让 harness 起不来，而操作者需要知道是哪个文件、为什么被拒。
 
@@ -59,7 +79,8 @@ None, as this package reads definition files and registers them and registers no
 <a id="known-limitations-and-deferred-work"></a>
 ## 已知限制与延期工作
 
-- **signer 是加载器自己，它什么都没有背书。** 文件拿到 `signer: 'workflow-filesystem'`，因为这是本构建能诚实声称的唯一来源——没有可用于校验更强来源的签名根。此处任何内容都不得被读作「某个已保存定义来自可信作者」的证据。
+- **出厂 profile 在配置锚之前不会加载任何已保存的 workflow。** 没有出厂 profile 声明 `dsh.trustAnchors`，所以在运维加上 offline-signed 锚并照上面的办法签名之前，每个已保存的定义都会被拒绝并写进日志。
+- **只有 offline-signed 锚能核验已保存的定义。** 此处不查 `dsh.trustAnchors` 里的 Sigstore 锚。
 - **每个文件都登记为版本 1。** 加载器没有版本历史的概念：改动 body 后重新保存会在同一名字下登记一个新 digest，而 body 未变的文件会以 `already-registered` 被拒。版本编号属于写这个目录的那一方。
 - **目录只在挂载时读取一次。** harness 运行期间新增的文件不会被拾取；`dsh-skill-filesystem` 会监视它的根目录，本包不会。
 

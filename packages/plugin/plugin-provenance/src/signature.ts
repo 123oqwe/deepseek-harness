@@ -381,25 +381,29 @@ export function signedClaimBytes(claim: PackageProvenanceClaim): Uint8Array {
 }
 
 /**
- * Check an offline signature against an admitted anchor's public key.
- * @param declaration - the admitted anchor.
- * @param claim - the claim whose canonical bytes were signed.
- * @param evidence - the offline evidence carrying the signature.
+ * Check an offline signature against an anchor's public key.
+ *
+ * The one offline verification in the repository: a package claim's
+ * {@link signedClaimBytes} here, and a saved workflow definition's digest in
+ * `@deepseek-ai/dsh-workflow-filesystem`.
+ * @param anchor - the anchor whose public key the signature is checked against.
+ * @param bytes - the exact bytes that were signed.
+ * @param signature - the detached signature.
  * @returns `undefined` when it verifies, or the reason it did not.
  */
-function checkOfflineSignature(
-  declaration: OfflineTrustAnchorDeclaration,
-  claim: PackageProvenanceClaim,
-  evidence: OfflineSignedProvenanceEvidence,
+export function checkOfflineSignature(
+  anchor: { readonly publicKeyPem?: string },
+  bytes: Uint8Array,
+  signature: Uint8Array,
 ): 'signature-invalid' | 'anchor-has-no-key' | undefined {
-  const { publicKeyPem } = declaration
+  const { publicKeyPem } = anchor
   if (publicKeyPem === undefined) return 'anchor-has-no-key'
   try {
     const key = createPublicKey(publicKeyPem)
     // `null` algorithm: Ed25519 and Ed448 carry their own digest, and passing
     // one throws. An RSA or EC key reaches the same call with the digest the
     // key type implies.
-    return verifySignature(null, signedClaimBytes(claim), key, evidence.signature) ? undefined : 'signature-invalid'
+    return verifySignature(null, bytes, key, signature) ? undefined : 'signature-invalid'
   } catch {
     // An unreadable key or a malformed signature is a failed verification, not
     // a crash: the caller asked whether this claim verifies, and it does not.
@@ -614,7 +618,7 @@ export function verifyPackageSignature(
       if (declaration === undefined || declaration.mode !== 'offline-signed') {
         return { verified: false, reason: 'trust-anchor-unregistered' }
       }
-      const failure = checkOfflineSignature(declaration, claim, evidence)
+      const failure = checkOfflineSignature(declaration, signedClaimBytes(claim), evidence.signature)
       if (failure !== undefined) return { verified: false, reason: failure }
       return { verified: true, trustAnchorId }
     }

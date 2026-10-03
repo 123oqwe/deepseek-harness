@@ -25,6 +25,12 @@
     },
     {
       "path": "../workflow-registry"
+    },
+    {
+      "path": "../../plugin/plugin-provenance"
+    },
+    {
+      "path": "../../kernel/trust-kernel"
     }
   ]
 }

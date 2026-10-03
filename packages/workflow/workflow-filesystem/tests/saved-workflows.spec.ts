@@ -11,12 +11,20 @@
  * the bytes read, so "the file changed" and "the definition changed" cannot
  * come apart, and a definition claiming a digest it does not hash to is not
  * expressible through this path at all.
+ *
+ * A definition registers only when the signature file beside it verifies, so
+ * `home()` signs every definition it writes with a test key, and `mounted()`
+ * pins a Trust Kernel whose one offline-signed anchor holds that key.
  */
+import { generateKeyPairSync, sign } from 'node:crypto'
+import type { KeyObject } from 'node:crypto'
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { extname, join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
+import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+import type { TrustKernelTrustAnchor } from '@deepseek-ai/dsh-trust-kernel/types'
 import { computeDefinitionDigest, DefinitionRegistry } from '@deepseek-ai/dsh-workflow-registry'
 import type { RegisteredDefinition } from '@deepseek-ai/dsh-workflow-registry'
 import SavedWorkflowLoader from '../src/index.ts'
@@ -40,13 +48,45 @@ afterEach(() => {
   for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true })
 })
 
-/** A harness home with a `workflows` directory holding the given files. */
-function home(files: Record<string, string>): string {
+/** The key these cases sign saved definitions with. */
+const signingKey = generateKeyPairSync('ed25519')
+
+/** The offline-signed anchor that admits {@link signingKey}. */
+const ANCHOR: TrustKernelTrustAnchor = {
+  mode: 'offline-signed',
+  publicKeyFingerprint: 'sha256:saved-workflow-test-key',
+  owner: 'saved workflow test signer',
+  publicKeyPem: signingKey.publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+}
+
+/**
+ * The signature file a definition needs to load.
+ * @param body - the definition's source.
+ * @param key - the private key that signs its digest.
+ * @param fingerprint - the fingerprint the file names.
+ * @returns the file's text.
+ */
+function signatureFor(body: string, key: KeyObject = signingKey.privateKey, fingerprint = 'sha256:saved-workflow-test-key'): string {
+  const digest = computeDefinitionDigest(body)
+  return JSON.stringify({ digest, publicKeyFingerprint: fingerprint, signature: sign(null, Buffer.from(digest), key).toString('base64') })
+}
+
+/**
+ * A harness home with a `workflows` directory holding the given files. Each
+ * definition file is signed unless named in `unsigned`.
+ * @param files - file names and their contents.
+ * @param unsigned - definition files written without a signature file.
+ * @returns the harness home.
+ */
+function home(files: Record<string, string>, unsigned: readonly string[] = []): string {
   const root = mkdtempSync(join(tmpdir(), 'dsh-saved-workflows-'))
   roots.push(root)
   mkdirSync(join(root, 'workflows'), { recursive: true })
   for (const [name, body] of Object.entries(files)) {
     writeFileSync(join(root, 'workflows', name), body, 'utf8')
+    if (['.js', '.mjs'].includes(extname(name)) && !unsigned.includes(name)) {
+      writeFileSync(join(root, 'workflows', `${name}.sig.json`), signatureFor(body), 'utf8')
+    }
   }
   process.env.DSH_HOME = root
   return root
@@ -71,8 +111,9 @@ class RecordingEngine {
   }
 }
 
-async function mounted(engine: unknown): Promise<Context> {
+async function mounted(engine: unknown, anchors: readonly TrustKernelTrustAnchor[] | 'no kernel' = [ANCHOR]): Promise<Context> {
   const ctx = new Context()
+  if (anchors !== 'no kernel') pinTrustKernel(ctx, createTrustKernel({ trustAnchors: anchors }))
   ctx.provide('workflowEngine', engine)
   await ctx.plugin(SavedWorkflowLoader)
   return ctx
@@ -162,6 +203,7 @@ describe('P4-09 must[0]: the REAL engine registers what the loader read', () => 
     // through the registry's own admission, not a fixture's.
     home({ 'saved.js': 'return "from a saved file"' })
     const ctx = new Context()
+    pinTrustKernel(ctx, createTrustKernel({ trustAnchors: [ANCHOR] }))
     await mountAgentLoopTestDependencies(ctx)
     await ctx.plugin(AgentLoop, { agents: [] })
     await ctx.plugin(MessageBusPlugin)
@@ -187,5 +229,91 @@ describe('P4-09 must[0]: the REAL engine registers what the loader read', () => 
         signer: brandString<SignerIdentity>('test'),
       })
     }).toThrow(/already-registered/u)
+  })
+})
+
+describe('P4-09 acceptance[0]: a saved definition loads only when its signature verifies', () => {
+  it('refuses an unsigned definition, naming the missing signature file, and loads the signed one beside it', async () => {
+    home({ 'signed.js': 'return 1', 'unsigned.js': 'return 2' }, ['unsigned.js'])
+    const engine = new RecordingEngine()
+
+    const ctx = await mounted(engine)
+
+    expect(ctx.savedWorkflows.loaded).toEqual(['signed'])
+    expect(ctx.savedWorkflows.refused).toHaveLength(1)
+    expect(ctx.savedWorkflows.refused[0]?.name).toBe('unsigned')
+    expect(ctx.savedWorkflows.refused[0]?.reason).toContain('unsigned: unsigned.js.sig.json is missing')
+    expect(ctx.savedWorkflows.refused[0]?.reason).toContain('README')
+  })
+
+  it('records the owner of the anchor whose key verified the signature as the signer', async () => {
+    home({ 'report.js': 'return 1' })
+    const engine = new RecordingEngine()
+
+    await mounted(engine)
+
+    expect(engine.registered[0]?.signer).toBe('saved workflow test signer')
+  })
+
+  it('refuses a definition whose body changed after it was signed', async () => {
+    const root = home({ 'edited.js': 'return 1' })
+    writeFileSync(join(root, 'workflows', 'edited.js'), 'return 2', 'utf8')
+    const engine = new RecordingEngine()
+
+    const ctx = await mounted(engine)
+
+    expect(ctx.savedWorkflows.loaded).toEqual([])
+    expect(ctx.savedWorkflows.refused[0]?.reason).toContain(`digest-mismatch: the file hashes to ${computeDefinitionDigest('return 2')}`)
+    expect(engine.registered).toEqual([])
+  })
+
+  it('refuses a signature under a fingerprint no configured anchor has', async () => {
+    const root = home({ 'stranger.js': 'return 1' }, ['stranger.js'])
+    writeFileSync(join(root, 'workflows', 'stranger.js.sig.json'), signatureFor('return 1', signingKey.privateKey, 'sha256:unknown-key'), 'utf8')
+
+    const ctx = await mounted(new RecordingEngine())
+
+    expect(ctx.savedWorkflows.refused[0]?.reason).toContain('no-trust-anchor: no configured offline-signed trust anchor has the fingerprint sha256:unknown-key')
+  })
+
+  it('refuses a signature the anchor\'s key did not make', async () => {
+    const root = home({ 'forged.js': 'return 1' }, ['forged.js'])
+    const otherKey = generateKeyPairSync('ed25519').privateKey
+    writeFileSync(join(root, 'workflows', 'forged.js.sig.json'), signatureFor('return 1', otherKey), 'utf8')
+
+    const ctx = await mounted(new RecordingEngine())
+
+    expect(ctx.savedWorkflows.refused[0]?.reason).toContain('signature-invalid: the signature in forged.js.sig.json does not verify')
+  })
+
+  it('refuses a signature file that does not hold a digest, a fingerprint and a signature', async () => {
+    const root = home({ 'text.js': 'return 1', 'empty.js': 'return 2', 'partial.js': 'return 3' }, ['text.js', 'empty.js', 'partial.js'])
+    writeFileSync(join(root, 'workflows', 'text.js.sig.json'), 'not a signature', 'utf8')
+    writeFileSync(join(root, 'workflows', 'empty.js.sig.json'), 'null', 'utf8')
+    writeFileSync(join(root, 'workflows', 'partial.js.sig.json'), JSON.stringify({ digest: computeDefinitionDigest('return 3') }), 'utf8')
+
+    const ctx = await mounted(new RecordingEngine())
+
+    expect(ctx.savedWorkflows.loaded).toEqual([])
+    expect(ctx.savedWorkflows.refused.map(entry => entry.reason.split(':')[0]).sort())
+      .toEqual(['signature-invalid', 'signature-invalid', 'signature-invalid'])
+  })
+
+  it('refuses every definition when no Trust Kernel is pinned', async () => {
+    home({ 'report.js': 'return 1' })
+
+    const ctx = await mounted(new RecordingEngine(), 'no kernel')
+
+    expect(ctx.savedWorkflows.loaded).toEqual([])
+    expect(ctx.savedWorkflows.refused[0]?.reason).toContain('no-trust-anchor: no Trust Kernel is pinned')
+  })
+
+  it('refuses every definition when the pinned kernel holds no anchor', async () => {
+    home({ 'report.js': 'return 1' })
+
+    const ctx = await mounted(new RecordingEngine(), [])
+
+    expect(ctx.savedWorkflows.loaded).toEqual([])
+    expect(ctx.savedWorkflows.refused[0]?.reason).toContain('no-trust-anchor')
   })
 })

@@ -1832,6 +1832,9 @@ importers:
       '@deepseek-ai/dsh-web-search-deepseek':
         specifier: workspace:^
         version: link:../../web/web-search-deepseek
+      '@deepseek-ai/dsh-workflow-filesystem':
+        specifier: workspace:^
+        version: link:../../workflow/workflow-filesystem
       '@deepseek-ai/dsh-workflow-worker-thread':
         specifier: workspace:^
         version: link:../../workflow/workflow-worker-thread
@@ -12357,6 +12360,9 @@ importers:
       '@deepseek-ai/dsh-message-bus':
         specifier: workspace:^
         version: link:../../run/message-bus
+      '@deepseek-ai/dsh-plugin-provenance':
+        specifier: workspace:^
+        version: link:../../plugin/plugin-provenance
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
@@ -12369,6 +12375,9 @@ importers:
       '@deepseek-ai/dsh-subagent-spawn-in-process':
         specifier: workspace:^
         version: link:../../subagent/subagent-spawn-in-process
+      '@deepseek-ai/dsh-trust-kernel':
+        specifier: workspace:^
+        version: link:../../kernel/trust-kernel
       '@deepseek-ai/dsh-workflow':
         specifier: workspace:^
         version: link:../workflow
@@ -13225,6 +13234,9 @@ importers:
       '@deepseek-ai/dsh-workflow':
         specifier: workspace:^
         version: link:../../packages/workflow/workflow
+      '@deepseek-ai/dsh-workflow-filesystem':
+        specifier: workspace:^
+        version: link:../../packages/workflow/workflow-filesystem
       '@deepseek-ai/dsh-workflow-journal':
         specifier: workspace:^
         version: link:../../packages/collaboration/workflow-journal

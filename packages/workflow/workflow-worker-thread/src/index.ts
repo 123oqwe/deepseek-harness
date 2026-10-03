@@ -554,8 +554,10 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
    * The digest is the caller's, not computed here: must[0] calls a definition a
    * signed artifact, and a registry that derived the digest itself would be
    * attesting the bytes rather than recording an attestation. `signer` is
-   * recorded and NOT verified — this build has no signature root to verify it
-   * against, which is stated rather than implied by the field's presence.
+   * recorded and not verified here: the saved-workflow loader,
+   * `@deepseek-ai/dsh-workflow-filesystem`, verifies a definition's signature
+   * against the deployment's trust anchors before it registers one, and any
+   * other caller answers for the definitions it registers.
    * @param definition - the definition to register, keyed by its digest.
    */
   registerDefinition(definition: RegisteredDefinition): void {
