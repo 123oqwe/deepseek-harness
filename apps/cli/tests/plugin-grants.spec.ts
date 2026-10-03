@@ -190,17 +190,6 @@ describe('P1-01 step 2: a factory boot records the first-party wildcard grant at
   }, LAUNCH_TIMEOUT_MS)
 })
 
-/** A clean Manifest v2 with no destinations, for a benign host layer. */
-const BENIGN_MANIFEST = {
-  manifestVersion: 2,
-  tools: [{
-    name: 'format-note', sideEffectClass: 'none', authAudience: ['model'],
-    allowedDestinations: [], dataClassification: 'internal',
-  }],
-  executionMode: 'in-process',
-  compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
-}
-
 /**
  * Stage a loadable package with NO `dsh` manifest, referenced by a cordis row's
  * `name` — a real plugin (`name`/`apply`) that mounts under shadow but is
@@ -276,29 +265,30 @@ async function bootStagedProfile(name: string, spec: {
   }
 }
 
-describe('P1-01 step 3: on a real factory boot, a patch renaming a row by id to a manifest-less package is refused (red first for B-519)', () => {
-  it('④ the manifest-less package does not mount and the renamed row keeps its original module', async () => {
-    const boot = await bootStagedProfile('rename', {
-      bundles: ['@deepseek-ai/dsh-base', 'host-bundle'],
-      stage: (dir) => {
-        stageBundlePackage(dir, 'host-bundle', BENIGN_MANIFEST, '- insert:\n    - id: target-row\n      name: host-plugin\n')
-        stageLoadablePackage(dir, 'host-plugin')
-        stageLoadablePackage(dir, 'manifestless-pkg')
-      },
-      overlayBody: '- id: target-row\n  name: manifestless-pkg\n',
+describe('P1-01 step 3: on a real factory boot, a patch swapping a manifest-less package into a group is refused (red first for B-519)', () => {
+  it('④ a --patch that inserts a group then swaps a manifest-less package into its config does not mount the package, and the refusal names the patch', async () => {
+    const boot = await bootStagedProfile('group-swap', {
+      bundles: ['@deepseek-ai/dsh-base'],
+      stage: (dir) => { stageLoadablePackage(dir, 'manifestless-pkg') },
+      // The user --patch inserts a group, then — by id with no name, so it is
+      // applied rather than skipped — swaps the group's config to mount a
+      // loadable package that declares no manifest. (A rename by id is skipped on
+      // a name mismatch, include/src/index.ts:116-118, so it never reaches the
+      // mount tree; a config swap by id does.)
+      overlayBody:
+        '- insert:\n    - id: probe-group\n      name: cordis:group\n      group: true\n'
+        + '- id: probe-group\n  config:\n    - id: probe-child\n      name: manifestless-pkg\n',
     })
     const entries = [...boot.ctx.loader.entries()]
-    const targetRow = entries.find(entry => entry.options.id === 'target-row')
     const liveManifestless = entries.some(entry => entry.options.name === 'manifestless-pkg' && entry.fiber !== undefined)
     const stderrNamesPatch = boot.overlayPath !== undefined && boot.stderr.includes(boot.overlayPath)
-    const detail = JSON.stringify({ targetRowName: targetRow?.options.name, liveManifestless, stderrNamesPatch })
+    const detail = JSON.stringify({ liveManifestless, stderrNamesPatch, names: entries.map(entry => entry.options.name) })
     await boot.ctx.fiber.dispose()
-    // RED today: the id-rename edits the mounted row under shadow, so the
-    // manifest-less package mounts and the row no longer names its original module.
+    // RED today: the group's config swap mounts the manifest-less package. B-519
+    // refuses swapping a manifest-less package in, so it does not mount.
     expect(liveManifestless, detail).toBe(false)
-    expect(targetRow?.options.name, detail).toBe('host-plugin')
     // RED today: no refusal is written. B-519 names the patch file (and the row
-    // id, package, reason) on stderr when it refuses the rename.
+    // id, package, reason) on stderr when it refuses the swap.
     expect(stderrNamesPatch, detail).toBe(true)
   }, LAUNCH_TIMEOUT_MS)
 })
