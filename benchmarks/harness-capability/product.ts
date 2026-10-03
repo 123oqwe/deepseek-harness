@@ -94,12 +94,38 @@ export function normalizedLogs(logs: readonly string[]): string[] {
   })
 }
 
+/** The token the recorded-session normalizer writes in place of a manifest's idempotency key. */
+const IDEMPOTENCY_KEY_TOKEN = '{{idempotencyKey}}'
+
+/**
+ * Every idempotency key an `action/manifest-appended` record of these logs declares.
+ * @param logs - the logs.
+ * @returns the keys, each once.
+ */
+function idempotencyKeysOf(logs: readonly string[]): string[] {
+  const keys = new Set<string>()
+  for (const log of logs) {
+    for (const record of records(log)) {
+      if (record.type !== 'action/manifest-appended') continue
+      const key = (record.data as { idempotencyKey?: unknown } | undefined)?.idempotencyKey
+      if (typeof key === 'string' && key.length > 0) keys.add(key)
+    }
+  }
+  return [...keys]
+}
+
 /**
  * The normalized projection of session logs the shipped profile wrote live,
  * primary first: the scrubbing {@link normalizedLogs} applies, without the
  * recorded-fixture restore that {@link normalizedLogs} runs first. That
  * restore is strict and refused the security lane's live logs (run
  * 36370052596); a live log is already in the current format.
+ *
+ * An idempotency key is a digest over the run id, so each run writes new
+ * ones. The recorded-session normalizer replaces the key in the manifest that
+ * declares it; every other occurrence of a declared key, such as the
+ * action-ledger refusal a resumed turn ended with (B-704, run 37108478263),
+ * is replaced with the same token here.
  * @param logs - the logs, primary first.
  * @returns one normalized JSONL text per log, in the same order.
  */
@@ -110,7 +136,8 @@ export function normalizedLiveLogs(logs: readonly string[]): string[] {
     sessionIds: headers.flatMap(header => typeof header.id === 'string' ? [header.id] : []),
     cwd: typeof cwd === 'string' ? cwd : '\0missing-cwd\0',
   }
-  return logs.map(log => normalizeSessionSnapshot(log, ctx))
+  const keys = idempotencyKeysOf(logs)
+  return logs.map(log => keys.reduce((text, key) => text.split(key).join(IDEMPOTENCY_KEY_TOKEN), normalizeSessionSnapshot(log, ctx)))
 }
 
 /**
