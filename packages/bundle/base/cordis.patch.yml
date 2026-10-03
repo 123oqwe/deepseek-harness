@@ -659,6 +659,14 @@
       config:
         provider: spawn
 
+    # Saved workflows (P4-09 must[0], acceptance[0]; question 31 (a)): a
+    # definition file under `$DSH_HOME/workflows` registers only when the
+    # signature beside it verifies against one of the profile's offline-signed
+    # `dsh.trustAnchors`, so a profile that configures none loads no saved
+    # workflow and logs each one it refused.
+    - id: workflow-filesystem
+      name: '@deepseek-ai/dsh-workflow-filesystem'
+
     - id: tool-workflow
       name: '@deepseek-ai/dsh-tool-workflow'
 

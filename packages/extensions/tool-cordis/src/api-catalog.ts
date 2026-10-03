@@ -1920,7 +1920,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
       {
         signature: 'readonly refused: { readonly name: string; readonly reason: string }[] = []',
-        description: 'One entry per definition the engine refused, naming the file and the reason.',
+        description: 'One entry per definition refused, by its signature check or by the engine, naming the file and the reason.',
         parameters: [],
       },
     ],

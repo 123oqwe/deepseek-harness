@@ -206,6 +206,7 @@
     "@deepseek-ai/dsh-web-search-perplexity": "workspace:^",
     "@deepseek-ai/dsh-win32-process": "workspace:^",
     "@deepseek-ai/dsh-workflow": "workspace:^",
+    "@deepseek-ai/dsh-workflow-filesystem": "workspace:^",
     "@deepseek-ai/dsh-workflow-journal": "workspace:^",
     "@deepseek-ai/dsh-workflow-registry": "workspace:^",
     "@deepseek-ai/dsh-workflow-worker-thread": "workspace:^",

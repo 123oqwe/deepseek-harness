@@ -23,7 +23,14 @@
 export type * from './signature.ts'
 export type * from './sbom.ts'
 
-export { admitUnsignedDevMode, listTrustAnchorIds, registerTrustAnchor, revokeTrustAnchor, verifyPackageSignature } from './signature.ts'
+export {
+  admitUnsignedDevMode,
+  checkOfflineSignature,
+  listTrustAnchorIds,
+  registerTrustAnchor,
+  revokeTrustAnchor,
+  verifyPackageSignature,
+} from './signature.ts'
 export { computeSbomDigest, generateSbom, verifySbomCoverage } from './sbom.ts'
 
 import { verifyPackageSignature } from './signature.ts'

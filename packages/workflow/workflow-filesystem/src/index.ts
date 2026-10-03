@@ -10,9 +10,16 @@
  * **Registering is not executing.** A definition's body reaches the engine as
  * a string and is stored as one; nothing here compiles, evaluates or imports
  * it, which is acceptance[0]'s claim and the reason this loader can read a
- * directory the model can write to. What protects a run is the engine's
- * registration check, not this plugin's caution: the digest is recomputed from
- * the body, and a mismatch or a self-recursive definition is refused there.
+ * directory the model can write to.
+ *
+ * **Only a signed definition registers.** Beside each definition file sits
+ * `<file>.sig.json`: the definition's digest, the fingerprint of the key that
+ * signed it, and the signature over the digest. A definition is offered to the
+ * engine only when that digest is the one computed from the bytes read and the
+ * signature verifies against one of the deployment's offline-signed trust
+ * anchors, held by the pinned Trust Kernel. Any other definition is refused
+ * with the reason. The engine's registration check then recomputes the digest
+ * and refuses a self-recursive definition.
  *
  * @module @deepseek-ai/dsh-workflow-filesystem
  */
@@ -23,8 +30,11 @@ import { Service } from '@deepseek-ai/cordis'
 import type { Context } from '@deepseek-ai/cordis'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
+import { checkOfflineSignature } from '@deepseek-ai/dsh-plugin-provenance'
+import { configuredTrustAnchors } from '@deepseek-ai/dsh-trust-kernel'
+import type { TrustKernelTrustAnchor } from '@deepseek-ai/dsh-trust-kernel/types'
 import { computeDefinitionDigest } from '@deepseek-ai/dsh-workflow-registry'
-import type { DefinitionName, RegisteredDefinition, SignerIdentity } from '@deepseek-ai/dsh-workflow-registry'
+import type { DefinitionDigest, DefinitionName, RegisteredDefinition, SignerIdentity } from '@deepseek-ai/dsh-workflow-registry'
 
 /**
  * The one engine operation this loader needs.
@@ -47,6 +57,12 @@ export interface DefinitionSink {
 /** The file extensions a saved definition may use. */
 const DEFINITION_EXTENSIONS: readonly string[] = ['.js', '.mjs']
 
+/** What follows a definition's file name to name the file holding its signature. */
+const SIGNATURE_SUFFIX = '.sig.json'
+
+/** Where a refusal sends an operator to learn how to sign a saved workflow. */
+const SIGNING_GUIDE = 'see the @deepseek-ai/dsh-workflow-filesystem README for how to sign a saved workflow'
+
 /**
  * Whether a mounted engine can accept registrations.
  * @param engine - the mounted `ctx.workflowEngine`.
@@ -66,11 +82,31 @@ function acceptsDefinitions(engine: unknown): engine is DefinitionSink {
  */
 interface DefinitionFile {
   readonly name: string
+  /** The file's own name, extension included. */
+  readonly fileName: string
   readonly body: string
+  /** The contents of `<fileName>.sig.json`, or `undefined` when there is none. */
+  readonly signature: string | undefined
 }
 
 /**
- * Read every definition file in a directory.
+ * Read a file that may be absent.
+ * @param path - the file to read.
+ * @returns its contents, or `undefined` when it cannot be read.
+ */
+async function readIfPresent(path: string): Promise<string | undefined> {
+  try {
+    return await readFile(path, 'utf8')
+  } catch {
+    // An absent signature file is the ordinary unsigned case, and an
+    // unreadable one leaves the definition exactly as unverifiable; the
+    // verification reports both as `unsigned`.
+    return undefined
+  }
+}
+
+/**
+ * Read every definition file in a directory, with its signature file.
  *
  * A missing directory yields no definitions rather than an error: a
  * deployment that has saved no workflows is the ordinary case, not a
@@ -92,9 +128,82 @@ async function readDefinitions(directory: string): Promise<readonly DefinitionFi
   for (const entry of entries) {
     if (!DEFINITION_EXTENSIONS.includes(extname(entry))) continue
     const body = await readFile(join(directory, entry), 'utf8')
-    files.push({ name: entry.slice(0, entry.length - extname(entry).length), body })
+    const signature = await readIfPresent(join(directory, `${entry}${SIGNATURE_SUFFIX}`))
+    files.push({ name: entry.slice(0, entry.length - extname(entry).length), fileName: entry, body, signature })
   }
   return files
+}
+
+/** Why a saved definition was refused before the engine saw it (P4-09 acceptance[0]). */
+type SignatureRefusal = 'unsigned' | 'digest-mismatch' | 'no-trust-anchor' | 'signature-invalid'
+
+/** A signature file's contents: the signed digest, the signing key's fingerprint, and the base64 signature over the digest. */
+interface DefinitionSignature {
+  readonly digest: string
+  readonly publicKeyFingerprint: string
+  readonly signature: string
+}
+
+/**
+ * Read a signature file's contents.
+ * @param text - the file's text.
+ * @returns the signature, or `undefined` when the text is not one.
+ */
+function parseSignature(text: string): DefinitionSignature | undefined {
+  let value: unknown
+  try {
+    value = JSON.parse(text)
+  } catch {
+    // Text that is not JSON is not a signature; the caller refuses it as one
+    // that does not verify.
+    return undefined
+  }
+  if (typeof value !== 'object' || value === null) return undefined
+  const { digest, publicKeyFingerprint, signature } = value as Partial<Record<keyof DefinitionSignature, unknown>>
+  return typeof digest === 'string' && typeof publicKeyFingerprint === 'string' && typeof signature === 'string'
+    ? { digest, publicKeyFingerprint, signature }
+    : undefined
+}
+
+/** An offline-signed anchor: one whose public key a saved definition's signature is checked against. */
+type OfflineAnchor = Extract<TrustKernelTrustAnchor, { mode: 'offline-signed' }>
+
+/**
+ * Decide whether a definition's signature lets it register (P4-09 must[0],
+ * acceptance[0]).
+ * @param file - the definition and its signature file's contents.
+ * @param digest - the digest computed from the bytes read.
+ * @param anchors - the deployment's configured anchors, or `undefined` when no Trust Kernel is pinned.
+ * @returns the owner of the anchor that verified the signature, or why the definition is refused.
+ */
+function verifyDefinitionSignature(
+  file: DefinitionFile,
+  digest: DefinitionDigest,
+  anchors: readonly TrustKernelTrustAnchor[] | undefined,
+):
+  | { readonly verified: true; readonly owner: string }
+  | { readonly verified: false; readonly reason: SignatureRefusal; readonly detail: string } {
+  const signatureFile = `${file.fileName}${SIGNATURE_SUFFIX}`
+  if (file.signature === undefined) return { verified: false, reason: 'unsigned', detail: `${signatureFile} is missing` }
+  const signed = parseSignature(file.signature)
+  if (signed === undefined) {
+    return { verified: false, reason: 'signature-invalid', detail: `${signatureFile} does not hold { digest, publicKeyFingerprint, signature }` }
+  }
+  if (signed.digest !== digest) {
+    return { verified: false, reason: 'digest-mismatch', detail: `the file hashes to ${digest} but ${signatureFile} names ${signed.digest}` }
+  }
+  if (anchors === undefined) {
+    return { verified: false, reason: 'no-trust-anchor', detail: 'no Trust Kernel is pinned, so this deployment holds no trust anchor' }
+  }
+  const anchor = anchors.find((candidate): candidate is OfflineAnchor =>
+    candidate.mode === 'offline-signed' && candidate.publicKeyFingerprint === signed.publicKeyFingerprint)
+  if (anchor === undefined) {
+    return { verified: false, reason: 'no-trust-anchor', detail: `no configured offline-signed trust anchor has the fingerprint ${signed.publicKeyFingerprint}` }
+  }
+  if (checkOfflineSignature(anchor, new TextEncoder().encode(signed.digest), Buffer.from(signed.signature, 'base64')) !== undefined) {
+    return { verified: false, reason: 'signature-invalid', detail: `the signature in ${signatureFile} does not verify against the key of ${anchor.owner}` }
+  }
+  return { verified: true, owner: anchor.owner }
 }
 
 declare module '@deepseek-ai/cordis' {
@@ -116,7 +225,7 @@ export default class SavedWorkflowLoader extends Service {
 
   /** Names registered from the definitions directory, in load order. */
   readonly loaded: string[] = []
-  /** One entry per definition the engine refused, naming the file and the reason. */
+  /** One entry per definition refused, by its signature check or by the engine, naming the file and the reason. */
   readonly refused: { readonly name: string; readonly reason: string }[] = []
 
   /**
@@ -140,12 +249,12 @@ export default class SavedWorkflowLoader extends Service {
   }
 
   /**
-   * Read and register every saved definition.
+   * Read, verify and register every saved definition.
    *
    * Runs at mount through `Service.init`, so a composition that loads this
    * plugin has its saved workflows registered before the first turn — a run
    * that nests one must not depend on whether a load happened to finish first.
-   * @returns once every definition file has been offered to the engine.
+   * @returns once every definition file has been verified and, when it verified, offered to the engine.
    */
   async [Service.init](): Promise<void> {
     const engine = this.ctx.workflowEngine
@@ -154,23 +263,42 @@ export default class SavedWorkflowLoader extends Service {
         'workflow-filesystem: the mounted workflow engine does not accept definition registrations, so saved workflows would load into nothing',
       )
     }
+    // The anchors a signature may verify against are the deployment's, held by
+    // the pinned Trust Kernel; with no kernel pinned there are none, and every
+    // saved definition is refused.
+    const kernel = this.ctx.get('trustKernel')
+    const anchors = kernel === undefined ? undefined : configuredTrustAnchors(kernel.signatureRoots)
     for (const file of await readDefinitions(this.directory)) {
+      const digest = computeDefinitionDigest(file.body)
+      const verdict = verifyDefinitionSignature(file, digest, anchors)
+      if (!verdict.verified) {
+        this.refuse(file.name, `${verdict.reason}: ${verdict.detail}; ${SIGNING_GUIDE}`)
+        continue
+      }
       const definition: RegisteredDefinition = {
-        digest: computeDefinitionDigest(file.body),
+        digest,
         name: brandString<DefinitionName>(file.name),
         version: 1,
         body: file.body,
-        // The loader is the signer it can honestly claim: this build has no
-        // signature root, and recording a stronger provenance than the one
-        // that exists would make an unverified file look attested.
-        signer: brandString<SignerIdentity>('workflow-filesystem'),
+        // The owner of the anchor whose key verified the signature.
+        signer: brandString<SignerIdentity>(verdict.owner),
       }
       try {
         engine.registerDefinition(definition)
         this.loaded.push(file.name)
       } catch (error: unknown) {
-        this.refused.push({ name: file.name, reason: error instanceof Error ? error.message : String(error) })
+        this.refuse(file.name, error instanceof Error ? error.message : String(error))
       }
     }
+  }
+
+  /**
+   * Record one refused definition, and log it so an operator sees it without a test harness.
+   * @param name - the definition's name.
+   * @param reason - why it was refused.
+   */
+  private refuse(name: string, reason: string): void {
+    this.refused.push({ name, reason })
+    this.ctx.logger.warn(`workflow-filesystem: saved workflow "${name}" was not loaded: ${reason}`)
   }
 }
