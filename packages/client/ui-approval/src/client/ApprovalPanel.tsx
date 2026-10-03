@@ -42,6 +42,12 @@ function ApprovalFlow({ pending, detail, t }: {
           {detail !== null && <div className={css.command}>{detail}</div>}
           {pending.display !== undefined && (
             <dl className={css.details}>
+              {pending.display.notice !== undefined && (
+                <>
+                  <dt className={css.detailLabel}>{t('detail.notice')}</dt>
+                  <dd className={css.detailValue}>{pending.display.notice}</dd>
+                </>
+              )}
               {([
                 ['detail.risk', pending.display.riskClass],
                 ['detail.resource', pending.display.resource],

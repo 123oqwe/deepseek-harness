@@ -84,6 +84,8 @@ export interface ApprovalPresentationDisplay {
   readonly expectedDiff: string
   /** When an approval given now stops being usable, as an absolute epoch millisecond. */
   readonly expiresAtMs: number
+  /** What approving any call of this tool permits beyond these fields, as the tool declares it; absent when it declares none. */
+  readonly notice?: string
 }
 
 /** Decisions this interactive Client presentation can return. */

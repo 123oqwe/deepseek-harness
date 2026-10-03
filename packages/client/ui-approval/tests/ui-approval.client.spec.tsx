@@ -370,6 +370,35 @@ describe('ApprovalPanel', () => {
     pending.abort(new Error('test cleanup'))
     await pending.result.catch(() => {})
   })
+
+  it('shows the tool\'s notice with the display fields only when the display carries one', async () => {
+    const display = {
+      manifestDigest: 'digest-abc',
+      arguments: '{"code":"<redacted>"}',
+      resource: 'other:run_code',
+      riskClass: 'security-sensitive',
+      expectedDiff: 'tool run_code executes with the manifested arguments',
+      expiresAtMs: 0,
+    }
+    const noticed = new PendingApproval(id('s1'), {
+      toolName: 'run_code',
+      display: { ...display, notice: 'This code does not run in the OS sandbox.' },
+    })
+    const { unmount } = render(<ApprovalPanel {...panelProps(noticed)} />)
+    expect(screen.getByText('detail.notice')).toBeTruthy()
+    expect(screen.getByText('This code does not run in the OS sandbox.')).toBeTruthy()
+    unmount()
+
+    const plain = new PendingApproval(id('s2'), { toolName: 'bash', display })
+    render(<ApprovalPanel {...panelProps(plain)} />)
+    expect(screen.getByText('security-sensitive')).toBeTruthy()
+    expect(screen.queryByText('detail.notice')).toBeNull()
+
+    for (const pending of [noticed, plain]) {
+      pending.abort(new Error('test cleanup'))
+      await pending.result.catch(() => {})
+    }
+  })
 })
 
 describe('package entries', () => {

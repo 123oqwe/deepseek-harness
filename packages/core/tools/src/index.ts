@@ -307,6 +307,14 @@ export interface ToolDefinition extends ToolSchema {
    */
   readonly riskDomainTags?: readonly string[]
   /**
+   * What approving any call of this tool permits that the manifest's fields do
+   * not say, shown as the approval display's `notice` on every ask about the
+   * call (P2-06 must[0]). `run_code` declares that its program runs outside the
+   * OS sandbox. Static per tool; NEVER model-visible, because `schemas()`
+   * whitelists only name, description and parameters.
+   */
+  readonly approvalNotice?: string
+  /**
    * Pure synchronous classifier for overlap with sibling tool calls. Only
    * `true` opts in; omission, exceptions, non-`true` returns, and invalid
    * `defineTool` arguments are exclusive. This metadata is never model-visible.
@@ -2182,6 +2190,7 @@ export class ToolRuntime extends Service {
             risk.judged?.classification.riskClass ?? 'security-sensitive',
             redactArgumentsValueForDisplay(exec.arguments),
             Date.now() + APPROVAL_DISPLAY_VALIDITY_MS,
+            tool?.approvalNotice,
           ),
       )
       if (refusal !== undefined) return refusedRiskResult(refusal, exec.name)

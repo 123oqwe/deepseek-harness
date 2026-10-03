@@ -275,6 +275,13 @@ export interface ApprovalDisplay {
   readonly expectedDiff: string
   /** When an approval given now stops being usable, as an absolute epoch millisecond. */
   readonly expiresAtMs: number
+  /**
+   * What approving any call of this tool permits that the six fields do not
+   * say, in the tool's own words (`ToolDefinition.approvalNotice`) — `run_code`
+   * states that its program runs outside the OS sandbox. Absent when the tool
+   * declares none.
+   */
+  readonly notice?: string
 }
 
 /** Digest over an approval's whole bound tuple. */

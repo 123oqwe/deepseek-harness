@@ -35,7 +35,7 @@ interface ResolvedCredential {
 
 沙箱模式只约束写入；读取与网络不在其内。被工作区里的文字引导的模型，能经 `read`、`grep`、`glob` 工具和 `bash` 读到你的账户读得到的任何文件，并把读到的内容送出去：用 `web_fetch` 发往公开 URL、写进 `web_search` 的查询，或者从仍可联网的 `bash` 发出。在默认的 `workspace-write` 模式与 `ask` 审批下，这些都不请求批准。项目自己的 `.env`（上文的 `project-env` 来源层）就是这样的文件，所以在 agent 可能打开的任何工作区里，都不要把密钥放进去。
 
-harness 自己的凭证库是例外。在 `read-only` 与 `workspace-write` 模式下，模型的工具读不到 `$DSH_HOME/.credentials.yaml` 与主目录下的 `$DSH_HOME/.env`，bubblewrap 或 Seatbelt 约束的命令也读不到；在 Landlock 或 Windows 主机上，受限命令仍读得到（见[本地沙箱提供方的限制](../../packages/sandbox/sandbox-local/README.zh.md#known-limitations-and-deferred-work)）。你以 `danger-full-access` 批准的调用也读得到。出网管控归 P3-04，让密钥值不进入模型上下文归 P3-06 must[3]；两者都尚未交付。
+harness 自己的凭证库是例外。在 `read-only` 与 `workspace-write` 模式下，模型的工具读不到 `$DSH_HOME/.credentials.yaml` 与主目录下的 `$DSH_HOME/.env`，bubblewrap 或 Seatbelt 约束的命令也读不到；在 Landlock 或 Windows 主机上，受限命令仍读得到（见[本地沙箱提供方的限制](../../packages/sandbox/sandbox-local/README.zh.md#known-limitations-and-deferred-work)）。你以 `danger-full-access` 批准的调用也读得到，你批准的 `run_code` 程序同样读得到：它不在 OS 沙箱里运行，其审批请求会写明这一点。出网管控归 P3-04，让密钥值不进入模型上下文归 P3-06 must[3]；两者都尚未交付。
 
 ## 描述
 

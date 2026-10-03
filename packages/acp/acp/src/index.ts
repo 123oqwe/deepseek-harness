@@ -193,6 +193,9 @@ export function apply(ctx: Context, config: AcpConfig): void {
             toolCallId: callId,
             title: `${request.toolName} — ${request.display.riskClass}`,
             content: [
+              ...request.display.notice === undefined
+                ? []
+                : [{ type: 'content', content: { type: 'text', text: `Notice: ${request.display.notice}` } }],
               { type: 'content', content: { type: 'text', text: `Resource: ${request.display.resource}` } },
               { type: 'content', content: { type: 'text', text: `Expected: ${request.display.expectedDiff}` } },
               { type: 'content', content: { type: 'text', text: `Arguments (redacted): ${request.display.arguments}` } },

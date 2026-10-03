@@ -14,6 +14,8 @@ import ToolRuntime, {
   type JsonSchemaNode, type ToolDefinition, type ToolDispatchExecution, type ToolExecutionResult, type ToolExecutionToken,
 } from '@deepseek-ai/dsh-tools'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
+import type { ActionManifest } from '@deepseek-ai/dsh-action-manifest'
+import { approvalDisplayFor } from '../src/external-effect.ts'
 
 const testToolSignal = new AbortController().signal
 
@@ -67,6 +69,36 @@ describe('ToolRuntime', () => {
       description: 'a tool that declares what it touches',
       parameters: { type: 'object', properties: { text: { type: 'string' } } },
     }])
+  })
+
+  it('P2-06 must[0]: carries a tool\'s approval notice to the approval display, and never to the model', async () => {
+    const ctx = await setup()
+    const noticed = defineTool({
+      name: 'noticed',
+      description: 'a tool whose approval states a fact',
+      approvalNotice: 'runs outside the sandbox',
+      parameters: { text: { type: 'string' } },
+      output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
+      async execute() { return 'ok' },
+    })
+
+    expect(noticed.approvalNotice).toBe('runs outside the sandbox')
+    expect(echoTool.approvalNotice).toBeUndefined()
+    ctx.tools.register(noticed)
+    expect(ctx.tools.schemas()).toEqual([{
+      name: 'noticed',
+      description: 'a tool whose approval states a fact',
+      parameters: { type: 'object', properties: { text: { type: 'string' } } },
+    }])
+
+    // approvalDisplayFor reads only the target, the arguments hash and the expected diff.
+    const manifest = {
+      target: { kind: 'other', ref: 'noticed' },
+      argumentsHash: 'sha256:args',
+      expectedDiff: { description: 'tool noticed executes with the manifested arguments' },
+    } as unknown as ActionManifest
+    expect(approvalDisplayFor(manifest, 'destructive', '{}', 1, 'runs outside the sandbox').notice).toBe('runs outside the sandbox')
+    expect('notice' in approvalDisplayFor(manifest, 'destructive', '{}', 1, undefined)).toBe(false)
   })
 
   it('registers tools, exposes schemas, and feeds the system-prompt assembly', async () => {

@@ -4372,7 +4372,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ApprovalDisplay',
-    declaration: 'export interface ApprovalDisplay {\n    readonly manifestDigest: string;\n    readonly arguments: string;\n    readonly resource: string;\n    readonly riskClass: string;\n    readonly expectedDiff: string;\n    readonly expiresAtMs: number;\n}',
+    declaration: 'export interface ApprovalDisplay {\n    readonly manifestDigest: string;\n    readonly arguments: string;\n    readonly resource: string;\n    readonly riskClass: string;\n    readonly expectedDiff: string;\n    readonly expiresAtMs: number;\n    readonly notice?: string;\n}',
   },
   {
     name: 'ApprovalOutcome',
@@ -7396,7 +7396,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ToolDefinition',
-    declaration: 'export interface ToolDefinition extends ToolSchema {\n    readonly output: ToolOutputDefinition;\n    execute(args: unknown, exec: ToolRunContext): Promise<unknown>;\n    finalizeContent?(exec: Readonly<ToolExecution>, result: Readonly<ToolExecutionResult>): ContentBlock[] | undefined;\n    timeoutMs?: number;\n    readonly riskDomainTags?: readonly string[];\n    isConcurrencySafe?(args: unknown): boolean;\n    presentCall?(args: unknown): ToolCallView | undefined;\n    presentResult?(args: unknown, result: ToolResult): ToolResultView | undefined;\n}',
+    declaration: 'export interface ToolDefinition extends ToolSchema {\n    readonly output: ToolOutputDefinition;\n    execute(args: unknown, exec: ToolRunContext): Promise<unknown>;\n    finalizeContent?(exec: Readonly<ToolExecution>, result: Readonly<ToolExecutionResult>): ContentBlock[] | undefined;\n    timeoutMs?: number;\n    readonly riskDomainTags?: readonly string[];\n    readonly approvalNotice?: string;\n    isConcurrencySafe?(args: unknown): boolean;\n    presentCall?(args: unknown): ToolCallView | undefined;\n    presentResult?(args: unknown, result: ToolResult): ToolResultView | undefined;\n}',
   },
   {
     name: 'ToolDispatchExecution',

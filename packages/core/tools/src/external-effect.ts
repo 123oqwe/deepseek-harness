@@ -1129,13 +1129,15 @@ export function redactArgumentsValueForDisplay(value: unknown): string {
  * @param riskClass - the class the gate classified this action into.
  * @param redactedArguments - the arguments as the decider should see them.
  * @param expiresAtMs - when an approval given now stops being usable.
- * @returns the six fields must[0] names.
+ * @param notice - the dispatched tool's `approvalNotice`; `undefined` when it declares none or the tool is unknown.
+ * @returns the six fields must[0] names, plus `notice` when the tool declares one.
  */
 export function approvalDisplayFor(
   manifest: ActionManifest,
   riskClass: string,
   redactedArguments: string,
   expiresAtMs: number,
+  notice: string | undefined,
 ): ApprovalDisplay {
   const target = manifest.target
   const resource = target.kind === 'filesystem'
@@ -1151,6 +1153,7 @@ export function approvalDisplayFor(
     riskClass,
     expectedDiff: manifest.expectedDiff.description,
     expiresAtMs,
+    ...notice === undefined ? {} : { notice },
   }
 }
 

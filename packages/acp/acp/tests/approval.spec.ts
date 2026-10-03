@@ -160,6 +160,17 @@ describe('P2-06 must[0]: the ACP decider is shown the action, not only its id', 
     expect(JSON.stringify(harness.permissionRequests[0])).toContain('<redacted>')
   })
 
+  it('puts the tool\'s notice first when the display carries one', async () => {
+    harness = await makeBridgeHarness()
+    harness.onPermission = () => ({ outcome: { outcome: 'selected', optionId: 'reject-once' } })
+    const ask = await askWithDisplay()
+    await harness.ctx.approval.request({ ...ask, display: { ...ask.display!, notice: 'This code does not run in the OS sandbox.' } })
+
+    const content = harness.permissionRequests[0]?.toolCall.content ?? []
+    expect(content[0]).toEqual({ type: 'content', content: { type: 'text', text: 'Notice: This code does not run in the OS sandbox.' } })
+    expect(content).toHaveLength(6)
+  })
+
   it('sends the payload it always sent when the ask carries no manifest', async () => {
     // The non-tool-call path and every pre-existing asker: an ask with no
     // display must reach the client unchanged rather than with empty fields,
