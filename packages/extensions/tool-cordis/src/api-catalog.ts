@@ -105,12 +105,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
       {
         signature: 'markAmbiguous(scope: LedgerScope, key: string, epoch: LedgerGeneration): void',
-        description: 'Record that retrying cannot determine the outcome.',
+        description: 'Record that retrying cannot determine the outcome, with the cause `errored`: the dispatch path calls it for a tool result that is an error.',
         parameters: [{ name: 'scope', description: 'the reservation\'s owning principal.' }, { name: 'key', description: 'the idempotency key.' }, { name: 'epoch', description: 'the generation that holds the reservation, or `\'unfenced\'` when its holder had none.' }],
       },
       {
         signature: 'markInterrupted(keys: readonly { readonly scope: LedgerScope; readonly key: string }[]): readonly LedgerEntry[]',
-        description: 'Send the `sent` entries of calls a resumed session closed as interrupted to reconciliation, in one transaction (B-726).',
+        description: 'Send the `sent` entries of calls a resumed session closed as interrupted to reconciliation, with the cause `interrupted`, in one transaction (B-726).',
         parameters: [{ name: 'keys', description: 'the scoped keys of the interrupted calls\' manifests.' }],
         returns: 'the entries moved to `ambiguous`.',
       },
@@ -5425,8 +5425,12 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface Lease {\n    readonly workItem: WorkItemId;\n    readonly holder: WorkerId;\n    readonly epoch: LeaseEpoch;\n    readonly expiresAtMs: number;\n}',
   },
   {
+    name: 'LedgerAmbiguityCause',
+    declaration: 'export type LedgerAmbiguityCause = \'interrupted\' | \'fenced\' | \'errored\';',
+  },
+  {
     name: 'LedgerEntry',
-    declaration: 'export interface LedgerEntry {\n    readonly scope: LedgerScope;\n    readonly key: IdempotencyKey;\n    readonly argumentsHash: ArgumentsHash;\n    readonly state: LedgerState;\n    readonly epoch: LedgerGeneration;\n    readonly capability?: CapabilityRef;\n    readonly leaseRun?: RunId;\n    readonly receiptDigest?: ReceiptDigest;\n    readonly resolution?: LedgerResolution;\n}',
+    declaration: 'export interface LedgerEntry {\n    readonly scope: LedgerScope;\n    readonly key: IdempotencyKey;\n    readonly argumentsHash: ArgumentsHash;\n    readonly state: LedgerState;\n    readonly epoch: LedgerGeneration;\n    readonly capability?: CapabilityRef;\n    readonly leaseRun?: RunId;\n    readonly cause?: LedgerAmbiguityCause;\n    readonly receiptDigest?: ReceiptDigest;\n    readonly resolution?: LedgerResolution;\n}',
   },
   {
     name: 'LedgerEpoch',

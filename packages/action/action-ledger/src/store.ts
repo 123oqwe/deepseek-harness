@@ -24,7 +24,7 @@ import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { decideReservation, sameActionBlockers } from './index.ts'
-import type { LedgerEntry, LedgerEpoch, LedgerGeneration, LedgerResolution, LedgerScope, LedgerState, ReceiptDigest, ReserveDecision, ReserveRequest } from './types.ts'
+import type { LedgerAmbiguityCause, LedgerEntry, LedgerEpoch, LedgerGeneration, LedgerResolution, LedgerScope, LedgerState, ReceiptDigest, ReserveDecision, ReserveRequest } from './types.ts'
 
 /** The store's handle. */
 export interface LedgerStore {
@@ -56,7 +56,9 @@ export interface LedgerStore {
   confirm: (scope: LedgerScope, key: string, epoch: LedgerGeneration, receiptDigest: ReceiptDigest, resolution?: LedgerResolution) => void
   /**
    * Record that the outcome cannot be determined by retrying; it goes to reconciliation.
-   * Refused for an entry that is not `prepared` or `sent`.
+   * Refused for an entry that is not `prepared` or `sent`. The dispatch path calls it for a
+   * tool result that is an error, so the entry's cause is `errored`, which stops its own key
+   * and no other.
    */
   markAmbiguous: (scope: LedgerScope, key: string, epoch: LedgerGeneration) => void
   /**
@@ -67,7 +69,8 @@ export interface LedgerStore {
   markCompensated: (scope: LedgerScope, key: string, epoch: LedgerGeneration, resolution: LedgerResolution) => void
   /**
    * Move the `sent` entries of calls a resumed session closed as interrupted to
-   * `ambiguous`, in one transaction, under each entry's own generation (B-726).
+   * `ambiguous` with the cause `interrupted`, in one transaction, under each entry's own
+   * generation (B-726).
    * An entry in any other state, or absent, is left as it is. Returns the
    * entries it moved.
    */
@@ -92,9 +95,9 @@ export interface LedgerStore {
  * transaction; the version check refuses the file up front instead, which is
  * the pre-release stance — reject an old format rather than migrate it.
  *
- * Version 3 records each entry's capability and the run that issued its
- * epoch, so a reservation can find another key's unsettled entry for the same
- * action (B-726). A version 2 file has neither column and is refused the same way.
+ * Version 3 records each entry's capability, the run that issued its epoch and
+ * why it became `ambiguous`, so a reservation can find another key's entry for
+ * the same action whose outcome a crash left unknown (B-726). A version 2 file has neither column and is refused the same way.
  */
 const SCHEMA_VERSION = 3
 
@@ -116,9 +119,10 @@ const SCHEMA = [
   // `=` so the absent generation matches itself and nothing else.
   //
   // `capability` and `lease_run` are NULL for a reservation that named neither: such
-  // an entry is matched by its key alone.
+  // an entry is matched by its key alone. `cause` is NULL until the entry becomes
+  // `ambiguous`, and keeps that value after a host resolution moves it on.
   'CREATE TABLE IF NOT EXISTS ledger (scope TEXT NOT NULL, key TEXT NOT NULL, arguments_hash TEXT NOT NULL, state TEXT NOT NULL, epoch INTEGER,'
-    + ' receipt_digest TEXT, capability TEXT, lease_run TEXT, PRIMARY KEY (scope, key))',
+    + ' receipt_digest TEXT, capability TEXT, lease_run TEXT, cause TEXT, PRIMARY KEY (scope, key))',
   // The host user's resolutions of ambiguous entries (BLOCKED-311). A table of
   // its own rather than new ledger columns, so a version 2 file gains it here
   // without a migration, and a build that predates it reads the ledger as before.
@@ -126,7 +130,7 @@ const SCHEMA = [
 ]
 
 /** The columns an entry is read from: its ledger row and, once resolved, its resolution. */
-const ENTRY_SELECT = 'SELECT l.scope, l.key, l.arguments_hash, l.state, l.epoch, l.receipt_digest, l.capability, l.lease_run, r.outcome, r.resolved_by, r.resolved_at'
+const ENTRY_SELECT = 'SELECT l.scope, l.key, l.arguments_hash, l.state, l.epoch, l.receipt_digest, l.capability, l.lease_run, l.cause, r.outcome, r.resolved_by, r.resolved_at'
   + ' FROM ledger l LEFT JOIN resolution r ON r.scope = l.scope AND r.key = l.key'
 
 /** One row of {@link ENTRY_SELECT}. */
@@ -139,6 +143,7 @@ interface EntryRow {
   receipt_digest: string | null
   capability: string | null
   lease_run: string | null
+  cause: string | null
   outcome: string | null
   resolved_by: string | null
   resolved_at: number | null
@@ -158,6 +163,7 @@ function entryOf(row: EntryRow): LedgerEntry {
     epoch: row.epoch === null ? 'unfenced' : row.epoch as LedgerEpoch,
     ...(row.capability === null ? {} : { capability: row.capability as NonNullable<LedgerEntry['capability']> }),
     ...(row.lease_run === null ? {} : { leaseRun: row.lease_run as NonNullable<LedgerEntry['leaseRun']> }),
+    ...(row.cause === null ? {} : { cause: row.cause as LedgerAmbiguityCause }),
     ...(row.receipt_digest === null ? {} : { receiptDigest: row.receipt_digest as ReceiptDigest }),
     ...(row.outcome === null ? {} : {
       resolution: {
@@ -213,6 +219,7 @@ const IN_FLIGHT_STATES = '\'prepared\', \'sent\''
  * @param resolution - the host user's resolution, when this move reconciles an
  *   `ambiguous` entry: the entry must still be `ambiguous`, and the resolution is
  *   written in the same transaction as the move.
+ * @param cause - why the entry becomes `ambiguous`, for a move to that state.
  */
 function transition(
   db: DatabaseSync,
@@ -222,14 +229,15 @@ function transition(
   state: LedgerState,
   receiptDigest?: ReceiptDigest,
   resolution?: LedgerResolution,
+  cause?: LedgerAmbiguityCause,
 ): void {
   if (resolution === undefined) {
-    move(db, scope, key, epoch, state, receiptDigest ?? null, false)
+    move(db, scope, key, epoch, state, receiptDigest ?? null, false, cause ?? null)
     return
   }
   db.exec('BEGIN IMMEDIATE')
   try {
-    move(db, scope, key, epoch, state, receiptDigest ?? null, true)
+    move(db, scope, key, epoch, state, receiptDigest ?? null, true, null)
     db.prepare('INSERT INTO resolution (scope, key, outcome, resolved_by, resolved_at) VALUES (?, ?, ?, ?, ?)')
       .run(scope, key, resolution.outcome, resolution.resolvedBy, resolution.resolvedAt)
     db.exec('COMMIT')
@@ -249,6 +257,7 @@ function transition(
  * @param receiptDigest - the receipt, or null.
  * @param resolving - whether a host resolution makes this move: it moves only
  *   an `ambiguous` entry, and every other move only an entry still in flight.
+ * @param cause - why the entry becomes `ambiguous` (B-726); null leaves the recorded cause as it is.
  */
 function move(
   db: DatabaseSync,
@@ -258,14 +267,15 @@ function move(
   state: LedgerState,
   receiptDigest: ReceiptDigest | null,
   resolving: boolean,
+  cause: LedgerAmbiguityCause | null,
 ): void {
   const from = resolving ? '\'ambiguous\'' : IN_FLIGHT_STATES
   // `epoch IS ?`, not `epoch = ?`: an unfenced holder's generation is SQL NULL,
   // and `NULL = NULL` is false, so `=` would refuse every write by the very
   // caller that holds the reservation.
   const changed = db
-    .prepare(`UPDATE ledger SET state = ?, receipt_digest = ? WHERE scope = ? AND key = ? AND epoch IS ? AND state IN (${from})`)
-    .run(state, receiptDigest, scope, key, columnEpoch(epoch)).changes
+    .prepare(`UPDATE ledger SET state = ?, receipt_digest = ?, cause = COALESCE(?, cause) WHERE scope = ? AND key = ? AND epoch IS ? AND state IN (${from})`)
+    .run(state, receiptDigest, cause, scope, key, columnEpoch(epoch)).changes
   if (changed === 0) {
     const current = readEntry(db, scope, key)
     throw new Error(current === undefined
@@ -326,7 +336,7 @@ export function openLedgerStore(directory: string): LedgerStore {
         const existing = readEntry(db, request.scope, request.key)
         const decision = decideReservation(request, existing)
         if (existing?.state === 'sent' && decision.action === 'refused' && decision.reason === 'ambiguous-needs-reconciliation') {
-          move(db, request.scope, request.key, existing.epoch, 'ambiguous', null, false)
+          move(db, request.scope, request.key, existing.epoch, 'ambiguous', null, false, 'fenced')
         }
         if (decision.action !== 'reserved') {
           db.exec('COMMIT')
@@ -341,7 +351,7 @@ export function openLedgerStore(directory: string): LedgerStore {
             .all(request.scope, request.capability, request.argumentsHash, request.key) as unknown as EntryRow[]).map(entryOf))
         if (blockers.length > 0) {
           for (const blocker of blockers) {
-            if (blocker.state === 'sent') move(db, blocker.scope, blocker.key, blocker.epoch, 'ambiguous', null, false)
+            if (blocker.state === 'sent') move(db, blocker.scope, blocker.key, blocker.epoch, 'ambiguous', null, false, 'fenced')
           }
           db.exec('COMMIT')
           return { action: 'refused', reason: 'ambiguous-needs-reconciliation' }
@@ -366,14 +376,14 @@ export function openLedgerStore(directory: string): LedgerStore {
     },
     markSent: (scope, key, epoch) => { transition(db, scope, key, epoch, 'sent') },
     confirm: (scope, key, epoch, receiptDigest, resolution) => { transition(db, scope, key, epoch, 'confirmed', receiptDigest, resolution) },
-    markAmbiguous: (scope, key, epoch) => { transition(db, scope, key, epoch, 'ambiguous') },
+    markAmbiguous: (scope, key, epoch) => { transition(db, scope, key, epoch, 'ambiguous', undefined, undefined, 'errored') },
     markCompensated: (scope, key, epoch, resolution) => { transition(db, scope, key, epoch, 'compensated', undefined, resolution) },
     markInterrupted: (keys) => {
       db.exec('BEGIN IMMEDIATE')
       try {
         const moved: LedgerEntry[] = []
         for (const { scope, key } of keys) {
-          const changed = db.prepare('UPDATE ledger SET state = \'ambiguous\' WHERE scope = ? AND key = ? AND state = \'sent\'').run(scope, key).changes
+          const changed = db.prepare('UPDATE ledger SET state = \'ambiguous\', cause = \'interrupted\' WHERE scope = ? AND key = ? AND state = \'sent\'').run(scope, key).changes
           const entry = changed === 0 ? undefined : readEntry(db, scope, key)
           if (entry !== undefined) moved.push(entry)
         }

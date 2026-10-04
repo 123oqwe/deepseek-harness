@@ -1218,7 +1218,11 @@ export function approvalDisplayFor(
  * A failure is `ambiguous`, not a release: a tool that threw may or may not
  * have committed its effect, and clearing the reservation would let a retry
  * perform it a second time. acceptance[1] is exactly this — an ambiguous entry
- * goes to reconciliation rather than being retried.
+ * goes to reconciliation rather than being retried. Its cause is `errored`, so
+ * it refuses a retry under its own key only: a retry of the same action under
+ * a new call id goes ahead, because the tool reported a failure rather than an
+ * unknown outcome, and a failure that committed anyway can then be performed
+ * twice (B-726; Known Limitation).
  * @param ctx - the mounting context, consulted for an optional ledger.
  * @param agent - the agent whose run owns the action.
  * @param record - the reservation this result belongs to, absent when the call never reserved.

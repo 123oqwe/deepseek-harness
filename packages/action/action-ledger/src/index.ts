@@ -12,6 +12,7 @@
 export { default } from './plugin.ts'
 export type { Config as ActionLedgerConfig } from './plugin.ts'
 export type {
+  LedgerAmbiguityCause,
   LedgerEntry,
   LedgerEpoch,
   LedgerGeneration,
@@ -129,13 +130,16 @@ export function decideReservation(request: ReserveRequest, existing: LedgerEntry
  * A key is derived from the call id, so a model that retries an action whose
  * outcome is unknown under a new call id presents a new key, and
  * {@link decideReservation} alone would let it send again. An entry recording
- * the same scope, tool and arguments under another key stops it when that
- * entry is unsettled: an `ambiguous` one, from any run; and a `sent` one held
- * by an OLDER generation of the SAME run, whose holder's lease has lapsed.
- * Lease epochs are counted per run, so a `sent` entry of another run, or of
- * this generation, may be live in flight and does not stop it. A settled
- * entry (`confirmed`, `compensated`) does not either: repeating a finished
- * action on purpose is an ordinary request.
+ * the same scope, tool and arguments under another key stops it when a crash
+ * left that entry's outcome unknown: an `ambiguous` one whose cause is
+ * `interrupted` or `fenced`, from any run; and a `sent` one held by an OLDER
+ * generation of the SAME run, whose holder's lease has lapsed. Lease epochs are
+ * counted per run, so a `sent` entry of another run, or of this generation, may
+ * be live in flight and does not stop it. An `ambiguous` entry whose tool
+ * reported an error (`errored`) stops only its own key: its outcome is a known
+ * failure, recorded as ambiguous because a failure may have committed. A
+ * settled entry (`confirmed`, `compensated`) does not stop it either:
+ * repeating a finished action on purpose is an ordinary request.
  * @param request - the reservation being decided; without a capability nothing is matched.
  * @param sameAction - entries of the request's scope recording its capability and arguments.
  * @returns the entries that stop the reservation, in the order given.
@@ -146,7 +150,7 @@ export function sameActionBlockers(request: ReserveRequest, sameAction: readonly
     && entry.scope === request.scope
     && entry.capability === request.capability
     && entry.argumentsHash === request.argumentsHash
-    && (entry.state === 'ambiguous'
+    && ((entry.state === 'ambiguous' && (entry.cause === 'interrupted' || entry.cause === 'fenced'))
       || (entry.state === 'sent'
         && request.leaseRun !== undefined && entry.leaseRun === request.leaseRun
         && request.epoch !== 'unfenced' && entry.epoch !== 'unfenced'
