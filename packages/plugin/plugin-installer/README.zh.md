@@ -46,7 +46,7 @@ const dir = await extractQuarantined(quarantinedTarballPath, {
 
 | 文件 | 职责 |
 | --- | --- |
-| [`src/extract.ts`](src/extract.ts) | `inspectTarball`（拒第一个不安全条目；大小检查在条目头处抛，早于该条目数据被读出，故炸弹在膨胀前即被拒）与 `extractQuarantined`。 |
+| [`src/extract.ts`](src/extract.ts) | `inspectTarball`（列举归档但不解包，记录第一个不安全条目，遍历后再抛；全程不写盘，故被拒的炸弹永不膨胀到磁盘）与 `extractQuarantined`。 |
 | [`src/types.ts`](src/types.ts) | `UnpackPolicy`、`UnpackThreatKind` 闭合 union、`PluginInstallError`。 |
 | [`src/index.ts`](src/index.ts) | 公共导出面与 `DEFAULT_*` 策略上限。 |
 

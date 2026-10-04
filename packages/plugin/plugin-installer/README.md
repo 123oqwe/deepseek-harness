@@ -46,7 +46,7 @@ The security core only extracts files; it never invokes npm or runs a package's 
 
 | File | Responsibility |
 | --- | --- |
-| [`src/extract.ts`](src/extract.ts) | `inspectTarball` (refuse the first unsafe entry; the size check throws at the header, before the entry's data is drained, so a bomb is refused before it expands) and `extractQuarantined`. |
+| [`src/extract.ts`](src/extract.ts) | `inspectTarball` (list the archive without extracting, record the first unsafe entry, and throw after the walk; nothing is written, so a refused bomb never expands onto disk) and `extractQuarantined`. |
 | [`src/types.ts`](src/types.ts) | `UnpackPolicy`, the `UnpackThreatKind` closed union, and `PluginInstallError`. |
 | [`src/index.ts`](src/index.ts) | The public surface and the `DEFAULT_*` policy limits. |
 
