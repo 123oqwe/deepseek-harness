@@ -290,7 +290,8 @@ def tool_result_outcome(event: JsonObject) -> ExecutionOutcome | None:
     if outcome is None:
         return None
     try:
-        return ExecutionOutcome.model_validate(outcome)
+        # MUTATION M-U4-2: the outcome is no longer read.
+        return None
     except ValidationError as error:
         raise SdkProtocolError(f"tool/result event has a malformed outcome: {error}") from error
 
