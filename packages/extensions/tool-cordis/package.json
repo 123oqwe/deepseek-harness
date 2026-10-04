@@ -53,5 +53,96 @@
     "@deepseek-ai/dsh-system-prompt": "workspace:^",
     "@deepseek-ai/dsh-tools": "workspace:^",
     "@deepseek-ai/cordis": "workspace:^"
+  },
+  "dsh": {
+    "manifestVersion": 2,
+    "executionMode": "in-process",
+    "compatibility": {
+      "dshVersionRange": ">=0.1.0 <0.2.0"
+    },
+    "tools": [
+      {
+        "name": "cordis_inspect_list",
+        "sideEffectClass": "read",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "cordis_inspect_query",
+        "sideEffectClass": "read",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "cordis_inspect_self",
+        "sideEffectClass": "read",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "confidential"
+      },
+      {
+        "name": "cordis_define",
+        "sideEffectClass": "write",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "confidential"
+      },
+      {
+        "name": "cordis_run",
+        "sideEffectClass": "process",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [
+          {
+            "kind": "process",
+            "commandPattern": "*"
+          },
+          {
+            "kind": "network",
+            "hostPattern": "*"
+          },
+          {
+            "kind": "filesystem",
+            "pathPattern": "/"
+          }
+        ],
+        "dataClassification": "confidential"
+      },
+      {
+        "name": "cordis_stop",
+        "sideEffectClass": "write",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "cordis_undefine",
+        "sideEffectClass": "destructive",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      }
+    ],
+    "events": [
+      {
+        "name": "agent/pre-step",
+        "mode": "waterfall"
+      }
+    ]
   }
 }

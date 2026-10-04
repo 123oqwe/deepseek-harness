@@ -88,5 +88,99 @@
     "@deepseek-ai/dsh-tools": "workspace:^",
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-session-projection": "workspace:^"
+  },
+  "dsh": {
+    "manifestVersion": 2,
+    "executionMode": "in-process",
+    "compatibility": {
+      "dshVersionRange": ">=0.1.0 <0.2.0"
+    },
+    "services": [
+      {
+        "ctxKey": "subagentModelSelection",
+        "role": "provides"
+      }
+    ],
+    "tools": [
+      {
+        "name": "subagent",
+        "sideEffectClass": "write",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "subagent_fork",
+        "sideEffectClass": "write",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "list_subagent_models",
+        "sideEffectClass": "read",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "subagent_codex",
+        "sideEffectClass": "process",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [
+          {
+            "kind": "process",
+            "commandPattern": "codex"
+          }
+        ],
+        "dataClassification": "confidential"
+      },
+      {
+        "name": "subagent_claude_code",
+        "sideEffectClass": "process",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [
+          {
+            "kind": "process",
+            "commandPattern": "claude"
+          }
+        ],
+        "dataClassification": "confidential"
+      },
+      {
+        "name": "subagent_acp",
+        "sideEffectClass": "process",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [
+          {
+            "kind": "process",
+            "commandPattern": "*"
+          }
+        ],
+        "dataClassification": "confidential"
+      }
+    ],
+    "events": [
+      {
+        "name": "subagent/provider-added",
+        "mode": "emit"
+      },
+      {
+        "name": "subagent/provider-removed",
+        "mode": "emit"
+      }
+    ]
   }
 }
