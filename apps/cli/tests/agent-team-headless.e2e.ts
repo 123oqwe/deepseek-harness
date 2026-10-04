@@ -76,9 +76,25 @@ describe('dsh run with Agent Teams enabled', () => {
         killSignal: 'SIGKILL',
         reject: false,
       })
+      // PROBE (B-727, never merge): each session log's record count and its last 60 record types, tool calls named.
+      const trail: string[] = []
+      for (const file of (await readdir(sessions, { recursive: true }).catch(() => [] as string[])).filter(entry => entry.endsWith('.jsonl'))) {
+        const types: string[] = []
+        for (const line of (await readFile(join(sessions, file), 'utf8')).split('\n').filter(Boolean)) {
+          try {
+            const record = JSON.parse(line) as { type?: unknown; data?: { name?: unknown } }
+            const name = record.data?.name
+            types.push(typeof name === 'string' ? `${String(record.type)}:${name}` : String(record.type))
+          } catch {
+            // A line torn by the SIGKILL is not JSON; name it instead.
+            types.push('<torn>')
+          }
+        }
+        trail.push(`${file} (${String(types.length)} records): ${types.slice(-60).join(' ')}`)
+      }
       expect(
         result.exitCode,
-        `dsh headless profile exited unexpectedly.\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
+        `dsh headless profile exited unexpectedly.\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}\nsessions:\n${trail.join('\n')}`,
       ).toBe(0)
       // P1-02 must[4] (question 30 (b)): the launcher names the profile's
       // workspace-linked dependency and the fixture LLM mounted by path.
