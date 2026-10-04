@@ -5,7 +5,7 @@
   },
   "generatedBy": "scripts/gen-control-protocol-schema.ts",
   "source": "packages/sdk/server/src/server.ts SERVER_PROTOCOL_SURFACE",
-  "fingerprint": "995c330e021d0f08ebbceaf74aaab7309fc5e492630930d825fe6e013682a6a1",
+  "fingerprint": "4f824421b35ba17a732c77d85a103f3e11aaa23aef0aa11c6aeb9fc7baed8a07",
   "surface": {
     "methods": [
       {
@@ -16,6 +16,16 @@
       {
         "name": "session/prompt",
         "schemaId": "sdk-protocol:SessionPromptParams",
+        "version": "1.0"
+      },
+      {
+        "name": "approval/list",
+        "schemaId": "sdk-protocol:ApprovalListParams",
+        "version": "1.0"
+      },
+      {
+        "name": "approval/decide",
+        "schemaId": "sdk-protocol:ApprovalDecideParams",
         "version": "1.0"
       },
       {
@@ -38,6 +48,11 @@
       {
         "name": "host.control",
         "schemaId": "sdk-protocol:HostControlNotification",
+        "version": "1.0"
+      },
+      {
+        "name": "approval.changed",
+        "schemaId": "sdk-protocol:ApprovalChangedNotification",
         "version": "1.0"
       },
       {

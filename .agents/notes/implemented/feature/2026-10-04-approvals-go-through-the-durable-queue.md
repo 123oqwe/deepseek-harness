@@ -24,5 +24,5 @@ Epic P2-07 acceptance[1] and acceptance[2] require that an approval runs its act
 
 ## Consequences
 
-- Every profile built on `dsh-base` mounts the SQLite store at `dshHomePath('approvals')`, so hosts that share one home share one queue. The SDK's list and decide requests, then the Run's `waiting_for_approval`, follow in later Use-slice commits.
+- Every profile built on `dsh-base` mounts the SQLite store at `dshHomePath('approvals')`, so hosts that share one home share one queue. The Run's `waiting_for_approval` follows in a later Use-slice commit.
 - The revocation runs for every agent created for a session, including a new session, where it finds nothing to revoke.

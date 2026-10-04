@@ -115,6 +115,53 @@ class ProtocolVersionRange(BaseModel):
     max: int
 
 
+class Approval(BaseModel):
+    """One approval as the SDK carries it (Epic P2-07).
+
+    Mirrors the protocol's ``SdkApproval``. ``state`` is read against the
+    server's clock, so a lapsed approval arrives as ``expired``; ``revision``
+    is what a decision names, and a decision from an older read is refused.
+    """
+
+    model_config = _KEEP_UNKNOWN
+
+    id: str
+    sessionId: str
+    runId: str | None = None
+    toolName: str
+    requestDigest: str
+    state: str
+    revision: int
+    deadlineMs: int
+
+
+class ApprovalDecision(BaseModel):
+    """``approval/decide``'s answer: the decided approval, or why the decision did not happen.
+
+    ``conflict`` is set exactly when ``ok`` is false. An approval of another
+    tenant is ``not-found``, as if it did not exist.
+    """
+
+    model_config = _KEEP_UNKNOWN
+
+    ok: bool
+    conflict: str | None = None
+    approval: Approval | None = None
+
+
+class ApprovalChanged(BaseModel):
+    """``approval.changed`` payload: an approval was recorded or moved.
+
+    Sent only to a client that declared the ``approval`` capability.
+    ``sessionId`` is at the top level, so a session subscription receives it.
+    """
+
+    model_config = _KEEP_UNKNOWN
+
+    sessionId: str
+    approval: Approval
+
+
 class InitializeResponse(BaseModel):
     model_config = _KEEP_UNKNOWN
 

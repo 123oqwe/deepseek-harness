@@ -33,18 +33,21 @@ Wire one JSON-RPC 2.0 message per `\n`-terminated line over byte streams you own
 
 ### The SDK methods
 
-Both wire ends share one method set: three client-to-server requests and four server-to-client notifications.
+Both wire ends share one method set: five client-to-server requests and six server-to-client notifications.
 
 | Direction | Method | Payload types |
 |---|---|---|
 | client→server | `initialize` | `InitializeParams` → `InitializeResult` |
 | client→server | `session/prompt` | `SessionPromptParams` → `SessionPromptResult` (durable enqueue receipt) |
+| client→server | `approval/list` | `ApprovalListParams` → `ApprovalListResult` (the connection's tenant's pending approvals) |
+| client→server | `approval/decide` | `ApprovalDecideParams` → `ApprovalDecideResult` (one compare-and-swap; another tenant's approval is `not-found`) |
 | client→server | `shutdown` | no params → `{}` |
 | server→client | `session.event` | `SessionEventNotification` (every session in the runtime, unfiltered) |
 | server→client | `session.status` | `SessionStatusNotification` (whole-agent `running`/`idle` transition) |
 | server→client | `subagent.started` | `SubagentStartedNotification` |
 | server→client | `subagent.finished` | `SubagentFinishedNotification` (in-process runs only) |
 | server→client | `host.control` | `HostControlNotification` (host-wide stop; opt-in, and the only message carrying no `sessionId`) |
+| server→client | `approval.changed` | `ApprovalChangedNotification` (opt-in by `approval`; the connection's tenant's approvals only) |
 
 `HarnessSdkRequestMap` and `HarnessSdkNotificationMap` index these shapes by method name; the package root exports them together with the transport.
 

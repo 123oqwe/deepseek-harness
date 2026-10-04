@@ -16,6 +16,8 @@ from pydantic import BaseModel
 
 from .errors import JsonRpcError, TransportClosedError
 from .models import (
+    Approval,
+    ApprovalDecision,
     CapabilityDeclaration,
     IncomingRequest,
     InitializeResponse,
@@ -34,6 +36,10 @@ HOST_LEVEL_NOTIFICATION_METHODS = frozenset({"host.control"})
 #: stop (P2-12 acceptance[3]). Opt-in: a client that does not declare it is
 #: sent no ``host.control`` at all, and reads no state off the handshake.
 HOST_CONTROL_CAPABILITY = "host-control"
+#: The capability a client declares to be told of every approval of its
+#: connection's tenant that the runtime records or moves (``approval.changed``,
+#: Epic P2-07). Opt-in, like ``host-control``.
+APPROVAL_CAPABILITY = "approval"
 #: The ``sdk-protocol:InitializeParams`` version this client writes, as
 #: ``(major, minor)``: the one ``@deepseek-ai/dsh-sdk-protocol`` states as
 #: ``INITIALIZE_PARAMS_SCHEMA_VERSION``. :meth:`HarnessClient.initialize`
@@ -234,6 +240,24 @@ class HarnessClient:
             notification_subscription=notification_subscription,
         )
         return response.messageId
+
+    def list_approvals(self, session_id: str | None = None) -> list[Approval]:
+        """List the pending approvals of the tenant this connection acts as, oldest first.
+
+        ``session_id`` narrows the list to one session's approvals.
+        """
+        payload: JsonObject = {} if session_id is None else {"sessionId": session_id}
+        return self.request("approval/list", payload, response_model=_ApprovalListResponse).approvals
+
+    def decide_approval(self, approval_id: str, revision: int, decision: str) -> ApprovalDecision:
+        """Approve or deny one approval from the revision this client read.
+
+        ``decision`` is ``"approved"`` or ``"denied"``. A decision from an
+        older read is refused as ``stale-revision``, so two clients deciding
+        one approval get one ``ok``.
+        """
+        payload: JsonObject = {"id": approval_id, "revision": revision, "decision": decision}
+        return self.request("approval/decide", payload, response_model=ApprovalDecision)
 
     def request(
         self,
@@ -637,6 +661,10 @@ class NotificationSubscription:
 
 class _SessionPromptResponse(BaseModel):
     messageId: str
+
+
+class _ApprovalListResponse(BaseModel):
+    approvals: list[Approval]
 
 
 class _ShutdownResponse(BaseModel):

@@ -23,7 +23,8 @@ import type {
   ApprovalViewer,
   ApprovalWriteResult,
 } from '@deepseek-ai/dsh-approval-store'
-import { attachedIdentity, type Session } from '@deepseek-ai/dsh-session'
+import type { IdentityContext } from '@deepseek-ai/dsh-principal'
+import { attachedIdentity, type Session, type SessionId } from '@deepseek-ai/dsh-session'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
 import type { ApprovalOutcome } from './types.ts'
 
@@ -37,7 +38,19 @@ import type { ApprovalOutcome } from './types.ts'
  * @returns the viewer every store call for this session uses.
  */
 export function approvalViewerOf(session: Session): ApprovalViewer {
-  const { actor } = manifestAttribution(attachedIdentity(session), session.id)
+  return approvalViewerOfIdentity(attachedIdentity(session), session.id)
+}
+
+/**
+ * {@link approvalViewerOf} for a caller that holds an identity rather than a
+ * session: the SDK server's connection acts as the host user its sessions act
+ * as, so it lists and decides as the viewer those sessions record.
+ * @param identity - the identity the caller acts as, or `undefined` for none.
+ * @param sessionId - the scope an anonymous principal is named after.
+ * @returns the viewer every store call for this caller uses.
+ */
+export function approvalViewerOfIdentity(identity: IdentityContext | undefined, sessionId: SessionId): ApprovalViewer {
+  const { actor } = manifestAttribution(identity, sessionId)
   return { tenant: actor.tenantId, principal: actor.id }
 }
 

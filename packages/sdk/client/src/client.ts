@@ -18,10 +18,14 @@ import {
   INITIALIZE_PARAMS_SCHEMA_VERSION,
   JsonRpcLineTransport,
   JsonRpcResponseError,
+  type ApprovalDecideParams,
+  type ApprovalDecideResult,
+  type ApprovalListParams,
   type CapabilityDowngrade,
   type InitializeParams,
   type InitializeResult,
   type SessionPromptParams,
+  type SdkApproval,
   type SdkPromptContentBlock,
 } from '@deepseek-ai/dsh-sdk-protocol'
 import { disposeRuntimeProcess } from './dispose.ts'
@@ -375,6 +379,36 @@ export class HarnessClient {
       throw new SdkProtocolError(`session/prompt returned no message id: ${JSON.stringify(result)}`)
     }
     return result.messageId
+  }
+
+  /**
+   * List the pending approvals of the tenant this connection acts as (Epic
+   * P2-07): what a client that reconnects still has to decide.
+   * @param sessionId - narrow the list to one session's approvals.
+   * @returns the pending approvals, oldest first.
+   */
+  async listApprovals(sessionId?: string): Promise<SdkApproval[]> {
+    const params: ApprovalListParams = sessionId === undefined ? {} : { sessionId }
+    const result = await this.request('approval/list', { ...params })
+    if (!isRecord(result) || !Array.isArray(result.approvals)) {
+      throw new SdkProtocolError(`approval/list returned no approvals: ${JSON.stringify(result)}`)
+    }
+    return result.approvals as SdkApproval[]
+  }
+
+  /**
+   * Approve or deny one approval from the revision this client read (Epic
+   * P2-07). A decision from an older read is refused as `stale-revision`, so
+   * two clients deciding one approval get one `ok`.
+   * @param params - the approval, the revision read, and the decision.
+   * @returns the decided approval, or why the decision did not happen.
+   */
+  async decideApproval(params: ApprovalDecideParams): Promise<ApprovalDecideResult> {
+    const result = await this.request('approval/decide', { ...params })
+    if (!isRecord(result) || typeof result.ok !== 'boolean') {
+      throw new SdkProtocolError(`approval/decide returned no outcome: ${JSON.stringify(result)}`)
+    }
+    return result as unknown as ApprovalDecideResult
   }
 
   /**

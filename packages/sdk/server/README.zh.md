@@ -71,11 +71,12 @@ Stdout 只承载 JSON-RPC 帧，客户端可以逐字节解析；诊断信息应
 |---|---|
 | [`src/index.ts`](src/index.ts) | 插件入口：`Config` schema、stdio 接线、请求分发、共享关闭与退出任务 |
 | [`src/server.ts`](src/server.ts) | `HarnessSdkJsonRpcServer`：协议方法、逐会话 agent 创建、生命周期订阅、清理 |
+| [`src/approvals.ts`](src/approvals.ts) | 由 `ctx.approvalStore` 应答的 `approval/list` 与 `approval/decide`，以及审批的线上形式 |
 | — | 不发布运行时不变式伴生入口；此展示适配器不拥有包内持久事件流；边界与回放测试覆盖协议映射。 |
 
 ### 请求流程
 
-每个协议方法在执行前都会校验输入并解析负责该请求的状态——`initialize` 保存 SDK 路由，`session/prompt` 解析存活的 agent 与会话配对并排入消息，`shutdown` 刷新响应，再 dispose 根上下文使其达到完全停稳，最后以 0 退出——共享退出任务确保竞争的 `shutdown` 请求绝不会重复 dispose 或退出。分发逻辑位于 [src/index.ts](src/index.ts) 与 [src/server.ts](src/server.ts)。
+每个协议方法在执行前都会校验输入并解析负责该请求的状态——`initialize` 保存 SDK 路由，`session/prompt` 解析存活的 agent 与会话配对并排入消息，`approval/list` 与 `approval/decide` 以本连接各会话所代表的宿主用户身份读取和判定（其他租户的审批答 `not-found`），`shutdown` 刷新响应，再 dispose 根上下文使其达到完全停稳，最后以 0 退出——共享退出任务确保竞争的 `shutdown` 请求绝不会重复 dispose 或退出。分发逻辑位于 [src/index.ts](src/index.ts) 与 [src/server.ts](src/server.ts)。
 
 ### 清理
 
