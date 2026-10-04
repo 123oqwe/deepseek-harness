@@ -1,6 +1,8 @@
 /**
  * The ExecutionWorld capability seam (Epic P3-01): the vocabulary a world is
  * described in, and the lifecycle and selection decisions over it.
+ * It also holds the typed outcome of an execution that did not succeed, and
+ * the mappings to it from control-channel facts (Epic P3-03).
  *
  * Contract only at this stage — no provider, no service mount. The local
  * provider adapting `dsh-sandbox` is P3-01's P stage (must[2]), and the
@@ -10,3 +12,5 @@
 
 export * from './types.ts'
 export * from './lifecycle.ts'
+export * from './outcome.ts'
+export * from './errors.ts'

@@ -19,6 +19,7 @@ English | [中文](README.zh.md)
 - [Selection fails closed](#selection-fails-closed)
 - [What the local provider refuses, and why that is the honest answer](#what-the-local-provider-refuses-and-why-that-is-the-honest-answer)
 - [What the mount does, and what it does not](#what-the-mount-does-and-what-it-does-not)
+- [How an execution that did not succeed is classified](#how-an-execution-that-did-not-succeed-is-classified)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 
@@ -74,6 +75,13 @@ The two vocabularies differ by one name and `filesystemForSandboxMode` translate
 
 `bindingFor` answers `undefined` — which a dispatch path reads as the fail-closed `absent` policy fact — when no provider is registered, when every provider refuses the request, when no file-effect boundary is mounted, when the chosen provider rejects the create, and when the created handle fails the check above. In the first two cases and the last, `refusalFor(agent)` says why, and `@deepseek-ai/dsh-tools`' reader records it once per session as `action/world-unbound`, so a session running without the world its deployment asked for says so in its log. `requestedCeilings()` answers which ceilings the deployment's request states whether or not a world was bound, so a caller can tell a deployment that asked for none from one whose ceiling no world here can hold.
 
+<a id="how-an-execution-that-did-not-succeed-is-classified"></a>
+## How an execution that did not succeed is classified
+
+`ExecutionOutcome` (`src/outcome.ts`) names how an execution ended other than with success (Epic P3-03): `policy_denied` (a gate refused it before it ran, with the gate and the refusing error's name), `resource_exhausted` (a memory, cpu, task, budget or ceiling limit), `timeout` (by the tool guard, the executor or the model provider), `cancelled` (by an abort, an interrupt, or a fence: the run held its work item and another holder took it over), `tool_failed` (with an exit code, signal or code), and `world_lost` (lost contact, a failed provider, or a refused lease on the work item). `retryClassOf` answers whether trying again can change it: a refusal, an exhausted budget and a cancellation are `permanent`, a deadline and a lost world `transient`, and a tool's own failure is `by-tool`.
+
+`outcomeOfToolError` and `outcomeOfModelFailure` (`src/errors.ts`) map today's control-channel facts to an outcome: a tool error's structured name and code, a model failure's code. Neither reads a result's content, so a program that prints a denial does not change the outcome its call is recorded with. A refusal name counts only with the pre-dispatch code `ABORTED_BEFORE_DISPATCH`, and a name or code the tables do not know is `tool_failed`, never a refusal. The model mapping lives here rather than in `@deepseek-ai/dsh-llm` because this package already reaches the model layer through the sandbox and the session, so the reverse edge would be a cycle.
+
 <a id="model-experience"></a>
 ## Model Experience
 
@@ -95,6 +103,7 @@ Nothing here enters the system prompt or the tool list. A world refused by polic
 - **A stated ceiling binds only where a provider can hold it, and a shell call refuses where none can.** A deployment may set `request.maxProcesses` and `request.resources` (`cpuMillicores`, a whole percent of one CPU; `memoryBytes`; `diskBytes`). The local provider refuses every ceiling, because the sandbox confines file effects and nothing else. The fenced provider (`./fenced`, mounted by `dsh-base` and consulted after local) holds cpu, memory and process ceilings where the subprocess runtime can; a disk ceiling is refused by both. Where no provider holds a stated ceiling, `bindingFor` answers `undefined` and `requestedCeilings()` still reports what was stated, so the shell tools refuse the call with `WorldCeilingsRefusedError` rather than run it unbounded. That is the honest direction: handing back a world with no ceiling to a deployment that asked for one is indistinguishable from a ceiling being honoured.
 - **A plugin can build a real fenced provider that over-claims.** `createFencedWorldProvider` is exported and takes the subprocess runtime's answer as its `enforceableLimits` option, so a plugin can build a provider that `register` admits under `fenced` while its answer claims ceilings the runtime cannot hold, and selection then chooses it for them; a spawn that needs such a ceiling is still refused by the subprocess runtime. This is the same class as P1-09's Known Limitation ⑧: a plugin in the same process holding a context is outside what the registry can check, and Trust Kernel or Fiber isolation is what bounds it.
 - **The tool guard runs after the risk gate.** On the native and code-mode dispatch paths the risk gate may ask a person before the tool runtime evaluates guards, so a person can be asked to approve a call the guard then refuses. The call still does not run.
+- **Nothing records an outcome yet.** The vocabulary and the mappings exist, but no dispatch writes one on `tool/result` yet, and a result refused by a guard or a pre-execute denial carries no structured name, so it maps to `tool_failed` until a later stage gives it one.
 - **No provider reports resource usage back.** `WorldResourcesSpec` states ceilings and `WorldOutcome` carries none of what was consumed, so a deployment cannot yet bill or alert on a world. The outcome shape is the place to add it, once a provider has real numbers to put there.
 
 ### Dev Note

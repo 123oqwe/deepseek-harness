@@ -19,6 +19,7 @@ kind: "package-reference"
 - [选择朝拒绝方向失败](#selection-fails-closed)
 - [local provider 拒绝了什么,以及为什么那才是诚实的答复](#what-the-local-provider-refuses-and-why-that-is-the-honest-answer)
 - [挂载件做什么,以及不做什么](#what-the-mount-does-and-what-it-does-not)
+- [未成功的执行如何归类](#how-an-execution-that-did-not-succeed-is-classified)
 - [Model Experience](#model-experience)
 - [已知限制与延后事项](#known-limitations-and-deferred-work)
 
@@ -74,6 +75,13 @@ attestation 交给 kernel，而不在此处验证。`WorldAttestation` 是证据
 
 `bindingFor` 在五种情况下回答 `undefined`——派发路径把它读作 fail-closed 的 `absent` 策略事实：没有注册任何 provider、所有 provider 都拒绝该请求、没有挂载文件效应边界、被选中的 provider 在 create 时拒绝，以及新建的 handle 没通过上面的核对。前两种与最后一种，`refusalFor(agent)` 说明原因，`@deepseek-ai/dsh-tools` 的读取方把它按会话记一次 `action/world-unbound`，所以一个没拿到部署所要 world 就在运行的会话，会在日志里写明这一点。`requestedCeilings()` 不论是否绑出了 world，都回答部署的请求声明了哪些上限，调用方据此区分「部署没要上限」与「要了上限、这里没有 world 守得住」。
 
+<a id="how-an-execution-that-did-not-succeed-is-classified"></a>
+## 未成功的执行如何归类
+
+`ExecutionOutcome`（`src/outcome.ts`）给出一次执行除成功之外的结束方式（Epic P3-03）：`policy_denied`（执行前被某道关卡拒绝，带着关卡和拒绝错误的名字）、`resource_exhausted`（内存、cpu、任务、预算或上限）、`timeout`（由工具调用守卫、执行器或模型提供方判定）、`cancelled`（由中止、中断或围栏造成；围栏指该 run 原本持有工作项、被另一持有者接管）、`tool_failed`（带退出码、信号或错误码），以及 `world_lost`（失去联系、提供方失败或工作项的租约被拒）。`retryClassOf` 回答再试一次能否改变结果：拒绝、预算耗尽与取消是 `permanent`，超时与失去世界是 `transient`，工具自身的失败是 `by-tool`。
+
+`outcomeOfToolError` 与 `outcomeOfModelFailure`（`src/errors.ts`）把现有控制通道的事实映射为结果：工具错误的结构化名字与错误码，模型失败的错误码。两者都不读结果内容，所以程序打印出一段拒绝文本，也改变不了它这次调用被记录的结果。拒绝名只有带着派发前错误码 `ABORTED_BEFORE_DISPATCH` 时才算数，表里不认识的名字或错误码一律是 `tool_failed`，绝不当成拒绝。模型侧的映射放在这里而不放在 `@deepseek-ai/dsh-llm`，因为本包已经经由 sandbox 与 session 依赖到模型层，反向的边会成环。
+
 <a id="model-experience"></a>
 ## Model Experience
 
@@ -95,6 +103,7 @@ attestation 交给 kernel，而不在此处验证。`WorldAttestation` 是证据
 - **声明的上限只在有 provider 守得住的地方绑定，守不住的地方 shell 调用被拒绝。**部署可以设置 `request.maxProcesses` 与 `request.resources`（`cpuMillicores` 须是一个 CPU 的整数百分比；`memoryBytes`；`diskBytes`）。local provider 对每一种上限都拒绝，因为 sandbox 治理的只有文件副作用。fenced provider（`./fenced`，由 `dsh-base` 挂载，在 local 之后被问到）在 subprocess 运行时守得住的地方守住 cpu、内存与进程数上限；磁盘上限两者都拒绝。没有 provider 守得住声明的上限时，`bindingFor` 答 `undefined`，而 `requestedCeilings()` 仍报告声明了什么，所以 shell 工具以 `WorldCeilingsRefusedError` 拒绝该调用，而不是无上限地运行它。这是诚实的方向：把一个没有上限的 world 交给一个要求上限的部署，与「上限被遵守」长得一模一样。
 - **插件可以造一个会夸大的真 fenced provider。**`createFencedWorldProvider` 是导出的，它把 subprocess 运行时的答复当作 `enforceableLimits` 选项接收，所以插件可以造出一个 `register` 会以 `fenced` 收下的 provider，而它的答复声称守得住运行时守不住的上限，选择随后会为这些上限选中它；需要这类上限的 spawn 仍会被 subprocess 运行时拒绝。这与 P1-09 的 Known Limitation ⑧ 同一类：同一进程里持有 context 的插件，在注册表能核对的范围之外，要靠 Trust Kernel 或 Fiber 隔离来约束。
 - **工具 guard 在风险闸之后才运行。**在原生与 code-mode 两条派发路径上，风险闸可能在工具运行时评估 guard 之前就去问人，所以一个人可能被请求批准一次随后被 guard 拒绝的调用。该调用仍然不会运行。
+- **还没有地方记录结果。** 词表与映射已经有了，但还没有哪次派发把它写进 `tool/result`；被守卫或 pre-execute 拒绝的结果也不带结构化名字，所以在后续阶段给它名字之前，它映射为 `tool_failed`。
 - **没有 provider 回报资源用量。** `WorldResourcesSpec` 陈述上限，而 `WorldOutcome` 不携带任何已消耗量，因此部署还无法对一个 world 计费或告警。结果形状就是将来添加它的地方，等某个 provider 真有数字可填。
 
 ### 开发备注
