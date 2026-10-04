@@ -4927,9 +4927,9 @@
       "path": "packages/subagent/subagent/src/continuation-activation.ts",
       "kind": "source",
       "stages": [
-        "U.5",
+        "U.8",
         "U.7",
-        "U.8"
+        "U.5"
       ],
       "reason": "Where a starting parent redelivers the settlements it acked and never recorded (B-676, BLOCKED-350): each acked settlement's arrival key is compared with the parent's record, and the ones missing wake the parent. U.5 (A-566) observes it on the shipped headless composition, and M-676-1′ changes it. NOT labelled HOT ZONE: P4-06 reads this file here, and the change is B-676's own."
     },
@@ -4958,8 +4958,8 @@
       "kind": "source",
       "stages": [
         "U.4",
-        "U.7",
-        "U.8"
+        "U.8",
+        "U.7"
       ],
       "reason": "The send side's producer. The outbox decisions ran over records nothing created — `dispatchOnce`'s only caller shipped in no bundle — while the one real handoff between agents was delivered by hand and dropped whenever the parent could not receive it. This commits the settlement before anyone tries to deliver it."
     },
@@ -5032,8 +5032,8 @@
       "path": "tests/first100/fixtures/P4-06.settlement-crash.composition.spec.ts",
       "kind": "test",
       "stages": [
-        "U.5",
-        "U.8"
+        "U.8",
+        "U.5"
       ]
     },
     {

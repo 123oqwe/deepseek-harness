@@ -22017,7 +22017,8 @@
         "mutationDescription": "M-676-1′ `feff899d65718bcbb02a9e6c5aadc6400202dbdc` (parent 518cf957b8ac4a1fe1ce40485a68a036c48d79bb, batch 26's code tip; the same one-line change as M-676-1 `60bb0f10d1`, whose own parent no longer matches): a starting parent treats every acked settlement as recorded, so none is redelivered (packages/subagent/subagent/src/continuation-activation.ts). A-416: 518cf957b8 and the tree this entry is frozen on differ only under spec/first100/exec/, and this entry lists no file there.",
         "failureSummary": "Read from each round's own narrow report over this entry's argv; every round carried build. M-676-1′ run 37104583785: 1 passed, 1 failed: «P4-06 acceptance[0]: a settlement acked around a host crash still takes effect exactly once the settlement acked before its flush, then lost to the crash, still takes effect exactly once after the restart»."
       },
-      "note": "P4-06 U-stage supplement 5: acceptance[0] (BLOCKED-350) on the shipped headless composition. A settlement acked before the parent recorded it, then lost to a host crash, still takes effect exactly once after the restart; control: one whose flush survived the crash is recorded exactly once. Lane A's A-566 (red first for B-676)."
+      "note": "P4-06 U-stage supplement 5: acceptance[0] (BLOCKED-350) on the shipped headless composition. A settlement acked before the parent recorded it, then lost to a host crash, still takes effect exactly once after the restart; control: one whose flush survived the crash is recorded exactly once. Lane A's A-566 (red first for B-676).",
+      "supersededBy": "2026-10-04T09:23:06.000Z"
     },
     {
       "epic": "P4-06",
@@ -22822,7 +22823,8 @@
         "mutationDescription": "M-a585-1 drops the target filter from settlementsInState, so a parent that drains takes every owed settlement, its own and another parent's. A-416: each mutated file and this entry's files are byte-identical at the rounds' parent aa7dbb02db91841ae50e638706c346fed862cd4d, which is the code tip of batch 28, and at the tree this entry is frozen on.",
         "failureSummary": "Read from each round's own narrow report; every round carried build. M-a585-1 `dbef98fed32e5610f17e05ac5d14b88448841d26` run 37159030854 (drops the target filter from settlementsInState, so a parent that drains takes every owed settlement, its own and another parent's): 1 passed, 1 failed in packages/subagent/subagent/tests/cross-tenant-settlement-isolation.spec.ts: «P4-06 acceptance[2]: a settlement is consumed only by its own parent, never cross-tenant ② the isolation survives a restart: settlements owed at shutdown reach only their own parent on resume»."
       },
-      "note": "P4-06 U-stage supplement 7: acceptance[2] (a cross-tenant message cannot be consumed) on shipped plugins assembled in-process (agent loop, message bus, JSONL session persistence, subagent runtime and in-process spawn), not started through the headless launcher. Two parents each start a child, the host stops with both settlements owed, and on resume each parent's durable log carries only its own child's settlement. Case ① of the same file (both parents live) runs under this argv but is not frozen: each live settlement is committed and drained synchronously, so no drain sees two owed rows and no mutation of the target filter reddens it (gate3 2026-10-04T02:08:28Z). Lane A's A-585 with its timing fix c1fb0ad6e1. dryRunProof: batch 28's full run 37158956685 on aa7dbb02db91841ae50e638706c346fed862cd4d."
+      "note": "P4-06 U-stage supplement 7: acceptance[2] (a cross-tenant message cannot be consumed) on shipped plugins assembled in-process (agent loop, message bus, JSONL session persistence, subagent runtime and in-process spawn), not started through the headless launcher. Two parents each start a child, the host stops with both settlements owed, and on resume each parent's durable log carries only its own child's settlement. Case ① of the same file (both parents live) runs under this argv but is not frozen: each live settlement is committed and drained synchronously, so no drain sees two owed rows and no mutation of the target filter reddens it (gate3 2026-10-04T02:08:28Z). Lane A's A-585 with its timing fix c1fb0ad6e1. dryRunProof: batch 28's full run 37158956685 on aa7dbb02db91841ae50e638706c346fed862cd4d.",
+      "supersededBy": "2026-10-04T09:23:06.000Z"
     },
     {
       "epic": "P1-07",
@@ -23203,6 +23205,84 @@
         "failureSummary": "3 of 6 failed: `drops a REDELIVERY ...` and `still drops the redelivery after a RESTART ...` both AssertionError: expected 'deliver' to be 'drop'; `reads the seen-set at DECISION time ...` AssertionError: expected [ 'deliver', 'deliver' ] to deeply equal [ 'deliver', 'drop' ]. The 3 that still passed are the ones that do not depend on the durable set (first delivery, later epoch, wrong addressee), which is the expected split rather than a gap. Mutation reverted immediately; `git diff --stat` on the file was empty and the command returned 6 passed (6) before continuing."
       },
       "note": "P4-06 U-stage supplement 2, replaced for its note alone (A-584). must[2]'s dedup is observed on the shipped path by the agent inbox's consumer fold, which consumes a message only when it is recorded, keyed by (source, messageId, epoch): packages/core/agent-loop/src/inbox.ts:94-102 moves the key from claimed to consumed when the message's user/message is recorded, and :396 refuses an already-consumed key. classifyIntake and decideMailboxDelivery have no caller on the shipped product (A-584), so they are NOT must[2]'s production call site; the mailbox-classification cases this entry runs exercise them as a library-level observation only (Known Limitation). sensitivityProof carries over from the entry it replaces: the change is to the note alone. The observing tree is pinned at refs/dsh/freeze/P4-06.U.2/2026-10-04T06-01-20.000Z -> 7b008b27ba1eae2d7bf2de0e91cc2028d9f76f2f, whose tree is dryRunProof.treeSha."
+    },
+    {
+      "epic": "P4-06",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-06",
+        "stage": "U"
+      },
+      "supplementSeq": 7,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/subagent/subagent/tests/cross-tenant-settlement-isolation.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-06 acceptance[2]: a settlement is consumed only by its own parent, never cross-tenant ② the isolation survives a restart: settlements owed at shutdown reach only their own parent on resume"
+      ],
+      "files": [
+        "packages/subagent/subagent/tests/cross-tenant-settlement-isolation.spec.ts",
+        "packages/subagent/subagent/tests/persistence-helpers.ts",
+        "packages/core/agent-loop/tests/mock-adapter.ts",
+        "packages/subagent/subagent/src/settlement-outbox.ts",
+        "packages/subagent/subagent/src/continuation-activation.ts"
+      ],
+      "frozenAtUtc": "2026-10-04T09:23:06.000Z",
+      "supersedes": "2026-10-04T02:15:13.000Z",
+      "supersessionReason": "S9: the predecessor's sensitivityProof (M-a585-1, run 37159030854) turned case ② red by a testTimeout before it reached the cross-tenant assertion, not by that assertion (gate3 2026-10-04T05:16:39Z). Lane A reshaped ② so its synchronisation waits on a bounded delivery count (317c9bcc0e), and made its restart precondition deterministic: the first process's children hang until after dispose, so both settlements are owed at shutdown (b4595550ae, after 28r2's first full run 37181848952 reddened ② on that precondition; no assertion changed). The case title is unchanged. M-a585-1 v3, re-hung on that spec, turns ② red on the subject assertion (run 37187222251). The spec file and the proof change; argv, files, expected exit, cases and note are the predecessor's.",
+      "dryRunProof": {
+        "treeSha": "9747777eed501435f190e4a41cfbd3a1915e5fbe",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-a585-1 v3 `9c35617173b4317601daf7420711ad7a4f43b844` (parent 61ecaf02d9c5d0d5ac725260a986a81fde8882df, lane A's reshaped ② with its deterministic restart precondition, on the 28r tip) drops only the target filter from settlementsInState (`row.target === parentSessionId &&`, packages/subagent/subagent/src/settlement-outbox.ts), so a parent that drains takes every owed settlement, its own and another parent's. A-416: each mutated file and this entry's files are byte-identical at the round's parent and at the tree this entry is frozen on.",
+        "failureSummary": "Read from the round's own narrow report over this entry's argv; the round carried build. Run 37187222251: 1 passed, 1 failed in packages/subagent/subagent/tests/cross-tenant-settlement-isolation.spec.ts: «P4-06 acceptance[2]: a settlement is consumed only by its own parent, never cross-tenant ② the isolation survives a restart: settlements owed at shutdown reach only their own parent on resume», on its subject assertion at cross-tenant-settlement-isolation.spec.ts:201:23 (`expect(a, detail).toEqual([childA.childId])`: parent A's log held both children's settlements), not on a timeout or a synchronisation gate."
+      },
+      "note": "P4-06 U-stage supplement 7: acceptance[2] (a cross-tenant message cannot be consumed) on shipped plugins assembled in-process (agent loop, message bus, JSONL session persistence, subagent runtime and in-process spawn), not started through the headless launcher. Two parents each start a child, the host stops with both settlements owed, and on resume each parent's durable log carries only its own child's settlement. Case ① of the same file (both parents live) runs under this argv but is not frozen: each live settlement is committed and drained synchronously, so no drain sees two owed rows and no mutation of the target filter reddens it (gate3 2026-10-04T02:08:28Z). Lane A's A-585 with its timing fix c1fb0ad6e1. dryRunProof: batch 28's full run 37158956685 on aa7dbb02db91841ae50e638706c346fed862cd4d."
+    },
+    {
+      "epic": "P4-06",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-06",
+        "stage": "U"
+      },
+      "supplementSeq": 5,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-06.settlement-crash.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-06 acceptance[0]: a settlement acked around a host crash still takes effect exactly once control: the settlement whose flush survived the crash is in the parent's record exactly once after the restart",
+        "P4-06 acceptance[0]: a settlement acked around a host crash still takes effect exactly once the settlement acked before its flush, then lost to the crash, still takes effect exactly once after the restart"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-06.settlement-crash.composition.spec.ts",
+        "packages/subagent/subagent/src/continuation-activation.ts"
+      ],
+      "frozenAtUtc": "2026-10-04T09:23:06.000Z",
+      "supersedes": "2026-10-03T07:03:11.000Z",
+      "supersessionReason": "A-416: A-603 (frozen in 28r as U.8 [489]) changed this entry's spec file, adding the crash-before-ack variant, so the predecessor's sensitivityProof (M-676-1′, run 37104583785, parent 518cf957b8) no longer comes from a tree whose files match. M-676-1′ v2 is the same one-line change re-hung on the 28r tip, which carries A-603, and turns this entry's case red on its subject (run 37181363899; delegate 2026-10-04). Only the proof changes; argv, files, expected exit, cases and note are the predecessor's.",
+      "dryRunProof": {
+        "treeSha": "9747777eed501435f190e4a41cfbd3a1915e5fbe",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-676-1′ v2 `46ddf225f7a89553a0e14e0471a0c1628ce4cb7e` (parent 7b008b27ba1eae2d7bf2de0e91cc2028d9f76f2f, the 28r tip, which carries A-603's change to this entry's spec): a starting parent treats every acked settlement as recorded, so none is redelivered (packages/subagent/subagent/src/continuation-activation.ts). A-416: each mutated file and this entry's files are byte-identical at the round's parent and at the tree this entry is frozen on.",
+        "failureSummary": "Read from the round's own narrow report over this entry's argv; the round carried build. Run 37181363899: 2 passed, 1 failed in tests/first100/fixtures/P4-06.settlement-crash.composition.spec.ts: «P4-06 acceptance[0]: a settlement acked around a host crash still takes effect exactly once the settlement acked before its flush, then lost to the crash, still takes effect exactly once after the restart», on its subject assertion at P4-06.settlement-crash.composition.spec.ts:115:82 (the settlement lost to the crash took no effect after the restart)."
+      },
+      "note": "P4-06 U-stage supplement 5: acceptance[0] (BLOCKED-350) on the shipped headless composition. A settlement acked before the parent recorded it, then lost to a host crash, still takes effect exactly once after the restart; control: one whose flush survived the crash is recorded exactly once. Lane A's A-566 (red first for B-676)."
     }
   ]
 }
