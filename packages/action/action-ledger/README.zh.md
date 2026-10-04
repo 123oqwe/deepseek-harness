@@ -52,9 +52,9 @@ tool result 记录的是 harness 观察到的东西，它记录不了外部世�
 <a id="a-retry-under-a-new-call-id-is-the-same-action"></a>
 ## 换一个 call id 重试仍是同一个动作
 
-键由 call id 算出，所以模型换一个 call id 重试一个结果未知的动作，带来的是一个新键。因此预留还带上自己的 capability，以及发出它那一代的租约所属的 run。同一 scope 下另一个键的记录若记着同一个 capability 与参数，并且是 `ambiguous`（不论哪个 run），或是同一个 run 里更旧的代持有的 `sent`，`reserve` 就以 `ambiguous-needs-reconciliation` 拒绝（`sameActionBlockers`，B-726）。每条这样的 `sent` 在同一事务里改成 `ambiguous`。租约的 epoch 按 run 各自计数，所以别的 run 或这一代的 `sent` 可能正在途，不挡这次预留。已结清的记录不挡，参数不同、工具不同的记录也不挡。没有带 capability 的预留只按键匹配。
+键由 call id 算出，所以模型换一个 call id 重试一个结果未知的动作，带来的是一个新键。因此预留还带上自己的 capability，以及发出它那一代的租约所属的 run。同一 scope 下另一个键的记录若记着同一个 capability 与参数，并且是因崩溃而结果不可知的 `ambiguous`（成因 `interrupted` 或 `fenced`，不论哪个 run），或是同一个 run 里更旧的代持有的 `sent`，`reserve` 就以 `ambiguous-needs-reconciliation` 拒绝（`sameActionBlockers`，B-726）。每条这样的 `sent` 在同一事务里改成 `ambiguous`。租约的 epoch 按 run 各自计数，所以别的 run 或这一代的 `sent` 可能正在途，不挡这次预留。已结清的记录不挡，参数不同、工具不同的记录也不挡。没有带 capability 的预留只按键匹配。分发路径因工具报错而标成 `ambiguous` 的记录（成因 `errored`）只挡它自己的键：它的结果是已知的失败，记成 ambiguous 只因为失败也可能已经提交。
 
-`markInterrupted` 在一个事务里，把恢复的会话以中断关掉（`TOOL_OUTCOME_UNKNOWN`）的调用的 `sent` 记录改成 `ambiguous`，让它们在任何重试之前就列入对账。它不比代：恢复在修复日志之前先拿到了会话的写所有权，所以记下这个调用的持有者已经不再写那个会话；它若还在运行，之后的 `confirm` 会被拒。文件的 schema 版本是 3，更旧的文件在打开时被拒。
+`markInterrupted` 在一个事务里，把恢复的会话以中断关掉（`TOOL_OUTCOME_UNKNOWN`）的调用的 `sent` 记录改成 `ambiguous`，成因记为 `interrupted`，让它们在任何重试之前就列入对账。`reserve` 转的 `sent`（第 33 题 (a)，或另一个键在同一个 run 里更旧的代）成因记为 `fenced`。它不比代：恢复在修复日志之前先拿到了会话的写所有权，所以记下这个调用的持有者已经不再写那个会话；它若还在运行，之后的 `confirm` 会被拒。文件的 schema 版本是 3，更旧的文件在打开时被拒。
 
 <a id="the-host-user-resolves-an-ambiguous-effect"></a>
 ## 宿主用户消解 ambiguous 的副作用
@@ -78,6 +78,7 @@ tool result 记录的是 harness 观察到的东西，它记录不了外部世�
 - **回执摘要算的是工具自己的内容**,也就是 harness 观察到的东西,而不是 provider 返回的东西。在传输携带真实回执之前,这个摘要证明的是"同一个结果被记录了两次",而不是"外部世界只提交了一次"。
 - **`ambiguous` 分不清"不可知"与"仅仅是失败了"。**派发路径对每一个出错的工具结果都写它,这是 fail-closed 的读法:抛错的工具可能提交了,也可能没有。要区分"请求根本没发出去"与"结果确实不可知",需要本包没有的目标状态查询。
 - **没有 lease 时,must[2] 不成立。**只有 Run Service 会分配 lease 代,所以不挂载它的 profile——`sdk-minimal` 出厂就不带——预留时是 unfenced 的,那里两个并发 worker 可以同时持有一条预留并且都发送。账本把这件事报成决定上的 `fenced: false`,而不是默默承诺一个它给不出的排他性;session 日志里它表现为一条没有 `leaseEpoch` 的 `action/manifest-appended` 事件。要让这些 profile 也拿到这条保证,需要它们没有的代来源。
+- **工具报错之后换一个 call id 重试，照常执行。**`errored` 的记录只挡它自己的键，所以失败的那一次若其实已经提交，换 id 的同一动作可能再执行一次。这是「每个错误都按 ambiguous 记」的既有限制；B-726 不使它扩大。
 - **没人恢复的会话，它滞留的 `sent` 记录一直留着。**那个会话恢复时它们才改成 `ambiguous`。在那之前，别的会话的重试只有在同一个 run、更新的代下才会碰到它们。
 - 不发布 runtime invariant companion:本包不持有状态、也不观测任何东西,因此不存在两个观测者可能产生分歧的自有关系。
 

@@ -84,6 +84,22 @@ export type LedgerState =
  */
 export type LedgerScope = PrincipalId
 
+/**
+ * Why an entry became `ambiguous` (B-726).
+ *
+ * The first two mean a crash left the outcome unknown; the third means the
+ * tool reported a failure, which is recorded as `ambiguous` only because a
+ * failure may still have committed. A retry under another key is stopped by
+ * the first two alone.
+ */
+export type LedgerAmbiguityCause =
+  /** A resumed session closed the call as interrupted (TOOL_OUTCOME_UNKNOWN) while its entry was `sent`. */
+  | 'interrupted'
+  /** A newer generation of the same run found the entry `sent` by a holder whose lease had lapsed (question 33 (a)). */
+  | 'fenced'
+  /** The tool's result was an error. */
+  | 'errored'
+
 /** One ledger row: an external effect and what is known about it. */
 export interface LedgerEntry {
   /** The principal this key belongs to; keys are unique within a scope, never across. */
@@ -98,6 +114,8 @@ export interface LedgerEntry {
   readonly capability?: CapabilityRef
   /** The run whose lease issued `epoch`, when the holder had one; epochs compare only within one run. */
   readonly leaseRun?: RunId
+  /** Why the entry became `ambiguous`; absent for an entry that never was. */
+  readonly cause?: LedgerAmbiguityCause
   /** Present once a receipt has been seen; absent in every other state. */
   readonly receiptDigest?: ReceiptDigest
   /** Present once the host user has resolved the entry out of `ambiguous`; absent otherwise. */

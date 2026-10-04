@@ -265,7 +265,8 @@ export default class ActionLedgerPlugin extends Service {
   }
 
   /**
-   * Record that retrying cannot determine the outcome.
+   * Record that retrying cannot determine the outcome, with the cause `errored`:
+   * the dispatch path calls it for a tool result that is an error.
    * @param scope - the reservation's owning principal.
    * @param key - the idempotency key.
    * @param epoch - the generation that holds the reservation, or `'unfenced'` when its holder had none.
@@ -276,7 +277,7 @@ export default class ActionLedgerPlugin extends Service {
 
   /**
    * Send the `sent` entries of calls a resumed session closed as interrupted to
-   * reconciliation, in one transaction (B-726).
+   * reconciliation, with the cause `interrupted`, in one transaction (B-726).
    * @param keys - the scoped keys of the interrupted calls' manifests.
    * @returns the entries moved to `ambiguous`.
    */

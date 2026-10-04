@@ -11,9 +11,10 @@ Status: implemented
 ## 决定
 
 - 恢复时，在追加关闭事件之前，`settleInterruptedEffects` 把每个以 `TOOL_OUTCOME_UNKNOWN` 关掉的调用的 `sent` 记录在一个事务里改成 `ambiguous`（`markInterrupted`）。`run_code` 调用的记录包括它的 code-mode 子调用，子调用的 action id 是 `<callId>:ptc:<n>`。这里不比代。恢复在修复日志之前先拿到了会话的写所有权，所以记下这个调用的持有者已经不再写这个会话。那个持有者若还在运行，它之后的 `confirm` 会被拒，因为记录已是 `ambiguous`，不会重复发送。没有代的记录也一样改。
-- 预约带上自己的 capability，以及发出它那一代的租约所属的 run。同一 scope 下另一个键的记录若记着同一个 capability 与参数，并且是 `ambiguous`（不论哪个 run），或是同一个 run 里更旧的代持有的 `sent`，`reserve` 就以 `ambiguous-needs-reconciliation` 拒绝（`sameActionBlockers`）。每条这样的 `sent` 在同一事务里改成 `ambiguous`。已结清的记录不挡，参数不同、工具不同的记录不挡，这一代或别的 run 的 `sent` 也不挡。
+- 预约带上自己的 capability，以及发出它那一代的租约所属的 run。同一 scope 下另一个键的记录若记着同一个 capability 与参数，并且是因崩溃而结果不可知的 `ambiguous`（不论哪个 run），或是同一个 run 里更旧的代持有的 `sent`，`reserve` 就以 `ambiguous-needs-reconciliation` 拒绝（`sameActionBlockers`）。每条这样的 `sent` 在同一事务里改成 `ambiguous`。已结清的记录不挡，参数不同、工具不同的记录不挡，这一代或别的 run 的 `sent` 也不挡。
 - 租约的 epoch 按 run 各自计数，所以只有同一个 run 的两代才可比。账本把这个 run 记在 epoch 旁边。
-- 账本文件的 schema 版本是 3，新增 `capability` 与 `lease_run` 两列，以及 scope、capability、参数哈希上的索引。按发布前惯例，版本 2 的文件在打开时被拒。
+- 每条 `ambiguous` 记录都记下成因：`interrupted`（恢复时转的）、`fenced`（`reserve` 从租约已失效的持有者手里转的）、`errored`（工具报了错）。只有前两种挡另一个键。`errored` 的记录照旧只挡它自己的键：它的结果是已知的失败，记成 ambiguous 只因为失败也可能已经提交。每一次原生调用都会预约，每一个错误都记成 `ambiguous`，若 `errored` 也挡别的键，日常的重试（比如文件建好之后再读一次）都会被拒，直到宿主用户结清（gate3 2026-10-04T02:45:37Z）。
+- 账本文件的 schema 版本是 3，新增 `capability`、`lease_run` 与 `cause` 三列，以及 scope、capability、参数哈希上的索引。按发布前惯例，版本 2 的文件在打开时被拒。
 - 对账答复加了一句：由宿主用户用 `/resolve-effect` 结清，不要换一个调用再做一次。
 
 ## 考虑过的替代方案
@@ -27,4 +28,5 @@ Status: implemented
 
 - 崩溃之后，会话一恢复，被打断调用的副作用就在对账清单里。在恢复的会话里，同一工具、同一参数的重试，不论带什么 call id，都会被拒，直到宿主用户结清。
 - 前一次还没结清时，有意重复同一动作也会被拒，答复里写明 `/resolve-effect`。
+- 不涵盖：工具报错之后，换一个 call id 的同一动作照常执行，所以失败的那一次若其实已经提交，可能再执行一次。这是「每个错误都记成 `ambiguous`」的既有限制，本改动不使它扩大。
 - 不涵盖：从不恢复的会话，它的 `sent` 记录一直留到恢复。在那之前，别的会话的重试只有在同一个 run、更新的代下才会碰到它们。没有带 capability 的预约只按键匹配；出厂的两条分发路径都带。

@@ -46,14 +46,25 @@ function sentFirst(dir: string): void {
 }
 
 describe('B-726: a retry under a new key is the same action while the first is unsettled', () => {
-  it('refuses the retry while another key\'s entry for the same tool and arguments is ambiguous, whatever run it came from', () => {
+  it('refuses the retry while another key\'s entry for the same tool and arguments was left ambiguous by a crash, whatever run it came from', () => {
     const dir = directory()
     sentFirst(dir)
-    openLedgerStore(dir).markAmbiguous(SCOPE, FIRST, epoch(1))
+    openLedgerStore(dir).markInterrupted([{ scope: SCOPE, key: FIRST }])
     const ledger = openLedgerStore(dir)
+    expect(ledger.entry(SCOPE, FIRST)).toMatchObject({ state: 'ambiguous', cause: 'interrupted' })
     expect(ledger.reserve(request({ key: RETRY, epoch: epoch(0), leaseRun: OTHER_RUN })))
       .toEqual({ action: 'refused', reason: 'ambiguous-needs-reconciliation' })
     expect(ledger.entry(SCOPE, RETRY)).toBeUndefined()
+  })
+
+  it('lets a retry under a new key through when the first entry is ambiguous because its tool reported an error: that stops its own key only', () => {
+    const dir = directory()
+    sentFirst(dir)
+    const ledger = openLedgerStore(dir)
+    ledger.markAmbiguous(SCOPE, FIRST, epoch(1))
+    expect(ledger.entry(SCOPE, FIRST)).toMatchObject({ state: 'ambiguous', cause: 'errored' })
+    expect(ledger.reserve(request({ key: RETRY, epoch: epoch(2) })).action).toBe('reserved')
+    expect(ledger.reserve(request({ epoch: epoch(2) }))).toEqual({ action: 'refused', reason: 'ambiguous-needs-reconciliation' })
   })
 
   it('refuses a newer generation of the same run and moves the older generation\'s SENT entry to ambiguous in the same reservation', () => {
@@ -62,7 +73,7 @@ describe('B-726: a retry under a new key is the same action while the first is u
     const ledger = openLedgerStore(dir)
     expect(ledger.reserve(request({ key: RETRY, epoch: epoch(2) })))
       .toEqual({ action: 'refused', reason: 'ambiguous-needs-reconciliation' })
-    expect(ledger.entry(SCOPE, FIRST)).toMatchObject({ state: 'ambiguous', epoch: 1, capability: SEND, leaseRun: RUN })
+    expect(ledger.entry(SCOPE, FIRST)).toMatchObject({ state: 'ambiguous', epoch: 1, capability: SEND, leaseRun: RUN, cause: 'fenced' })
     expect(ledger.listAmbiguous(SCOPE).map(entry => entry.key)).toEqual([FIRST])
     expect(ledger.entry(SCOPE, RETRY)).toBeUndefined()
   })
@@ -81,7 +92,7 @@ describe('B-726: a retry under a new key is the same action while the first is u
     const dir = directory()
     sentFirst(dir)
     const ledger = openLedgerStore(dir)
-    ledger.markAmbiguous(SCOPE, FIRST, epoch(1))
+    ledger.markInterrupted([{ scope: SCOPE, key: FIRST }])
     expect(ledger.reserve(request({ key: RETRY, argumentsHash: brandString<ArgumentsHash>('sha256-other') })).action).toBe('reserved')
     expect(ledger.reserve(request({ key: brandString<IdempotencyKey>('other-tool'), capability: brandString<CapabilityRef>('read_mail') })).action).toBe('reserved')
     ledger.confirm(SCOPE, FIRST, epoch(1), brandString<ReceiptDigest>('resolved'), { outcome: 'confirmed', resolvedBy: SCOPE, resolvedAt: 1 })
@@ -91,7 +102,7 @@ describe('B-726: a retry under a new key is the same action while the first is u
   it('matches a request that names no capability by its key alone', () => {
     const dir = directory()
     sentFirst(dir)
-    openLedgerStore(dir).markAmbiguous(SCOPE, FIRST, epoch(1))
+    openLedgerStore(dir).markInterrupted([{ scope: SCOPE, key: FIRST }])
     const unnamed: ReserveRequest = { scope: SCOPE, key: RETRY, argumentsHash: ARGS, epoch: epoch(1), leaseRun: RUN }
     expect(openLedgerStore(dir).reserve(unnamed).action).toBe('reserved')
   })
@@ -111,7 +122,7 @@ describe('B-726: a resumed session sends its interrupted calls\' effects to reco
       { scope: SCOPE, key: settled },
       { scope: SCOPE, key: brandString<IdempotencyKey>('never-reserved') },
     ])
-    expect(moved.map(entry => [entry.key, entry.state, entry.epoch])).toEqual([[FIRST, 'ambiguous', 1]])
+    expect(moved.map(entry => [entry.key, entry.state, entry.epoch, entry.cause])).toEqual([[FIRST, 'ambiguous', 1, 'interrupted']])
     expect(ledger.entry(SCOPE, settled)?.state).toBe('confirmed')
     expect(ledger.reserve(request({ key: RETRY, epoch: epoch(0), leaseRun: OTHER_RUN })))
       .toEqual({ action: 'refused', reason: 'ambiguous-needs-reconciliation' })
@@ -131,7 +142,7 @@ describe('B-726: a resumed session sends its interrupted calls\' effects to reco
 
 describe('B-726: sameActionBlockers decides from the entries it is given', () => {
   const entry = (over: Partial<LedgerEntry>): LedgerEntry =>
-    ({ scope: SCOPE, key: FIRST, argumentsHash: ARGS, state: 'ambiguous', epoch: epoch(1), capability: SEND, leaseRun: RUN, ...over })
+    ({ scope: SCOPE, key: FIRST, argumentsHash: ARGS, state: 'ambiguous', epoch: epoch(1), capability: SEND, leaseRun: RUN, cause: 'interrupted', ...over })
   const retry = request({ key: RETRY, epoch: epoch(2) })
 
   it('returns nothing for a request that names no capability', () => {
@@ -139,8 +150,12 @@ describe('B-726: sameActionBlockers decides from the entries it is given', () =>
     expect(sameActionBlockers(unnamed, [entry({})])).toEqual([])
   })
 
-  it('keeps only another key\'s unsettled entry for the same scope, tool and arguments', () => {
-    const blocking = [entry({}), entry({ key: brandString<IdempotencyKey>('older-sent'), state: 'sent' })]
+  it('keeps only another key\'s entry for the same scope, tool and arguments whose outcome a crash left unknown', () => {
+    const blocking = [
+      entry({}),
+      entry({ key: brandString<IdempotencyKey>('older-sent'), state: 'sent' }),
+      entry({ key: brandString<IdempotencyKey>('fenced'), cause: 'fenced' }),
+    ]
     const passing = [
       entry({ key: RETRY }),
       entry({ key: brandString<IdempotencyKey>('other-scope'), scope: brandString<PrincipalId>('someone-else') }),
@@ -150,11 +165,12 @@ describe('B-726: sameActionBlockers decides from the entries it is given', () =>
       entry({ key: brandString<IdempotencyKey>('same-generation'), state: 'sent', epoch: epoch(2) }),
       entry({ key: brandString<IdempotencyKey>('other-run'), state: 'sent', leaseRun: OTHER_RUN }),
       entry({ key: brandString<IdempotencyKey>('unfenced-holder'), state: 'sent', epoch: 'unfenced' }),
+      entry({ key: brandString<IdempotencyKey>('errored'), cause: 'errored' }),
     ]
     expect(sameActionBlockers(retry, [...blocking, ...passing])).toEqual(blocking)
     const { leaseRun: _run, ...runless } = retry
     void _run
-    expect(sameActionBlockers({ ...runless, epoch: 'unfenced' }, blocking)).toEqual([blocking[0]])
+    expect(sameActionBlockers({ ...runless, epoch: 'unfenced' }, blocking)).toEqual([blocking[0], blocking[2]])
   })
 })
 
