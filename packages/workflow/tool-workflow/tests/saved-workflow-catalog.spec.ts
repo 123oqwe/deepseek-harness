@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { agentEvents } from '@deepseek-ai/dsh-agent'
 import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
+import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { UserMessage } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
@@ -118,6 +119,15 @@ describe('B-729: the saved-workflow catalog reaches the model through a durable 
     engine.entries = [ENTRY, { name: 'triage', digest: 'sha256-5678' }]
     const [changed] = catalogs(await step(ctx, agent))
     expect(textOf(changed)).toContain('- name: triage, digest: sha256-5678')
+  })
+
+  it('counts only its own catalog as published, not a turn event or the user\'s message', async () => {
+    const { ctx, agent } = await setup()
+    ;(ctx.workflowEngine as ListingEngine).entries = [ENTRY]
+    agent.session.append('turn/start', { turn: 1 })
+    agent.session.append('user/message', createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }), { surfaceOp: 'append' })
+
+    expect(catalogs(await step(ctx, agent))).toHaveLength(1)
   })
 
   it('publishes nothing with nothing to list, no loader and no earlier catalog', async () => {
