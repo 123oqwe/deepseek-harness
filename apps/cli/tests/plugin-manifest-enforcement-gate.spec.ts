@@ -35,6 +35,7 @@ import {
   resolveProfileFeatureGates,
   type AdmissionDecisionRecord,
 } from '../src/profile-boot.ts'
+import { lockStagedPackages } from './fixtures/locked-profile.ts'
 
 const REPOSITORY_ROOT = fileURLToPath(new URL('../../../', import.meta.url))
 
@@ -106,6 +107,8 @@ describe('plugin-manifest-enforcement gate: shadow', () => {
     initProfile(dir, ['denied-plugin', 'admitted-plugin'], DEFAULT_PROFILE_PATCH_RELOAD)
     stageBundlePackage(dir, 'denied-plugin', {}, '- id: denied-row\n  name: cordis:noop\n')
     stageBundlePackage(dir, 'admitted-plugin', BENIGN_MANIFEST, '- id: admitted-row\n  name: cordis:noop\n')
+    // A profile-local package loads only once the profile's lock records it (P1-03 must[2]).
+    await lockStagedPackages(dir, ['denied-plugin', 'admitted-plugin'])
 
     const off = await composeProfile('demo', [], 'off')
     expect(readShadowRecords()).toEqual([])
@@ -246,6 +249,8 @@ describe('plugin-manifest-enforcement gate: the rows user patch layers mount (B-
   it('shadow composes every row and records the rows enforce would refuse', async () => {
     const dir = stagePatchedProfile()
     writeFileSync(join(dir, 'cordis.patch.yml'), PROFILE_ROWS)
+    // A profile-local package loads only once the profile's lock records it (P1-03 must[2]).
+    await lockStagedPackages(dir, ['manifestless-plugin', 'declared-plugin'])
 
     const composed = await composeProfile('patched', [], 'shadow')
 
@@ -292,6 +297,8 @@ describe('plugin-manifest-enforcement gate: the rows user patch layers mount (B-
       '',
     ].join('\n'))
     const files = [profileFile, homeFile, overlay]
+    // Lock what the boot loads: admission excludes every manifestless-plugin row before the lock gate judges anything.
+    await lockStagedPackages(dir, ['declared-plugin'])
     const before = files.map(file => readFileSync(file, 'utf8'))
 
     const { value: composed, stderr } = await captureStderr(() => composeProfile('patched', [overlay], 'enforce'))
@@ -331,6 +338,8 @@ describe('plugin-manifest-enforcement gate: the rows user patch layers mount (B-
       '    - name: manifestless-plugin',
       '',
     ].join('\n'))
+    // Lock what the boot loads: admission excludes the swapped-in manifestless-plugin row before the lock gate judges anything.
+    await lockStagedPackages(dir, ['declared-plugin'])
 
     const { value: composed, stderr } = await captureStderr(() => composeProfile('patched', [], 'enforce'))
 
@@ -346,6 +355,8 @@ describe('plugin-manifest-enforcement gate: the rows user patch layers mount (B-
     // A packaged install's proxy: its `dsh` field holds only `moduleFallback`.
     stagePluginPackage(dir, '@deepseek-ai/dsh-headless', { moduleFallback: { targets: {} } })
     writeFileSync(join(dir, 'cordis.patch.yml'), '- insert:\n    - id: proxied-row\n      name: "@deepseek-ai/dsh-headless"\n')
+    // Staged in the profile's own node_modules, the proxy is a profile-local package to the lock gate (P1-03 must[2]).
+    await lockStagedPackages(dir, ['@deepseek-ai/dsh-headless'])
 
     await composeProfile('patched', [], 'shadow')
 
@@ -388,6 +399,8 @@ describe('plugin-manifest-enforcement gate: the installation\'s wildcard grants 
     const dir = resolveProfileDir('granted')
     initProfile(dir, ['@deepseek-ai/dsh-base', 'denied-plugin'], DEFAULT_PROFILE_PATCH_RELOAD)
     stageBundlePackage(dir, 'denied-plugin', {}, '- id: denied-row\n  name: cordis:noop\n')
+    // A profile-local package loads only once the profile's lock records it (P1-03 must[2]).
+    await lockStagedPackages(dir, ['denied-plugin'])
 
     await composeProfile('granted', [], 'shadow')
 

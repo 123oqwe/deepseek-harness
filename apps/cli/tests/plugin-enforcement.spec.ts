@@ -19,6 +19,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { FiberState } from '@deepseek-ai/cordis'
 import { boot, DEFAULT_PROFILE_PATCH_RELOAD, initProfile, resolveProfileDir } from '@deepseek-ai/dsh-app-boot'
 import { applyPostMountPluginEnforcement, composeProfile } from '../src/profile-boot.ts'
+import { lockStagedPackages } from './fixtures/locked-profile.ts'
 
 const REPOSITORY_ROOT = fileURLToPath(new URL('../../../', import.meta.url))
 
@@ -62,6 +63,8 @@ describe('composeProfile: real pre-mount admission (must[3]/acceptance[0])', () 
       executionMode: 'in-process',
       compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
     }, '- id: admitted-row\n  name: cordis:noop\n')
+    // A profile-local bundle loads only once the profile's lock records it (P1-03 must[2]).
+    await lockStagedPackages(dir, ['denied-plugin', 'admitted-plugin'])
     const composed = await composeProfile('demo', [], 'off')
     expect(composed.admittedLayerNames).toEqual(['denied-plugin', 'admitted-plugin'])
     expect(composed.deniedLayers).toEqual([])
@@ -81,6 +84,8 @@ describe('composeProfile: real pre-mount admission (must[3]/acceptance[0])', () 
       executionMode: 'in-process',
       compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
     }, '- id: admitted-row\n  name: cordis:noop\n')
+    // Lock what the boot loads: admission excludes denied-plugin before the lock gate judges anything.
+    await lockStagedPackages(dir, ['admitted-plugin'])
     const composed = await composeProfile('demo', [], 'enforce')
     expect(composed.admittedLayerNames).toEqual(['admitted-plugin'])
     // A package whose dsh field only carries dsh.bundle.patch (no

@@ -16,6 +16,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
+import { lockStagedPackages } from './fixtures/locked-profile.ts'
 
 const REPOSITORY_ROOT = fileURLToPath(new URL('../../../', import.meta.url))
 const BIN_SCRIPT = join(REPOSITORY_ROOT, 'apps/cli/src/bin.ts')
@@ -82,7 +83,7 @@ function compatDeclaration(overrides: Record<string, unknown> = {}): Record<stri
  * itself, and no path shared with a concurrently running spec.
  * @param cwd - the smoke's isolated temporary working directory.
  */
-function stageCompatProfile(cwd: string): void {
+async function stageCompatProfile(cwd: string): Promise<void> {
   const profileDir = join(cwd, '.dsh', 'profiles', 'compat')
   mkdirSync(profileDir, { recursive: true })
   writeFileSync(join(profileDir, 'package.json'), JSON.stringify({
@@ -99,6 +100,8 @@ function stageCompatProfile(cwd: string): void {
   }), BLOCKED_MARKER, false)
   // Declares nothing it cannot get, so it mounts and ends the run.
   stageBundlePlugin(profileDir, 'compat-healthy-bundle', compatDeclaration(), HEALTHY_MARKER, true)
+  // A profile-local bundle loads only once the profile's lock records it (P1-03 must[2]); the blocked one never reaches the lock gate.
+  await lockStagedPackages(profileDir, ['compat-healthy-bundle'])
 }
 
 describe('acceptance[1]: an unsatisfiable bundle\'s plugin code never runs at a real profile boot', () => {

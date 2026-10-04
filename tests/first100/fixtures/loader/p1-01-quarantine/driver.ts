@@ -30,6 +30,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { DEFAULT_PROFILE_PATCH_RELOAD, initProfile, loadLayeredEnv, resolveProfileDir } from '@deepseek-ai/dsh-app-boot'
 import { runProfile } from '../../../../../apps/cli/src/profile-boot.ts'
+import { lockStagedPackages } from '../../../../../apps/cli/tests/fixtures/locked-profile.ts'
 import { DECLARES_UNREGISTERED_LAYER, MATCH_STAYS_LAYER, MATCH_TOOL, MISMATCH_NAME, MISSING_MANIFEST_LAYER, NON_ENTRY_MISMATCH_LAYER, SUBPATH_UNDECLARED_LAYER } from './shared.ts'
 
 /** The manifest-less test plugin package the non-entry layer's patch mounts (so it is judged by that layer's manifest, not its own). */
@@ -155,6 +156,9 @@ stageSubpathLayer(profileDir, SUBPATH_UNDECLARED_LAYER, MATCH_TOOL, MISMATCH_NAM
 // registration is not associated back to this layer's manifest, so nothing is
 // compared); green after 乙.
 stageNonEntryLayer(profileDir, NON_ENTRY_MISMATCH_LAYER, NON_ENTRY_HELPER, MATCH_TOOL, MISMATCH_NAME)
+// A profile-local package loads only once the profile's lock records it (P1-03 must[2]): the four
+// admitted layers and the helper one of them mounts. The denied missing-manifest layer never reaches the lock gate.
+await lockStagedPackages(profileDir, [MATCH_STAYS_LAYER, DECLARES_UNREGISTERED_LAYER, SUBPATH_UNDECLARED_LAYER, NON_ENTRY_MISMATCH_LAYER, NON_ENTRY_HELPER])
 
 let ctx: Context | undefined
 let bootError: string | undefined

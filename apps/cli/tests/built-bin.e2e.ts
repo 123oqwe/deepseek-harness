@@ -16,6 +16,7 @@ import { entryListSchema } from '@deepseek-ai/cordis-plugin-include'
 import { execa } from 'execa'
 import * as yaml from 'js-yaml'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { lockStagedPackages } from './fixtures/locked-profile.ts'
 
 /** Published-entry acceptance for argument errors, profile lifecycle, and boot-free config dumps. */
 const repoRoot = fileURLToPath(new URL('../../../', import.meta.url))
@@ -74,7 +75,7 @@ interface ProfileLifecycleFixture {
  * dsh.profile.bundles, no dsh-base — proving out-of-box composition machinery without
  * booting the entire product tree.
  */
-function createProfileLifecycleFixture(): ProfileLifecycleFixture {
+async function createProfileLifecycleFixture(): Promise<ProfileLifecycleFixture> {
   const home = mkdtempSync(join(tmpdir(), 'dsh-profile-lifecycle-'))
   const ready = join(home, 'ready')
   const settled = join(home, 'settled')
@@ -143,6 +144,8 @@ function createProfileLifecycleFixture(): ProfileLifecycleFixture {
   for (const file of ['package.json', 'cordis.patch.yml', 'plugin.mjs']) {
     writeFileSync(join(linkTarget, file), readFileSync(join(bundleDir, file)))
   }
+  // A profile-local bundle loads only once the profile's lock records it (P1-03 must[2]).
+  await lockStagedPackages(profileDir, ['dsh-lifecycle-bundle'])
   return { home, ready, settled, disposed, interrupt }
 }
 
@@ -229,7 +232,7 @@ interface StartupFixture {
  * `@deepseek-ai/dsh-cmdline` and `commander` through the profile module
  * fallback, exactly as an installed out-of-tree bundle does.
  */
-function createStartupFixture(): StartupFixture {
+async function createStartupFixture(): Promise<StartupFixture> {
   const home = mkdtempSync(join(tmpdir(), 'dsh-profile-startup-'))
   const profileDir = join(home, 'profiles', 'startup')
   // Written straight into the installed location: a row module resolves its
@@ -302,6 +305,8 @@ function createStartupFixture(): StartupFixture {
     dsh: { profile: { bundles: ['dsh-startup-bundle'] } },
   }, undefined, 2))
   writeFileSync(join(profileDir, 'cordis.patch.yml'), '[]\n')
+  // A profile-local bundle loads only once the profile's lock records it (P1-03 must[2]).
+  await lockStagedPackages(profileDir, ['dsh-startup-bundle'])
   return {
     home,
     ready: join(home, 'ready'),
@@ -777,7 +782,7 @@ describe.skipIf(!existsSync(dshBin))('dsh BUILT bin (node lib/bin.js, no tsx)', 
   }, SPAWN_TIMEOUT_MS + 30_000)
 
   it('lets a profile without a parser ignore app arguments and dispose on a startup-time signal', async () => {
-    const fixture = createProfileLifecycleFixture()
+    const fixture = await createProfileLifecycleFixture()
     const child = startProfileLifecycle(fixture, ['--unclaimed'])
     try {
       await waitForFile(fixture.ready)
@@ -793,7 +798,7 @@ describe.skipIf(!existsSync(dshBin))('dsh BUILT bin (node lib/bin.js, no tsx)', 
   }, SPAWN_TIMEOUT_MS + 30_000)
 
   it('fully settles a custom profile, hot-reloads its patch layer with removal reverting, and disposes on a signal', async () => {
-    const fixture = createProfileLifecycleFixture()
+    const fixture = await createProfileLifecycleFixture()
     const child = startProfileLifecycle(fixture)
     const profilePatch = join(fixture.home, 'profiles', 'lifecycle', 'cordis.patch.yml')
     const configFile = join(fixture.home, 'config-echo')
@@ -845,7 +850,7 @@ describe.skipIf(!existsSync(dshBin))('dsh BUILT bin (node lib/bin.js, no tsx)', 
   }, SPAWN_TIMEOUT_MS + 30_000)
 
   it('hands the app arguments to the profile, which applies them before its rows start', async () => {
-    const fixture = createStartupFixture()
+    const fixture = await createStartupFixture()
     const child = startStartupProfile(fixture, ['--generation', 'flagged'])
     try {
       await waitForFile(fixture.ready)
@@ -861,7 +866,7 @@ describe.skipIf(!existsSync(dshBin))('dsh BUILT bin (node lib/bin.js, no tsx)', 
   }, SPAWN_TIMEOUT_MS + 30_000)
 
   it('starts a consumer on its composed value when the invocation carries no app arguments', async () => {
-    const fixture = createStartupFixture()
+    const fixture = await createStartupFixture()
     const child = startStartupProfile(fixture, [])
     try {
       await waitForFile(fixture.ready)
@@ -878,7 +883,7 @@ describe.skipIf(!existsSync(dshBin))('dsh BUILT bin (node lib/bin.js, no tsx)', 
     // A live edit recomposes every row while the provider service remains
     // active, so each config expression reads the same invocation value (a
     // served port does not move back to its composed fallback).
-    const fixture = createStartupFixture()
+    const fixture = await createStartupFixture()
     const profilePatch = join(fixture.home, 'profiles', 'startup', 'cordis.patch.yml')
     const child = startStartupProfile(fixture, ['--generation', 'flagged'])
     try {
@@ -909,7 +914,7 @@ describe.skipIf(!existsSync(dshBin))('dsh BUILT bin (node lib/bin.js, no tsx)', 
   }, SPAWN_TIMEOUT_MS + 30_000)
 
   it("prints the app's own help, starts none of its rows, and exits", async () => {
-    const fixture = createStartupFixture()
+    const fixture = await createStartupFixture()
     try {
       const result = await startStartupProfile(fixture, ['--help'])
       expect(result.exitCode).toBe(0)

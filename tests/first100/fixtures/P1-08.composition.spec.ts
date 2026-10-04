@@ -22,6 +22,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
+import { lockStagedPackages } from '../../../apps/cli/tests/fixtures/locked-profile.ts'
 
 const REPOSITORY_ROOT = fileURLToPath(new URL('../../../', import.meta.url))
 const BIN_SCRIPT = join(REPOSITORY_ROOT, 'apps/cli/src/bin.ts')
@@ -108,7 +109,7 @@ function schemaRangeAt(major: number): Record<string, unknown>[] {
  * directory's removal.
  * @param cwd - the smoke's isolated temporary working directory.
  */
-function stageCompatProfile(cwd: string): void {
+async function stageCompatProfile(cwd: string): Promise<void> {
   const profileDir = join(cwd, '.dsh', 'profiles', 'compat')
   mkdirSync(profileDir, { recursive: true })
   writeFileSync(join(profileDir, 'package.json'), JSON.stringify({
@@ -136,6 +137,8 @@ function stageCompatProfile(cwd: string): void {
     capabilities: [{ capabilityId: 'p1-08-absent-optional', necessity: 'optional', securityCritical: false }],
   }), false)
   stageBundlePlugin(profileDir, BUNDLES.healthy, compatDeclaration(), true)
+  // A profile-local bundle loads only once the profile's lock records it (P1-03 must[2]); a blocked one never reaches the lock gate.
+  await lockStagedPackages(profileDir, [BUNDLES.schemaControl.name, BUNDLES.optionalMissing.name, BUNDLES.healthy.name])
 }
 
 describe('P1-08 composition: seven declared bundles through one real `dsh --profile compat` launch', () => {
