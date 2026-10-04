@@ -10764,11 +10764,13 @@ The repository already records the problem and a version-independent guard: `scr
 
 ### BLOCKED-359 — the lock gate runs only at boot, so a live-reload edit mounts a profile-local package the lock never approved (security-related, under-refuse)
 
-**Status:** OPEN (2026-10-04). Owed; does not block A-550 or P1-03. Found by lane B while grounding A-550. Ruled by the delegate; draft `artifacts/delegate/blocked-359-draft.md`.
+**Status:** OPEN (2026-10-04). Fixed and verified on `lane-b-merge-candidate-359` (`d3ef5e48cc`); lands with the merged batch once P0-02 is decided. Does not block A-550 or P1-03. Found by lane B while grounding A-550. Ruled by the delegate; draft `artifacts/delegate/blocked-359-draft.md`.
 
 - **The gap.** A-550's gate runs in `composeProfile` at boot. On a `patchReload: live` profile (web), a row edited into `cordis.patch.yml` that names an unlocked package in the profile's `node_modules` is mounted by the reload without the lock check.
 - **Why it is not A-550's.** P1-03 must[2] reads 「生产 boot 只加载 lock 中已批准…的插件」, and acceptance[0] and [1] are about boot as well; A-550 meets the clause as written (§12, §13). The reload surface is a hardening beyond it.
 - **Closing condition.** The reload's recomposition runs the same lock gate and refuses the row, or the whole reload. Red first by the lane not writing the fix: a live reload that mounts an unlocked package is refused.
+- **The fix (c4586ebd67; 3ecf79c18f on the candidate).** `composeLive` is asynchronous and runs `enforceProfileLock` over the recomposed generation, so the reload is judged on the same inputs a boot is: the profile's dependencies, its admitted bundle layers and every module the generation's rows name. A mismatch throws, `watchUserPatches` lets the rejection refuse the whole generation, and HMR keeps the previous tree and broadcasts `hmr/config-update-failed`. The refusal names what it stops (`refusing to reload`).
+- **Evidence.** Red first 5e62de858f (the delegate's blind spec, lane B driver): pre-fix 1 pass, 1 red at the unlocked package being mounted (run 37242401607). The fix: 2 of 2, and app-boot's user-patches 20 of 20 (run 37242668963). M-359-1 (6f4f298db5, the reload skips the gate): 1 pass, 1 red at the unlocked package being mounted (run 37242974635). The A-579b live-admission case now locks its package (42e6ecdf9a), so the reload gate passes and admission decides; it stays red until B-519's live admission lands and is not run now (e2e).
 
 ### BLOCKED-360 — the installation's identity for wildcard grants missed packages it carries transitively, and a patch-inserted installation package without a Manifest v2 was refused under enforce (security and correctness)
 
@@ -10803,3 +10805,14 @@ The repository already records the problem and a version-independent guard: `scr
 - **What this does NOT claim.**
   - Not that a release has shipped unverified bytes. The upload carries what the verified job packed; nothing here measures a substitution.
   - Not that P0-07 or BLOCKED-292 is unmet. The verifier is the last step of the job that builds the release.
+- **A stale comment in the same jobs (severity ≤2, registered only).** `release-publish.yml` and `release-vendor-publish.yml` say at :105-110 that the pack job does not set `RELEASE_PUBLISH`; its "Verify release version" step has set it since a33ed4ddf8. The comment is left as is because frozen [396] lists both workflows in its files, so editing it alone would make that case stale. It is corrected in the same change that closes this entry, which edits those workflows and re-observes [396] anyway.
+
+### BLOCKED-363 — token growth issued a filtered delegated parent a root, so a filtered launcher and the detached run it started held a tool the filter excluded (security, under-refuse)
+
+**Status:** OPEN (2026-10-04). Fix written by lane B (option (B), adcc0520e3 on 4844d9919b); runs pending. Ruled by the delegate; finding `artifacts/delegate/d8-redelegate-growth-security-finding.md`.
+
+- **The defect.** `redelegateIfNeeded`'s growth branch in `packages/policy/capability-token-file/src/index.ts` (:411-420 on 4844d9919b; :401-405 on the candidate line), from 62f05dda9e (BLOCKED-331), issued the child's parent a root covering what the parent could see before re-deriving the child. When the parent was itself delegated under a filter, that root replaced its filtered token: a launcher allowed only `read` held `write`. Growth adds only visible tools, so every name it adds is callable.
+- **Evidence (red first).** D8's control case (a filtered launcher and its detached run hold `read`, not `write`, before the restart) failed on 4844d9919b and on M-D8-1 (runs 37242628946, 37242938984).
+- **The fix.** Option (B): a name grows only through every delegated ancestor's filter, each ancestor is re-derived under its own filter, and nothing is re-derived when no name can be added (lane B). Lane A strengthens the D8 driver to observe a real dispatch.
+- **Closing condition.** With (B) landed, D8's control observes a dispatch of `write` refused, and a mutation that removes the walk up the delegation chain turns it red again; the §S9 chain is complete.
+- **P2-02.** Not withdrawn (rule a: a defect under repair, and the red first already shows it; P2-02's precedent repairs product defects in place). It is P2-02's third open finding, after BLOCKED-330 and BLOCKED-331.
