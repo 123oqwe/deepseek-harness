@@ -55,5 +55,18 @@
   "dependencies": {
     "@deepseek-ai/dsh-session-format-catalog": "workspace:^",
     "@deepseek-ai/dsh-util-values": "workspace:^"
+  },
+  "dsh": {
+    "manifestVersion": 2,
+    "executionMode": "in-process",
+    "compatibility": {
+      "dshVersionRange": ">=0.1.0 <0.2.0"
+    },
+    "events": [
+      {
+        "name": "llm/stream",
+        "mode": "waterfall"
+      }
+    ]
   }
 }
