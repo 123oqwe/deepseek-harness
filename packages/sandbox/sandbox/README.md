@@ -65,11 +65,11 @@ Enforcement is reported per call: `full` means the backend governs every promise
 
 ### Denied calls and escalation
 
-When a confined call is denied, the operation reports a denial marker naming the mode — `[sandbox: file access denied under <mode> mode]` — and, when the composition advertises escalation, an escalation hint. The model may retry the exact call once with `sandbox_permissions` (the narrowest wider mode that suffices) plus a `justification`; the user sees one approval prompt and can allow once, reject, or cancel. The escalation must be strictly wider than the call's effective mode, and it applies to that one call only.
+When a confined filesystem operation is denied, it reports a denial marker naming the mode — `[sandbox: file access denied under <mode> mode]`. A shell command whose output reads like a denial carries `[the command's output reads like a sandbox file-access denial under <mode> mode; the sandbox did not report it]` instead, because that text is the command's own. When the composition advertises escalation, an escalation hint follows either one. The model may retry the exact call once with `sandbox_permissions` (the narrowest wider mode that suffices) plus a `justification`; the user sees one approval prompt and can allow once, reject, or cancel. The escalation must be strictly wider than the call's effective mode, and it applies to that one call only.
 
 ### Fail-closed behavior
 
-When no backend can enforce the requested mode, the call fails with `SANDBOX_UNAVAILABLE` rather than running unconfined; the error text names the missing platform runner. A backend that fails after starting also reports a structured runner-failure signature, so a broken sandbox is distinguishable from a command failure.
+When no backend can enforce the requested mode, the call fails with `SANDBOX_UNAVAILABLE` rather than running unconfined; the error text names the missing platform runner. A runner that fails before starting the command is told apart from a command failure by the launch marker, never by what either prints.
 
 -----
 
@@ -129,7 +129,7 @@ Start with the subsystem reference for the exhaustive contract, then the backend
 
 #### What the model sees
 
-Through [`dsh-bash-sandbox`](../../shell/bash-sandbox/README.md) and [`dsh-tool-bash`](../../shell/tool-bash/README.md), a requested confined mode with no usable backend produces code `SANDBOX_UNAVAILABLE` and the exact error below; an execution-time runner failure appends ` Runner failure: <detail>`.
+Through [`dsh-bash-sandbox`](../../shell/bash-sandbox/README.md) and [`dsh-tool-bash`](../../shell/tool-bash/README.md), a requested confined mode with no usable backend produces code `SANDBOX_UNAVAILABLE` and the exact error below; an execution-time runner failure appends ` Runner failure: the runner exited <code> before starting the command: <its last stderr line>`.
 
 ##### Exact error
 
@@ -149,7 +149,7 @@ Append-only; newly visible content follows the reusable request prefix and does 
 
 #### What the model sees
 
-A denied call surfaces the marker `[sandbox: file access denied under <mode> mode]` and, where the composition advertises escalation, the hint `[sandbox: escalation available — retry this exact <subject> once with sandbox_permissions (the narrowest wider mode that suffices) + justification; the approval prompt asks the user]`. The retry carries `sandbox_permissions` and a `justification`; the user's `allowed-once` / `rejected` / `cancelled` decision becomes the call's result text.
+A denied filesystem operation surfaces the marker `[sandbox: file access denied under <mode> mode]`, a shell command whose output reads like a denial surfaces `[the command's output reads like a sandbox file-access denial under <mode> mode; the sandbox did not report it]`, and, where the composition advertises escalation, the hint `[sandbox: escalation available — retry this exact <subject> once with sandbox_permissions (the narrowest wider mode that suffices) + justification; the approval prompt asks the user]`. The retry carries `sandbox_permissions` and a `justification`; the user's `allowed-once` / `rejected` / `cancelled` decision becomes the call's result text.
 
 #### Token effect
 

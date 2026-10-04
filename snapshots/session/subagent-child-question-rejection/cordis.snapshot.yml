@@ -13,8 +13,6 @@
       - -c
       - while [ "$1" != "--" ]; do shift; done; shift; exec "$@"
       - passthrough-runner
-    runnerFailureSignatures:
-      - 'passthrough-runner: profile rejected'
 
 - id: agent-default-model
   name: '@deepseek-ai/dsh-agent-default-model'

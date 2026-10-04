@@ -1,7 +1,9 @@
 /**
  * Deterministic real-process proofs for runner classification: the real local
- * provider and sandbox bash executor exercise direct runner-spawn failures
- * and a POSIX fake Landlock launcher that prints its notice before exec.
+ * provider and sandbox bash executor exercise configured runners that cannot
+ * start and a POSIX fake Landlock launcher that prints its notice before exec.
+ * A runner failed exactly when the command never wrote its launch marker
+ * (Epic P3-03 U2), whatever the runner printed or exited with.
  */
 
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
@@ -11,7 +13,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { LAUNCHER_FAILURE_EXIT } from '@deepseek-ai/node-addon-system/landlock-run'
-import { SANDBOX_UNAVAILABLE, SandboxUnavailableError } from '@deepseek-ai/dsh-sandbox'
+import { SANDBOX_UNAVAILABLE } from '@deepseek-ai/dsh-sandbox'
 import { LocalSandboxProvider } from '@deepseek-ai/dsh-sandbox-local'
 import { SandboxPolicyService } from '@deepseek-ai/dsh-sandbox-policy'
 import { SandboxBashExecutor } from '@deepseek-ai/dsh-bash-sandbox'
@@ -73,10 +75,7 @@ async function setupConfiguredRunner(runner: string): Promise<SandboxBashExecuto
   const ctx = new Context()
   contexts.push(ctx)
   await ctx.plugin(SessionProjectionRegistry)
-  await ctx.plugin(LocalSandboxProvider, {
-    runnerCommand: [runner],
-    runnerFailureSignatures: ['configured-runner: fatal'],
-  })
+  await ctx.plugin(LocalSandboxProvider, { runnerCommand: [runner] })
   ;(ctx.sandbox as LocalSandboxProvider).internals = { hostSockets: () => [], writeWarning: () => {} }
   await ctx.plugin(SandboxPolicyService, { mode: 'read-only', workspaceRoot: process.cwd() })
   await ctx.plugin(LocalSubprocessRuntime)
@@ -85,7 +84,7 @@ async function setupConfiguredRunner(runner: string): Promise<SandboxBashExecuto
 }
 
 describe('partial Landlock runner-failure classification', () => {
-  it.each(['missing', 'unexecutable', 'missing-interpreter'] as const)('classifies a %s configured runner through the direct spawn error channel', async (kind) => {
+  it.each(['missing', 'unexecutable', 'missing-interpreter'] as const)('classifies a %s configured runner as a runner failure: the command never starts', async (kind) => {
     const dir = await mkdtemp(join(tmpdir(), 'dsh-unusable-sandbox-runner-'))
     tempDirs.push(dir)
     const runner = join(dir, `${kind}-runner`)
@@ -102,8 +101,7 @@ describe('partial Landlock runner-failure classification', () => {
 
     const task = bash.start(bash.resolve({ command: 'true' }))
     await task.done
-    expect(task.status).toBe('killed')
-    expect(task.readOutput().delta).toContain(`subprocess failed before reporting an outcome: Error: spawn ${runner}`)
+    expect(task.readOutput().delta).toContain(runner)
     expect(task.sandbox).toEqual({
       mode: 'read-only',
       denied: false,
@@ -131,14 +129,11 @@ describe('partial Landlock runner-failure classification', () => {
       const error = await bash.run(bash.resolve(request)).catch((value: unknown) => value)
       expect(error).toMatchObject({ name: 'SandboxUnavailableError', code: SANDBOX_UNAVAILABLE })
       expect(error).toBeInstanceOf(Error)
-      // Empirically, Darwin and Linux Node 24 preserve the passed bare/relative
-      // argv[0] in this spawn error rather than resolving it to an absolute path.
-      expect((error as Error).message).toContain(`spawn ${runner} ENOENT`)
+      expect((error as Error).message).toContain(runner)
 
       const task = bash.start(bash.resolve(request))
       await task.done
-      expect(task.status).toBe('killed')
-      expect(task.readOutput().delta).toContain(`subprocess failed before reporting an outcome: Error: spawn ${runner} ENOENT`)
+      expect(task.readOutput().delta).toContain(runner)
       expect(task.sandbox).toEqual({
         mode: 'read-only',
         denied: false,
@@ -149,53 +144,20 @@ describe('partial Landlock runner-failure classification', () => {
     },
   )
 
-  it('keeps a real malformed executable ordinary across no-shebang spawn behavior', async () => {
+  it('classifies a malformed runner executable as a runner failure: it never starts the command', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'dsh-malformed-sandbox-runner-'))
     tempDirs.push(dir)
     const runner = join(dir, 'malformed-runner')
     await writeFile(runner, 'not a native executable or shebang script\n', { mode: 0o755 })
     const bash = await setupConfiguredRunner(runner)
-    const request = { command: 'true' }
 
-    // Node/libuv may expose execve's ENOEXEC directly (Darwin) or retry a
-    // no-shebang executable through /bin/sh (Linux). Neither path supplies the
-    // ENOENT/EACCES with the exact failed executable path required for runner attribution.
-    const foreground = await bash.run(bash.resolve(request)).catch((value: unknown) => value)
-    expect(foreground).not.toBeInstanceOf(SandboxUnavailableError)
-
-    if (foreground instanceof Error) {
-      expect(foreground).toMatchObject({ code: 'ENOEXEC', syscall: 'spawn' })
-      expect((foreground as { path?: unknown }).path).toBeUndefined()
-
-      let background: unknown
-      try {
-        bash.start(bash.resolve(request))
-      } catch (error) {
-        background = error
-      }
-      expect(background).toMatchObject({ code: 'ENOEXEC', syscall: 'spawn' })
-      expect((background as { path?: unknown }).path).toBeUndefined()
-      expect(background).not.toBeInstanceOf(SandboxUnavailableError)
-    } else {
-      expect(foreground).toMatchObject({
-        exitCode: 127,
-        signal: null,
-        sandbox: { mode: 'read-only', denied: false, enforcement: 'partial', backend: 'runner-command' },
-      })
-      expect((foreground as { stderr: { text: string } }).stderr.text.length).toBeGreaterThan(0)
-
-      const background = bash.start(bash.resolve(request))
-      await background.done
-      expect(background.status).toBe('completed')
-      expect(background.exitCode).toBe(127)
-      expect(background.signal).toBeNull()
-      expect(background.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'partial', backend: 'runner-command' })
-      const output = background.readOutput().delta
-      expect(output.startsWith('[stderr]\n')).toBe(true)
-      expect(output.length).toBeGreaterThan('[stderr]\n'.length)
-      expect(output).not.toContain('subprocess failed before reporting an outcome:')
-    }
-
+    // The host-side wrapper's exec meets ENOEXEC and the shell runs the file
+    // as a script, which fails without starting the command.
+    await expect(bash.run(bash.resolve({ command: 'true' })))
+      .rejects.toMatchObject({ name: 'SandboxUnavailableError', code: SANDBOX_UNAVAILABLE })
+    const task = bash.start(bash.resolve({ command: 'true' }))
+    await task.done
+    expect(task.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'partial', backend: 'runner-command', runnerFailed: true })
     const accounting = (bash as unknown as { processFacts: Map<unknown, unknown> }).processFacts
     expect(accounting.size).toBe(0)
   })
@@ -219,12 +181,10 @@ describe('partial Landlock runner-failure classification', () => {
     expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'partial', backend: 'landlock' })
   })
 
-  it.each([1, 2])('keeps a Landlock fatal line at exit %i as insufficient runner-failure evidence', async (exitCode) => {
+  it.each([1, 2, LAUNCHER_FAILURE_EXIT])('classifies a Landlock launcher that exits %i before starting the command as a runner failure', async (exitCode) => {
     const bash = await setup(exitCode)
-    const result = await bash.run(bash.resolve({ command: 'true' }))
-    expect(result.exitCode).toBe(exitCode)
-    expect(result.stderr.text).toBe(`${NOTICE}\n${FATAL}\n`)
-    expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'partial', backend: 'landlock' })
+    await expect(bash.run(bash.resolve({ command: 'true' })))
+      .rejects.toMatchObject({ name: 'SandboxUnavailableError', code: SANDBOX_UNAVAILABLE })
   })
 
   it('reports the fatal line after the notice as SANDBOX_UNAVAILABLE detail', async () => {
@@ -232,7 +192,7 @@ describe('partial Landlock runner-failure classification', () => {
     const error = await bash.run(bash.resolve({ command: 'true' })).catch((value: unknown) => value)
     expect(error).toMatchObject({ name: 'SandboxUnavailableError', code: SANDBOX_UNAVAILABLE })
     expect(error).toBeInstanceOf(Error)
-    expect((error as Error).message).toContain(`Runner failure: ${FATAL}`)
+    expect((error as Error).message).toContain(`Runner failure: the runner exited ${String(LAUNCHER_FAILURE_EXIT)} before starting the command: ${FATAL}`)
     expect((error as Error).message).not.toContain(NOTICE)
   })
 

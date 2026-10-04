@@ -57,11 +57,11 @@ kind: "package-reference"
 
 ### 拒绝与升权
 
-被拒绝的命令作为事实被报告：结果携带 `sandbox: { mode, denied: true }`，工具层把它转成标准的权限拒绝面——与 bash 工具使用同一个。当升权可用时，模型可以使用范围最小的更宽松模式并附上一句理由，对同一条命令重试一次；批准提示会询问用户，获得批准前不会执行任何命令。本执行器自身绝不协商权限。每个受限结果还会给出约束该命令的后端（`sandbox.backend`）；当该后端无法拒绝 Unix-domain socket 时（Windows ACL runner 就无法拒绝），还会列出它留下可连的已知宿主 socket（`sandbox.reachableSockets`）。
+失败输出读起来像拒绝的命令作为提示被报告：结果携带 `sandbox: { mode, denied: true }`，工具层把它转成读自输出的拒绝提示——与 bash 工具使用同一个。当升权可用时，模型可以使用范围最小的更宽松模式并附上一句理由，对同一条命令重试一次；批准提示会询问用户，获得批准前不会执行任何命令。本执行器自身绝不协商权限。每个受限结果还会给出约束该命令的后端（`sandbox.backend`）；当该后端无法拒绝 Unix-domain socket 时（Windows ACL runner 就无法拒绝），还会列出它留下可连的已知宿主 socket（`sandbox.reachableSockets`）。
 
 ### 失败与恢复
 
-如果没有 runner 能强制执行受限模式，前台调用以 `SANDBOX_UNAVAILABLE` 失败，后台进程则记录 runner 失败事实——绝不会静默无隔离运行。只有当提供方拒绝中的 `ENOENT`/`EACCES` 路径或 syscall 独立指向 `argv[0]` 时，才将其归因于隔离 runner；否则仍沿用本地执行器不区分阶段的提供方失败语义。
+如果没有 runner 能强制执行受限模式，前台调用以 `SANDBOX_UNAVAILABLE` 失败，后台进程则记录 runner 失败事实——绝不会静默无隔离运行。在 POSIX 上，命令始终没有写下启动标记（`dsh-sandbox` 的 `LaunchMarker`）时 runner 即为失败，不论打印了什么；Windows 没有可用于标记的 POSIX shell，那里只有 spawn 失败才算。只有当提供方拒绝中的 `ENOENT`/`EACCES` 路径或 syscall 独立指向 `argv[0]` 时，才将其归因于隔离 runner；否则仍沿用本地执行器不区分阶段的提供方失败语义。
 
 -----
 
@@ -82,13 +82,13 @@ kind: "package-reference"
 | 文件 | 职责 |
 |---|---|
 | [`src/index.ts`](src/index.ts) | 插件入口：`SandboxPwshExecutor`、按进程保留事实、run/start 包装 |
-| [`src/helpers.ts`](src/helpers.ts) | 拒绝、runner 失败与 runner spawn 失败分类 |
+| [`src/helpers.ts`](src/helpers.ts) | 拒绝分类、runner spawn 失败归因与 runner 失败详情 |
 | — | 不发布运行时不变式伴生入口；除所属 seam 所执行的约定外，本包不暴露独立事件序列或可变数据关系；分类可在结果中观察。 |
 | `tests/` | 跨 ACL 与平台 runner 演练的行为 |
 
 ### 主要流程
 
-对受限模式，`resolve()` 标记每次调用的策略；`run` 与 `start` 把 pwsh argv 经提供方包装，再把受限 argv 交给继承的子进程路径。结算时执行器对结果分类：runner 失败优先于拒绝（命令从未运行），stderr 携带 runner 拒绝方言的失败运行报告 `denied: true`，每次受限运行都携带模式、强制执行、后端与可连 socket 事实。`danger-full-access` 完全绕过提供方，并标记 `denied: false`。
+对受限模式，`resolve()` 标记每次调用的策略；`run` 与 `start` 把 pwsh argv 放在启动标记的沙箱内包装层之后（Windows 上无标记）经提供方包装，再把受限 argv 放在宿主侧包装层之后交给继承的子进程路径。结算时执行器对结果分类：命令没有写下启动标记的运行是 runner 失败，优先于拒绝（命令从未运行）；stderr 携带 runner 拒绝方言的失败运行报告 `denied: true`（读自该输出的提示）；每次受限运行都携带模式、强制执行、后端与可连 socket 事实。`danger-full-access` 完全绕过提供方，并标记 `denied: false`。
 
 ### 不变式
 

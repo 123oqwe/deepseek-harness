@@ -32,8 +32,6 @@ import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
-  LAUNCHER_BIN,
-  LAUNCHER_FAILURE_EXIT,
   launcherPath as landlockLauncherPath,
   probe as defaultProbeLandlock,
 } from '@deepseek-ai/node-addon-system/landlock-run'
@@ -41,7 +39,7 @@ import { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { HarnessError } from '@deepseek-ai/dsh-llm'
 import { SANDBOX_UNAVAILABLE, SandboxProvider, SandboxUnavailableError } from '@deepseek-ai/dsh-sandbox'
-import type { ConfinedArgv, ConfinedSandboxMode, RunnerFailureRule, SandboxEnforcement, SandboxPolicy } from '@deepseek-ai/dsh-sandbox'
+import type { ConfinedArgv, ConfinedSandboxMode, SandboxEnforcement, SandboxPolicy } from '@deepseek-ai/dsh-sandbox'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import { AclWriteGrant, assertTempRootOutsideWorkspace, tempWriteSid, workspaceWriteSid } from '@deepseek-ai/dsh-sandbox-windows-acl'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
@@ -56,21 +54,15 @@ export interface Config {
    * non-empty override asserts full enforcement of file effects and skips built-in
    * selection and probing. The provider installs no Unix-socket filter into it, so
    * its wraps report `partial` enforcement and the known sockets left reachable.
-   * A runner that starts but refuses its profile must be identifiable by
-   * {@link runnerFailureSignatures}. Consumers classify a spawn rejection only after
+   * The runner must exec the wrapped argv after its own options: consumers learn
+   * that the command started from a launch marker written inside the sandbox, so a
+   * runner that refuses its profile is a runner failure whatever it prints.
+   * Consumers classify a spawn rejection only after
    * confirming the workdir is usable. `ENOENT` or `EACCES` identifies the runner when
    * `error.path` equals argv[0] and `error.syscall` is `spawn` or `spawn <runner>`, or
    * when `error.path` is absent and `error.syscall` is exactly `spawn <runner>`.
    */
   runnerCommand?: string[]
-  /**
-   * Case-insensitive stderr substrings emitted when a configured
-   * {@link runnerCommand} refuses its profile before executing the wrapped
-   * command. Required and non-empty with `runnerCommand`; rejected without
-   * it. Each entry is a non-empty, single-line, case-insensitive substring
-   * covering the executable runner's own failure dialect.
-   */
-  runnerFailureSignatures?: string[]
   /** Positive timeout for each functional probe; zero would mean unbounded to Node. */
   probeTimeoutMs?: number
 }
@@ -241,33 +233,6 @@ const DENIAL_SIGNATURES = {
   runnerCommand: ['read-only file system', 'permission denied'],
 } as const satisfies Record<SelectedRunner['runner'] | 'runnerCommand', readonly string[]>
 
-/** The windows-acl runner's documented failure exit (its own RUNNER_FAILURE_EXIT contract, distinct from Landlock's 125). */
-const WINDOWS_ACL_RUNNER_FAILURE_EXIT = 127
-
-/**
- * Runner-owned fatal diagnostics. Landlock has a versioned exit-125 plus
- * fatal-line launcher-failure contract. Bubblewrap's current fatal paths exit
- * 1 but its public contract does not reserve that status, while sandbox-exec
- * publishes no launcher-failure status; those backends remain signature-only.
- * The windows-acl runner prints `windows-acl-run: <detail>` on every
- * runner-side failure and exits 127 — the rule is exit-gated on that status
- * so a confined command that merely PRINTS the signature (or a runner
- * cleanup failure reported on a non-zero child exit) is never misclassified
- * as "the command did not run". Keep the Landlock tuple aligned with the
- * assembled snapshot fixture at
- * `packages/test-support/session-snapshot/tests/fixtures/partial-landlock-sandbox.ts`.
- */
-const RUNNER_FAILURE_RULES = {
-  bwrap: [{ fatalSignatures: ['bwrap: '] }],
-  landlock: [{
-    allowedExitCodes: [LAUNCHER_FAILURE_EXIT],
-    fatalSignatures: [`${LAUNCHER_BIN}: `],
-    informationalLines: [`${LAUNCHER_BIN}: partial enforcement (older Landlock ABI)`],
-  }],
-  seatbelt: [{ fatalSignatures: ['sandbox-exec: '] }],
-  'windows-acl': [{ allowedExitCodes: [WINDOWS_ACL_RUNNER_FAILURE_EXIT], fatalSignatures: ['windows-acl-run: '] }],
-} as const satisfies Record<SelectedRunner['runner'], readonly RunnerFailureRule[]>
-
 /**
  * Local process-sandbox provider. Registers as `ctx.sandbox`. Caches the
  * chain verdict and, on the windows-acl rung, the write grants
@@ -280,7 +245,6 @@ export class LocalSandboxProvider extends SandboxProvider {
   // Inline schema call: the config catalog walks `static Config` statically.
   static Config: z<Config> = z.object({
     runnerCommand: z.array(z.string()).default([]),
-    runnerFailureSignatures: z.array(z.string()).default([]),
     probeTimeoutMs: z.natural().default(5_000),
   })
 
@@ -288,7 +252,6 @@ export class LocalSandboxProvider extends SandboxProvider {
   internals: SandboxInternals = {}
 
   private readonly runnerCommand: string[] | undefined
-  private readonly configuredRunnerFailureSignatures: string[]
   private readonly probeTimeoutMs: number
   /** Cached chain verdict; undefined until the first confined wrap needs it. */
   private selectedRunner: SelectedRunner | 'unavailable' | undefined
@@ -310,18 +273,7 @@ export class LocalSandboxProvider extends SandboxProvider {
     // those runtime facts. An empty runnerCommand means "not configured":
     // use the platform chain.
     const runner = config.runnerCommand as string[]
-    const runnerFailureSignatures = config.runnerFailureSignatures as string[]
-    if (runner.length === 0 && runnerFailureSignatures.length > 0) {
-      throw new Error('sandbox-local: runnerFailureSignatures requires runnerCommand')
-    }
-    if (runner.length > 0 && runnerFailureSignatures.length === 0) {
-      throw new Error('sandbox-local: runnerCommand requires at least one runnerFailureSignatures entry')
-    }
-    if (runnerFailureSignatures.some(signature => signature.trim().length === 0 || /[\r\n]/u.test(signature))) {
-      throw new Error('sandbox-local: runnerFailureSignatures entries must be non-empty single-line strings')
-    }
     this.runnerCommand = runner.length > 0 ? runner : undefined
-    this.configuredRunnerFailureSignatures = runnerFailureSignatures
     this.probeTimeoutMs = config.probeTimeoutMs as number
     assertPositiveFinite('probeTimeoutMs', this.probeTimeoutMs)
     // The temp grants are revoked with the provider: a clean server
@@ -356,7 +308,6 @@ export class LocalSandboxProvider extends SandboxProvider {
         // attributable; nothing installs the socket filter into it.
         ...this.socketFacts('runner-command', 'full', false),
         denialSignatures: DENIAL_SIGNATURES.runnerCommand,
-        runnerFailureRules: [{ fatalSignatures: this.configuredRunnerFailureSignatures }],
       }
     }
     const selected = this.selectRunner(policy.mode)
@@ -376,7 +327,6 @@ export class LocalSandboxProvider extends SandboxProvider {
       backend: selected.runner,
       ...this.socketFacts(selected.runner, selected.enforcement, this.refusesUnixSockets(selected.runner)),
       denialSignatures: DENIAL_SIGNATURES[selected.runner],
-      runnerFailureRules: RUNNER_FAILURE_RULES[selected.runner],
     }
   }
 

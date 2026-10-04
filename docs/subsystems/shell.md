@@ -154,18 +154,22 @@ Each stream is a `CollectedOutput` — the (possibly truncated) text plus recove
 
 A sandbox-consuming executor exposes its configured mode fallback through `ShellExecutor.sandboxMode`. The tool layer asks [`@deepseek-ai/dsh-sandbox-policy`](../../packages/sandbox/sandbox-policy/README.md) to resolve each calling session's durable `sandbox/mode` override and immutable cwd into `ShellExecRequest.sandboxPolicy`; a user-approved strictly wider call replaces only the mode. The mode/root/enforcement vocabulary is owned by the [`@deepseek-ai/dsh-sandbox` seam](sandbox.md); modes govern file effects only.
 
-A sandboxed run reports its mode, conservative denial classification, enforcement completeness, the backend that confined it, and the known host sockets that backend left reachable. `runnerFailed` marks a sandbox runner failure before the command ran; foreground execution throws `SANDBOX_UNAVAILABLE`, while a settled background process has only its facts channel.
+A sandboxed run reports its mode, a denial hint read from the command's stderr, enforcement completeness, the backend that confined it, and the known host sockets that backend left reachable. `runnerFailed` marks a sandbox runner failure before the command ran (the command never wrote its launch marker); foreground execution throws `SANDBOX_UNAVAILABLE`, while a settled background process has only its facts channel.
 
 ```ts type-equiv
 /**
  * Sandbox facts for one run, present iff a sandboxing executor handled it.
  * Facts are reported independently of process exit status so callers can
- * distinguish command failures from policy denials and runner failures.
+ * distinguish command failures from denial hints and runner failures.
  */
 interface ShellSandboxInfo {
   /** The mode the command actually ran under. */
   mode: SandboxMode
-  /** Whether the sandbox denied a file operation. */
+  /**
+   * Whether a failed run's stderr reads like the backend's file-access denial.
+   * The text is the command's own and any program can print it, so this is a
+   * hint, never a security judgement (Epic P3-03 U2).
+   */
   denied: boolean
   /** How completely the selected runner enforced the requested mode. */
   enforcement?: SandboxEnforcement
@@ -176,7 +180,7 @@ interface ShellSandboxInfo {
    * reach; present only when there were any (`ConfinedArgv.reachableSockets`).
    */
   reachableSockets?: readonly string[]
-  /** Whether the sandbox runner failed before the command could run. */
+  /** Whether the sandbox runner failed before the command started: it never wrote the launch marker. */
   runnerFailed?: boolean
 }
 ```

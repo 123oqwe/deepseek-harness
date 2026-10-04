@@ -57,11 +57,11 @@ The executor takes no sandbox configuration of its own: the default mode and wor
 
 ### Denials are result facts
 
-A denied command is reported, not retried silently: the result carries `sandbox: { mode, denied: true }` and the model-facing tool appends the denial marker. When escalation is available, the model may retry the exact command once with the narrowest wider mode and a one-sentence justification; the approval prompt asks the user, and nothing executes before approval. This executor never negotiates permissions itself — the tool layer drives the override. Every confined result also names the backend that confined the command (`sandbox.backend`) and, when that backend cannot refuse Unix-domain sockets, lists the known host sockets it left reachable (`sandbox.reachableSockets`).
+A command whose failed output reads like a denial is reported, not retried silently: the result carries `sandbox: { mode, denied: true }`, a hint read from the command's own output, and the model-facing tool appends the output-read denial hint. When escalation is available, the model may retry the exact command once with the narrowest wider mode and a one-sentence justification; the approval prompt asks the user, and nothing executes before approval. This executor never negotiates permissions itself — the tool layer drives the override. Every confined result also names the backend that confined the command (`sandbox.backend`) and, when that backend cannot refuse Unix-domain sockets, lists the known host sockets it left reachable (`sandbox.reachableSockets`).
 
 ### Failures and recovery
 
-If no runner can enforce a confined mode, the foreground call fails with `SANDBOX_UNAVAILABLE` and a background process records a runner-failure fact — never a silent unconfined run. A provider rejection is attributed to the confinement runner only when its `ENOENT`/`EACCES` path or syscall independently names `argv[0]`; otherwise it keeps the local executor's stage-neutral provider-failure semantics.
+If no runner can enforce a confined mode, the foreground call fails with `SANDBOX_UNAVAILABLE` and a background process records a runner-failure fact — never a silent unconfined run. A runner failed when the command never wrote its launch marker (`LaunchMarker` from `dsh-sandbox`), whatever the runner or the command printed. A provider rejection is attributed to the confinement runner only when its `ENOENT`/`EACCES` path or syscall independently names `argv[0]`; otherwise it keeps the local executor's stage-neutral provider-failure semantics.
 
 -----
 
@@ -82,13 +82,13 @@ The executor is the sandboxing Service Provider for the `ctx.shell` seam: it inh
 | File | Role |
 |---|---|
 | [`src/index.ts`](src/index.ts) | Plugin entry: `SandboxBashExecutor`, per-process fact retention, run/start wrapping |
-| [`src/helpers.ts`](src/helpers.ts) | Denial, runner-failure, and runner-spawn-failure classification |
+| [`src/helpers.ts`](src/helpers.ts) | Denial classification, runner-spawn-failure attribution, and the runner-failure detail |
 | — | No runtime invariant companion is published; classification is observable in results, and this package exposes no independent event sequence or mutable data relation beyond contracts enforced at its owning seam. |
 | `tests/` | Exercised behavior across the bwrap, Landlock, and Seatbelt runners |
 
 ### Main flow
 
-For a confined mode, `resolve()` stamps the per-call policy (the session's mode override, or the deployment fallback); `run` and `start` wrap the bash argv through the provider and hand the confined argv to the inherited subprocess path. At settlement the executor classifies the outcome: a runner failure outranks a denial because the command never ran, a failed run whose stderr carries the backend's denial dialect is reported `denied: true`, and every confined run carries its mode, enforcement, backend and reachable-socket facts. `danger-full-access` bypasses the provider entirely and stamps `denied: false`.
+For a confined mode, `resolve()` stamps the per-call policy (the session's mode override, or the deployment fallback); `run` and `start` wrap the bash argv through the provider behind the launch marker's in-sandbox wrapper and hand the confined argv, behind its host-side wrapper, to the inherited subprocess path. At settlement the executor classifies the outcome: a run whose command never wrote its launch marker is a runner failure, which outranks a denial because the command never ran; a failed run whose stderr carries the backend's denial dialect is reported `denied: true`, a hint read from that output; and every confined run carries its mode, enforcement, backend and reachable-socket facts. `danger-full-access` bypasses the provider entirely and stamps `denied: false`.
 
 ### Invariants
 
@@ -137,7 +137,7 @@ A standing-policy change appends a complete owner-rendered context snapshot afte
 
 #### What the model sees
 
-After ordinary bounded output, a denied call appends exactly `[sandbox: file access denied under <mode> mode]`. When escalation is available it next appends `[sandbox: escalation available — retry this exact command once with sandbox_permissions (the narrowest wider mode that suffices) + justification; the approval prompt asks the user]`. A settled background runner failure instead appends `[sandbox: the sandbox runner itself failed under <mode> mode — the command did not run; this is a sandbox problem, not a command failure]`. A refused Unix-domain socket shows in the command's own error output as `Operation not permitted`; under Seatbelt, whose file-denial dialect is that same text, the call is also classified as denied and carries the markers above, while under bwrap it carries none.
+After ordinary bounded output, a call classified as denied appends exactly `[the command's output reads like a sandbox file-access denial under <mode> mode; the sandbox did not report it]`. When escalation is available it next appends `[sandbox: escalation available — retry this exact command once with sandbox_permissions (the narrowest wider mode that suffices) + justification; the approval prompt asks the user]`. A settled background runner failure instead appends `[sandbox: the sandbox runner itself failed under <mode> mode — the command did not run; this is a sandbox problem, not a command failure]`. A refused Unix-domain socket shows in the command's own error output as `Operation not permitted`; under Seatbelt, whose file-denial dialect is that same text, the call is also classified as denied and carries the markers above, while under bwrap it carries none.
 
 #### Token effect
 
@@ -151,7 +151,7 @@ Append-only; newly visible content follows the reusable request prefix and does 
 
 #### What the model sees
 
-If no runner can enforce a confined mode, the foreground call propagates the `SANDBOX_UNAVAILABLE` error from the sandbox seam. A provider rejection with `ENOENT`/`EACCES` path or syscall evidence that names `argv[0]` supplies the original error as runner-failure detail; another rejection remains a stage-neutral provider error. A settled runner failure supplies the matched fatal stderr line and preserves the original stderr collection; the appended `Runner failure: <detail>` is the authoritative diagnosis over the generic `SANDBOX_UNAVAILABLE` prefix.
+If no runner can enforce a confined mode, the foreground call propagates the `SANDBOX_UNAVAILABLE` error from the sandbox seam. A provider rejection with `ENOENT`/`EACCES` path or syscall evidence that names `argv[0]` supplies the original error as runner-failure detail; another rejection remains a stage-neutral provider error. A settled runner failure — the command never wrote its launch marker — supplies `the runner exited <code> before starting the command: <its last stderr line>` and preserves the original stderr collection; the appended `Runner failure: <detail>` is the authoritative diagnosis over the generic `SANDBOX_UNAVAILABLE` prefix.
 
 #### Token effect
 

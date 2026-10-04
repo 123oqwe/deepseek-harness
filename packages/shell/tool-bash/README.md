@@ -59,7 +59,7 @@ Passing `run_in_background: true` returns a job id immediately and no timeout ap
 
 ### Sandboxed execution and escalation
 
-When the mounted executor confines commands (for example `dsh-bash-sandbox`), a blocked file operation is reported as `[sandbox: file access denied under <mode> mode]` — a policy denial, not a command failure. The model may then retry the exact same command once in the same turn with `sandbox_permissions` (the narrowest wider mode that suffices) and a one-sentence `justification`; the approval prompt raised by that retry is how the user consents. Escalation is never speculative: a request with no real prior denial, or one that is not strictly wider than the current mode, fails closed without running anything, and a rejected escalation is final for that command. The sandbox may also refuse Unix-domain sockets, such as the Docker daemon's or an SSH agent's; the tool description tells the model that opening one then fails with `Operation not permitted`, a sandbox denial that only `danger-full-access` lifts ([which backends refuse them](../../sandbox/sandbox-local/README.md#unix-domain-sockets)).
+When the mounted executor confines commands (for example `dsh-bash-sandbox`), a failed command whose output reads like a file-access denial carries `[the command's output reads like a sandbox file-access denial under <mode> mode; the sandbox did not report it]` — usually the sandbox blocked it, not a bug in the command; the text is the command's own, so it is a hint, not a policy decision. The model may then retry the exact same command once in the same turn with `sandbox_permissions` (the narrowest wider mode that suffices) and a one-sentence `justification`; the approval prompt raised by that retry is how the user consents. Escalation is never speculative: a request with no real prior denial, or one that is not strictly wider than the current mode, fails closed without running anything, and a rejected escalation is final for that command. The sandbox may also refuse Unix-domain sockets, such as the Docker daemon's or an SSH agent's; the tool description tells the model that opening one then fails with `Operation not permitted`, a sandbox denial that only `danger-full-access` lifts ([which backends refuse them](../../sandbox/sandbox-local/README.md#unix-domain-sockets)).
 
 ### What can go wrong
 
@@ -159,7 +159,7 @@ Prefix-stable while visibility, background support, and executor sandbox capabil
 
 #### What the model sees
 
-The renderer emits the data-dependent stdout tail, then optional `[stderr]` and the stderr tail. With no output it emits exactly `(no output)`. Conditional lines are exactly `[output truncated; full output: <path-or-(unavailable)>]`, `[sandbox: file access denied under <mode> mode]`, `[timed out after <timeoutMs>ms]`, `[killed by signal: <signal>]`, and `[exit code: <exitCode>]`; the sandbox escalation and runner-failure lines are quoted in [`dsh-bash-sandbox`](../bash-sandbox/README.md).
+The renderer emits the data-dependent stdout tail, then optional `[stderr]` and the stderr tail. With no output it emits exactly `(no output)`. Conditional lines are exactly `[output truncated; full output: <path-or-(unavailable)>]`, `[the command's output reads like a sandbox file-access denial under <mode> mode; the sandbox did not report it]`, `[timed out after <timeoutMs>ms]`, `[killed by signal: <signal>]`, and `[exit code: <exitCode>]`; the sandbox escalation and runner-failure lines are quoted in [`dsh-bash-sandbox`](../bash-sandbox/README.md).
 
 #### Token effect
 

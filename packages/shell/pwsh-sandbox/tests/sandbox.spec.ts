@@ -3,23 +3,26 @@
  * makes wrapping, policy hand-off, fail-closed propagation, and fact stamping
  * deterministic; real-provider integration lives in `tests/acl.e2e.ts`.
  * Requires pwsh for the integration block (skips without it — same gate as
- * pwsh-local's suites); the helpers block is pure and always runs.
+ * pwsh-local's suites); the helpers block is pure and always runs. On POSIX a
+ * run goes through the launch marker's wrappers, so a fake runner that exits
+ * without starting the command is a runner failure; Windows has no marker and
+ * counts only spawn failures. `$DSH_HOME` points at a temp directory.
  */
 
 import { spawnSync } from 'node:child_process'
 import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { Context, Service } from '@deepseek-ai/cordis'
 import { SandboxProvider, SandboxUnavailableError } from '@deepseek-ai/dsh-sandbox'
-import type { ConfinedArgv, RunnerFailureRule, SandboxExecutionPolicy, SandboxPolicy } from '@deepseek-ai/dsh-sandbox'
+import type { ConfinedArgv, SandboxExecutionPolicy, SandboxPolicy } from '@deepseek-ai/dsh-sandbox'
 import { resolvePwshPath } from '@deepseek-ai/dsh-pwsh-local'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { SandboxPolicyService } from '@deepseek-ai/dsh-sandbox-policy'
 import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
 import { SandboxPwshExecutor } from '../src/index.ts'
-import { backendFacts, classifyRunnerFailure, isRunnerSpawnFailure, matchesSignature } from '../src/helpers.ts'
+import { backendFacts, isRunnerSpawnFailure, matchesSignature, runnerFailureDetail } from '../src/helpers.ts'
 
 // The same probe pwsh-local's suites and the vitest coverage exemption use:
 // spawnSync never throws on a missing binary (it reports status null), and
@@ -29,6 +32,24 @@ function pwshAvailable(): boolean {
 }
 
 const spillDir = mkdtempSync(join(tmpdir(), 'dsh-pwsh-sandbox-spec-'))
+const dshHome = mkdtempSync(join(tmpdir(), 'dsh-pwsh-sandbox-home-'))
+
+beforeAll(() => {
+  vi.stubEnv('DSH_HOME', dshHome)
+})
+
+afterAll(() => {
+  vi.unstubAllEnvs()
+  rmSync(dshHome, { recursive: true, force: true })
+})
+
+/** Where the launch marker exists: everywhere but Windows. */
+const MARKED = process.platform !== 'win32'
+
+/** The program a run spawns first: the launch marker's host-side shell on POSIX, the runner itself on Windows. */
+function spawnedProgram(runner: string): string {
+  return MARKED ? '/bin/sh' : runner
+}
 
 /** One recorded provider call: the argv handed over and the policy it rode with. */
 interface ConfineCall {
@@ -38,7 +59,7 @@ interface ConfineCall {
 
 /** A passthrough wrap: the caller's argv unchanged, asserted full — commands run unconfined, deterministically. */
 const passthrough = (argv: readonly string[]): ConfinedArgv =>
-  ({ argv: [...argv], backend: 'fake-runner', enforcement: 'full', reachableSockets: [], denialSignatures: ['access is denied', 'access to the path'], runnerFailureRules: [] })
+  ({ argv: [...argv], backend: 'fake-runner', enforcement: 'full', reachableSockets: [], denialSignatures: ['access is denied', 'access to the path'] })
 
 /** A subprocess service whose spawn() throws SYNCHRONOUSLY — the paths the async service never produces. */
 function throwingSubprocessRuntime(error: unknown): new (ctx: Context) => Service {
@@ -120,31 +141,11 @@ describe('helpers (pure)', () => {
     })
   })
 
-  describe('classifyRunnerFailure', () => {
-    const rules: readonly RunnerFailureRule[] = [{
-      allowedExitCodes: [127],
-      fatalSignatures: ['fake-runner: '],
-      informationalLines: ['fake-runner: partial enforcement'],
-    }]
-
-    it('matches a fatal signature on a gated exit code, skipping informational lines', () => {
-      expect(classifyRunnerFailure(127, 'fake-runner: partial enforcement\nfake-runner: profile refused\n', rules))
-        .toEqual({ detail: 'fake-runner: profile refused' })
-    })
-
-    it('rejects zero/null exits, gate mismatches, and empty signatures', () => {
-      expect(classifyRunnerFailure(0, 'fake-runner: x', rules)).toBeUndefined()
-      expect(classifyRunnerFailure(null, 'fake-runner: x', rules)).toBeUndefined()
-      expect(classifyRunnerFailure(1, 'fake-runner: x', rules)).toBeUndefined()
-      expect(classifyRunnerFailure(127, 'clean output', rules)).toBeUndefined()
-      expect(classifyRunnerFailure(127, 'fake-runner: x', [{ fatalSignatures: ['  '] }])).toBeUndefined()
-    })
-
-    it('the windows-acl rule is exit-gated on 127: a confined command that merely prints the signature on a non-127 exit is NOT a runner failure', () => {
-      const windowsAclRules: readonly RunnerFailureRule[] = [{ allowedExitCodes: [127], fatalSignatures: ['windows-acl-run: '] }]
-      expect(classifyRunnerFailure(3, 'windows-acl-run: something the command printed', windowsAclRules)).toBeUndefined()
-      expect(classifyRunnerFailure(127, 'windows-acl-run: missing --workspace', windowsAclRules))
-        .toEqual({ detail: 'windows-acl-run: missing --workspace' })
+  describe('runnerFailureDetail', () => {
+    it('names the runner\'s exit and its last non-empty stderr line', () => {
+      expect(runnerFailureDetail(127, 'fake-runner: partial enforcement\nfake-runner: profile refused\n'))
+        .toBe('the runner exited 127 before starting the command: fake-runner: profile refused')
+      expect(runnerFailureDetail(1, '')).toBe('the runner exited 1 before starting the command')
     })
   })
 
@@ -184,8 +185,10 @@ describe.skipIf(!pwshAvailable())('SandboxPwshExecutor', () => {
     expect(calls).toHaveLength(1)
     const call = calls[0]
     expect(call?.policy).toEqual(RO)
-    // The confined argv is the pwsh invocation, ready for a runner prefix.
-    expect(call?.argv[0]).toMatch(/pwsh(\.exe)?$/u)
+    // The confined argv is the pwsh invocation, behind the launch marker's
+    // in-sandbox wrapper on POSIX, ready for a runner prefix.
+    if (MARKED) expect(call?.argv.slice(0, 4)).toEqual(['/bin/sh', '-c', expect.stringContaining('>&9'), 'dsh-launched'])
+    expect(call?.argv[MARKED ? 4 : 0]).toMatch(/pwsh(\.exe)?$/u)
     expect(call?.argv).toContain('-NonInteractive')
     expect(call?.argv.at(-1)).toContain('echo wrapped')
     expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner' })
@@ -216,7 +219,6 @@ describe.skipIf(!pwshAvailable())('SandboxPwshExecutor', () => {
       enforcement: 'full',
       reachableSockets: [],
       denialSignatures: [],
-      runnerFailureRules: [],
     }))
     await expect(executor.run(executor.resolve({ command: 'echo never', sandboxPolicy: RO, signal: controller.signal })))
       .rejects.toThrow('caller-cancel')
@@ -242,21 +244,20 @@ describe.skipIf(!pwshAvailable())('SandboxPwshExecutor', () => {
       enforcement: 'full',
       reachableSockets: [],
       denialSignatures: [],
-      runnerFailureRules: [{ fatalSignatures: ['fake-runner: '] }],
     }))
     await expect(executor.run(executor.resolve({ command: 'echo never-runs', sandboxPolicy: RO })))
       .rejects.toThrow(SandboxUnavailableError)
   }, 30_000)
 
   it('a SYNCHRONOUS attributable spawn rejection in run() fails closed, an unattributable one rethrows', async () => {
-    const attributable = Object.assign(new Error('sync-enoent'), { code: 'ENOENT', syscall: 'spawn node', path: 'node' })
+    const program = spawnedProgram('node')
+    const attributable = Object.assign(new Error('sync-enoent'), { code: 'ENOENT', syscall: `spawn ${program}`, path: program })
     const { executor: closed } = await setup(() => ({
       argv: ['node', '--', 'pwsh'],
       backend: 'fake-runner',
       enforcement: 'full',
       reachableSockets: [],
       denialSignatures: [],
-      runnerFailureRules: [{ fatalSignatures: ['fake-runner: '] }],
     }), throwingSubprocessRuntime(attributable))
     await expect(closed.run(closed.resolve({ command: 'echo never', sandboxPolicy: RO })))
       .rejects.toThrow(SandboxUnavailableError)
@@ -268,14 +269,14 @@ describe.skipIf(!pwshAvailable())('SandboxPwshExecutor', () => {
   }, 30_000)
 
   it('a SYNCHRONOUS spawn rejection in start() follows the same attribution split', async () => {
-    const attributable = Object.assign(new Error('sync-enoent-start'), { code: 'ENOENT', syscall: 'spawn node', path: 'node' })
+    const program = spawnedProgram('node')
+    const attributable = Object.assign(new Error('sync-enoent-start'), { code: 'ENOENT', syscall: `spawn ${program}`, path: program })
     const { executor: closed } = await setup(() => ({
       argv: ['node', '--', 'pwsh'],
       backend: 'fake-runner',
       enforcement: 'full',
       reachableSockets: [],
       denialSignatures: [],
-      runnerFailureRules: [{ fatalSignatures: ['fake-runner: '] }],
     }), throwingSubprocessRuntime(attributable))
     expect(() => closed.start(closed.resolve({ command: 'echo never', sandboxPolicy: RO })))
       .toThrow(SandboxUnavailableError)
@@ -286,17 +287,27 @@ describe.skipIf(!pwshAvailable())('SandboxPwshExecutor', () => {
       .toThrow('sync-emfile-start')
   }, 30_000)
 
-  it('a runner that REFUSES at runtime (fatal signature, nonzero exit) fails closed too', async () => {
+  it('a runner that exits before starting the command fails closed where the launch marker exists; on Windows only a spawn failure counts', async () => {
     const { executor } = await setup(() => ({
       argv: [process.execPath, '-e', 'console.error(\'fake-runner: profile refused\'); process.exit(127)', '--'],
       backend: 'fake-runner',
       enforcement: 'full',
       reachableSockets: [],
       denialSignatures: [],
-      runnerFailureRules: [{ fatalSignatures: ['fake-runner: '] }],
     }))
-    await expect(executor.run(executor.resolve({ command: 'echo never-runs', sandboxPolicy: RO })))
-      .rejects.toThrow(SandboxUnavailableError)
+    const run = executor.run(executor.resolve({ command: 'echo never-runs', sandboxPolicy: RO }))
+    if (MARKED) await expect(run).rejects.toThrow(SandboxUnavailableError)
+    else await expect(run).resolves.toMatchObject({ exitCode: 127, sandbox: { mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner' } })
+  }, 30_000)
+
+  it('a command that prints a runner\'s failure text and exits with its code is an ordinary result', async () => {
+    const { executor } = await setup()
+    const command = "[Console]::Error.WriteLine('windows-acl-run: missing --workspace'); exit 127"
+    const result = await executor.run(executor.resolve({ command, sandboxPolicy: RO }))
+    expect([result.exitCode, result.sandbox]).toEqual([127, { mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner' }])
+    const proc = executor.start(executor.resolve({ command, sandboxPolicy: RO }))
+    await proc.done
+    expect(proc.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner' })
   }, 30_000)
 
   it('background confined runs stamp clean facts at settlement', async () => {
@@ -318,21 +329,46 @@ describe.skipIf(!pwshAvailable())('SandboxPwshExecutor', () => {
     expect(denied.sandbox).toEqual({ mode: 'read-only', denied: true, enforcement: 'full', backend: 'fake-runner' })
   }, 30_000)
 
-  it('background provider rejections with runner provenance settle as runnerFailed facts', async () => {
+  it('a background runner that cannot start settles as runnerFailed facts', async () => {
     const { executor } = await setup(() => ({
       argv: ['definitely-not-a-real-runner', '--', 'pwsh'],
       backend: 'fake-runner',
       enforcement: 'full',
       reachableSockets: [],
       denialSignatures: [],
-      runnerFailureRules: [{ fatalSignatures: ['fake-runner: '] }],
     }))
     const proc = executor.start(executor.resolve({ command: 'echo never', sandboxPolicy: RO }))
     await proc.done
     expect(proc.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner', runnerFailed: true })
-    // The failure note surfaces through the read path.
+    // The failure surfaces through the read path: the host-side shell's exec
+    // error on POSIX, the spawn rejection note on Windows.
     const read = proc.readOutput()
-    expect(read.delta).toContain('subprocess failed before reporting an outcome')
+    expect(read.delta).toContain(MARKED ? 'definitely-not-a-real-runner' : 'subprocess failed before reporting an outcome')
+  }, 30_000)
+
+  // POSIX-only: the fake runners are /bin/sh scripts, and Windows has no launch marker.
+  it.skipIf(!MARKED)('a runner stopped before it starts the command keeps its own outcome: a signal death, the deadline, an abort', async () => {
+    const wrap = (script: string) => (argv: readonly string[]): ConfinedArgv => ({
+      argv: ['/bin/sh', '-c', script, 'fake-runner', '--', ...argv],
+      backend: 'fake-runner',
+      enforcement: 'full',
+      reachableSockets: [],
+      denialSignatures: [],
+    })
+    const { executor: killed } = await setup(wrap('kill -9 $$'))
+    const signalled = await killed.run(killed.resolve({ command: 'echo never', sandboxPolicy: RO }))
+    expect([signalled.exitCode, signalled.signal]).toEqual([null, 'SIGKILL'])
+    const proc = killed.start(killed.resolve({ command: 'echo never', sandboxPolicy: RO }))
+    await proc.done
+    expect(proc.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner' })
+
+    const { executor: stalling } = await setup(wrap('trap "exit 3" TERM; while :; do sleep 0.05; done'))
+    const timedOut = await stalling.run(stalling.resolve({ command: 'echo never', sandboxPolicy: RO, timeoutMs: 300 }))
+    expect([timedOut.timedOut, timedOut.exitCode]).toEqual([true, 3])
+    const controller = new AbortController()
+    setTimeout(() => { controller.abort() }, 300)
+    const aborted = await stalling.run(stalling.resolve({ command: 'echo never', sandboxPolicy: RO, signal: controller.signal }))
+    expect([aborted.aborted, aborted.exitCode]).toEqual([true, 3])
   }, 30_000)
 
   it('danger-full-access background runs bypass confine and carry no facts', async () => {

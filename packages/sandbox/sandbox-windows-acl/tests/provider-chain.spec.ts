@@ -48,7 +48,6 @@ describe('windows-acl win32 chain (LocalSandboxProvider)', () => {
     expect(confined.enforcement).toBe('partial')
     expect(confined.reachableSockets).toEqual([])
     expect(confined.denialSignatures).toEqual(['access is denied', 'access to the path', 'permission denied'])
-    expect(confined.runnerFailureRules).toEqual([{ allowedExitCodes: [127], fatalSignatures: ['windows-acl-run: '] }])
     // A sole candidate is selected unprobed.
     expect(probeWindowsAcl).not.toHaveBeenCalled()
     // The runner cannot refuse Unix-domain sockets, and the operator is told so.
@@ -60,6 +59,5 @@ describe('windows-acl win32 chain (LocalSandboxProvider)', () => {
     const confined = sandbox.confine(['true'], RO)
     expect(confined.argv.slice(-4)).toEqual(['--mode', 'read-only', '--', 'true'])
     expect(confined.enforcement).toBe('partial')
-    expect(confined.runnerFailureRules).toEqual([{ allowedExitCodes: [127], fatalSignatures: ['windows-acl-run: '] }])
   })
 })

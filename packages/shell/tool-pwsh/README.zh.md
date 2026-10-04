@@ -55,7 +55,7 @@ kind: "package-reference"
 
 ### Windows 特有的沙箱行为
 
-在沙箱执行器下，被拒绝的命令会报告 `[sandbox: file access denied under <mode> mode]`，并适用相同的单次升权路径：用 `sandbox_permissions` 加一句 `justification`，经用户审批后重试完全相同的命令一次。工具还会在其描述中教授两条 Windows 受限令牌约定：只读 pwsh 运行在 ConstrainedLanguage 中（`.NET` 静态调用、`Add-Type`、COM 与反射会以 "only core types" 错误失败）；两种受限模式下程序都无法打开命名管道，因此通过管道 stdio 捕获另一程序输出的命令会以 EPERM 失败——请升权该确切命令一次，或重构命令以避免捕获输出。
+在沙箱执行器下，输出读起来像文件访问拒绝的失败命令会带上 `[the command's output reads like a sandbox file-access denial under <mode> mode; the sandbox did not report it]`，并适用相同的单次升权路径：用 `sandbox_permissions` 加一句 `justification`，经用户审批后重试完全相同的命令一次。工具还会在其描述中教授两条 Windows 受限令牌约定：只读 pwsh 运行在 ConstrainedLanguage 中（`.NET` 静态调用、`Add-Type`、COM 与反射会以 "only core types" 错误失败）；两种受限模式下程序都无法打开命名管道，因此通过管道 stdio 捕获另一程序输出的命令会以 EPERM 失败——请升权该确切命令一次，或重构命令以避免捕获输出。
 
 ### 可能出什么问题
 
@@ -152,7 +152,7 @@ Non-zero exits are reported as `[exit code: N]` markers; investigate failures be
 
 #### 模型看到什么
 
-渲染器输出依数据而定的 stdout 尾部，再输出可选的 `[stderr]` 和 stderr 尾部。条件行精确为 `[output truncated; full output: <path-or-(unavailable)>]`、`[sandbox: file access denied under <mode> mode]` 加升权提示 `[sandbox: escalation available — …]`（仅在组合声明升权时）、`[timed out after <timeoutMs>ms]`、`[killed by signal: <signal>]` 与 `[exit code: <exitCode>]`（仅非零退出）；空正文渲染为 `(no output)`。
+渲染器输出依数据而定的 stdout 尾部，再输出可选的 `[stderr]` 和 stderr 尾部。条件行精确为 `[output truncated; full output: <path-or-(unavailable)>]`、`[the command's output reads like a sandbox file-access denial under <mode> mode; the sandbox did not report it]` 加升权提示 `[sandbox: escalation available — …]`（仅在组合声明升权时）、`[timed out after <timeoutMs>ms]`、`[killed by signal: <signal>]` 与 `[exit code: <exitCode>]`（仅非零退出）；空正文渲染为 `(no output)`。
 
 #### Token 影响
 

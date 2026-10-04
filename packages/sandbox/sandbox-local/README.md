@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-sandbox-local` confines commands and their descendants on Linux, macOS, and Windows while sharing the host kernel and filesystem. It chooses a supported platform runner automatically and fails with `SANDBOX_UNAVAILABLE` when none is usable, so commands never silently run without confinement. Each execution reports `full` or `partial` enforcement plus denial and runner-failure signatures, allowing callers to distinguish an unavailable or broken sandbox from a policy denial. Where the backend can, both confining modes also refuse Unix-domain sockets, so a command cannot reach the Docker daemon or an SSH agent; a backend that cannot reports `partial` and names the known sockets it leaves reachable. Choose it for host-local bash or pwsh execution; use a container or remote executor when the process needs an isolated environment.
+`dsh-sandbox-local` confines commands and their descendants on Linux, macOS, and Windows while sharing the host kernel and filesystem. It chooses a supported platform runner automatically and fails with `SANDBOX_UNAVAILABLE` when none is usable, so commands never silently run without confinement. Each execution reports `full` or `partial` enforcement plus the backend's denial signatures, a hint read from the command's output; whether the runner started the command is the consumer's launch marker, so callers tell an unavailable or broken sandbox from a command failure. Where the backend can, both confining modes also refuse Unix-domain sockets, so a command cannot reach the Docker daemon or an SSH agent; a backend that cannot reports `partial` and names the known sockets it leaves reachable. Choose it for host-local bash or pwsh execution; use a container or remote executor when the process needs an isolated environment.
 
 ## Table of Contents
 
@@ -43,14 +43,13 @@ Load the sandbox service and mount the provider; the defaults below are the sele
 | Field | Default | Meaning |
 |---|---|---|
 | `runnerCommand` | `[]` | Custom runner argv; bwrap-compatible profile arguments are appended and built-in selection and probes are skipped; enforcement is reported `partial` because no Unix-socket filter is installed |
-| `runnerFailureSignatures` | `[]` | Case-insensitive stderr substrings identifying the custom runner's own failure dialect; required with `runnerCommand` |
 | `probeTimeoutMs` | `5,000` | Timeout for each functional probe of a competing runner candidate |
 
 The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-sandbox-local) is the exhaustive source for every accepted field and its JSDoc.
 
 ### Confined execution and enforcement
 
-With the provider mounted, a command runs under the mode you resolve per call. Enforcement is a reported fact, not a promise: `full` means the backend governs every promised file effect and refuses Unix-domain sockets, while `partial` means it governs only a subset or cannot refuse those sockets — Landlock, the Windows ACL rung (also for its Everyone and hard-link boundaries) and a `runnerCommand` runner are the current partial cases, so a consumer that requires an absolute boundary can reject or surface them. Denied file effects surface through the backend's denial dialect, and a runner that fails before executing the command reports a structured runner-failure signature.
+With the provider mounted, a command runs under the mode you resolve per call. Enforcement is a reported fact, not a promise: `full` means the backend governs every promised file effect and refuses Unix-domain sockets, while `partial` means it governs only a subset or cannot refuse those sockets — Landlock, the Windows ACL rung (also for its Everyone and hard-link boundaries) and a `runnerCommand` runner are the current partial cases, so a consumer that requires an absolute boundary can reject or surface them. Denied file effects surface as a hint through the backend's denial dialect; a runner that fails before executing the command is identified by the consumer's launch marker.
 
 Under `workspace-write` the harness home (`$DSH_HOME`, from the shared `protectedRoots` helper) stays read-only even inside the workspace: bwrap binds it read-only over the workspace bind, Seatbelt denies writes under it after the workspace grant, and Landlock and the Windows ACL rung, which can only grant writable roots, refuse to run a command whose workspace or temp area contains it and say how to move it. The home holds the harness's own configuration — profiles and patch layers, the settings document the enforced policy set comes from, trust anchors, saved workflows and the action ledger — so a confined command cannot rewrite it; `danger-full-access`, approved call by call, can. In both confining modes the harness credential store (`$DSH_HOME/.credentials.yaml` and `$DSH_HOME/.env`, from the shared `unreadableFiles` helper) is also unreadable: bwrap binds `/dev/null` over each file that exists, and Seatbelt denies each to reads.
 
@@ -114,9 +113,9 @@ The Seatbelt profile is allow-default with `(deny file-write*)` plus write allow
 
 The Windows rung keeps one deterministic write SID and standing ACE per workspace, while every live session/workspace pair gets a random private temp directory with a distinct SID and revocable ACE — sessions sharing a workspace share its intended write authority without inheriting one another's temp authority. A fresh provider always chooses a new temp path and SID, so crash residue cannot block or authorize a resumed session. The rung reports `partial` enforcement because the restricted token must retain Everyone and NTFS hard links alias one file object across paths.
 
-### Denial and runner-failure dialects
+### Denial dialects
 
-Each runner's kernel speaks its own denial dialect, carried on every wrap as `denialSignatures`, and `runnerFailureRules` give each runner's fatal signature, so consumers classify a runner refusal before checking denial signatures. The exact strings and exit codes live in [`src/index.ts`](src/index.ts).
+Each runner's kernel speaks its own denial dialect, carried on every wrap as `denialSignatures`; the command's output carries it, so a match is a hint. A runner refusal is never read from output: every runner execs the wrapped argv, and the consumer's launch marker tells whether it started. The exact strings live in [`src/index.ts`](src/index.ts).
 
 ### Source map
 

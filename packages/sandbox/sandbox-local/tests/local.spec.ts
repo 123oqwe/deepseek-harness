@@ -231,7 +231,6 @@ describe('runnerCommand config', () => {
     const probeSeatbelt = vi.fn(() => false)
     const { sandbox } = await setup({
       runnerCommand: ['fake-runner', '--flag'],
-      runnerFailureSignatures: ['fake-runner: profile rejected'],
     }, { probeBwrap, probeLandlock, probeSeatbelt, hostSockets: () => ['/run/docker.sock'] })
     const confined = sandbox.confine(['bash', '-c', 'echo hi'], WW)
     expect(confined).toEqual({
@@ -244,7 +243,6 @@ describe('runnerCommand config', () => {
       // An operator runner's kernel mechanism is unknown: both Linux
       // file-denial dialects, never bare EPERM.
       denialSignatures: ['read-only file system', 'permission denied'],
-      runnerFailureRules: [{ fatalSignatures: ['fake-runner: profile rejected'] }],
     })
     expect(probeBwrap).not.toHaveBeenCalled()
     expect(probeLandlock).not.toHaveBeenCalled()
@@ -259,27 +257,6 @@ describe('runnerCommand config', () => {
     expect(() => sandbox.confine(['true'], RO)).toThrow(SandboxUnavailableError)
     expect(probeBwrap).toHaveBeenCalledTimes(1)
   })
-
-  it('requires an operator-owned failure dialect for every configured runner', async () => {
-    await expect(setup({ runnerCommand: ['fake-runner'] })).rejects.toThrow(
-      'runnerCommand requires at least one runnerFailureSignatures entry',
-    )
-  })
-
-  it('rejects runner failure signatures when no custom runner consumes them', async () => {
-    await expect(setup({ runnerFailureSignatures: ['profile rejected'] })).rejects.toThrow(
-      'runnerFailureSignatures requires runnerCommand',
-    )
-  })
-
-  it.each(['  ', 'fatal\ncontinued', 'fatal\rcontinued'])(
-    'rejects an unusable configured-runner failure signature %j',
-    async (signature) => {
-      await expect(setup({ runnerCommand: ['fake-runner'], runnerFailureSignatures: [signature] })).rejects.toThrow(
-        'runnerFailureSignatures entries must be non-empty single-line strings',
-      )
-    },
-  )
 })
 
 describe('the platform chains', () => {
@@ -294,7 +271,6 @@ describe('the platform chains', () => {
       enforcement: 'full',
       reachableSockets: [],
       denialSignatures: ['read-only file system'],
-      runnerFailureRules: [{ fatalSignatures: ['bwrap: '] }],
     })
     expect(probeLandlock).not.toHaveBeenCalled()
     expect(warnings).toEqual([])
@@ -322,19 +298,14 @@ describe('the platform chains', () => {
       enforcement: 'partial',
       reachableSockets: [],
       denialSignatures: ['permission denied'],
-      runnerFailureRules: [{
-        allowedExitCodes: [LAUNCHER_FAILURE_EXIT],
-        fatalSignatures: ['landlock-run: '],
-        informationalLines: ['landlock-run: partial enforcement (older Landlock ABI)'],
-      }],
     })
     expect(probeLandlock).toHaveBeenCalledWith(launcher)
   })
 
   it('darwin selects its sole candidate WITHOUT probing: nothing to arbitrate', async () => {
     // The safety property moves to execution time: an unusable sandbox-exec
-    // refuses to run the command, and the wrap's runnerFailureRules let
-    // the consumer classify that as a sandbox failure, not a task failure.
+    // refuses to run the command, which never writes its launch marker, so
+    // the consumer classifies that as a sandbox failure, not a task failure.
     const probeSeatbelt = vi.fn(() => true)
     const { sandbox } = await setup({}, { platform: 'darwin', probeSeatbelt })
     const confined = sandbox.confine(['bash', '-c', 'echo hi'], RO)
@@ -344,7 +315,6 @@ describe('the platform chains', () => {
       enforcement: 'full',
       reachableSockets: [],
       denialSignatures: ['operation not permitted'],
-      runnerFailureRules: [{ fatalSignatures: ['sandbox-exec: '] }],
     })
     expect(probeSeatbelt).not.toHaveBeenCalled()
     expect(warnings).toEqual([])
@@ -561,7 +531,6 @@ describe('the default seatbelt probe (sandbox-exec contract)', () => {
       enforcement: 'full',
       reachableSockets: [],
       denialSignatures: ['operation not permitted'],
-      runnerFailureRules: [{ fatalSignatures: ['sandbox-exec: '] }],
     })
   })
 
@@ -588,7 +557,6 @@ describe('the windows-acl probe (runner invocation contract)', () => {
     expect(confined.argv.slice(-4)).toEqual(['--mode', 'read-only', '--', 'true'])
     expect(confined.enforcement).toBe('partial')
     expect(confined.denialSignatures).toEqual(['access is denied', 'access to the path', 'permission denied'])
-    expect(confined.runnerFailureRules).toEqual([{ allowedExitCodes: [127], fatalSignatures: ['windows-acl-run: '] }])
   })
 
   it('reads a failing probe as unusable and walks to the next rung', async () => {

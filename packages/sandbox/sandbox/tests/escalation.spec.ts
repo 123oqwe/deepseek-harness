@@ -12,6 +12,7 @@ import {
   WIDER_MODES,
   approveEscalation,
   escalationHintMarker,
+  outputDenialHint,
   sandboxDenialMarker,
   validateEscalationArgs,
 } from '@deepseek-ai/dsh-sandbox'
@@ -46,6 +47,12 @@ describe('the model-facing markers', () => {
   it('the denial marker names the mode', () => {
     expect(sandboxDenialMarker('read-only')).toBe('[sandbox: file access denied under read-only mode]')
     expect(sandboxDenialMarker('workspace-write')).toBe('[sandbox: file access denied under workspace-write mode]')
+  })
+
+  it('the output-read denial hint names the mode and says the sandbox did not report it', () => {
+    expect(outputDenialHint('read-only'))
+      .toBe('[the command\'s output reads like a sandbox file-access denial under read-only mode; the sandbox did not report it]')
+    expect(outputDenialHint('read-only').startsWith('[sandbox: file access denied')).toBe(false)
   })
 
   it('the hint marker names the family subject', () => {

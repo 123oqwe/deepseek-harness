@@ -1133,11 +1133,6 @@
     },
     {
       "doc": "docs/subsystems/sandbox.md",
-      "symbol": "RunnerFailureRule",
-      "source": "packages/sandbox/sandbox/src/index.ts"
-    },
-    {
-      "doc": "docs/subsystems/sandbox.md",
       "symbol": "ConfinedArgv",
       "source": "packages/sandbox/sandbox/src/index.ts"
     },

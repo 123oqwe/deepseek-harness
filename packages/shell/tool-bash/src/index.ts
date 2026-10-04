@@ -75,7 +75,7 @@ function bashDescription(backgroundEnabled: boolean, escalationModes: readonly S
     + 'Each call runs in a fresh shell: no state (cwd, variables, functions) persists between calls — '
     + 'pass `workdir` instead of using `cd`. Non-zero exits are reported as `[exit code: N]`. '
     + `Current harness environment facts are exposed through managed \`$${DSH_ENV_PREFIX}*\` variables; inspect them when needed. `
-    + 'Commands may run under a file sandbox; a blocked file operation is reported as `[sandbox: file access denied under <mode> mode]` — a policy denial, not a bug in the command; do not retry another way. '
+    + 'Commands may run under a file sandbox; when a failed command\'s output reads like a file-access denial, the result carries `[the command\'s output reads like a sandbox file-access denial under <mode> mode; the sandbox did not report it]` — usually the sandbox blocked it, not a bug in the command; do not retry another way. '
     + 'The sandbox may also refuse Unix-domain sockets (such as the Docker daemon\'s or an SSH agent\'s): opening one then fails with '
     + '`Operation not permitted`, a sandbox denial that only `danger-full-access` lifts. '
     + 'Long output is truncated to its tail; the full output is saved to a file whose path is reported when available. '

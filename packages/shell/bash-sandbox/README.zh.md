@@ -57,11 +57,11 @@ kind: "package-reference"
 
 ### 拒绝是结果事实
 
-被拒绝的命令会被报告，而不是静默重试：结果携带 `sandbox: { mode, denied: true }`，面向模型的工具会追加拒绝标记。当升权可用时，模型可以用最窄的充分宽模式与一句理由重试同一条命令一次；批准提示会询问用户，未经批准绝不执行任何东西。本执行器自身绝不协商权限——覆盖值由工具层驱动。每个受限结果还会给出约束该命令的后端（`sandbox.backend`），当该后端无法拒绝 Unix-domain socket 时，还会列出它留下可连的已知宿主 socket（`sandbox.reachableSockets`）。
+失败输出读起来像拒绝的命令会被报告，而不是静默重试：结果携带 `sandbox: { mode, denied: true }`（从命令自己的输出读出的提示），面向模型的工具会追加读自输出的拒绝提示。当升权可用时，模型可以用最窄的充分宽模式与一句理由重试同一条命令一次；批准提示会询问用户，未经批准绝不执行任何东西。本执行器自身绝不协商权限——覆盖值由工具层驱动。每个受限结果还会给出约束该命令的后端（`sandbox.backend`），当该后端无法拒绝 Unix-domain socket 时，还会列出它留下可连的已知宿主 socket（`sandbox.reachableSockets`）。
 
 ### 失败与恢复
 
-如果没有 runner 能强制执行受限模式，前台调用以 `SANDBOX_UNAVAILABLE` 失败，后台进程则记录 runner 失败事实——绝不会静默无隔离运行。只有当 provider rejection 的 `ENOENT`/`EACCES` 路径或 syscall 独立指向 `argv[0]` 时，才把它归因于 confinement runner；其他 rejection 保持本地执行器不声明阶段的 provider-failure 语义。
+如果没有 runner 能强制执行受限模式，前台调用以 `SANDBOX_UNAVAILABLE` 失败，后台进程则记录 runner 失败事实——绝不会静默无隔离运行。命令始终没有写下启动标记（`dsh-sandbox` 的 `LaunchMarker`）时，runner 即为失败，不论 runner 或命令打印了什么。只有当 provider rejection 的 `ENOENT`/`EACCES` 路径或 syscall 独立指向 `argv[0]` 时，才把它归因于 confinement runner；其他 rejection 保持本地执行器不声明阶段的 provider-failure 语义。
 
 -----
 
@@ -82,13 +82,13 @@ kind: "package-reference"
 | 文件 | 职责 |
 |---|---|
 | [`src/index.ts`](src/index.ts) | 插件入口：`SandboxBashExecutor`、按进程保留事实、run/start 包装 |
-| [`src/helpers.ts`](src/helpers.ts) | 拒绝、runner 失败与 runner spawn 失败分类 |
+| [`src/helpers.ts`](src/helpers.ts) | 拒绝分类、runner spawn 失败归因与 runner 失败详情 |
 | — | 不发布运行时不变式伴生入口；分类可在结果中观察，且除归属 seam 所强制执行的约定外，本包不公开独立事件序列或可变数据关系。 |
 | `tests/` | 跨 bwrap、Landlock 与 Seatbelt runner 演练的行为 |
 
 ### 主要流程
 
-对受限模式，`resolve()` 标记每次调用的策略（会话的模式覆盖值，或部署回退）；`run` 与 `start` 把 bash argv 经提供方包装，再把受限 argv 交给继承的 subprocess 路径。结算时执行器对结果分类：runner 失败优先于拒绝（命令从未运行），stderr 携带后端拒绝方言的失败运行报告 `denied: true`，每次受限运行都携带模式、强制执行、后端与可连 socket 事实。`danger-full-access` 完全绕过提供方，并标记 `denied: false`。
+对受限模式，`resolve()` 标记每次调用的策略（会话的模式覆盖值，或部署回退）；`run` 与 `start` 把 bash argv 放在启动标记的沙箱内包装层之后经提供方包装，再把受限 argv 放在宿主侧包装层之后交给继承的 subprocess 路径。结算时执行器对结果分类：命令没有写下启动标记的运行是 runner 失败，优先于拒绝（命令从未运行）；stderr 携带后端拒绝方言的失败运行报告 `denied: true`（读自该输出的提示）；每次受限运行都携带模式、强制执行、后端与可连 socket 事实。`danger-full-access` 完全绕过提供方，并标记 `denied: false`。
 
 ### 不变式
 
@@ -137,7 +137,7 @@ kind: "package-reference"
 
 #### 模型看到的内容
 
-在普通有界输出之后，被拒绝的调用会精确追加 `[sandbox: file access denied under <mode> mode]`。当升权可用时，接下来精确追加 `[sandbox: escalation available — retry this exact command once with sandbox_permissions (the narrowest wider mode that suffices) + justification; the approval prompt asks the user]`。已结算的后台 runner 失败则追加 `[sandbox: the sandbox runner itself failed under <mode> mode — the command did not run; this is a sandbox problem, not a command failure]`。被拒绝的 Unix-domain socket 在命令自己的错误输出里显示为 `Operation not permitted`；Seatbelt 的文件拒绝方言正是这段文字，所以在 Seatbelt 下该调用也会被判为拒绝并带上述标记，在 bwrap 下则不带。
+在普通有界输出之后，判为拒绝的调用会精确追加 `[the command's output reads like a sandbox file-access denial under <mode> mode; the sandbox did not report it]`。当升权可用时，接下来精确追加 `[sandbox: escalation available — retry this exact command once with sandbox_permissions (the narrowest wider mode that suffices) + justification; the approval prompt asks the user]`。已结算的后台 runner 失败则追加 `[sandbox: the sandbox runner itself failed under <mode> mode — the command did not run; this is a sandbox problem, not a command failure]`。被拒绝的 Unix-domain socket 在命令自己的错误输出里显示为 `Operation not permitted`；Seatbelt 的文件拒绝方言正是这段文字，所以在 Seatbelt 下该调用也会被判为拒绝并带上述标记，在 bwrap 下则不带。
 
 #### Token 影响
 
@@ -151,7 +151,7 @@ kind: "package-reference"
 
 #### 模型看到的内容
 
-如果没有 runner 能强制执行受限模式，前台调用会传播来自 sandbox seam 的 `SANDBOX_UNAVAILABLE` 错误。当提供方拒绝带有 `ENOENT`／`EACCES` 路径或 syscall 证据并指向 `argv[0]` 时，会把原始错误作为 runner 失败详情；其他拒绝仍是与阶段无关的提供方错误。已结算的 runner 失败以匹配到的致命 stderr 行作为详情，并保留原始 stderr 收集结果；追加的 `Runner failure: <detail>` 是权威诊断，优先于通用的 `SANDBOX_UNAVAILABLE` 前缀。
+如果没有 runner 能强制执行受限模式，前台调用会传播来自 sandbox seam 的 `SANDBOX_UNAVAILABLE` 错误。当提供方拒绝带有 `ENOENT`／`EACCES` 路径或 syscall 证据并指向 `argv[0]` 时，会把原始错误作为 runner 失败详情；其他拒绝仍是与阶段无关的提供方错误。已结算的 runner 失败（命令没有写下启动标记）以 `the runner exited <code> before starting the command: <its last stderr line>` 作为详情，并保留原始 stderr 收集结果；追加的 `Runner failure: <detail>` 是权威诊断，优先于通用的 `SANDBOX_UNAVAILABLE` 前缀。
 
 #### Token 影响
 

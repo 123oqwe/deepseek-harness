@@ -804,7 +804,7 @@ describe('renderProcessRead', () => {
     expect(renderProcessRead(base, { mode: 'read-only', denied: true }, ['workspace-write']))
       .toContain('[sandbox: escalation available')
     expect(renderProcessRead({ delta: 'tail', lossy: false }, { mode: 'read-only', denied: true }))
-      .toBe('tail\n[sandbox: file access denied under read-only mode]')
+      .toBe('tail\n[the command\'s output reads like a sandbox file-access denial under read-only mode; the sandbox did not report it]')
     const runner = renderProcessRead(
       { delta: '', lossy: false },
       { mode: 'workspace-write', denied: true, runnerFailed: true },

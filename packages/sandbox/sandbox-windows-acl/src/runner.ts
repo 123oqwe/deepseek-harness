@@ -39,8 +39,9 @@
  *
  * Failure contract: every runner-side failure (bad args, missing
  * directories, token/grant/spawn errors) prints `windows-acl-run: <detail>`
- * to stderr and exits 127 — the seam's RUNNER_FAILURE_RULES matches that
- * signature. The child is NEVER spawned unrestricted.
+ * to stderr and exits 127, for the operator to read; consumers do not judge a
+ * runner failure from it, because a command can print the same line. The
+ * child is NEVER spawned unrestricted.
  * @module @deepseek-ai/dsh-sandbox-windows-acl/runner
  */
 
@@ -56,7 +57,7 @@ const RUNNER_FAILURE_EXIT = 127
 
 class RunnerFailure extends Error {}
 
-/** Print the runner-failure signature line and unwind. */
+/** Print the runner-failure line and unwind. */
 function fail(detail: string): never {
   process.stderr.write(`${RUNNER_SIGNATURE}: ${detail}\n`)
   throw new RunnerFailure(detail)

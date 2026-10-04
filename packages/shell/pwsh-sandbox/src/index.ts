@@ -3,10 +3,14 @@
  * `@deepseek-ai/dsh-bash-sandbox`. It wraps the exact local pwsh argv through
  * `ctx.sandbox` (which on Windows resolves to the ACL restricted-token runner
  * chain), inherits local process mechanics, and reports the selected mode,
- * backend, enforcement, reachable-socket and denial facts. Positive runner-executable evidence
- * identifies a broken confinement runner: foreground calls throw
- * `SANDBOX_UNAVAILABLE`, while background processes carry `runnerFailed`;
- * other provider rejections retain stage-neutral local-executor semantics. The
+ * backend, enforcement, reachable-socket and denial facts. A confinement
+ * runner failed when it could not be spawned or, on POSIX, when the command
+ * inside never wrote its launch marker (Epic P3-03 U2), never from what the
+ * output says. Windows has no POSIX shell for the marker, so there only a
+ * spawn failure counts. Foreground calls throw `SANDBOX_UNAVAILABLE`, while
+ * background processes carry `runnerFailed`; other provider rejections retain
+ * stage-neutral local-executor semantics. The denial fact is a hint read from
+ * stderr. The
  * tool layer owns the escalation approval flow through `ctx.approval`; this
  * executor reports the sandbox facts the tool renders.
  * @module @deepseek-ai/dsh-pwsh-sandbox
@@ -14,11 +18,10 @@
 
 import { Context } from '@deepseek-ai/cordis'
 import type { ShellExecRequest, ShellExecSpec, ShellProcess, ShellRunResult } from '@deepseek-ai/dsh-shell'
-import { SandboxUnavailableError } from '@deepseek-ai/dsh-sandbox'
+import { LaunchMarker, SandboxUnavailableError } from '@deepseek-ai/dsh-sandbox'
 import type {
   ConfinedArgv,
   ConfinedSandboxMode,
-  RunnerFailureRule,
   SandboxEnforcement,
   SandboxExecutionPolicy,
   SandboxMode,
@@ -27,7 +30,7 @@ import type {
 import type {} from '@deepseek-ai/dsh-sandbox-policy'
 import { PwshLocalExecutor } from '@deepseek-ai/dsh-pwsh-local'
 import type { Config as LocalConfig } from '@deepseek-ai/dsh-pwsh-local'
-import { backendFacts, classifyDenial, classifyRunnerFailure, isRunnerSpawnFailure, matchesSignature } from './helpers.ts'
+import { backendFacts, classifyDenial, isRunnerSpawnFailure, matchesSignature, runnerFailureDetail } from './helpers.ts'
 
 /**
  * Plugin config: the local executor's knobs, verbatim. The sandbox policy —
@@ -69,7 +72,7 @@ export class SandboxPwshExecutor extends PwshLocalExecutor {
     backend: string
     reachableSockets: readonly string[]
     denialSignatures: readonly string[]
-    runnerFailureRules: readonly RunnerFailureRule[]
+    marker: LaunchMarker
     runnerProgram: string | undefined
     workdir: string
   }>()
@@ -102,32 +105,38 @@ export class SandboxPwshExecutor extends PwshLocalExecutor {
       const result = await super.run(spec)
       return { ...result, sandbox: { mode, denied: false } }
     }
-    const confined = this.confine(spec, { ...policy, mode })
-    let result: ShellRunResult
+    const marker = LaunchMarker.open()
     try {
-      result = await this.runArgv(spec, confined.argv)
-    } catch (error) {
-      // An upstream abort remains cancellation even when it prevents spawn.
-      if (spec.signal?.aborted === true) spec.signal.throwIfAborted()
-      if (isRunnerSpawnFailure(error, confined.argv[0], spec.workdir)) {
-        throw new SandboxUnavailableError(mode, String(error))
+      const confined = this.confine(marker, spec, { ...policy, mode })
+      const argv = marker.runner(confined.argv)
+      let result: ShellRunResult
+      try {
+        result = await this.runArgv(spec, argv)
+      } catch (error) {
+        // An upstream abort remains cancellation even when it prevents spawn.
+        if (spec.signal?.aborted === true) spec.signal.throwIfAborted()
+        if (isRunnerSpawnFailure(error, argv[0], spec.workdir)) {
+          throw new SandboxUnavailableError(mode, String(error))
+        }
+        throw error
       }
-      throw error
-    }
-    // Runner failure outranks denial because the command did not run. Carry
-    // the matched fatal line, not an informational line that preceded it.
-    const runnerFailure = classifyRunnerFailure(result.exitCode, result.stderr.text, confined.runnerFailureRules)
-    if (runnerFailure !== undefined) {
-      throw new SandboxUnavailableError(mode, runnerFailure.detail)
-    }
-    return {
-      ...result,
-      sandbox: {
-        mode,
-        denied: classifyDenial(result, confined.denialSignatures),
-        enforcement: confined.enforcement,
-        ...backendFacts(confined),
-      },
+      // Runner failure outranks denial because the command did not run. An
+      // abort, the deadline or a signal may stop the runner first; those keep
+      // their own outcome.
+      if (!marker.started() && result.exitCode !== null && !result.aborted && !result.timedOut) {
+        throw new SandboxUnavailableError(mode, runnerFailureDetail(result.exitCode, result.stderr.text))
+      }
+      return {
+        ...result,
+        sandbox: {
+          mode,
+          denied: classifyDenial(result, confined.denialSignatures),
+          enforcement: confined.enforcement,
+          ...backendFacts(confined),
+        },
+      }
+    } finally {
+      marker.release()
     }
   }
 
@@ -137,25 +146,34 @@ export class SandboxPwshExecutor extends PwshLocalExecutor {
     if (mode === 'danger-full-access') return super.start(spec)
     // Once startArgv returns, install facts synchronously; promise settlement
     // cannot run before start() returns.
-    const confined = this.confine(spec, { ...policy, mode })
+    const marker = LaunchMarker.open()
+    let confined: ConfinedArgv
+    try {
+      confined = this.confine(marker, spec, { ...policy, mode })
+    } catch (error) {
+      marker.release()
+      throw error
+    }
+    const argv = marker.runner(confined.argv)
     let proc: ShellProcess
     try {
-      proc = this.startArgv(spec, confined.argv)
+      proc = this.startArgv(spec, argv)
     } catch (error) {
-      if (isRunnerSpawnFailure(error, confined.argv[0], spec.workdir)) {
+      marker.release()
+      if (isRunnerSpawnFailure(error, argv[0], spec.workdir)) {
         throw new SandboxUnavailableError(mode, String(error))
       }
       throw error
     }
-    const { enforcement, backend, reachableSockets, denialSignatures, runnerFailureRules } = confined
+    const { enforcement, backend, reachableSockets, denialSignatures } = confined
     this.processFacts.set(proc, {
       mode,
       enforcement,
       backend,
       reachableSockets,
       denialSignatures,
-      runnerFailureRules,
-      runnerProgram: confined.argv[0],
+      marker,
+      runnerProgram: argv[0],
       workdir: spec.workdir,
     })
     return proc
@@ -171,10 +189,12 @@ export class SandboxPwshExecutor extends PwshLocalExecutor {
       this.processFacts.delete(proc)
       // A provider rejection exposes no public failure stage. Attribute it to
       // the confinement runner only when the error independently names argv[0].
-      // Otherwise settled runner failure outranks denial-like diagnostics.
+      // Otherwise a runner that exited without the launch marker failed, which
+      // outranks denial-like diagnostics; a signal death is not attributed.
       const runnerFailed = providerRejected
         ? isRunnerSpawnFailure(providerError, facts.runnerProgram, facts.workdir)
-        : classifyRunnerFailure(proc.exitCode, stderr, facts.runnerFailureRules) !== undefined
+        : !facts.marker.started() && proc.exitCode !== null
+      facts.marker.release()
       proc.sandbox = {
         mode: facts.mode,
         denied: !runnerFailed && matchesSignature(proc.exitCode, stderr, facts.denialSignatures),
@@ -187,15 +207,15 @@ export class SandboxPwshExecutor extends PwshLocalExecutor {
   }
 
   /**
-   * Wrap one pwsh invocation via the `ctx.sandbox` provider. Provider errors
-   * propagate unchanged; the returned argv is handed directly to the local
-   * executor's subprocess path.
+   * Wrap one pwsh invocation, behind the launch marker's in-sandbox wrapper,
+   * via the `ctx.sandbox` provider. Provider errors propagate unchanged.
+   * @param marker - the run's launch marker (unmarked on Windows).
    * @param spec - resolved execution spec whose pwsh argv is confined.
    * @param policy - resolved confined execution policy.
    * @returns the provider's exact argv and settlement-classification facts.
    */
-  private confine(spec: ShellExecSpec, policy: SandboxPolicy): ConfinedArgv {
-    return this.ctx.sandbox.confine(this.argv(spec), policy)
+  private confine(marker: LaunchMarker, spec: ShellExecSpec, policy: SandboxPolicy): ConfinedArgv {
+    return this.ctx.sandbox.confine(marker.command(this.argv(spec)), policy)
   }
 }
 /* jscpd:ignore-end */

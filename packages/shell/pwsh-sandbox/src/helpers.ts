@@ -9,7 +9,7 @@
 /* jscpd:ignore-start */
 import { accessSync, constants, statSync } from 'node:fs'
 import type { ShellRunResult, ShellSandboxInfo } from '@deepseek-ai/dsh-shell'
-import type { ConfinedArgv, RunnerFailureRule } from '@deepseek-ai/dsh-sandbox'
+import type { ConfinedArgv } from '@deepseek-ai/dsh-sandbox'
 
 /**
  * A confined run's backend and, when there are any, the host sockets it left reachable.
@@ -64,12 +64,6 @@ export function isRunnerSpawnFailure(
   return syscall === 'spawn' || syscall === exactSyscall
 }
 
-/** Fatal runner evidence retained for infrastructure-error detail. */
-interface RunnerFailureMatch {
-  /** The original stderr line that matched a fatal signature. */
-  detail: string
-}
-
 /**
  * Classify a failed run against the selected backend's denial dialect.
  * @param result - settled foreground run.
@@ -81,37 +75,16 @@ export function classifyDenial(result: ShellRunResult, signatures: readonly stri
 }
 
 /**
- * Classify one settled process against the selected backend's structured
- * runner-failure rules. Each rule requires a nonzero exit, its optional
- * exit-code gate, and a fatal signature on one stderr line after exact
- * informational lines are excluded.
- * @param exitCode - process exit code; null means signal termination.
- * @param stderr - collected stderr text, left unchanged.
- * @param rules - structured runner-failure rules from the active wrap.
- * @returns the first matching fatal line, or undefined when evidence is insufficient.
+ * The detail a runner failure reports: the runner's exit and its last
+ * non-empty stderr line, the runner's own because the command never started;
+ * a runner prints its fatal diagnostic after any notice.
+ * @param exitCode - the runner's exit code.
+ * @param stderr - collected stderr text.
+ * @returns the detail.
  */
-export function classifyRunnerFailure(
-  exitCode: number | null,
-  stderr: string,
-  rules: readonly RunnerFailureRule[],
-): RunnerFailureMatch | undefined {
-  if (exitCode === null || exitCode === 0) return undefined
-  const lines = stderr.split(/\r?\n/)
-  for (const rule of rules) {
-    if (rule.allowedExitCodes !== undefined && !rule.allowedExitCodes.includes(exitCode)) continue
-    const informationalLines = new Set((rule.informationalLines ?? []).map(line => line.toLowerCase()))
-    // An empty or whitespace-only substring is not meaningful runner evidence.
-    // Ignore it while keeping any valid signatures beside it active.
-    const fatalSignatures = rule.fatalSignatures
-      .filter(signature => signature.trim().length > 0)
-      .map(signature => signature.toLowerCase())
-    for (const line of lines) {
-      const lowered = line.toLowerCase()
-      if (informationalLines.has(lowered)) continue
-      if (fatalSignatures.some(signature => lowered.includes(signature))) return { detail: line }
-    }
-  }
-  return undefined
+export function runnerFailureDetail(exitCode: number | null, stderr: string): string {
+  const line = stderr.split(/\r?\n/u).findLast(entry => entry.trim().length > 0)
+  return `the runner exited ${String(exitCode)} before starting the command${line === undefined ? '' : `: ${line}`}`
 }
 
 /**

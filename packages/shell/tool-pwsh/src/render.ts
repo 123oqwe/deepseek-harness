@@ -12,7 +12,7 @@
 
 import type { ShellProcessRead, ShellSandboxInfo, CollectedOutput } from '@deepseek-ai/dsh-shell'
 import type { SandboxMode } from '@deepseek-ai/dsh-sandbox'
-import { escalationHintMarker, sandboxDenialMarker } from '@deepseek-ai/dsh-sandbox'
+import { escalationHintMarker, outputDenialHint } from '@deepseek-ai/dsh-sandbox'
 
 /* jscpd:ignore-start -- deliberate twin of dsh-tool-bash/render.ts (Agent Note). */
 
@@ -61,7 +61,7 @@ export function renderPwshResult(
   const markers: string[] = []
   // Keep the exit marker last because parseExitStatus anchors there.
   if (result.sandbox?.denied) {
-    markers.push(sandboxDenialMarker(result.sandbox.mode))
+    markers.push(outputDenialHint(result.sandbox.mode))
     // Hint only when the composition exposes escalation, before the final exit marker.
     if (escalationModes.length > 0) {
       markers.push(escalationHintMarker('command'))
@@ -102,7 +102,7 @@ export function renderPwshProcessRead(
   if (sandbox?.runnerFailed) {
     notices.push(`[sandbox: the sandbox runner itself failed under ${sandbox.mode} mode — the command did not run; this is a sandbox problem, not a command failure]`)
   } else if (sandbox?.denied) {
-    notices.push(sandboxDenialMarker(sandbox.mode))
+    notices.push(outputDenialHint(sandbox.mode))
     if (escalationModes.length > 0) {
       notices.push(escalationHintMarker('command'))
     }

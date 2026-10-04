@@ -3,12 +3,15 @@
  * policy hand-off, fail-closed propagation, classification, and fact stamping deterministic;
  * real-provider integration lives in `tests/landlock.e2e.ts`. A mode-0555 directory supplies
  * the Unix denial signature used by the classifier without requiring a real sandbox runner.
+ * Fake runners that exec their argv start the command, so the launch marker is written; fake
+ * runners that exit first stand in for a runner failure. `$DSH_HOME` points at a temp
+ * directory, where the markers live.
  */
 
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { afterAll, describe, expect, it, vi } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import type { ShellRunResult, CollectedOutput } from '@deepseek-ai/dsh-shell'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
@@ -18,14 +21,32 @@ import { SandboxPolicyService } from '@deepseek-ai/dsh-sandbox-policy'
 import { SandboxBashExecutor } from '@deepseek-ai/dsh-bash-sandbox'
 import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
 import type { SubprocessHandle, SubprocessOutputReader } from '@deepseek-ai/dsh-subprocess'
-import { classifyDenial, classifyRunnerFailure, isRunnerSpawnFailure } from '../src/helpers.ts'
+import { classifyDenial, isRunnerSpawnFailure, runnerFailureDetail } from '../src/helpers.ts'
 import type { Config } from '@deepseek-ai/dsh-bash-sandbox'
 
 const spillDir = mkdtempSync(join(tmpdir(), 'dsh-bash-sandbox-spec-'))
+const dshHome = mkdtempSync(join(tmpdir(), 'dsh-bash-sandbox-home-'))
+
+beforeAll(() => {
+  vi.stubEnv('DSH_HOME', dshHome)
+})
 
 afterAll(() => {
+  vi.unstubAllEnvs()
   rmSync(spillDir, { recursive: true, force: true })
+  rmSync(dshHome, { recursive: true, force: true })
 })
+
+/** The launch markers still on disk. */
+function openMarkers(): string[] {
+  try {
+    return readdirSync(join(dshHome, 'cache', 'launch'))
+  } catch (error: unknown) {
+    // No run has opened a marker yet, so the directory was never created.
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return []
+    throw error
+  }
+}
 
 /** One recorded provider call: the argv handed over and the policy it rode with. */
 interface ConfineCall {
@@ -36,9 +57,6 @@ interface ConfineCall {
 /** The Linux file-denial dialects the fake wraps carry — matches the unix-permission denials the tests below produce. */
 const UNIX_SIGNATURES = ['read-only file system', 'permission denied'] as const
 
-/** The runner-failure rule the fake wraps carry (a fake-runner: error line marks the sandbox itself failing). */
-const RUNNER_FAILURE = [{ fatalSignatures: ['fake-runner: '] }] as const
-
 /** Provider argv[0] forms that all share the caller-owned cwd spawn precondition. */
 const RUNNER_FORMS = [
   ['absolute', process.execPath],
@@ -48,7 +66,7 @@ const RUNNER_FORMS = [
 
 /** A passthrough wrap: the caller's argv unchanged, asserted full — commands run unconfined, deterministically. */
 const passthrough = (argv: readonly string[]): ConfinedArgv =>
-  ({ argv: [...argv], backend: 'fake-runner', enforcement: 'full', reachableSockets: [], denialSignatures: UNIX_SIGNATURES, runnerFailureRules: RUNNER_FAILURE })
+  ({ argv: [...argv], backend: 'fake-runner', enforcement: 'full', reachableSockets: [], denialSignatures: UNIX_SIGNATURES })
 
 /**
  * Boot a context with a recording fake `ctx.sandbox` (behavior injectable
@@ -93,25 +111,26 @@ function executionPolicy(mode: SandboxMode, workspaceRoot = resolve(process.cwd(
 }
 
 describe('the provider hand-off', () => {
-  it('hands the provider the exact bash argv and the per-call policy, and runs the returned argv', async () => {
+  it('hands the provider the exact bash argv behind the launch marker\'s in-sandbox wrapper, and the per-call policy', async () => {
     const { bash, calls } = await setup()
     const result = await bash.run(bash.resolve({ command: 'echo \'a b\' "c\'d"' }))
     expect(result.stdout.text).toBe('a b c\'d\n')
     expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner' })
     expect(calls).toEqual([{
-      argv: ['bash', '-c', 'echo \'a b\' "c\'d"'],
+      argv: ['/bin/sh', '-c', expect.stringContaining('>&9'), 'dsh-launched', 'bash', '-c', 'echo \'a b\' "c\'d"'],
       policy: { mode: 'read-only', workspaceRoot: resolve(process.cwd()) },
     }])
   })
 
-  it('hands the provider\'s returned argv directly to ctx.subprocess.spawn', async () => {
-    const returnedArgv = ['env', 'DSH_WRAP=1', 'bash', '-c', 'printf "%s" "$DSH_WRAP"']
-    const { ctx, bash } = await setup({}, () => ({ argv: returnedArgv, backend: 'fake-runner', enforcement: 'full', reachableSockets: [], denialSignatures: UNIX_SIGNATURES, runnerFailureRules: RUNNER_FAILURE }))
+  it('spawns the provider\'s returned argv behind the host-side launch wrapper', async () => {
+    const { ctx, bash, calls } = await setup({}, argv => ({ argv: ['env', 'DSH_WRAP=1', ...argv], backend: 'fake-runner', enforcement: 'full', reachableSockets: [], denialSignatures: UNIX_SIGNATURES }))
     const spawn = vi.spyOn(ctx.subprocess, 'spawn')
     const result = await bash.run(bash.resolve({ command: 'printf "%s" "$DSH_WRAP"' }))
     expect(result.stdout.text).toBe('1')
     expect(spawn).toHaveBeenCalledTimes(1)
-    expect(spawn.mock.calls[0]?.[0].argv).toEqual(returnedArgv)
+    const spawned = spawn.mock.calls[0]?.[0].argv ?? []
+    expect(spawned.slice(0, 4)).toEqual(['/bin/sh', '-c', expect.stringContaining('9>'), 'dsh-launch-status'])
+    expect(spawned.slice(5)).toEqual(['env', 'DSH_WRAP=1', ...calls[0]?.argv ?? []])
     expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner' })
   })
 
@@ -124,7 +143,9 @@ describe('the provider hand-off', () => {
       'const { appendFileSync } = require("node:fs");',
       'const { spawnSync } = require("node:child_process");',
       'appendFileSync(process.env.DSH_ORDER_FILE, "runner\\n");',
-      'const child = spawnSync(process.argv[1], process.argv.slice(2), { env: process.env, stdio: "inherit" });',
+      // Descriptor 9 is passed on, as a real runner's exec keeps it.
+      'const stdio = [0, 1, 2, "ignore", "ignore", "ignore", "ignore", "ignore", "ignore", 9];',
+      'const child = spawnSync(process.argv[1], process.argv.slice(2), { env: process.env, stdio });',
       'process.exit(child.status ?? 125);',
     ].join('')
     const { bash } = await setup({}, argv => ({
@@ -133,7 +154,6 @@ describe('the provider hand-off', () => {
       enforcement: 'full',
       reachableSockets: [],
       denialSignatures: UNIX_SIGNATURES,
-      runnerFailureRules: RUNNER_FAILURE,
     }))
 
     try {
@@ -197,7 +217,6 @@ describe('fail closed', () => {
         enforcement: 'full',
         reachableSockets: [],
         denialSignatures: UNIX_SIGNATURES,
-        runnerFailureRules: RUNNER_FAILURE,
       }))
       const parent = mkdtempSync(join(tmpdir(), 'dsh-sandbox-missing-cwd-'))
       try {
@@ -232,7 +251,6 @@ describe('fail closed', () => {
       enforcement: 'full',
       reachableSockets: [],
       denialSignatures: UNIX_SIGNATURES,
-      runnerFailureRules: RUNNER_FAILURE,
     }))
     vi.spyOn(ctx.subprocess, 'spawn').mockImplementation(() => {
       throw Object.assign(new Error('spawn ENOEXEC'), { code: 'ENOEXEC', syscall: 'spawn' })
@@ -252,7 +270,7 @@ describe('fail closed', () => {
     expect(background).not.toBeInstanceOf(SandboxUnavailableError)
   })
 
-  it('classifies a synchronous SubprocessRuntime EACCES with the exact runner path', async () => {
+  it('classifies a synchronous SubprocessRuntime EACCES naming the spawned program', async () => {
     const runner = join(spillDir, 'unexecutable-runner')
     const { ctx, bash } = await setup({}, argv => ({
       argv: [runner, ...argv],
@@ -260,12 +278,11 @@ describe('fail closed', () => {
       enforcement: 'full',
       reachableSockets: [],
       denialSignatures: UNIX_SIGNATURES,
-      runnerFailureRules: RUNNER_FAILURE,
     }))
     // This pins an alternative SubprocessRuntime's synchronous seam, not the
     // shipped local behavior.
-    vi.spyOn(ctx.subprocess, 'spawn').mockImplementation(() => {
-      throw Object.assign(new Error('spawn EACCES'), { code: 'EACCES', syscall: 'spawn', path: runner })
+    vi.spyOn(ctx.subprocess, 'spawn').mockImplementation((spec) => {
+      throw Object.assign(new Error('spawn EACCES'), { code: 'EACCES', syscall: 'spawn', path: spec.argv[0] })
     })
 
     await expect(bash.run(bash.resolve({ command: 'true' })))
@@ -282,7 +299,6 @@ describe('fail closed', () => {
       enforcement: 'full',
       reachableSockets: [],
       denialSignatures: UNIX_SIGNATURES,
-      runnerFailureRules: RUNNER_FAILURE,
     }))
     const parent = mkdtempSync(join(tmpdir(), 'dsh-sandbox-missing-cwd-'))
     const workdir = join(parent, 'missing')
@@ -467,53 +483,11 @@ describe('isRunnerSpawnFailure', () => {
   })
 })
 
-describe('classifyRunnerFailure', () => {
-  it('ignores empty and whitespace-only fatal signatures instead of treating exit status or notice text as evidence', () => {
-    const notice = 'landlock-run: partial enforcement (older Landlock ABI)'
-    const emptyRule = [{ allowedExitCodes: [125], fatalSignatures: ['', ' ', '\t'] }]
-    expect(classifyRunnerFailure(125, '', emptyRule)).toBeUndefined()
-    expect(classifyRunnerFailure(125, notice, emptyRule)).toBeUndefined()
-  })
-
-  it('keeps valid fatal signatures active beside an ignored empty entry', () => {
-    const notice = 'landlock-run: partial enforcement (older Landlock ABI)'
-    const fatal = 'landlock-run: ruleset creation failed'
-    const rules = [{
-      allowedExitCodes: [125],
-      fatalSignatures: ['', ' ', 'landlock-run: '],
-      informationalLines: [notice],
-    }]
-    expect(classifyRunnerFailure(125, `${notice}\nchild diagnostic\n${fatal}`, rules)).toEqual({ detail: fatal })
-  })
-
-  it('requires Landlock exit 125 plus a non-notice fatal line and returns that original line', () => {
-    const notice = 'landlock-run: partial enforcement (older Landlock ABI)'
-    const rules = [{ allowedExitCodes: [125], fatalSignatures: ['landlock-run: '], informationalLines: [notice] }]
-    expect(classifyRunnerFailure(1, notice, rules)).toBeUndefined()
-    expect(classifyRunnerFailure(2, notice, rules)).toBeUndefined()
-    expect(classifyRunnerFailure(125, notice, rules)).toBeUndefined()
-    expect(classifyRunnerFailure(125, notice.toUpperCase(), rules)).toBeUndefined()
-    expect(classifyRunnerFailure(125, `${notice}: extra detail`, rules))
-      .toEqual({ detail: `${notice}: extra detail` })
-    expect(classifyRunnerFailure(125, `${notice}\nlandlock-run: exec failed: No such file or directory`, rules))
-      .toEqual({ detail: 'landlock-run: exec failed: No such file or directory' })
-  })
-
-  it.each([
-    'landlock-run: usage error: missing `-- <argv>...` command',
-    'landlock-run: landlock is not enforced by this kernel (ABI unsupported or disabled)',
-    'landlock-run: cannot open rule path: /gone: No such file or directory',
-    'landlock-run: landlock ruleset error: Invalid argument',
-    'landlock-run: exec failed: Permission denied',
-    'landlock-run: out of memory',
-    'landlock-run: future fatal diagnostic',
-  ])('keeps known and future Landlock fatal diagnostics fail-closed: %s', (fatal) => {
-    const rules = [{
-      allowedExitCodes: [125],
-      fatalSignatures: ['landlock-run: '],
-      informationalLines: ['landlock-run: partial enforcement (older Landlock ABI)'],
-    }]
-    expect(classifyRunnerFailure(125, fatal, rules)).toEqual({ detail: fatal })
+describe('runnerFailureDetail', () => {
+  it('names the runner\'s exit and its last non-empty stderr line', () => {
+    expect(runnerFailureDetail(125, 'landlock-run: partial enforcement (older Landlock ABI)\nlandlock-run: exec failed: No such file or directory\n\n'))
+      .toBe('the runner exited 125 before starting the command: landlock-run: exec failed: No such file or directory')
+    expect(runnerFailureDetail(0, '')).toBe('the runner exited 0 before starting the command')
   })
 })
 
@@ -525,7 +499,6 @@ describe('result facts', () => {
       enforcement: 'full',
       reachableSockets: [],
       denialSignatures: UNIX_SIGNATURES,
-      runnerFailureRules: RUNNER_FAILURE,
     }))
     const result = await bash.run(bash.resolve({ command: `exit ${exitCode}` }))
     expect(result.exitCode).toBe(exitCode)
@@ -548,7 +521,7 @@ describe('result facts', () => {
   })
 
   it('carries the provider\'s partial-enforcement fact through unchanged', async () => {
-    const { bash } = await setup({}, argv => ({ argv: [...argv], backend: 'fake-runner', enforcement: 'partial', reachableSockets: [], denialSignatures: UNIX_SIGNATURES, runnerFailureRules: RUNNER_FAILURE }))
+    const { bash } = await setup({}, argv => ({ argv: [...argv], backend: 'fake-runner', enforcement: 'partial', reachableSockets: [], denialSignatures: UNIX_SIGNATURES }))
     const result = await bash.run(bash.resolve({ command: 'true' }))
     expect(result.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'partial', backend: 'fake-runner' })
   })
@@ -561,7 +534,6 @@ describe('result facts', () => {
       enforcement: 'partial',
       reachableSockets,
       denialSignatures: UNIX_SIGNATURES,
-      runnerFailureRules: RUNNER_FAILURE,
     }))
     const facts = { mode: 'read-only', denied: false, enforcement: 'partial', backend: 'landlock', reachableSockets }
     expect((await bash.run(bash.resolve({ command: 'true' }))).sandbox).toEqual(facts)
@@ -579,7 +551,6 @@ describe('background sandbox facts', () => {
       enforcement: 'full',
       reachableSockets: [],
       denialSignatures: UNIX_SIGNATURES,
-      runnerFailureRules: RUNNER_FAILURE,
     }))
     const parent = mkdtempSync(join(tmpdir(), 'dsh-sandbox-missing-cwd-'))
     try {
@@ -638,24 +609,24 @@ describe('background sandbox facts', () => {
   })
 
   it('a foreground runner failure throws the fail-closed error, never a task result', async () => {
-    // The wrap's runner prefix on a failed run means the SANDBOX broke and
-    // the command never ran — the late twin of the confine-time throw, with
-    // the matched fatal stderr line carried as the cause.
-    const { bash } = await setup()
-    const run = bash.run(bash.resolve({ command: 'echo "fake-runner: ruleset rejected" >&2; exit 125' }))
+    // A runner that exits without starting the command means the SANDBOX
+    // broke — the late twin of the confine-time throw, with the runner's exit
+    // and first stderr line carried as the detail.
+    const { bash } = await setup({}, refusingRunner('fake-runner', 'fake-runner: ruleset rejected', 125))
+    const run = bash.run(bash.resolve({ command: 'true' }))
     await expect(run).rejects.toThrow(expect.objectContaining({ code: SANDBOX_UNAVAILABLE }))
-    await expect(run).rejects.toThrow('fake-runner: ruleset rejected')
+    await expect(run).rejects.toThrow('the runner exited 125 before starting the command: fake-runner: ruleset rejected')
   })
 
   it('a foreground runner failure outranks denial: runner error text may contain denial words', async () => {
-    const { bash } = await setup()
-    await expect(bash.run(bash.resolve({ command: 'echo "fake-runner: cannot open rule path: /x: Permission denied" >&2; exit 125' })))
+    const { bash } = await setup({}, refusingRunner('fake-runner', 'fake-runner: cannot open rule path: /x: Permission denied', 125))
+    await expect(bash.run(bash.resolve({ command: 'true' })))
       .rejects.toThrow(expect.objectContaining({ code: SANDBOX_UNAVAILABLE }))
   })
 
   it('a settled background runner failure stamps runnerFailed (no error channel remains), not denied', async () => {
-    const { bash } = await setup()
-    const task = bash.start(bash.resolve({ command: 'echo "fake-runner: cannot open rule path: /x: Permission denied" >&2; exit 125' }))
+    const { bash } = await setup({}, refusingRunner('fake-runner', 'fake-runner: cannot open rule path: /x: Permission denied', 125))
+    const task = bash.start(bash.resolve({ command: 'true' }))
     await task.done
     expect(task.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner', runnerFailed: true })
   })
@@ -671,7 +642,7 @@ describe('background sandbox facts', () => {
     let call = 0
     const { bash } = await setup({}, (argv) => {
       const wrap = wraps[Math.min(call++, wraps.length - 1)] as Pick<ConfinedArgv, 'backend' | 'enforcement' | 'reachableSockets' | 'denialSignatures'>
-      return { argv: [...argv], ...wrap, runnerFailureRules: RUNNER_FAILURE }
+      return { argv: [...argv], ...wrap }
     })
     const slow = bash.start(bash.resolve({ command: 'sleep 0.4; echo "x: Permission denied" >&2; exit 1' }))
     const quick = bash.start(bash.resolve({ command: 'true' }))
@@ -697,5 +668,106 @@ describe('background sandbox facts', () => {
     const task = bash.start(bash.resolve({ command: 'sleep 30' }))
     await ctx.fiber.dispose()
     expect(task.status).toBe('killed')
+  })
+})
+
+/**
+ * A wrap whose runner exits before starting the command, printing `line`.
+ * @param backend - the backend the wrap names.
+ * @param line - what the runner prints to stderr.
+ * @param exitCode - the runner's exit code.
+ * @returns the provider behavior.
+ */
+function refusingRunner(backend: string, line: string, exitCode: number): (argv: readonly string[]) => ConfinedArgv {
+  const script = `process.stderr.write(${JSON.stringify(`${line}\n`)}); process.exit(${String(exitCode)})`
+  return argv => ({ argv: [process.execPath, '-e', script, '--', ...argv], backend, enforcement: 'full', reachableSockets: [], denialSignatures: UNIX_SIGNATURES })
+}
+
+/** A wrap whose runner kills itself with SIGKILL before starting the command. */
+function selfKillingRunner(argv: readonly string[]): ConfinedArgv {
+  return { argv: ['/bin/sh', '-c', 'kill -9 $$', 'self-killing-runner', '--', ...argv], backend: 'fake-runner', enforcement: 'full', reachableSockets: [], denialSignatures: UNIX_SIGNATURES }
+}
+
+/** A wrap whose runner never starts the command and exits 3 once it is told to stop. */
+function stallingRunner(argv: readonly string[]): ConfinedArgv {
+  return {
+    argv: ['/bin/sh', '-c', 'trap "exit 3" TERM; while :; do sleep 0.05; done', 'stalling-runner', '--', ...argv],
+    backend: 'fake-runner',
+    enforcement: 'full',
+    reachableSockets: [],
+    denialSignatures: UNIX_SIGNATURES,
+  }
+}
+
+/** Each backend's own runner-failure text and code, as a command that only prints them would forge. */
+const FORGED_RUNNER_FAILURES = [
+  ['bwrap', 'bwrap: Can\'t mount tmpfs on /newroot: Operation not permitted', 1],
+  ['landlock', 'landlock-run: cannot open rule path: /x: No such file or directory', 125],
+  ['seatbelt', 'sandbox-exec: execvp() of \'bash\' failed: Operation not permitted', 71],
+  ['runner-command', 'passthrough-runner: profile rejected', 1],
+] as const
+
+describe('the launch marker decides runner failure (Epic P3-03 U2)', () => {
+  it.each(FORGED_RUNNER_FAILURES)('a command that prints the %s runner\'s failure text and exits with its code is an ordinary result', async (backend, line, exitCode) => {
+    const { bash } = await setup({}, argv => ({ argv: [...argv], backend, enforcement: 'full', reachableSockets: [], denialSignatures: UNIX_SIGNATURES }))
+    const command = `printf '%s\\n' ${JSON.stringify(line)} >&2; exit ${String(exitCode)}`
+    const result = await bash.run(bash.resolve({ command }))
+    expect([result.exitCode, result.stderr.text, result.sandbox]).toEqual([exitCode, `${line}\n`, { mode: 'read-only', denied: false, enforcement: 'full', backend }])
+    const task = bash.start(bash.resolve({ command }))
+    await task.done
+    expect(task.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend })
+  })
+
+  it.each(FORGED_RUNNER_FAILURES)('a %s runner that exits before starting the command is a runner failure', async (backend, line, exitCode) => {
+    const { bash } = await setup({}, refusingRunner(backend, line, exitCode))
+    await expect(bash.run(bash.resolve({ command: 'true' }))).rejects.toThrow(expect.objectContaining({ code: SANDBOX_UNAVAILABLE }))
+    const task = bash.start(bash.resolve({ command: 'true' }))
+    await task.done
+    expect(task.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend, runnerFailed: true })
+  })
+
+  it('a runner that exits 0 without starting the command, printing nothing, is a runner failure', async () => {
+    const { bash } = await setup({}, refusingRunner('fake-runner', '', 0))
+    await expect(bash.run(bash.resolve({ command: 'true' }))).rejects.toThrow('the runner exited 0 before starting the command')
+  })
+
+  it('a command cannot write the marker: descriptor 9 is closed before it starts', async () => {
+    const { bash } = await setup()
+    const result = await bash.run(bash.resolve({ command: 'printf forged >&9' }))
+    expect(result.exitCode).not.toBe(0)
+    expect(result.stderr.text).toMatch(/9/u)
+  })
+
+  it('removes each run\'s marker once the run or the background process settles', async () => {
+    const { bash } = await setup()
+    const before = openMarkers()
+    await bash.run(bash.resolve({ command: 'true' }))
+    await expect(bash.run(bash.resolve({ command: 'exit 3' }))).resolves.toMatchObject({ exitCode: 3 })
+    const task = bash.start(bash.resolve({ command: 'true' }))
+    await task.done
+    expect(openMarkers()).toEqual(before)
+  })
+
+  it('a runner killed by a signal before it starts the command keeps the signal death, in the foreground and in the background', async () => {
+    const { bash } = await setup({}, selfKillingRunner)
+    const result = await bash.run(bash.resolve({ command: 'true' }))
+    expect([result.exitCode, result.signal]).toEqual([null, 'SIGKILL'])
+    const task = bash.start(bash.resolve({ command: 'true' }))
+    await task.done
+    expect(task.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner' })
+  })
+
+  it('a runner the deadline stops before it starts the command keeps the timeout', async () => {
+    const { bash } = await setup({}, stallingRunner)
+    const result = await bash.run(bash.resolve({ command: 'true', timeoutMs: 300 }))
+    expect([result.timedOut, result.exitCode]).toEqual([true, 3])
+  })
+
+  it('a runner an abort stops before it starts the command keeps the cancellation', async () => {
+    const { bash } = await setup({}, stallingRunner)
+    const controller = new AbortController()
+    setTimeout(() => { controller.abort() }, 300)
+    const result = await bash.run(bash.resolve({ command: 'true', signal: controller.signal }))
+    expect([result.aborted, result.exitCode]).toEqual([true, 3])
   })
 })

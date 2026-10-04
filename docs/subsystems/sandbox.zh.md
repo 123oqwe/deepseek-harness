@@ -100,27 +100,7 @@ interface SandboxPolicy extends SandboxExecutionPolicy {
 
 ## 包装后的 argv 与分类方言
 
-`RunnerFailureRule` 汇集用于判定 runner 在执行命令前失败的证据。消费方要求进程以非零状态退出，并同时满足可选的允许退出码门控，以及余下某一 stderr 行中不区分大小写的致命签名。系统会先按不区分大小写的整行精确匹配移除信息性排除项，因此无害的 runner 通知本身不能证明失败。匹配到的行仍可用作错误详情；分类过程不会重写 stderr。
-
-```ts type-equiv
-/**
- * Evidence that identifies a sandbox runner failing before it executes the
- * wrapped command. A consumer first applies {@link allowedExitCodes} when
- * present, removes {@link informationalLines} by case-insensitive exact line
- * equality, then matches {@link fatalSignatures} case-insensitively within
- * each remaining stderr line. Exit status alone never proves runner failure.
- */
-interface RunnerFailureRule {
-  /** Nonzero process exit codes on which this rule may match; omitted permits any nonzero exit. */
-  allowedExitCodes?: readonly number[]
-  /** Non-empty substrings identifying a fatal runner diagnostic on one stderr line. */
-  fatalSignatures: readonly string[]
-  /** Benign stderr lines excluded by exact full-line equality before fatal matching. */
-  informationalLines?: readonly string[]
-}
-```
-
-`ConfinedArgv` 是消费方实际 spawn 的内容。除了替换后的 argv，它还给出后端名称，携带后端的强制执行事实与它留下可连的已知宿主 socket，以及两种正交的 stderr 分类器。`denialSignatures` 用于识别沙箱正常工作时受限命令被阻止的情况。`runnerFailureRules` 用于识别沙箱 runner 在执行命令之前拒绝或失败的情况；消费方应先检查后者，将其作为沙箱基础设施故障上报，而非普通任务失败。
+`ConfinedArgv` 是消费方实际 spawn 的内容。除了替换后的 argv，它还给出后端名称，携带后端的强制执行事实与它留下可连的已知宿主 socket，以及后端的拒绝方言。`denialSignatures` 匹配的是命令自己写出的 stderr，所以命中只是给模型看的提示，从不作为安全判定。runner 有没有启动命令不从输出读取：POSIX runner 会 exec 调用方的 argv，消费方用 `LaunchMarker`（见下文）包住命令与 runner，并在进程结束后读取标记。
 
 ```ts type-equiv
 /**
@@ -129,7 +109,11 @@ interface RunnerFailureRule {
  * achieves for it.
  */
 interface ConfinedArgv {
-  /** The wrapped argv (runner, profile, separator, then the caller's argv). */
+  /**
+   * The wrapped argv (runner, profile, separator, then the caller's argv). A
+   * POSIX runner execs the caller's argv once confinement is in place, so a
+   * consumer can learn that it started from a {@link LaunchMarker}.
+   */
   argv: string[]
   /**
    * The backend that confines this execution: `bwrap`, `landlock`,
@@ -155,20 +139,19 @@ interface ConfinedArgv {
    * under bwrap's read-only binds, EACCES under Landlock, EPERM under
    * Seatbelt). A consumer that infers denials from a failed run's stderr
    * matches against exactly these rather than a cross-backend union — the
-   * union claims denials a given backend never produces.
+   * union claims denials a given backend never produces. The stderr is the
+   * command's own and any program can print these, so a match is a hint,
+   * never a security judgement (Epic P3-03 U2).
    */
   denialSignatures: readonly string[]
-  /**
-   * Structured runner-failure evidence rules. Consumers require a matching
-   * fatal stderr line (after informational exclusions) and any rule-specific
-   * exit-code gate before checking denial signatures: runner failure means the
-   * command never ran, while denial means confinement worked and blocked it.
-   */
-  runnerFailureRules: readonly RunnerFailureRule[]
 }
 ```
 
-[本地提供方](../../packages/sandbox/sandbox-local/README.zh.md)拥有运维配置，并将其 runner 方言映射到这些规则。[沙箱化 bash 消费方](../../packages/shell/bash-sandbox/README.zh.md)拥有 spawn 与结果归因。
+[本地提供方](../../packages/sandbox/sandbox-local/README.zh.md)拥有运维配置。[沙箱化 bash 消费方](../../packages/shell/bash-sandbox/README.zh.md)拥有 spawn 与结果归因。
+
+## 启动标记
+
+`LaunchMarker` 判定 runner 失败（Epic P3-03 U2）。宿主侧的 `/bin/sh` 在 `$DSH_HOME/cache/launch` 下打开一个状态文件作为描述符 9，再 exec runner；沙箱内的 `/bin/sh` 写入标记、关闭描述符 9，再 exec 命令。没有标记的运行是 runner 失败；有标记的运行已经启动了命令，任何失败都归命令自己。命令伪造不了这两种状态：它不持有状态文件的描述符，而任何受限模式都不允许它写 harness 主目录。Windows 没有可用于这两层包装的 POSIX shell，所以那里的标记是无标记形式，只有 spawn 失败才认定为 runner 失败。
 
 ## 提供方与 fail-closed 错误
 

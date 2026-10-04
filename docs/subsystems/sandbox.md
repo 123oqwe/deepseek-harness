@@ -100,27 +100,7 @@ interface SandboxPolicy extends SandboxExecutionPolicy {
 
 ## Wrapped argv and classification dialects
 
-`RunnerFailureRule` combines evidence that a runner failed before executing the command. A consumer requires a nonzero exit, the optional allowed-exit-code gate, and a case-insensitive fatal signature within one remaining stderr line. Case-insensitive exact full-line informational exclusions are removed first, so a benign runner notice cannot prove failure by itself. The matched line remains available as error detail; classification does not rewrite stderr.
-
-```ts type-equiv
-/**
- * Evidence that identifies a sandbox runner failing before it executes the
- * wrapped command. A consumer first applies {@link allowedExitCodes} when
- * present, removes {@link informationalLines} by case-insensitive exact line
- * equality, then matches {@link fatalSignatures} case-insensitively within
- * each remaining stderr line. Exit status alone never proves runner failure.
- */
-interface RunnerFailureRule {
-  /** Nonzero process exit codes on which this rule may match; omitted permits any nonzero exit. */
-  allowedExitCodes?: readonly number[]
-  /** Non-empty substrings identifying a fatal runner diagnostic on one stderr line. */
-  fatalSignatures: readonly string[]
-  /** Benign stderr lines excluded by exact full-line equality before fatal matching. */
-  informationalLines?: readonly string[]
-}
-```
-
-`ConfinedArgv` is what the consumer spawns. Besides the replacement argv, it names the backend, carries its enforcement fact and the known host sockets it leaves reachable, and carries two orthogonal stderr classifiers. `denialSignatures` identify the confined command being blocked while the sandbox works correctly. `runnerFailureRules` identify the sandbox runner refusing or failing before it executes the command; consumers check these first and surface a sandbox infrastructure failure, never an ordinary task failure.
+`ConfinedArgv` is what the consumer spawns. Besides the replacement argv, it names the backend, carries its enforcement fact and the known host sockets it leaves reachable, and carries the backend's denial dialect. `denialSignatures` match stderr the command itself writes, so a match is a hint the model reads, never a security judgement. Whether the runner started the command is not read from output: a POSIX runner execs the caller's argv, and the consumer wraps the command and the runner in a `LaunchMarker` (below) and reads the marker once the process settles.
 
 ```ts type-equiv
 /**
@@ -129,7 +109,11 @@ interface RunnerFailureRule {
  * achieves for it.
  */
 interface ConfinedArgv {
-  /** The wrapped argv (runner, profile, separator, then the caller's argv). */
+  /**
+   * The wrapped argv (runner, profile, separator, then the caller's argv). A
+   * POSIX runner execs the caller's argv once confinement is in place, so a
+   * consumer can learn that it started from a {@link LaunchMarker}.
+   */
   argv: string[]
   /**
    * The backend that confines this execution: `bwrap`, `landlock`,
@@ -155,20 +139,19 @@ interface ConfinedArgv {
    * under bwrap's read-only binds, EACCES under Landlock, EPERM under
    * Seatbelt). A consumer that infers denials from a failed run's stderr
    * matches against exactly these rather than a cross-backend union — the
-   * union claims denials a given backend never produces.
+   * union claims denials a given backend never produces. The stderr is the
+   * command's own and any program can print these, so a match is a hint,
+   * never a security judgement (Epic P3-03 U2).
    */
   denialSignatures: readonly string[]
-  /**
-   * Structured runner-failure evidence rules. Consumers require a matching
-   * fatal stderr line (after informational exclusions) and any rule-specific
-   * exit-code gate before checking denial signatures: runner failure means the
-   * command never ran, while denial means confinement worked and blocked it.
-   */
-  runnerFailureRules: readonly RunnerFailureRule[]
 }
 ```
 
-The [local provider](../../packages/sandbox/sandbox-local/README.md) owns operator configuration and maps its runner dialect into these rules. The [sandboxed bash consumer](../../packages/shell/bash-sandbox/README.md) owns spawn and result attribution.
+The [local provider](../../packages/sandbox/sandbox-local/README.md) owns operator configuration. The [sandboxed bash consumer](../../packages/shell/bash-sandbox/README.md) owns spawn and result attribution.
+
+## Launch marker
+
+`LaunchMarker` decides runner failure (Epic P3-03 U2). A host-side `/bin/sh` opens a status file under `$DSH_HOME/cache/launch` on descriptor 9 and execs the runner; a `/bin/sh` inside the sandbox writes the marker, closes descriptor 9 and execs the command. A run without the marker is a runner failure; a run with it started the command, and any failure is the command's own. The command cannot forge either state: it holds no descriptor to the status file, and no confined mode lets it write the harness home. Windows has no POSIX shell for the wrappers, so there the marker is unmarked and only a spawn failure identifies a runner failure.
 
 ## Provider and fail-closed errors
 

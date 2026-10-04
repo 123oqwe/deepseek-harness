@@ -14,10 +14,12 @@ export {
   WIDER_MODES,
   approveEscalation,
   escalationHintMarker,
+  outputDenialHint,
   sandboxDenialMarker,
   validateEscalationArgs,
 } from './escalation.ts'
 export type { EscalationApproval, EscalationApprover, EscalationOutcome, EscalationRequest } from './escalation.ts'
+export { LaunchMarker } from './launch-marker.ts'
 export { canonicalPath, protectedRoots, unreadableFiles, writableRoots } from './roots.ts'
 
 /**
@@ -75,28 +77,16 @@ export interface SandboxPolicy extends SandboxExecutionPolicy {
 }
 
 /**
- * Evidence that identifies a sandbox runner failing before it executes the
- * wrapped command. A consumer first applies {@link allowedExitCodes} when
- * present, removes {@link informationalLines} by case-insensitive exact line
- * equality, then matches {@link fatalSignatures} case-insensitively within
- * each remaining stderr line. Exit status alone never proves runner failure.
- */
-export interface RunnerFailureRule {
-  /** Nonzero process exit codes on which this rule may match; omitted permits any nonzero exit. */
-  allowedExitCodes?: readonly number[]
-  /** Non-empty substrings identifying a fatal runner diagnostic on one stderr line. */
-  fatalSignatures: readonly string[]
-  /** Benign stderr lines excluded by exact full-line equality before fatal matching. */
-  informationalLines?: readonly string[]
-}
-
-/**
  * A {@link SandboxProvider.confine} result: the argv to spawn in place of
  * the caller's own, plus the enforcement completeness the selected backend
  * achieves for it.
  */
 export interface ConfinedArgv {
-  /** The wrapped argv (runner, profile, separator, then the caller's argv). */
+  /**
+   * The wrapped argv (runner, profile, separator, then the caller's argv). A
+   * POSIX runner execs the caller's argv once confinement is in place, so a
+   * consumer can learn that it started from a {@link LaunchMarker}.
+   */
   argv: string[]
   /**
    * The backend that confines this execution: `bwrap`, `landlock`,
@@ -122,16 +112,11 @@ export interface ConfinedArgv {
    * under bwrap's read-only binds, EACCES under Landlock, EPERM under
    * Seatbelt). A consumer that infers denials from a failed run's stderr
    * matches against exactly these rather than a cross-backend union — the
-   * union claims denials a given backend never produces.
+   * union claims denials a given backend never produces. The stderr is the
+   * command's own and any program can print these, so a match is a hint,
+   * never a security judgement (Epic P3-03 U2).
    */
   denialSignatures: readonly string[]
-  /**
-   * Structured runner-failure evidence rules. Consumers require a matching
-   * fatal stderr line (after informational exclusions) and any rule-specific
-   * exit-code gate before checking denial signatures: runner failure means the
-   * command never ran, while denial means confinement worked and blocked it.
-   */
-  runnerFailureRules: readonly RunnerFailureRule[]
 }
 
 /**

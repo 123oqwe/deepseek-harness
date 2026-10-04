@@ -57,11 +57,11 @@ On Windows, mount the ACL restricted-token provider; on Linux and macOS, mount t
 
 ### Denials and escalation
 
-A denied command is reported as a fact: the result carries `sandbox: { mode, denied: true }`, and the tool layer converts it into the standard permission-denied surface — the same one the bash tool uses. When escalation is available, the model may retry the exact command once with the narrowest wider mode and a one-sentence justification; the approval prompt asks the user, and nothing executes before approval. This executor never negotiates permissions itself. Every confined result also names the backend that confined the command (`sandbox.backend`) and, when that backend cannot refuse Unix-domain sockets, as the Windows ACL runner cannot, lists the known host sockets it left reachable (`sandbox.reachableSockets`).
+A command whose failed output reads like a denial is reported as a hint: the result carries `sandbox: { mode, denied: true }`, and the tool layer converts it into the output-read denial hint — the same one the bash tool uses. When escalation is available, the model may retry the exact command once with the narrowest wider mode and a one-sentence justification; the approval prompt asks the user, and nothing executes before approval. This executor never negotiates permissions itself. Every confined result also names the backend that confined the command (`sandbox.backend`) and, when that backend cannot refuse Unix-domain sockets, as the Windows ACL runner cannot, lists the known host sockets it left reachable (`sandbox.reachableSockets`).
 
 ### Failures and recovery
 
-If no runner can enforce a confined mode, the foreground call fails with `SANDBOX_UNAVAILABLE` and a background process records a runner-failure fact — never a silent unconfined run. A provider rejection is attributed to the confinement runner only when its `ENOENT`/`EACCES` path or syscall independently names `argv[0]`; otherwise it keeps the local executor's stage-neutral provider-failure semantics.
+If no runner can enforce a confined mode, the foreground call fails with `SANDBOX_UNAVAILABLE` and a background process records a runner-failure fact — never a silent unconfined run. On POSIX a runner failed when the command never wrote its launch marker (`LaunchMarker` from `dsh-sandbox`), whatever was printed; Windows has no POSIX shell for the marker, so there only a spawn failure counts. A provider rejection is attributed to the confinement runner only when its `ENOENT`/`EACCES` path or syscall independently names `argv[0]`; otherwise it keeps the local executor's stage-neutral provider-failure semantics.
 
 -----
 
@@ -82,13 +82,13 @@ The executor is the pwsh twin of `dsh-bash-sandbox`: it inherits `dsh-pwsh-local
 | File | Role |
 |---|---|
 | [`src/index.ts`](src/index.ts) | Plugin entry: `SandboxPwshExecutor`, per-process fact retention, run/start wrapping |
-| [`src/helpers.ts`](src/helpers.ts) | Denial, runner-failure, and runner-spawn-failure classification |
+| [`src/helpers.ts`](src/helpers.ts) | Denial classification, runner-spawn-failure attribution, and the runner-failure detail |
 | — | No runtime invariant companion is published; this package exposes no independent event sequence or mutable data relation beyond contracts enforced at its owning seams. Classification is observable in results. |
 | `tests/` | Exercised behavior across the ACL and platform runners |
 
 ### Main flow
 
-For a confined mode, `resolve()` stamps the per-call policy; `run` and `start` wrap the pwsh argv through the provider and hand the confined argv to the inherited subprocess path. At settlement the executor classifies the outcome: a runner failure outranks a denial because the command never ran, a failed run whose stderr carries the runner's denial dialect is reported `denied: true`, and every confined run carries its mode, enforcement, backend and reachable-socket facts. `danger-full-access` bypasses the provider entirely and stamps `denied: false`.
+For a confined mode, `resolve()` stamps the per-call policy; `run` and `start` wrap the pwsh argv through the provider behind the launch marker's in-sandbox wrapper (unmarked on Windows) and hand the confined argv, behind its host-side wrapper, to the inherited subprocess path. At settlement the executor classifies the outcome: a run whose command never wrote its launch marker is a runner failure, which outranks a denial because the command never ran; a failed run whose stderr carries the runner's denial dialect is reported `denied: true`, a hint read from that output; and every confined run carries its mode, enforcement, backend and reachable-socket facts. `danger-full-access` bypasses the provider entirely and stamps `denied: false`.
 
 ### Invariants
 

@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-04-a-confined-command-proves-it-started.md
+2026-10-04-a-confined-command-proves-it-started.md: 1a6f95bd735d6399a3b4abba095fdcfe6a8c175b
+2026-10-04-a-confined-command-proves-it-started.zh.md: ef14a884d8ada42fb32a633d93c3c7c054778965

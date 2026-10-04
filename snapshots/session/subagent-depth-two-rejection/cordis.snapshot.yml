@@ -12,8 +12,6 @@
       - -c
       - while [ "$1" != "--" ]; do shift; done; shift; exec "$@"
       - passthrough-runner
-    runnerFailureSignatures:
-      - 'passthrough-runner: profile rejected'
 
 - id: tool-subagent
   name: '@deepseek-ai/dsh-tool-subagent'

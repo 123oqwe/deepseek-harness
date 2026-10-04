@@ -16,12 +16,16 @@ export type { CollectedOutput, DshEnvironment, DshEnvironmentKey } from '@deepse
 /**
  * Sandbox facts for one run, present iff a sandboxing executor handled it.
  * Facts are reported independently of process exit status so callers can
- * distinguish command failures from policy denials and runner failures.
+ * distinguish command failures from denial hints and runner failures.
  */
 export interface ShellSandboxInfo {
   /** The mode the command actually ran under. */
   mode: SandboxMode
-  /** Whether the sandbox denied a file operation. */
+  /**
+   * Whether a failed run's stderr reads like the backend's file-access denial.
+   * The text is the command's own and any program can print it, so this is a
+   * hint, never a security judgement (Epic P3-03 U2).
+   */
   denied: boolean
   /** How completely the selected runner enforced the requested mode. */
   enforcement?: SandboxEnforcement
@@ -32,7 +36,7 @@ export interface ShellSandboxInfo {
    * reach; present only when there were any (`ConfinedArgv.reachableSockets`).
    */
   reachableSockets?: readonly string[]
-  /** Whether the sandbox runner failed before the command could run. */
+  /** Whether the sandbox runner failed before the command started: it never wrote the launch marker. */
   runnerFailed?: boolean
 }
 

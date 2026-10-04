@@ -1059,13 +1059,13 @@ describe('renderPwshResult sandbox markers', () => {
 
   it('a denied run reports the denial marker before the exit marker', () => {
     expect(renderPwshResult({ ...base, exitCode: 2, sandbox: { mode: 'read-only', denied: true } }))
-      .toBe('out\n[sandbox: file access denied under read-only mode]\n[exit code: 2]')
+      .toBe('out\n[the command\'s output reads like a sandbox file-access denial under read-only mode; the sandbox did not report it]\n[exit code: 2]')
   })
 
   it('hints only when the composition advertises escalation', () => {
     const denied = { ...base, sandbox: { mode: 'read-only' as const, denied: true } }
     expect(renderPwshResult(denied, ['workspace-write'])).toBe(
-      'out\n[sandbox: file access denied under read-only mode]\n'
+      'out\n[the command\'s output reads like a sandbox file-access denial under read-only mode; the sandbox did not report it]\n'
       + '[sandbox: escalation available — retry this exact command once with sandbox_permissions '
       + '(the narrowest wider mode that suffices) + justification; the approval prompt asks the user]',
     )
@@ -1120,9 +1120,9 @@ describe('renderPwshProcessRead', () => {
 
   it('appends the denial marker and hints only when escalation is advertised', () => {
     expect(renderPwshProcessRead({ delta: 'x', lossy: false }, { mode: 'read-only', denied: true }))
-      .toBe('x\n[sandbox: file access denied under read-only mode]')
+      .toBe('x\n[the command\'s output reads like a sandbox file-access denial under read-only mode; the sandbox did not report it]')
     expect(renderPwshProcessRead({ delta: 'x', lossy: false }, { mode: 'read-only', denied: true }, ['workspace-write']))
-      .toBe('x\n[sandbox: file access denied under read-only mode]\n'
+      .toBe('x\n[the command\'s output reads like a sandbox file-access denial under read-only mode; the sandbox did not report it]\n'
         + '[sandbox: escalation available — retry this exact command once with sandbox_permissions '
         + '(the narrowest wider mode that suffices) + justification; the approval prompt asks the user]')
   })

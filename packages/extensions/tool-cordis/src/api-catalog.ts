@@ -4834,7 +4834,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ConfinedArgv',
-    declaration: 'export interface ConfinedArgv {\n    argv: string[];\n    backend: string;\n    enforcement: SandboxEnforcement;\n    reachableSockets: readonly string[];\n    denialSignatures: readonly string[];\n    runnerFailureRules: readonly RunnerFailureRule[];\n}',
+    declaration: 'export interface ConfinedArgv {\n    argv: string[];\n    backend: string;\n    enforcement: SandboxEnforcement;\n    reachableSockets: readonly string[];\n    denialSignatures: readonly string[];\n}',
   },
   {
     name: 'ConfinedSandboxMode',
@@ -6335,10 +6335,6 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'RunNegotiation',
     declaration: 'export interface RunNegotiation {\n    readonly protocolVersion: number;\n    readonly agreedCapabilities: readonly string[];\n    readonly ignoredCapabilities: readonly string[];\n    readonly downgrades: readonly {\n        readonly capability: string;\n        readonly reason: string;\n        readonly adapter: string;\n    }[];\n}',
-  },
-  {
-    name: 'RunnerFailureRule',
-    declaration: 'export interface RunnerFailureRule {\n    allowedExitCodes?: readonly number[];\n    fatalSignatures: readonly string[];\n    informationalLines?: readonly string[];\n}',
   },
   {
     name: 'RunOwnerId',

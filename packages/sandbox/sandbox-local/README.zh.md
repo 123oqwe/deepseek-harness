@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-`dsh-sandbox-local` 在共享宿主内核和文件系统的同时，限制 Linux、macOS 与 Windows 上的命令及其派生进程。它自动选择受支持的平台 runner；没有可用 runner 时以 `SANDBOX_UNAVAILABLE` 失败，因此命令绝不会静默无限制运行。每次执行都会报告 `full` 或 `partial` 强制执行，以及拒绝和 runner 失败签名，让调用方能区分不可用或损坏的沙箱与策略拒绝。在后端做得到时，两种受限模式还会拒绝 Unix-domain socket，因此命令连不上 Docker 守护进程或 SSH agent；做不到的后端报告 `partial`，并列出它留下可连的已知 socket。宿主本地 bash 或 pwsh 执行适合选择它；进程需要隔离环境时应改用容器或远程执行器。
+`dsh-sandbox-local` 在共享宿主内核和文件系统的同时，限制 Linux、macOS 与 Windows 上的命令及其派生进程。它自动选择受支持的平台 runner；没有可用 runner 时以 `SANDBOX_UNAVAILABLE` 失败，因此命令绝不会静默无限制运行。每次执行都会报告 `full` 或 `partial` 强制执行，以及后端的拒绝签名——那是从命令输出读出的提示；runner 有没有启动命令由消费方的启动标记判定，因此调用方能区分不可用或损坏的沙箱与命令失败。在后端做得到时，两种受限模式还会拒绝 Unix-domain socket，因此命令连不上 Docker 守护进程或 SSH agent；做不到的后端报告 `partial`，并列出它留下可连的已知 socket。宿主本地 bash 或 pwsh 执行适合选择它；进程需要隔离环境时应改用容器或远程执行器。
 
 ## 目录
 
@@ -43,14 +43,13 @@ kind: "package-reference"
 | 字段 | 默认值 | 含义 |
 |---|---|---|
 | `runnerCommand` | `[]` | 自定义 runner argv；会追加 bwrap 兼容的 profile 参数，并跳过内置选择与探测；因为不安装 Unix socket 过滤器，强制执行报告为 `partial` |
-| `runnerFailureSignatures` | `[]` | 识别自定义 runner 自身失败方言的不区分大小写 stderr 子串；与 `runnerCommand` 搭配必需 |
 | `probeTimeoutMs` | `5,000` | 每次竞争 runner 候选功能探测的超时时间 |
 
 生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-sandbox-local)是每个受支持字段及其 JSDoc 的穷尽式真源。
 
 ### 受限执行与强制执行
 
-挂载提供方后，命令在你逐调用解析的模式下运行。强制执行是报告的事实，而非承诺：`full` 表示后端管辖模式承诺的每个文件操作并拒绝 Unix-domain socket，`partial` 表示它只管辖子集或无法拒绝这些 socket——Landlock、Windows ACL 档（还有 Everyone 与硬链接边界）与 `runnerCommand` runner 是当前的部分强制执行情形，因此需要绝对边界的消费方可以拒绝或向上暴露它们。被拒绝的文件操作通过后端的拒绝方言呈现，执行命令前失败的 runner 会报告结构化的 runner 失败签名。
+挂载提供方后，命令在你逐调用解析的模式下运行。强制执行是报告的事实，而非承诺：`full` 表示后端管辖模式承诺的每个文件操作并拒绝 Unix-domain socket，`partial` 表示它只管辖子集或无法拒绝这些 socket——Landlock、Windows ACL 档（还有 Everyone 与硬链接边界）与 `runnerCommand` runner 是当前的部分强制执行情形，因此需要绝对边界的消费方可以拒绝或向上暴露它们。被拒绝的文件操作通过后端的拒绝方言以提示呈现；执行命令前失败的 runner 由消费方的启动标记识别。
 
 在 `workspace-write` 下，harness 主目录（`$DSH_HOME`，来自共享的 `protectedRoots` helper）即使位于工作区内也保持只读：bwrap 在工作区的可写 bind 之上把它以只读方式 bind，Seatbelt 在工作区授权之后拒绝写入它，而只能授予可写根目录的 Landlock 与 Windows ACL 档在工作区或临时区域包含它时拒绝执行命令，并说明如何移开。主目录保存 harness 自己的配置——profile 与补丁层、强制执行的策略集所来自的设置文档、信任锚、已保存的 workflow 与 action ledger——所以受限命令无法改写它；逐调用批准的 `danger-full-access` 可以。在两种受限模式下，harness 凭证库（`$DSH_HOME/.credentials.yaml` 与 `$DSH_HOME/.env`，来自共享的 `unreadableFiles` helper）也读不到：bwrap 把 `/dev/null` bind 到每个已存在的文件上，Seatbelt 拒绝读取每个文件。
 
@@ -114,9 +113,9 @@ Seatbelt profile 默认允许，带 `(deny file-write*)` 与来自共享 `writab
 
 Windows 档为每个工作区保留一个确定性写入 SID 和常驻 ACE，同时为每个活跃的会话/工作区对分配一个随机私有临时目录，以及不同的 SID 和可撤销 ACE——共享工作区的会话共享其预期写权限，却不会继承彼此的临时目录权限。新的提供方总会选择新的临时路径和 SID，因此崩溃残留既无法阻止恢复的会话，也无法向其授权。该档报告 `partial` 强制执行，因为受限令牌必须保留 Everyone，且 NTFS 硬链接会把同一文件对象别名为多个路径。
 
-### 拒绝与 runner 失败方言
+### 拒绝方言
 
-每个 runner 的内核都有自己的拒绝方言，随每次包装以 `denialSignatures` 携带，`runnerFailureRules` 则给出每个 runner 的致命签名，因此消费方先分类 runner 拒绝，再检查拒绝签名。精确的字符串与退出码位于 [`src/index.ts`](src/index.ts)。
+每个 runner 的内核都有自己的拒绝方言，随每次包装以 `denialSignatures` 携带；它出现在命令的输出里，所以命中只是提示。runner 拒绝从不依据输出判定：每个 runner 都会 exec 包装后的 argv，由消费方的启动标记判定它有没有启动。精确的字符串位于 [`src/index.ts`](src/index.ts)。
 
 ### 源码地图
 

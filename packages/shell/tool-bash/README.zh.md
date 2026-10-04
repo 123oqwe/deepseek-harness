@@ -59,7 +59,7 @@ kind: "package-reference"
 
 ### 沙箱执行与升权
 
-当已挂载的执行器约束命令（例如 `dsh-bash-sandbox`）时，被阻止的文件操作会报告为 `[sandbox: file access denied under <mode> mode]`——这是策略拒绝，不是命令失败。模型随后可以在同一轮次中用 `sandbox_permissions`（满足需要的最窄更宽模式）与一句 `justification` 重试完全相同的命令一次；该重试引发的审批提示就是用户同意的方式。升权绝不能预先推测：没有真实拒绝依据的请求，或没有严格宽于当前模式的请求，都会直接失败且不执行任何操作；被拒绝的升权对该命令即为最终结果。沙箱还可能拒绝 Unix-domain socket，例如 Docker 守护进程或 SSH agent 的 socket；工具描述告诉模型，这时打开 socket 会以 `Operation not permitted` 失败，这是只有 `danger-full-access` 才能解除的沙箱拒绝（[哪些后端会拒绝](../../sandbox/sandbox-local/README.zh.md#unix-domain-sockets)）。
+当已挂载的执行器约束命令（例如 `dsh-bash-sandbox`）时，输出读起来像文件访问拒绝的失败命令会带上 `[the command's output reads like a sandbox file-access denial under <mode> mode; the sandbox did not report it]`——通常是沙箱阻止了它，而不是命令有缺陷；这段文本是命令自己的，所以只是提示，不是策略判定。模型随后可以在同一轮次中用 `sandbox_permissions`（满足需要的最窄更宽模式）与一句 `justification` 重试完全相同的命令一次；该重试引发的审批提示就是用户同意的方式。升权绝不能预先推测：没有真实拒绝依据的请求，或没有严格宽于当前模式的请求，都会直接失败且不执行任何操作；被拒绝的升权对该命令即为最终结果。沙箱还可能拒绝 Unix-domain socket，例如 Docker 守护进程或 SSH agent 的 socket；工具描述告诉模型，这时打开 socket 会以 `Operation not permitted` 失败，这是只有 `danger-full-access` 才能解除的沙箱拒绝（[哪些后端会拒绝](../../sandbox/sandbox-local/README.zh.md#unix-domain-sockets)）。
 
 ### 可能出什么问题
 
@@ -159,7 +159,7 @@ Check the [exit code: N] marker on every bash result; investigate failures befor
 
 #### 模型看到什么
 
-renderer 输出依数据而定的 stdout 尾部，再输出可选的 `[stderr]` 和 stderr 尾部。没有输出时，它精确输出 `(no output)`。条件行精确为 `[output truncated; full output: <path-or-(unavailable)>]`、`[sandbox: file access denied under <mode> mode]`、`[timed out after <timeoutMs>ms]`、`[killed by signal: <signal>]` 与 `[exit code: <exitCode>]`；沙箱升权与 runner 故障行原文列于 [`dsh-bash-sandbox`](../bash-sandbox/README.zh.md)。
+renderer 输出依数据而定的 stdout 尾部，再输出可选的 `[stderr]` 和 stderr 尾部。没有输出时，它精确输出 `(no output)`。条件行精确为 `[output truncated; full output: <path-or-(unavailable)>]`、`[the command's output reads like a sandbox file-access denial under <mode> mode; the sandbox did not report it]`、`[timed out after <timeoutMs>ms]`、`[killed by signal: <signal>]` 与 `[exit code: <exitCode>]`；沙箱升权与 runner 故障行原文列于 [`dsh-bash-sandbox`](../bash-sandbox/README.zh.md)。
 
 #### Token 影响
 

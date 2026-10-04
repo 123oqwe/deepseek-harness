@@ -65,11 +65,11 @@ kind: "package-reference"
 
 ### 被拒绝的调用与升权
 
-受限调用被拒绝时，操作会报告指明模式的拒绝标记——`[sandbox: file access denied under <mode> mode]`——组合声明升权能力时还会给出升权提示。模型可以用 `sandbox_permissions`（足以放行的最窄更宽模式）加 `justification` 重试一次完全相同的调用；用户会看到一次审批提示，可以选择允许一次、拒绝或取消。升权必须严格宽于调用的生效模式，且只作用于该次调用。
+受限的文件系统操作被拒绝时，会报告指明模式的拒绝标记——`[sandbox: file access denied under <mode> mode]`。输出读起来像拒绝的 shell 命令则改为带 `[the command's output reads like a sandbox file-access denial under <mode> mode; the sandbox did not report it]`，因为那段文本是命令自己的。组合声明升权能力时，两者之后都会给出升权提示。模型可以用 `sandbox_permissions`（足以放行的最窄更宽模式）加 `justification` 重试一次完全相同的调用；用户会看到一次审批提示，可以选择允许一次、拒绝或取消。升权必须严格宽于调用的生效模式，且只作用于该次调用。
 
 ### 故障关闭行为
 
-没有后端能强制执行所请求的模式时，调用以 `SANDBOX_UNAVAILABLE` 失败，而不是不受限制地运行；错误文本会指明缺失的平台 runner。启动后失败的后端还会报告结构化的 runner 失败签名，因此损坏的沙箱可以与命令失败区分开。
+没有后端能强制执行所请求的模式时，调用以 `SANDBOX_UNAVAILABLE` 失败，而不是不受限制地运行；错误文本会指明缺失的平台 runner。runner 在启动命令之前失败时，由启动标记把它与命令失败区分开，从不依据两者打印的内容。
 
 -----
 
@@ -129,7 +129,7 @@ kind: "package-reference"
 
 #### 模型看到什么
 
-通过 [`dsh-bash-sandbox`](../../shell/bash-sandbox/README.zh.md) 和 [`dsh-tool-bash`](../../shell/tool-bash/README.zh.md)，请求的受限模式没有可用后端时会产生错误码 `SANDBOX_UNAVAILABLE` 及下方精确错误；执行期 runner 失败会追加 ` Runner failure: <detail>`。
+通过 [`dsh-bash-sandbox`](../../shell/bash-sandbox/README.zh.md) 和 [`dsh-tool-bash`](../../shell/tool-bash/README.zh.md)，请求的受限模式没有可用后端时会产生错误码 `SANDBOX_UNAVAILABLE` 及下方精确错误；执行期 runner 失败会追加 ` Runner failure: the runner exited <code> before starting the command: <its last stderr line>`。
 
 ##### 精确错误
 
@@ -149,7 +149,7 @@ sandbox mode "<mode>" is requested but no sandbox backend is usable on this host
 
 #### 模型看到什么
 
-被拒绝的调用会呈现标记 `[sandbox: file access denied under <mode> mode]`，组合声明升权能力时还会呈现提示 `[sandbox: escalation available — retry this exact <subject> once with sandbox_permissions (the narrowest wider mode that suffices) + justification; the approval prompt asks the user]`。重试携带 `sandbox_permissions` 与 `justification`；用户的 `allowed-once`／`rejected`／`cancelled` 决定成为该调用的结果文本。
+被拒绝的文件系统操作会呈现标记 `[sandbox: file access denied under <mode> mode]`，输出读起来像拒绝的 shell 命令会呈现 `[the command's output reads like a sandbox file-access denial under <mode> mode; the sandbox did not report it]`，组合声明升权能力时还会呈现提示 `[sandbox: escalation available — retry this exact <subject> once with sandbox_permissions (the narrowest wider mode that suffices) + justification; the approval prompt asks the user]`。重试携带 `sandbox_permissions` 与 `justification`；用户的 `allowed-once`／`rejected`／`cancelled` 决定成为该调用的结果文本。
 
 #### Token 影响
 

@@ -73,7 +73,7 @@ Temp isolation is per live session/workspace pair: sessions sharing a workspace 
 
 ### Failures and recovery
 
-`init()` throws on any Win32 failure — the child is never spawned unrestricted. A runner that fails before executing the command prints `windows-acl-run: <detail>` to stderr and exits 127, which the seam's runner-failure rules classify as a broken sandbox rather than a denial. Cleanup is best-effort by design: `dispose()` attempts every temp revocation and aggregates failures into an `AggregateError`.
+`init()` throws on any Win32 failure — the child is never spawned unrestricted. A runner that fails before executing the command prints `windows-acl-run: <detail>` to stderr and exits 127; a command can print the same, so consumers do not judge a runner failure from it (Windows has no launch marker, and only a spawn failure counts). Cleanup is best-effort by design: `dispose()` attempts every temp revocation and aggregates failures into an `AggregateError`.
 
 -----
 
@@ -99,7 +99,7 @@ Authenticated Users is absent from both lists — the WMI namespace security che
 
 ### The confinement runner
 
-The seam-facing shape is the runner entry (`./runner`): an argv-prefix wrapper `dsh-sandbox-local` spawns in place of the caller's command, with the same architecture as bwrap/landlock-run/sandbox-exec. The runner creates the restricted token, spawns the wrapped argv under it with the caller's stdio passed straight through, wraps the child in a `KILL_ON_JOB_CLOSE` job, mirrors the child's exit code, and revokes its self-managed temp grant on exit. Every runner-side failure prints `windows-acl-run: <detail>` to stderr and exits 127 — the seam's runner-failure rules match that signature.
+The seam-facing shape is the runner entry (`./runner`): an argv-prefix wrapper `dsh-sandbox-local` spawns in place of the caller's command, with the same architecture as bwrap/landlock-run/sandbox-exec. The runner creates the restricted token, spawns the wrapped argv under it with the caller's stdio passed straight through, wraps the child in a `KILL_ON_JOB_CLOSE` job, mirrors the child's exit code, and revokes its self-managed temp grant on exit. Every runner-side failure prints `windows-acl-run: <detail>` to stderr and exits 127, for the operator to read.
 
 ```sh
 node runner.js --workspace <dir> --temp <dir> --mode <read-only|workspace-write> [--write-sid <S-1-4-…> --temp-write-sid <S-1-4-…>] -- <argv...>

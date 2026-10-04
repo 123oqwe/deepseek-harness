@@ -61,15 +61,27 @@ export function validateEscalationArgs(sandboxPermissions: string | undefined, j
 }
 
 /**
- * The model-facing denial marker — the one vocabulary both enforcing families
- * teach and report, so the model recognizes a policy denial identically
- * whether the kernel refused a bash file effect or the filesystem provider's
- * fence refused a mutation.
+ * The model-facing denial marker for a denial the harness decides itself: the
+ * filesystem provider's fence refusing a mutation. A shell command's denial is
+ * only read from its output and carries {@link outputDenialHint} instead.
  * @param mode - the mode the denied call ran under.
  * @returns the marker line, exactly as the model sees it.
  */
 export function sandboxDenialMarker(mode: SandboxMode): string {
   return `[sandbox: file access denied under ${mode} mode]`
+}
+
+/**
+ * The hint a shell result carries when a failed command's stderr reads like
+ * the backend's file-access denial. The text is the command's own and any
+ * program can print it, so the hint says the sandbox did not report it; a
+ * denial the harness decides itself carries {@link sandboxDenialMarker}
+ * (Epic P3-03 U2).
+ * @param mode - the mode the command ran under.
+ * @returns the hint, bracketed like the other result markers.
+ */
+export function outputDenialHint(mode: SandboxMode): string {
+  return `[the command's output reads like a sandbox file-access denial under ${mode} mode; the sandbox did not report it]`
 }
 
 /**

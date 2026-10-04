@@ -356,7 +356,7 @@ export type Config = LocalConfig
 
 依赖： [`LocalConfig`](#deepseek-aidsh-bash-local)
 
-来源： [`packages/shell/bash-sandbox/src/index.ts:36`](../packages/shell/bash-sandbox/src/index.ts)
+来源： [`packages/shell/bash-sandbox/src/index.ts:37`](../packages/shell/bash-sandbox/src/index.ts)
 
 <a id="deepseek-aidsh-capability-token-file"></a>
 
@@ -2174,7 +2174,7 @@ export type Config = LocalConfig
 
 依赖： [`LocalConfig`](#deepseek-aidsh-pwsh-local)
 
-来源： [`packages/shell/pwsh-sandbox/src/index.ts:40`](../packages/shell/pwsh-sandbox/src/index.ts)
+来源： [`packages/shell/pwsh-sandbox/src/index.ts:43`](../packages/shell/pwsh-sandbox/src/index.ts)
 
 <a id="deepseek-aidsh-repeat-tool-reminder"></a>
 
@@ -2265,27 +2265,21 @@ export interface Config {
    * non-empty override asserts full enforcement of file effects and skips built-in
    * selection and probing. The provider installs no Unix-socket filter into it, so
    * its wraps report `partial` enforcement and the known sockets left reachable.
-   * A runner that starts but refuses its profile must be identifiable by
-   * {@link runnerFailureSignatures}. Consumers classify a spawn rejection only after
+   * The runner must exec the wrapped argv after its own options: consumers learn
+   * that the command started from a launch marker written inside the sandbox, so a
+   * runner that refuses its profile is a runner failure whatever it prints.
+   * Consumers classify a spawn rejection only after
    * confirming the workdir is usable. `ENOENT` or `EACCES` identifies the runner when
    * `error.path` equals argv[0] and `error.syscall` is `spawn` or `spawn <runner>`, or
    * when `error.path` is absent and `error.syscall` is exactly `spawn <runner>`.
    */
   runnerCommand?: string[]
-  /**
-   * Case-insensitive stderr substrings emitted when a configured
-   * {@link runnerCommand} refuses its profile before executing the wrapped
-   * command. Required and non-empty with `runnerCommand`; rejected without
-   * it. Each entry is a non-empty, single-line, case-insensitive substring
-   * covering the executable runner's own failure dialect.
-   */
-  runnerFailureSignatures?: string[]
   /** Positive timeout for each functional probe; zero would mean unbounded to Node. */
   probeTimeoutMs?: number
 }
 ```
 
-来源： [`packages/sandbox/sandbox-local/src/index.ts:53`](../packages/sandbox/sandbox-local/src/index.ts)
+来源： [`packages/sandbox/sandbox-local/src/index.ts:51`](../packages/sandbox/sandbox-local/src/index.ts)
 
 <a id="deepseek-aidsh-sandbox-policy"></a>
 
