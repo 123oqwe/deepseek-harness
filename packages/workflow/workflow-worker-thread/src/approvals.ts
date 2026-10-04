@@ -13,6 +13,10 @@
  */
 
 import { randomUUID } from 'node:crypto'
+// Before the approval store, which augments cordis's `Context`: this is the
+// package's first source file, and a build that meets that augmentation before
+// cordis's own declarations types `Context` twice.
+import type {} from '@deepseek-ai/cordis'
 import type {
   ApprovalRecord,
   ApprovalRequestId,
