@@ -76,21 +76,24 @@ describe('dsh run with Agent Teams enabled', () => {
         killSignal: 'SIGKILL',
         reject: false,
       })
-      // PROBE (B-727, never merge): each session log's record count and its last 60 record types, tool calls named.
+      // PROBE (B-727, never merge): each session log's record count, its first 50 and last 20 record types (tool calls
+      // named), and the data of its first eight tool/result records (v2: why no teammate session exists).
       const trail: string[] = []
       for (const file of (await readdir(sessions, { recursive: true }).catch(() => [] as string[])).filter(entry => entry.endsWith('.jsonl'))) {
         const types: string[] = []
+        const results: string[] = []
         for (const line of (await readFile(join(sessions, file), 'utf8')).split('\n').filter(Boolean)) {
           try {
             const record = JSON.parse(line) as { type?: unknown; data?: { name?: unknown } }
             const name = record.data?.name
             types.push(typeof name === 'string' ? `${String(record.type)}:${name}` : String(record.type))
+            if (record.type === 'tool/result' && results.length < 8) results.push(JSON.stringify(record.data).slice(0, 600))
           } catch {
             // A line torn by the SIGKILL is not JSON; name it instead.
             types.push('<torn>')
           }
         }
-        trail.push(`${file} (${String(types.length)} records): ${types.slice(-60).join(' ')}`)
+        trail.push(`${file} (${String(types.length)} records)\n  first: ${types.slice(0, 50).join(' ')}\n  last: ${types.slice(-20).join(' ')}\n  results:\n    ${results.join('\n    ')}`)
       }
       expect(
         result.exitCode,
