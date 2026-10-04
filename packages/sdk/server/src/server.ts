@@ -203,7 +203,7 @@ export const SERVER_PROTOCOL_SURFACE: ProtocolSurface = {
     { name: 'initialize', schemaId: 'sdk-protocol:InitializeParams', version: '1.0' },
     { name: 'session/prompt', schemaId: 'sdk-protocol:SessionPromptParams', version: '1.0' },
     { name: 'approval/list', schemaId: 'sdk-protocol:ApprovalListParams', version: '1.0' },
-    { name: 'approval/decide', schemaId: 'sdk-protocol:ApprovalDecideParams', version: '1.0' },
+    { name: 'approval.decide', schemaId: 'sdk-protocol:ApprovalDecideParams', version: '1.0' },
     { name: 'shutdown', schemaId: 'sdk-protocol:ShutdownRequest', version: '1.0' },
   ],
   // Every name this server originates: its notifications and `human/question`,
