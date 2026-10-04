@@ -20,6 +20,9 @@
  * - C stages A's package name in the profile's own `node_modules` as a link
  *   to a manifest-less copy outside the installation.
  * - D stages the same copy there as a real directory.
+ * - C's and D's profile-local copy is locked the way `dsh plugin` locks a
+ *   package, so the boot's lock gate (P1-03 must[2]) passes it and admission
+ *   alone decides.
  * - F adds no row: it observes the base bundle's `tool-web` row, whose
  *   `web_fetch` declares a wildcard destination the installation grants
  *   `@deepseek-ai/dsh-base`.
@@ -34,6 +37,7 @@ import { fileURLToPath } from 'node:url'
 import { type Context, FiberState } from '@deepseek-ai/cordis'
 import { DEFAULT_PROFILE_BUNDLES, loadLayeredEnv, resolveProfileDir } from '@deepseek-ai/dsh-app-boot'
 import { runProfile } from '../../../../../apps/cli/src/profile-boot.ts'
+import { lockStagedPackages } from '../../../../../apps/cli/tests/fixtures/locked-profile.ts'
 import {
   ANCESTOR_ONLY,
   BASE_WILDCARD_GRANT,
@@ -94,7 +98,7 @@ function stageManifestlessPackage(dir: string, name: string, key: string): void 
  * @param profileDir - the profile directory.
  * @returns the row id the candidate's result reads.
  */
-function stageCandidate(key: string, root: string, profileDir: string): string {
+async function stageCandidate(key: string, root: string, profileDir: string): Promise<string> {
   mkdirSync(profileDir, { recursive: true })
   writeFileSync(join(profileDir, 'package.json'), `${JSON.stringify({
     name: `dsh-profile-${PROFILE}`,
@@ -120,11 +124,13 @@ function stageCandidate(key: string, root: string, profileDir: string): string {
       mkdirSync(dirname(link), { recursive: true })
       symlinkSync(outside, link, 'junction')
       insert(INSTALLATION_PACKAGE)
+      await lockStagedPackages(profileDir, [INSTALLATION_PACKAGE])
       return SUBJECT_ROW
     }
     case PROFILE_SAME_NAME:
       stageManifestlessPackage(join(profileDir, 'node_modules', INSTALLATION_PACKAGE), INSTALLATION_PACKAGE, key)
       insert(INSTALLATION_PACKAGE)
+      await lockStagedPackages(profileDir, [INSTALLATION_PACKAGE])
       return SUBJECT_ROW
     case BASE_WILDCARD_GRANT:
       writeFileSync(join(profileDir, 'cordis.patch.yml'), '[]\n')
@@ -141,7 +147,7 @@ function stageCandidate(key: string, root: string, profileDir: string): string {
 async function runCandidate(key: string): Promise<void> {
   const home = process.env.DSH_HOME
   if (home === undefined) throw new Error('blocked-360 child: DSH_HOME is not set')
-  const row = stageCandidate(key, dirname(home), resolveProfileDir(PROFILE, home))
+  const row = await stageCandidate(key, dirname(home), resolveProfileDir(PROFILE, home))
   let ctx: Context | undefined
   let bootError: string | null = null
   try {
