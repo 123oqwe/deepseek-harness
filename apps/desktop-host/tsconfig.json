@@ -15,6 +15,7 @@
     { "path": "../../packages/client/modules" },
     { "path": "../../packages/host/webserver" },
     { "path": "../../packages/kernel/trust-kernel" },
+    { "path": "../../packages/plugin/plugin-provenance" },
     { "path": "../../packages/policy/policy-enforcement" },
     { "path": "../../packages/util/launch-environment" }
   ]
