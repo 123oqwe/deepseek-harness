@@ -46,7 +46,7 @@ import type {} from '@deepseek-ai/dsh-user-approval'
 import { MockAdapter, textResponse, toolCallResponse } from '../../../../../packages/core/agent-loop/tests/mock-adapter.ts'
 import { createFixtureRootAgent } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts'
 import { bootProductionProfile } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/production-profile.ts'
-import { CHARGE_TOOL, CONTROL_CALL_ID, ORIGINAL_CALL_ID, REPORT_PREFIX, RESEND_CALL_ID, type ControlReport, type ResendReport, type SettleReport } from './shared.ts'
+import { CHARGE_TOOL, CONTROL_CALL_ID, ORIGINAL_CALL_ID, REPORT_PREFIX, RESEND_CALL_ID, type BeforeReading, type ControlReading, type ControlReport, type PhaseResult, type ResendAfterReading, type ResendReport, type SettleAfterReading, type SettleReport } from './shared.ts'
 
 const PROVIDER = 'p4-12-dup-mock'
 /** The line prefix one phase reports under. */
@@ -261,7 +261,7 @@ async function single(ctx: Context): Promise<void> {
  * @param args - the phase's arguments after the script path.
  * @returns how it exited and what it reported.
  */
-function runPhase(args: readonly string[]): { status: number | null; signal: string | null; reading: Record<string, unknown> } {
+function runPhase<R>(args: readonly string[]): PhaseResult<R> {
   const result = spawnSync(process.execPath, [...process.execArgv, fileURLToPath(import.meta.url), ...args], {
     cwd: process.cwd(),
     env: process.env,
@@ -274,7 +274,9 @@ function runPhase(args: readonly string[]): { status: number | null; signal: str
   if (json === undefined) {
     throw new Error(`a-610 phase ${args.join(' ')} reported nothing (status ${String(result.status)}, signal ${String(result.signal)}); stderr tail:\n${result.stderr.slice(-1500)}`)
   }
-  return { status: result.status, signal: result.signal, reading: JSON.parse(json) as Record<string, unknown> }
+  // The only cast, at the process boundary: `JSON.parse` is `any`, read as the
+  // phase's reading type, exactly as each phase wrote it.
+  return { status: result.status, signal: result.signal, reading: JSON.parse(json) as R }
 }
 
 const [configPath, phase, mode, sessionArg, keyArg] = process.argv.slice(2)
@@ -282,19 +284,25 @@ if (configPath === undefined) throw new Error('a-610 driver requires a config pa
 
 if (phase === 'orchestrate') {
   if (mode === 'different-params') {
-    const only = runPhase([configPath, 'single', mode])
-    const report: ControlReport = { mode: 'different-params', single: only as ControlReport['single'] }
+    const single = runPhase<ControlReading>([configPath, 'single', mode])
+    const report: ControlReport = { mode: 'different-params', single }
     process.stdout.write(`${REPORT_PREFIX} ${JSON.stringify(report)}\n`)
   } else if (mode === 'resend-newid' || mode === 'settle') {
-    const first = runPhase([configPath, 'before', mode])
-    const reading = first.reading as { sessionId: string; scope: string | null; key: string | null }
-    if (reading.scope === null || reading.key === null) {
-      throw new Error(`a-610 ${mode}: the before phase did not reserve a ledger entry; reading: ${JSON.stringify(reading)}`)
+    const before = runPhase<BeforeReading>([configPath, 'before', mode])
+    const { sessionId, scope, key } = before.reading
+    if (scope === null || key === null) {
+      throw new Error(`a-610 ${mode}: the before phase did not reserve a ledger entry; reading: ${JSON.stringify(before.reading)}`)
     }
     await delay(CRASH_RESTART_DELAY_MS)
-    const second = runPhase([configPath, 'after', mode, reading.sessionId, reading.key])
-    const report = { mode, before: first, after: second } as unknown as ResendReport | SettleReport
-    process.stdout.write(`${REPORT_PREFIX} ${JSON.stringify(report)}\n`)
+    if (mode === 'resend-newid') {
+      const after = runPhase<ResendAfterReading>([configPath, 'after', mode, sessionId, key])
+      const report: ResendReport = { mode: 'resend-newid', before, after }
+      process.stdout.write(`${REPORT_PREFIX} ${JSON.stringify(report)}\n`)
+    } else {
+      const after = runPhase<SettleAfterReading>([configPath, 'after', mode, sessionId, key])
+      const report: SettleReport = { mode: 'settle', before, after }
+      process.stdout.write(`${REPORT_PREFIX} ${JSON.stringify(report)}\n`)
+    }
   } else {
     throw new Error(`a-610 driver: unknown mode ${String(mode)}`)
   }
