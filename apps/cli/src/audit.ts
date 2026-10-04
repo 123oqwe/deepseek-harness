@@ -76,14 +76,16 @@ export function approvalsForAction(events: readonly SessionEvent[], actionId: st
         decided.set(event.data.id, { seq: event.seq, outcome: event.data.outcome })
         break
       case 'approval/bound':
-        if (event.data.actionId === actionId) bound.push(event)
+        bound.push(event)
         break
       default:
         // Every other event type, including ones a later build adds, says nothing about approvals.
         break
     }
   }
-  return bound.map(({ seq, data }) => ({
+  // MUTATION M-280: match by the queried call's action (its tool name), not by its action id.
+  const action = bound.find(event => event.data.actionId === actionId)?.data.action
+  return bound.filter(event => event.data.action === action).map(({ seq, data }) => ({
     approvalId: data.id,
     action: data.action,
     actionId,
