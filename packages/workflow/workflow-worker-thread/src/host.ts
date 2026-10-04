@@ -60,8 +60,9 @@ export interface NestingPort {
  * `maxNestedTokens`, and every run nested under the root holds the same
  * object, so a nested run and an `agent()` child anywhere in the tree draw on
  * one count. The engine charges a nested run when it starts one; the run that
- * starts an `agent()` child charges the child and, once an in-process child
- * settles, debits the tokens it spent.
+ * starts an `agent()` child charges the child and debits the tokens an
+ * in-process child spends as its session records them, cancelling its running
+ * children once the tree has none left (B-714).
  */
 export interface TreeBudget {
   /** Nested runs and `agent()` children the tree may still start. */
@@ -186,6 +187,10 @@ export class WorkerRun implements WorkflowRun {
   private disposed: Promise<void> | undefined
   /** Renews this run's lease while it is live; cleared at settlement (P4-07 must[2]). */
   private heartbeat: NodeJS.Timeout | undefined
+  /** Tokens already taken off the tree for each in-process child, so each usage event debits only what is new (B-714). */
+  private readonly debited = new WeakMap<Agent, number>()
+  /** Stops metering children's sessions; set once a child runs under a tree token limit, cleared at settlement. */
+  private stopMetering: (() => void) | undefined
   /**
    * This run's journal (P4-08 must[0]/must[4]).
    *
@@ -596,6 +601,7 @@ export class WorkerRun implements WorkflowRun {
 
     const record: ChildRecord = { run }
     this.children.set(callId, record)
+    if (this.tree.tokensRemaining !== undefined) this.meterChildren()
     // Attach result forwarding before publishing the child handle. Because the
     // callback itself runs in a later microtask, ChildStarted is still posted
     // first even for an already-settled scripted provider.
@@ -642,15 +648,39 @@ export class WorkerRun implements WorkflowRun {
   }
 
   /**
-   * Take what one settled in-process child spent off this run's tree
-   * (P4-09 acceptance[3]).
+   * Meter this run's in-process children while they run (P4-09 acceptance[3],
+   * must[3]; B-714).
+   *
+   * Each event a running child's session records debits what that child spent
+   * since the last one, so a child is stopped while it runs rather than charged
+   * after it finished. Registered once per run, on the first child that starts
+   * under a tree token limit, and stopped when the run settles.
+   */
+  private meterChildren(): void {
+    if (this.stopMetering !== undefined) return
+    this.stopMetering = this.ctx.on('session/event', (session) => {
+      for (const { run } of this.children.values()) {
+        if (run.localAgent !== undefined && run.localAgent.session === session) {
+          this.debitTokens(run.localAgent)
+          return
+        }
+      }
+    })
+  }
+
+  /**
+   * Take what one in-process child spent since its last debit off this run's
+   * tree (P4-09 acceptance[3]), and cancel this run's children once the tree
+   * has none left.
    *
    * Read from token-meter's `tokenUsage` projection of the child's session:
-   * uncached input, output, cache reads and cache writes. A tree with no token
+   * uncached input, output, cache reads and cache writes. Usage reaches the
+   * session when a model response ends, so a tree overshoots its limit by at
+   * most one response per child running at that moment. A tree with no token
    * limit meters nothing. A composition that mounts no token-meter has no such
    * projection, so its trees spend tokens unmetered; the run says so once per
    * tree rather than once per child.
-   * @param child - the child agent whose run settled.
+   * @param child - the child agent whose session recorded an event, or whose run settled.
    */
   private debitTokens(child: Agent): void {
     const remaining = this.tree.tokensRemaining
@@ -664,7 +694,12 @@ export class WorkerRun implements WorkflowRun {
       return
     }
     const { uncachedInputTokens, outputTokens, cacheReadTokens, cacheWriteTokens } = usage.totals
-    this.tree.tokensRemaining = remaining - (uncachedInputTokens + outputTokens + cacheReadTokens + cacheWriteTokens)
+    const spent = uncachedInputTokens + outputTokens + cacheReadTokens + cacheWriteTokens
+    this.tree.tokensRemaining = remaining - (spent - (this.debited.get(child) ?? 0))
+    this.debited.set(child, spent)
+    if (this.tree.tokensRemaining <= 0) {
+      this.abortChildren('token-budget-exhausted: this run\'s tree spent its token limit (maxNestedTokens)')
+    }
   }
 
   /**
@@ -1024,6 +1059,7 @@ export class WorkerRun implements WorkflowRun {
     this.detachInputSignal()
     clearTimeout(this.graceTimer)
     clearInterval(this.heartbeat)
+    this.stopMetering?.()
     // Before the result resolves, so a caller that resumes on it reads the
     // compacted journal rather than racing the write that produces it.
     this.persistCompactedJournal()

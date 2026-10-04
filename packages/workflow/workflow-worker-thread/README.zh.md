@@ -179,8 +179,8 @@ kind: "package-reference"
 - **记录的输出只复用给身份相同的调用**——worker 用每个 `agent()` 调用的 prompt、`schema`、`provider` 与 `model` 算出它的身份（`callDigestOf`），运行日志把身份和步骤记在一起。resume 把按该身份记录、尚未用过的第一份输出交给这次调用，不管两者的步骤编号是否相同，所以编号随完成先后而定的步骤照样复用。身份只覆盖这次调用本身的请求：父会话、留给缺省值的 provider 或 model、工具与 `cwd` 都不在其中；prompt 里带时间戳的调用永远对不上。没有记录身份的步骤从不复用；worker 没拿到身份时，任何输出都不复用。
 - **步骤替换的记录若属于另一个调用或已核验，就会被保留**——一次没有匹配记录的调用，若在另一个调用记录过的编号上启动，运行日志会把那条记录整条移进 `displaced`；之后的 resume 仍会对账并复用它，例如原来的参数又回来时。同一身份的调用替换已核验的记录时，也照此移走：两次同身份的调用并发时，一次复用了某个编号上的记录，另一次就可能在这个编号上启动。没有任何代码删除 displaced 里的记录，压缩也保留它们。
 - **留存的被拒运行日志从不删除**——因脚本改动被拒的 resume，会在运行以同一个 id 从头开始之前，把运行日志移到运行日志目录下的 `refused/<runId>.<脚本摘要前 12 位十六进制>.json`；这个名字已被占用时，改用下一个空着的 `refused/<runId>.<摘要>.<n>.json`。没有任何代码删除这些文件。
-- **树的 token 计数只在子结算时扣**——宿主在进程内子的运行结算之后，才把它用掉的 token 从所在的树里扣掉，所以同时在跑的几个子可以一起超出上限；上限挡的是之后的起子。并发下不超预算是 P4-10 的条款（acceptance[0]）。
-- **没挂 token-meter，树的 token 上限就不生效**——宿主从 token-meter 的 `tokenUsage` 投影读子的用量（未缓存输入、输出、缓存读、缓存写）。组合里没挂 token-meter 时，一棵树里第一个结算的子会记一条 `this tree's token limit is not in effect: token-meter is not mounted`，不扣任何 token。出厂 base 挂了 token-meter。
+- **树的 token 上限最多超出每个在跑的子一个模型响应**——进程内子的会话记下用量时，宿主就把这部分从所在的树里扣掉；树扣完时，取消本 run 所有在跑的子，原因写 `token-budget-exhausted`。用量要等一次模型响应结束才进会话，所以那一刻在跑的每个子都能把手上的响应跑完；嵌套 run 的子在自己下一次记下用量时停。并发下不超预算是 P4-10 的条款（acceptance[0]）。
+- **没挂 token-meter，树的 token 上限就不生效**——宿主从 token-meter 的 `tokenUsage` 投影读子的用量（未缓存输入、输出、缓存读、缓存写）。组合里没挂 token-meter 时，一棵树里第一个被计量的子会记一条 `this tree's token limit is not in effect: token-meter is not mounted`，不扣任何 token。出厂 base 挂了 token-meter。
 - **树的计数只在内存里**——恢复的运行从日志记下的预算重新开一棵树，所以重启之前兄弟们用掉的不再算在它头上。
 - **`maxNestedTokens: 0` 表示不设 token 上限**——这棵树不计 token，也不会因为 token 拒任何子；`maxTotalAgents` 照样限制它能起多少嵌套 run 与 `agent()` 子。
 - **跑在别的进程里的子只能在没有 token 上限的树里跑**——这里读不到它的 token 用量，所以有 token 上限的树会拒它；workflow 子跑在远程 subagent provider 上的部署，要把 `maxNestedTokens` 设为 0，token 上限也就随之关掉。subagent 接缝要等 provider 起了子之后才说出它是远程的，所以拒绝的是一个已经起了的子，并立刻 dispose：provider 已经送出的提示词收不回，它从起到 dispose 之间做的事也拦不住。

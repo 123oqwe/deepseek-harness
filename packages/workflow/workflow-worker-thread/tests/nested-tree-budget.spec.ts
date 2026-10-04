@@ -3,7 +3,8 @@
  * charges each `agent()` child to its run's tree and refuses one when the tree
  * is spent, the engine charges a nested run to its parent's tree and bounds its
  * admission by what the tree has left, and an in-process child's tokens come
- * off the tree when it settles.
+ * off the tree as its session records them, stopping the run's running children
+ * once the tree has none left (B-714).
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
@@ -19,7 +20,7 @@ import * as spawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import TokenMeter from '@deepseek-ai/dsh-token-meter'
 import { computeDefinitionDigest } from '@deepseek-ai/dsh-workflow-registry'
 import type { DefinitionName, SignerIdentity } from '@deepseek-ai/dsh-workflow-registry'
-import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
+import { MockAdapter, textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import type { WorkerRun } from '../src/host.ts'
 import WorkerThreadWorkflowEngine from '../src/index.ts'
 import { HostToWorkerType, WorkerToHostType } from '../src/protocol.ts'
@@ -173,6 +174,41 @@ describe('P4-09 acceptance[3]: an in-process child\'s tokens come off its tree',
     // textResponse reports 10 input tokens and one output token per character.
     expect(run.tree.tokensRemaining).toBe(1_000_000 - (10 + 'child said so'.length))
     expect(run.tree.tokenLimitWarned).toBe(false)
+    await run.dispose()
+  })
+
+  it('stops a running child once the tree has spent its tokens, before the child settles (B-714)', async () => {
+    const { ctx, engine, parent } = await setup({ tokenMeter: true, answers: 0, maxNestedTokens: 20 })
+    // Two tool-call responses spend 15 tokens each; the third response is the step a child metered only at
+    // settlement would still take.
+    const adapter = new MockAdapter([
+      toolCallResponse('c1', 'no_such_tool', {}),
+      toolCallResponse('c2', 'no_such_tool', {}),
+      textResponse('one step too many'),
+    ])
+    ctx.llm.registerAdapter(['metered'], adapter)
+    const run = engine.start({
+      script: "try { await agent('spend', { provider: 'metered', model: 'metered' }); return 'ran' } catch { return 'stopped' }",
+      meta: META,
+      parent,
+    }) as WorkerRun
+
+    await run.result
+    expect(adapter.requests).toHaveLength(2)
+    expect(run.tree.tokensRemaining).toBe(20 - 30)
+    await run.dispose()
+  })
+
+  it('debits only its running children\'s sessions, not another session\'s events (B-714)', async () => {
+    const { ctx, engine, parent } = await setup({ tokenMeter: true, answers: 0, maxNestedTokens: 20 })
+    const adapter = new MockAdapter(['hang'])
+    ctx.llm.registerAdapter(['metered'], adapter)
+    const run = engine.start({ script: "await agent('wait', { provider: 'metered', model: 'metered' })", meta: META, parent }) as WorkerRun
+    await vi.waitFor(() => { expect(adapter.requests).toHaveLength(1) })
+
+    parent.session.append('turn/start', { turn: 1 })
+
+    expect(run.tree.tokensRemaining).toBe(20)
     await run.dispose()
   })
 

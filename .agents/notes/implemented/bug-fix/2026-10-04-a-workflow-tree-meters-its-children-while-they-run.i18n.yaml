@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-10-04-a-workflow-tree-meters-its-children-while-they-run.md
+2026-10-04-a-workflow-tree-meters-its-children-while-they-run.md: 1f21aa7c55783b45fe79e1bc8c9a63d47cf0b17a
+2026-10-04-a-workflow-tree-meters-its-children-while-they-run.zh.md: c8ddbdbc4e194ec9e8f7fad60f1b19caa8bc7402
