@@ -58,5 +58,15 @@
     "@deepseek-ai/dsh-timeout": "workspace:^",
     "@deepseek-ai/dsh-tool-call-timeout-policy": "workspace:^",
     "@deepseek-ai/dsh-tools": "workspace:^"
+  },
+  "dsh": {
+    "manifestVersion": 2,
+    "executionMode": "in-process",
+    "compatibility": {
+      "dshVersionRange": ">=0.1.0 <0.2.0"
+    },
+    "tools": [],
+    "services": [],
+    "events": []
   }
 }
