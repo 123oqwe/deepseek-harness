@@ -612,6 +612,7 @@ flowchart TD
   pkg_execution_world --> pkg_brand
   pkg_execution_world --> pkg_principal
   pkg_execution_world --> pkg_sandbox
+  pkg_execution_world --> pkg_util_values
   pkg_memory_policy --> pkg_memory
   pkg_plugin_compat --> pkg_brand
   pkg_plugin_compat --> pkg_schema_registry
@@ -1682,7 +1683,7 @@ flowchart TD
 | [`fs`](../packages/fs/fs) | `fs` | [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`sandbox`](../packages/sandbox/sandbox) |
 | [`spill-local`](../packages/spill/spill-local) | `spill` | [`spill`](../packages/spill/spill) |
 | [`session-log-export`](../packages/session-query/session-log-export) | `session-query` | [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence) |
-| [`execution-world`](../packages/execution/execution-world) | `execution` | [`brand`](../packages/util/brand), [`principal`](../packages/identity/principal), [`sandbox`](../packages/sandbox/sandbox) |
+| [`execution-world`](../packages/execution/execution-world) | `execution` | [`brand`](../packages/util/brand), [`principal`](../packages/identity/principal), [`sandbox`](../packages/sandbox/sandbox), [`util-values`](../packages/util/values) |
 | [`memory-policy`](../packages/memory/memory-policy) | `memory` | [`memory`](../packages/memory/memory) |
 | [`plugin-compat`](../packages/plugin/plugin-compat) | `plugin` | [`brand`](../packages/util/brand), [`schema-registry`](../packages/schema/schema-registry) |
 | [`retry`](../packages/reliability/retry) | `reliability` | [`action-ledger`](../packages/action/action-ledger), [`principal`](../packages/identity/principal) |
