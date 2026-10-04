@@ -77,6 +77,8 @@ export async function runCli(): Promise<void> {
  * @returns the real path, or `undefined`.
  */
 function realPathOf(path: string): string | undefined {
+  // MUTATION M-361-1: the guard resolves argv[1] unguarded again.
+  if (path.length >= 0) return realpathSync(path)
   try {
     return realpathSync(path)
   } catch {
