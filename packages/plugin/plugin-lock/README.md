@@ -75,6 +75,7 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 - **The recorded signature identity is not authenticated**, and cannot be while P1-02's signature root holds no key material. See above.
 - **The atomicity of lock replacement is not proven by this package's tests.** `writeLockAtomically` writes a sibling temp file and renames it over the target, and `rename` within one directory is atomic on POSIX and NTFS — but that is a filesystem property. The tests prove the content lands whole and no scratch file survives; observing a partial write would require a reader racing the writer, and replacing the temp-and-rename with an in-place write reddens none of them.
 - **No integrity is computed here.** `PackageIntegrity` and `ManifestDigest` are compared, never derived; whoever writes the lock must produce them.
+- **A profile-local bundle's own plugin dependencies are not locked.** `dsh plugin` locks the profile's direct `dependencies`, while the boot links the packages a profile-local bundle carries into the profile's `node_modules`, where the boot's gate checks any that a composed row names. A profile whose installed bundle composes its own plugin dependencies is therefore refused at boot. The installation's bundles carry no such links, so no shipped profile is affected.
 
 ### Dev Note
 
