@@ -20,12 +20,12 @@
  * @module tests/first100/fixtures/loader/p1-01-census3/driver
  */
 
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { type Context, FiberState } from '@deepseek-ai/cordis'
-import { loadLayeredEnv } from '@deepseek-ai/dsh-app-boot'
+import { loadLayeredEnv, resolveProfileDir } from '@deepseek-ai/dsh-app-boot'
 import { featureGateShadowLogPath, runProfile } from '../../../../../apps/cli/src/profile-boot.ts'
 import { CENSUS_ROUTE } from './hang-llm.ts'
 import { GROUPS, type Group } from './groups.ts'
@@ -56,7 +56,12 @@ const rows = group.template === 'headless'
   ? [`- id: p1-01-census-hang-llm\n  name: '${hangLlm}'`, ...group.rows]
   : group.rows
 const overlay = join(cwd, 'census3.patch.yml')
-writeFileSync(overlay, `- insert:\n${rows.map(indented).join('\n')}\n`)
+writeFileSync(overlay, [...group.patches ?? [], `- insert:\n${rows.map(indented).join('\n')}`].join('\n') + '\n')
+for (const [packageName, packageDir] of Object.entries(group.installs ?? {})) {
+  const link = join(resolveProfileDir(group.template), 'node_modules', packageName)
+  mkdirSync(dirname(link), { recursive: true })
+  symlinkSync(packageDir, link, 'junction')
+}
 
 let ctx: Context | undefined
 let bootError: string | undefined
