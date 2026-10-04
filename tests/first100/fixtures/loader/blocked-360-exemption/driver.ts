@@ -20,9 +20,10 @@
  * - C stages A's package name in the profile's own `node_modules` as a link
  *   to a manifest-less copy outside the installation.
  * - D stages the same copy there as a real directory.
- * - C's and D's profile-local copy is locked the way `dsh plugin` locks a
- *   package, so the boot's lock gate (P1-03 must[2]) passes it and admission
- *   alone decides.
+ * - C's and D's profile-local copy is a profile dependency recorded in the
+ *   profile's lock, as `dsh plugin add` leaves a package, so the boot's lock
+ *   gate (P1-03 must[2]) passes it whether or not admission composes its row,
+ *   and admission alone decides.
  * - F adds no row: it observes the base bundle's `tool-web` row, whose
  *   `web_fetch` declares a wildcard destination the installation grants
  *   `@deepseek-ai/dsh-base`.
@@ -100,10 +101,11 @@ function stageManifestlessPackage(dir: string, name: string, key: string): void 
  */
 async function stageCandidate(key: string, root: string, profileDir: string): Promise<string> {
   mkdirSync(profileDir, { recursive: true })
+  const installed = key === SYMLINK_REALPATH_OUT || key === PROFILE_SAME_NAME
   writeFileSync(join(profileDir, 'package.json'), `${JSON.stringify({
     name: `dsh-profile-${PROFILE}`,
     private: true,
-    dependencies: {},
+    dependencies: installed ? { [INSTALLATION_PACKAGE]: '1.0.0' } : {},
     dsh: { profile: { bundles: [...DEFAULT_PROFILE_BUNDLES], patchReload: 'startup' } },
   }, undefined, 2)}\n`)
   const insert = (moduleName: string): void => {
