@@ -142,21 +142,25 @@ describe('P4-06 acceptance[2]: a settlement is consumed only by its own parent, 
     expect(second.ctx.messageBus.outboxRows().map(row => row.record.state).sort()).toEqual(['pending', 'pending'])
     await second.ctx.agents.resume({ resumeSessionId: SessionId('tenant-a'), agentOptions: { provider: 'mock', model: 'mock' } })
     await second.ctx.agents.resume({ resumeSessionId: SessionId('tenant-b'), agentOptions: { provider: 'mock', model: 'mock' } })
-    await vi.waitFor(() => { expect(ackedCount(second.ctx)).toBe(2) }, { timeout: 10_000 })
     // The ack is written when the notice is spliced into the parent, BEFORE the
     // splice reaches the parent's log and before the log is flushed (BLOCKED-350),
-    // so the in-memory session is a racy read. Read the DURABLE log instead: flush
-    // the resumed session, then load its stored events, and wait until each
-    // parent's own settlement has actually reached disk — a deterministic
-    // observation that does not depend on the splice's timing.
+    // so the in-memory session (and an acked-count gate) is a racy read. Read the
+    // DURABLE log instead: flush the resumed session, then load its stored events.
     const settledOnDisk = async (tenant: SessionId): Promise<SessionId[]> => {
       const session = second.ctx.agents.get(tenant)?.session
       if (session !== undefined) await second.ctx.sessions.flush(session)
       return settledFromEvents((await loadStoredSession(second.ctx.sessionPersistence, tenant)).events)
     }
+    // Gate on COUNT, not on the isolation itself: two settlements were owed, so
+    // two reach disk whether targeting is correct OR a cross-tenant mutation
+    // mis-delivers them. Asserting the per-tenant identity here would spin to a
+    // testTimeout under that mutation — reddening on the timeout, not on the
+    // isolation — and let a broken subject assertion red the same way (S9). This
+    // bounded count-only wait delivers the drain, then the subject assertions
+    // below decide isolation.
     await vi.waitFor(async () => {
-      expect(await settledOnDisk(SessionId('tenant-a'))).toEqual([childA.childId])
-      expect(await settledOnDisk(SessionId('tenant-b'))).toEqual([childB.childId])
+      const delivered = (await settledOnDisk(SessionId('tenant-a'))).length + (await settledOnDisk(SessionId('tenant-b'))).length
+      expect(delivered).toBeGreaterThanOrEqual(2)
     }, { timeout: 10_000 })
 
     const a = await settledOnDisk(SessionId('tenant-a'))
