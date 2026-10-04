@@ -619,10 +619,26 @@ async function main(): Promise<void> {
   process.once('SIGINT', () => { void stop() })
 }
 
+/**
+ * The real path of `path`, or `undefined` when it cannot be resolved.
+ * @param path - a path `existsSync` reported.
+ * @returns the real path, or `undefined`.
+ */
+function realPathOf(path: string): string | undefined {
+  try {
+    return realpathSync(path)
+  } catch {
+    // A SEA-packaged executable's virtual file system reports its entry script, named without the
+    // snapshot prefix, as existing and still refuses to resolve it; such a path names no file this
+    // module can be.
+    return undefined
+  }
+}
+
 // Not `import.meta.main`, which Node 24.0 leaves undefined (BLOCKED-351). The real path,
 // because this entry is started through a symlink; existence first, because a packaged
-// executable's argv[1] need not name a file.
-if (process.argv[1] !== undefined && existsSync(process.argv[1]) && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// executable's argv[1] need not name a file, and a resolution that fails names no file.
+if (process.argv[1] !== undefined && existsSync(process.argv[1]) && realPathOf(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error)
     if (process.send !== undefined) process.send({ type: 'fatal', message } satisfies DesktopHostEvent)
