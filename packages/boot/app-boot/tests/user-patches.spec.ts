@@ -478,6 +478,51 @@ describe('boot with user patches', () => {
     }
   })
 
+  it('awaits an asynchronous compose, and a rejected one refuses the whole generation', { timeout: 20_000 }, async () => {
+    const dir = tmp()
+    const userDir = tmp()
+    const filename = join(userDir, PROFILE_PATCH_FILENAME)
+    const basePatches = [{ id: 'noop', config: { value: 'generated' } }]
+    const ctx = await boot(NAME, writeTree(dir), basePatches)
+    onTestFinished(() => ctx.fiber.dispose())
+    await ctx.plugin(Timer)
+    await ctx.plugin(Hmr, { root: [], ignored: [], debounce: 0 })
+    const watchers: FSWatcher[] = []
+    const previousFactory = configWatch.create
+    onTestFinished(() => { configWatch.create = previousFactory })
+    configWatch.create = (options) => {
+      const watcher = new FSWatcher(options)
+      watchers.push(watcher)
+      queueMicrotask(() => { watcher.emit('ready') })
+      return watcher
+    }
+    const failures: Error[] = []
+    ctx.on('hmr/config-update-failed', (_failedFilename, error) => { failures.push(error) })
+    const dispose = await watchUserPatches(ctx, {
+      binName: NAME,
+      filename,
+      compose: async (userPatches) => {
+        await Promise.resolve()
+        if (userPatches.some(patch => JSON.stringify(patch).includes('refused'))) throw new Error('generation refused')
+        return [...basePatches, ...userPatches]
+      },
+    })
+    const watcher = watchers[0]!
+    try {
+      writeFileSync(filename, '- id: noop\n  config:\n    value: live\n')
+      watcher.emit('add', filename)
+      await eventually(() => (entryConfig(ctx, 'noop') as { value?: string }).value === 'live', 'asynchronous compose was not applied')
+
+      writeFileSync(filename, '- id: noop\n  config:\n    value: refused\n')
+      watcher.emit('change', filename)
+      await eventually(() => failures.length === 1, 'rejected compose was not broadcast')
+      expect(failures[0]?.message).toBe('generation refused')
+      expect((entryConfig(ctx, 'noop') as { value?: string }).value).toBe('live')
+    } finally {
+      await dispose()
+    }
+  })
+
   it('fails loud when the exact watcher lacks HMR or a root Include', async () => {
     const dir = tmp()
     const withoutHmr = await boot(NAME, writeTree(dir))

@@ -286,9 +286,11 @@ export interface UserPatchWatchOptions {
    * the same composition the app booted with, so a reload can interleave the
    * new user patches between app-owned layers (bundle layers below,
    * overlays above). Identity when omitted: the user layer
-   * is the whole patch list.
+   * is the whole patch list. It may be asynchronous; a throw or a rejection
+   * refuses the whole generation, so the mounted tree keeps the previous one
+   * and HMR reports the failure.
    */
-  compose?: (userPatches: PatchOptions[]) => PatchOptions[]
+  compose?: (userPatches: PatchOptions[]) => PatchOptions[] | Promise<PatchOptions[]>
 }
 
 /**
@@ -312,7 +314,7 @@ export async function watchUserPatches(
     // updates another option between refreshes is not silently reverted.
     const { patches: _previousPatches, ...includeConfig } = entry.options.config as Include.Config
     const userPatches = loadOptionalPatches(binName, filename) ?? []
-    const patches = compose(userPatches)
+    const patches = await compose(userPatches)
     await entry.update({
       config: {
         ...includeConfig,
