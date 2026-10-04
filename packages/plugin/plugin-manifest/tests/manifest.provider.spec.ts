@@ -13,6 +13,7 @@ import {
   classifyPluginDeclaration,
   compareDeclaredToObserved,
   decidePluginTrust,
+  detectWildcardPermissions,
   evaluatePreMountAdmission,
   partitionWildcardFindings,
   validatePluginManifestV2,
@@ -279,5 +280,22 @@ describe('partitionWildcardFindings (question 27 (a))', () => {
       granted: [],
       ungranted: [{ path: 'mcp.servers[0].allowedDestinations[0]', pattern: '*' }],
     })
+  })
+
+  it('detects a wildcard in a package-level field and grants it only to a grant that names no tool', () => {
+    const result = validatePluginManifestV2(loadFixture('benign'))
+    expect(result.valid).toBe(true)
+    if (!result.valid) return
+    const manifest: PluginManifestV2 = {
+      ...result.manifest,
+      filesystem: { readPaths: [], writePaths: ['/'] },
+      process: { commandPatterns: ['*'] },
+    }
+    const write = { path: 'filesystem.writePaths[0]', pattern: '/' }
+    const spawn = { path: 'process.commandPatterns[0]', pattern: '*' }
+    expect(detectWildcardPermissions(manifest)).toEqual([write, spawn])
+    const grant = { destinationKind: 'process', pattern: '*', purpose: 'test' } as const
+    expect(partitionWildcardFindings(manifest, [{ ...grant, tool: 'example-format-note' }])).toEqual({ granted: [], ungranted: [write, spawn] })
+    expect(partitionWildcardFindings(manifest, [grant])).toEqual({ granted: [{ finding: spawn, grant }], ungranted: [write] })
   })
 })

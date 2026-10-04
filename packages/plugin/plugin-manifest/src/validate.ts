@@ -496,18 +496,44 @@ export function isDeniedInProductionByDefault(declaration: PluginDeclaration): b
   return declaration.kind !== 'manifest-v2'
 }
 
-function collectDestinations(manifest: PluginManifestV2): readonly { path: string; destination: CapabilityDestination }[] {
-  const found: { path: string; destination: CapabilityDestination }[] = []
-  const collectEffect = (effect: CapabilityEffectDeclaration, path: string): void => {
+/** Where a destination is declared: one tool, the package itself, or an MCP server or remote Skill provider. */
+type DestinationScope =
+  | { readonly kind: 'tool'; readonly name: string }
+  | { readonly kind: 'package' }
+  | { readonly kind: 'remote' }
+
+/** One declared destination, its manifest path and its scope. */
+interface CollectedDestination {
+  readonly path: string
+  readonly destination: CapabilityDestination
+  readonly scope: DestinationScope
+}
+
+function collectDestinations(manifest: PluginManifestV2): readonly CollectedDestination[] {
+  const found: CollectedDestination[] = []
+  const collectEffect = (effect: CapabilityEffectDeclaration, path: string, scope: DestinationScope): void => {
     effect.allowedDestinations.forEach((destination, index) => {
-      found.push({ path: `${path}.allowedDestinations[${index}]`, destination })
+      found.push({ path: `${path}.allowedDestinations[${index}]`, destination, scope })
     })
   }
-  manifest.tools?.forEach((tool, index) => { collectEffect(tool, `tools[${index}]`) })
-  manifest.mcp?.servers.forEach((server, index) => { collectEffect(server, `mcp.servers[${index}]`) })
+  const collectPackage = (
+    patterns: readonly string[] | undefined,
+    path: string,
+    destinationOf: (pattern: string) => CapabilityDestination,
+  ): void => {
+    patterns?.forEach((pattern, index) => {
+      found.push({ path: `${path}[${index}]`, destination: destinationOf(pattern), scope: { kind: 'package' } })
+    })
+  }
+  manifest.tools?.forEach((tool, index) => { collectEffect(tool, `tools[${index}]`, { kind: 'tool', name: tool.name }) })
+  manifest.mcp?.servers.forEach((server, index) => { collectEffect(server, `mcp.servers[${index}]`, { kind: 'remote' }) })
   manifest.skills?.forEach((skill, index) => {
-    if (skill.remoteProvider !== undefined) collectEffect(skill.remoteProvider, `skills[${index}].remoteProvider`)
+    if (skill.remoteProvider !== undefined) collectEffect(skill.remoteProvider, `skills[${index}].remoteProvider`, { kind: 'remote' })
   })
+  collectPackage(manifest.filesystem?.readPaths, 'filesystem.readPaths', pathPattern => ({ kind: 'filesystem', pathPattern }))
+  collectPackage(manifest.filesystem?.writePaths, 'filesystem.writePaths', pathPattern => ({ kind: 'filesystem', pathPattern }))
+  collectPackage(manifest.network?.hostPatterns, 'network.hostPatterns', hostPattern => ({ kind: 'network', hostPattern }))
+  collectPackage(manifest.process?.commandPatterns, 'process.commandPatterns', commandPattern => ({ kind: 'process', commandPattern }))
   return found
 }
 
@@ -523,7 +549,8 @@ function patternOf(destination: CapabilityDestination): string {
 
 /**
  * Find every {@link CapabilityDestination} across a manifest's Tool, MCP
- * server, and remote-Skill-provider declarations whose pattern is
+ * server, and remote-Skill-provider declarations, and every pattern of its
+ * package-level `filesystem`, `network` and `process` fields, whose pattern is
  * maximally broad (`'*'`, `'**'`, or `'/'`) — acceptance[0]'s "申请通配权限"
  * (requesting wildcard permission), which a later P/U-stage installer fails
  * or quarantines. Pure schema-level detection only: this does not compare
@@ -539,13 +566,13 @@ export function detectWildcardPermissions(manifest: PluginManifestV2): readonly 
 
 /**
  * One installation-level grant of a wildcard destination to one tool of one
- * shipped layer (question 27 (a)): the shipped bundle's own tools may reach
- * everything only because the installation says so, tool by tool, with the
- * reason recorded.
+ * shipped package, or to the package's own package-level fields (question
+ * 27 (a)): the shipped package may reach everything only because the
+ * installation says so, tool by tool, with the reason recorded.
  */
 export interface WildcardGrant {
-  /** The tool the grant covers, by its manifest name. */
-  readonly tool: string
+  /** The tool the grant covers, by its manifest name; absent for the package-level `filesystem`, `network` and `process` fields. */
+  readonly tool?: string
   /** The destination kind the grant covers. */
   readonly destinationKind: CapabilityDestination['kind']
   /** The wildcard pattern the grant covers, exactly as the manifest writes it. */
@@ -563,9 +590,10 @@ export interface GrantedWildcard {
 /**
  * Split a manifest's wildcard findings ({@link detectWildcardPermissions}) by
  * `grants`: a finding on a tool is granted when one grant names that tool,
- * its destination kind and its pattern; every other finding, an MCP server's
- * or a remote Skill provider's included, stays ungranted. Pure; the
- * detection itself is unchanged.
+ * its destination kind and its pattern, and a finding on a package-level
+ * field when one grant names no tool, that kind and that pattern; an MCP
+ * server's or a remote Skill provider's finding always stays ungranted. Pure;
+ * the detection itself is unchanged.
  * @param manifest - a validated {@link PluginManifestV2}.
  * @param grants - the grants that apply to this manifest's layer.
  * @returns the granted findings with their grants, and the ungranted findings, each in manifest order.
@@ -576,12 +604,11 @@ export function partitionWildcardFindings(
 ): { readonly granted: readonly GrantedWildcard[]; readonly ungranted: readonly WildcardFinding[] } {
   const granted: GrantedWildcard[] = []
   const ungranted: WildcardFinding[] = []
-  for (const { path, destination } of collectDestinations(manifest)) {
+  for (const { path, destination, scope } of collectDestinations(manifest)) {
     const pattern = patternOf(destination)
     if (!WILDCARD_PATTERNS.has(pattern)) continue
-    const toolIndex = /^tools\[(\d+)\]\./u.exec(path)?.[1]
-    const tool = toolIndex === undefined ? undefined : manifest.tools?.[Number(toolIndex)]?.name
-    const grant = grants.find(candidate =>
+    const tool = scope.kind === 'tool' ? scope.name : undefined
+    const grant = scope.kind === 'remote' ? undefined : grants.find(candidate =>
       candidate.tool === tool && candidate.destinationKind === destination.kind && candidate.pattern === pattern)
     if (grant === undefined) ungranted.push({ path, pattern })
     else granted.push({ finding: { path, pattern }, grant })

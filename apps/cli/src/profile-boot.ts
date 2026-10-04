@@ -933,7 +933,8 @@ export function admissionDecisionLogPath(): string {
 
 /** One installation wildcard grant as an {@link AdmissionDecisionRecord} lists it. */
 export interface AdmissionDecisionGrant {
-  readonly tool: string
+  /** The tool the grant covers; absent for a grant of the package-level fields. */
+  readonly tool?: string
   readonly destinationKind: GrantedWildcard['grant']['destinationKind']
   readonly pattern: string
   /** Where the grant comes from: the installation's own grant table, `INSTALL_WILDCARD_GRANTS`. */
@@ -973,7 +974,7 @@ function appendAdmissionDecision(
     layer,
     decision,
     grants: grants.map(({ grant }) => ({
-      tool: grant.tool,
+      ...grant.tool === undefined ? {} : { tool: grant.tool },
       destinationKind: grant.destinationKind,
       pattern: grant.pattern,
       source: 'install-grant-table',
