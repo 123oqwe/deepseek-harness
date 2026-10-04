@@ -973,7 +973,7 @@ export class AgentLoop extends Service implements AgentFactory {
           // log unbalanced, so the next resume computes the same closers and
           // repeats this idempotent move. Done after the append, a crash there
           // would leave the effects `sent` with no closer left to find them by.
-          settleInterruptedEffects(this.runtime.ctx, persisted, closers)
+          settleInterruptedEffects(this.runtime.ctx, persisted, closers.slice(0, 0))
           if (closers.length > 0) await handle.append(closers)
           preparation = SessionPreparation.create(this.runtime.ctx.sessions.prepare(id, {
             seed: [...persisted, ...closers],
