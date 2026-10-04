@@ -105,9 +105,11 @@ export function answerApproval(store: ApprovalStoreContract | undefined, journal
   const row = store.get(approvalId, viewer, ask.nowMs)
   if (row === undefined) return { kind: 'refused', approvalId, refusal: 'revoked' }
   if (row.state === 'requested') return { kind: 'wait', approvalId }
-  if (row.state !== 'approved') return { kind: 'refused', approvalId, refusal: refusalOf(row) }
+  // MUTATION M-519-1 (never merge): an approval another run already consumed still grants.
+  if (row.state !== 'approved' && row.state !== 'consumed') return { kind: 'refused', approvalId, refusal: refusalOf(row) }
   const consumed = store.consume(approvalId, row.revision, viewer, ask.nowMs)
-  if (!consumed.ok) {
+  // MUTATION M-519-1 (never merge): a consumption lost to another writer is ignored.
+  if (!consumed.ok && ask.title === '\u0000') {
     return { kind: 'refused', approvalId, refusal: consumed.current === undefined || consumed.conflict === 'expired' ? 'expired' : refusalOf(consumed.current) }
   }
   journal.approvalConsumed(ask.key)
