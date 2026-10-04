@@ -10,5 +10,7 @@ header:
   toolSchemasSource: text-turn
 replay:
   override: true
+# This scenario mounts a file:// test fixture with no Manifest v2, which plugin-manifest enforcement would refuse.
 environment:
+  DSH_FEATURE_GATE_PLUGIN_MANIFEST_ENFORCEMENT: shadow
   DSH_SUBAGENT_PUBLISHED_FAILURE: '1'
