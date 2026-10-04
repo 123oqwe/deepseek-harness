@@ -28,6 +28,7 @@ kind: "package-group"
 |---|---|---|
 | [`attachment/`](attachment/README.zh.md) | 可用于提示词与命令、会持久保存并回到历史中的图片附件 | `ctx.attachments` |
 | [`attachment-local/`](attachment-local/README.zh.md) | 把附加图片存储在本机 `DSH_HOME` 下 | 注册到 `ctx.attachments` |
+| [`attachment-security/`](attachment-security/README.zh.md) | 在解析器或模型看到之前拒绝恶意附件载荷 | 注册到 `ctx.attachmentScanner` |
 
 -----
 

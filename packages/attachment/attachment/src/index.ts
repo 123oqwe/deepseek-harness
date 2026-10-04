@@ -22,6 +22,8 @@ export { AttachmentId, ImageVariantId } from './brand.ts'
 export { AttachmentError, isAttachmentError, isImageAdmissionError } from './error.ts'
 export type { AttachmentErrorCode, ImageAdmissionErrorCode } from './error.ts'
 export { admitEncodedFile, admitEncodedImages } from './admission.ts'
+export { AttachmentScanner } from './scan.ts'
+export type { AttachmentScanInput, AttachmentScanRefusal, AttachmentScanVerdict, AttachmentThreatKind } from './scan.ts'
 export { requestImageDimensions } from './request-projection.ts'
 export type {
   AttachmentId as AttachmentIdType,
