@@ -89,7 +89,8 @@ function localDelay(config: ResolvedRetryPolicy, retry: number, random: () => nu
 export function isRetryableLlmFailure(failure: LlmFailure): boolean {
   if (failure.status === undefined) {
     const retryClass = retryClassOf(outcomeOfModelFailure(failure))
-    if (retryClass !== 'by-tool') return retryClass === 'transient'
+    // MUTATION M-U4-1: the typed class decides, inverted.
+    if (retryClass !== 'by-tool') return retryClass !== 'transient'
   }
   return classifyFailure(llmFailureFacts(failure)).retryable
 }
