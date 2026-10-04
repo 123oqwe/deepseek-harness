@@ -169,3 +169,31 @@ describe('terminal card assembly', () => {
     await runtime.dispose()
   })
 })
+
+describe('outcome assembly (Epic P3-03 acceptance[1])', () => {
+  it('a recorded outcome reaches the keyed bash row and the fallback row as their state and kind', async () => {
+    const runtime = await bench([
+      bashResult(3, 'c-failed', { outcome: { kind: 'tool_failed', exitCode: 3 } }),
+      bashResult(4, 'c-cancelled', { outcome: { kind: 'cancelled', by: 'abort' } }),
+      bashResult(5, 'c-clean'),
+      bashResult(6, 'c-timeout', {
+        call: { name: 'pwsh', argsRaw: '{"command":"ls -la","description":"List files"}' },
+        outcome: { kind: 'timeout', by: 'executor', deadlineMs: 1_000 },
+      }),
+    ])
+    const view = runtime.renderRoot()
+
+    const keyed = [...view.container.querySelectorAll('[data-sample="bash"]')]
+    expect(keyed.map(row => row.getAttribute('data-state'))).toEqual(['error', 'stopped', 'ok'])
+    expect(keyed[0]!.textContent).toContain('执行失败')
+    // The command's own output is not a failure line: the collapsed row keeps the command.
+    expect(keyed[0]!.textContent).not.toContain('total 2')
+    expect(keyed[1]!.textContent).toContain('已取消')
+    expect(keyed[2]!.textContent).not.toMatch(/执行失败|已取消|超时/)
+
+    const fallback = view.container.querySelector('[data-tool="pwsh"]')
+    expect(fallback?.getAttribute('data-state')).toBe('error')
+    expect(fallback?.textContent).toContain('超时')
+    await runtime.dispose()
+  })
+})

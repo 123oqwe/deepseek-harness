@@ -19,7 +19,7 @@ import {
 } from '../models/primitive-labels.ts'
 import type { AskQuestionCardModel } from '../models/ask-question-card-model.ts'
 import {
-  formatToolBody, type ToolRowState, type ToolRowVariant,
+  formatToolBody, type ToolRowModel, type ToolRowState, type ToolRowVariant,
 } from '../models/tool-call-model.ts'
 import type { WebCardModelProps } from '../models/web-card-model.ts'
 import { AskQuestionCard } from './AskQuestionCard.tsx'
@@ -38,9 +38,12 @@ export interface ToolRowProps {
    * a narrow row clips the summary before this. For a fragment whose whole
    * value is surviving that clip — the todo row's parallel-active count.
    * null/absent = the summary is the whole collapsed content. Dropped on an
-   * error row, whose collapsed summary is the failure line instead.
+   * error row, whose collapsed summary is the failure line instead, and
+   * replaced by the outcome label when there is one.
    */
   summarySuffix?: string | null | undefined
+  /** Locale key of the recorded outcome kind (Epic P3-03), shown in the suffix slot; null/absent = none. */
+  outcomeKey?: ToolRowModel['outcomeKey'] | undefined
   /** Original argument JSON formatted only while the row is expanded. */
   bodyRaw?: string | null | undefined
   /** Flattened result text for the expanded Output section; null/absent = no output section. */
@@ -116,6 +119,7 @@ export function ToolRow({
   title,
   summary,
   summarySuffix,
+  outcomeKey,
   bodyRaw,
   output,
   askQuestion,
@@ -171,7 +175,8 @@ export function ToolRow({
     const { added, removed } = diffTotals(diffBody.card.diffs)
     return `+${added} -${removed}`
   }, [diffBody])
-  const suffix = failureLine === null ? summarySuffix ?? diffStat : null
+  const outcomeLabel = outcomeKey == null ? null : t(outcomeKey)
+  const suffix = outcomeLabel ?? (failureLine === null ? summarySuffix ?? diffStat : null)
   const fileLink = filePath !== undefined && onOpenFile !== undefined && failureLine === null
   const toggleExpand = () => {
     setExpanded(v => !v)

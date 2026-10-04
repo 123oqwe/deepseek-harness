@@ -62,6 +62,7 @@ function rootResult(match: ConversationMatch, previous?: RunningToolCall): ToolR
     content: result.content,
     isError: result.isError === true,
     ...match.event.data.error === undefined ? {} : { error: match.event.data.error },
+    ...match.event.data.outcome === undefined ? {} : { outcome: match.event.data.outcome },
     meta: match.event.data.meta,
     subCalls: [],
   }

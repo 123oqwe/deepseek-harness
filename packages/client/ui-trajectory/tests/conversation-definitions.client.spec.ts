@@ -480,6 +480,37 @@ describe('Trajectory conversation Definitions', () => {
     })
   })
 
+  it('carries a tool result\'s recorded outcome, and none when its event records none (Epic P3-03 acceptance[1])', () => {
+    const call = (seq: number, callId: string) => at(seq, 'tool/call', {
+      turn: 1, step: 1, callId, name: 'bash', arguments: '{"command":"exit 3"}',
+    })
+    const result = (seq: number, callId: string, outcome?: unknown) => at(seq, 'tool/result', {
+      turn: 1,
+      step: 1,
+      message: {
+        id: `result-${callId}`,
+        role: 'user',
+        source: { kind: 'tool', callId },
+        content: [{ type: 'tool-result', toolCallId: callId, content: [], isError: false }],
+      },
+      ...(outcome === undefined ? {} : { outcome }),
+    }, { surfaceOp: 'append' })
+    const current = snapshot(assembler([
+      at(1, 'turn/start', { turn: 1 }),
+      at(2, 'step/start', { turn: 1, step: 1 }),
+      call(3, 'failed'),
+      call(4, 'clean'),
+      result(5, 'failed', { kind: 'tool_failed', exitCode: 3 }),
+      result(6, 'clean'),
+      at(7, 'step/end', { turn: 1, step: 1 }),
+    ]))
+
+    const tools = current.eventNodes.filter(node => node.kind === 'tool-result')
+    expect(tools.map(node => node.callId).sort()).toEqual(['clean', 'failed'])
+    expect(tools.find(node => node.callId === 'failed')?.outcome).toEqual({ kind: 'tool_failed', exitCode: 3 })
+    expect(tools.find(node => node.callId === 'clean')).not.toHaveProperty('outcome')
+  })
+
   it('assembles compaction lifecycle, checkpoint replacement, and orphan interruption', () => {
     const current = snapshot(assembler([
       at(1, 'compaction/start', { compactionId: 'complete', turn: null }),

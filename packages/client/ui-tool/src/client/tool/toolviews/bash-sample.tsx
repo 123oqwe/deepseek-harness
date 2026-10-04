@@ -107,6 +107,7 @@ export function BashRow({ toolName, block, sessionId, useSessions, inspect, t }:
         <span className={clsx(css.summary, failureLine !== null && css.errorSummary)}>
           {failureLine ?? terminal?.description ?? model.summary}
         </span>
+        {model.outcomeKey !== null && <span className={css.outcome}>{t(model.outcomeKey)}</span>}
       </div>
       {open && (
         <div className={css.bodyWrap}>

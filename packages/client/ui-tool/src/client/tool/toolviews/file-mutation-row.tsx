@@ -26,6 +26,7 @@ export function FileMutationRow({ toolName, block, cwd, home, openFile, inspect,
       output={model.output}
       errorSummary={model.errorSummary}
       diff={diff}
+      outcomeKey={model.outcomeKey}
       state={model.state}
       filePath={model.filePath}
       onOpenFile={openFile}

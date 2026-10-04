@@ -61,6 +61,7 @@ export function TodoRow({ toolName, block, inspect, t }: TodoRowProps) {
       bodyRaw={model.bodyRaw}
       output={model.output}
       errorSummary={model.errorSummary}
+      outcomeKey={model.outcomeKey}
       state={model.state}
       inspect={inspect}
     />

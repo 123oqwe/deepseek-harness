@@ -33,6 +33,7 @@ export function SearchRow({ toolName, block, inspect, t }: SearchRowProps) {
       output={model.output}
       errorSummary={model.errorSummary}
       search={search}
+      outcomeKey={model.outcomeKey}
       state={model.state}
       inspect={inspect}
     />

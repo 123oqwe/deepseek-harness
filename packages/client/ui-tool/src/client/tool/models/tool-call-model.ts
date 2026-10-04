@@ -29,6 +29,15 @@ export const VARIANT_TITLE_KEYS = {
   others: 'tool.title.generic',
 } as const satisfies Record<ToolRowVariant, ToolTitleKey>
 
+type ToolOutcomeKey = Extract<LocaleKeysOf<'conversation'>, `outcome.${string}`>
+
+/** Locale key per recorded outcome kind (Epic P3-03). */
+const OUTCOME_KEYS = {
+  policy_denied: 'outcome.policyDenied', resource_exhausted: 'outcome.resourceExhausted',
+  timeout: 'outcome.timeout', cancelled: 'outcome.cancelled',
+  tool_failed: 'outcome.toolFailed', world_lost: 'outcome.worldLost',
+} as const satisfies Record<NonNullable<ToolResultNode['outcome']>['kind'], ToolOutcomeKey>
+
 /**
  * Known tool name -> variant.
  *
@@ -102,8 +111,14 @@ export interface ToolRowModel {
   bodyRaw: string | null
   /** Flattened result text ({@link resultText}); null while running or when the result carries no text. */
   output: string | null
-  /** First line of the result text on an error row; null for every other state. */
+  /**
+   * First line of the result text on an error row whose result is an error
+   * result; null otherwise, including a row only its recorded outcome marks
+   * failed, whose text is the command's own output.
+   */
   errorSummary: string | null
+  /** Locale key of the settled result's recorded outcome kind; null while running and for a result with none. */
+  outcomeKey: ToolOutcomeKey | null
   state: ToolRowState
 }
 
@@ -221,9 +236,13 @@ export function toolRowModel(toolName: string, block: ToolCallBlock, cwd?: strin
   const variant = classifyTool(toolName)
   const done = 'kind' in block
   const argsRaw = (done ? block.call?.argsRaw : block.argsRaw) ?? ''
+  const outcome = done ? block.outcome : undefined
+  // The recorded outcome decides first (Epic P3-03): a command that exited
+  // non-zero settles isError:false, and only its outcome says it failed.
   const state: ToolRowState = !done ? 'running'
-    : block.error?.code === 'interrupted' ? 'stopped'
-      : block.isError ? 'error' : 'ok'
+    : outcome !== undefined ? (outcome.kind === 'cancelled' ? 'stopped' : 'error')
+      : block.error?.code === 'interrupted' ? 'stopped'
+        : block.isError ? 'error' : 'ok'
   const base = argsRaw === ''
     ? block.callId
     : abbreviateHomePath(relativizeToCwd(deriveSummary(variant, argsRaw), cwd), home)
@@ -237,7 +256,7 @@ export function toolRowModel(toolName: string, block: ToolCallBlock, cwd?: strin
   // call with blank content has nothing to expand, and a blank first line
   // would erase the collapsed error row's summary slot.
   const output = done ? (resultText(block) || null) : null
-  const errorSummary = state === 'error' && output !== null ? firstLine(output) : null
+  const errorSummary = state === 'error' && done && block.isError && output !== null ? firstLine(output) : null
   const bodyRaw = argsRaw === '' ? null : argsRaw
   return {
     variant,
@@ -247,6 +266,7 @@ export function toolRowModel(toolName: string, block: ToolCallBlock, cwd?: strin
     bodyRaw,
     output,
     errorSummary,
+    outcomeKey: outcome === undefined ? null : OUTCOME_KEYS[outcome.kind],
     state,
   }
 }

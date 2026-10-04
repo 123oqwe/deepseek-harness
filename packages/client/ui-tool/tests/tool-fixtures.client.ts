@@ -116,6 +116,7 @@ export function toolSessionEvents(nodes: readonly ToolResultNode[]): readonly Se
             }],
           },
           ...(node.error === undefined ? {} : { error: node.error }),
+          ...(node.outcome === undefined ? {} : { outcome: node.outcome }),
           ...(node.meta === undefined ? {} : { meta: node.meta }),
         }),
         surfaceOp: 'append',

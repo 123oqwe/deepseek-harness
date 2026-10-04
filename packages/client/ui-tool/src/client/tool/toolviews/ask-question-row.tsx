@@ -149,6 +149,8 @@ export function AskQuestionRow({ toolName, block, inspect, t }: AskQuestionRowPr
   const argsRaw = ('kind' in block ? block.call?.argsRaw : block.argsRaw) ?? ''
   let summary = model.summary
   let state = model.state
+  // A composer verdict's own summary already says how the call ended.
+  const verdict = code === 'ASK_CANCELLED' || code === 'ASK_ABORTED'
   let transcript: AskQuestionCardModel | null = null
   if (code === 'ASK_CANCELLED') {
     summary = t('ask.cancelled')
@@ -189,6 +191,7 @@ export function AskQuestionRow({ toolName, block, inspect, t }: AskQuestionRowPr
       bodyRaw={transcript === null ? model.bodyRaw : null}
       output={transcript === null ? model.output : null}
       askQuestion={transcript}
+      outcomeKey={verdict ? null : model.outcomeKey}
       state={state}
       inspect={inspect}
     />

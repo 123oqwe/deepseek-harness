@@ -114,6 +114,13 @@ interface SessionEventMap {
     message: ToolResultMessage
     /** Optional failure identity; allowed only when the tool-result block has `isError: true`. */
     error?: { name: string; code: string }
+    /**
+     * How the execution did not succeed (Epic P3-03); absent when it succeeded.
+     * Present on every error result, and on a result the tool reported a
+     * failure for from its own structured facts, such as a command that exited
+     * non-zero.
+     */
+    outcome?: ToolResultOutcome
     meta?: JsonValue
   }
   /**

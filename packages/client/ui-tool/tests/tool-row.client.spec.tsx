@@ -93,6 +93,40 @@ describe('tool-call-model', () => {
     expect(toolRowModel('bash', result({ isError: true, error: { name: 'E', code: 'interrupted' } })).state).toBe('stopped')
   })
 
+  it('derives the state from a recorded outcome first, and the label from its kind (Epic P3-03 acceptance[1])', () => {
+    const outcomes: NonNullable<ToolResultNode['outcome']>[] = [
+      { kind: 'policy_denied', source: 'policy', name: 'PolicyRefusedError' },
+      { kind: 'resource_exhausted', limit: 'memory' },
+      { kind: 'timeout', by: 'executor', deadlineMs: 1_000 },
+      { kind: 'cancelled', by: 'abort' },
+      { kind: 'tool_failed', exitCode: 3 },
+      { kind: 'world_lost', reason: 'gone' },
+    ]
+    expect(outcomes.map((outcome) => {
+      const model = toolRowModel('bash', result({ outcome }))
+      return [model.state, model.outcomeKey === null ? null : t(model.outcomeKey)]
+    })).toEqual([
+      ['error', '被策略拒绝'],
+      ['error', '资源耗尽'],
+      ['error', '超时'],
+      ['stopped', '已取消'],
+      ['error', '执行失败'],
+      ['error', '执行环境丢失'],
+    ])
+    const plain = toolRowModel('bash', result())
+    expect([plain.state, plain.outcomeKey]).toEqual(['ok', null])
+    expect(toolRowModel('bash', running()).outcomeKey).toBeNull()
+  })
+
+  it('keeps the collapsed line of a row only its outcome marks failed, and the failure line of an error result', () => {
+    const exited = result({
+      content: [{ type: 'text', text: 'npm ERR! missing script\ndetail' }],
+      outcome: { kind: 'tool_failed', exitCode: 1 },
+    })
+    expect(toolRowModel('bash', exited).errorSummary).toBeNull()
+    expect(toolRowModel('bash', { ...exited, isError: true }).errorSummary).toBe('npm ERR! missing script')
+  })
+
   it('derives the bash summary from description over command', () => {
     const m = toolRowModel('bash', running())
     expect(t(m.titleKey)).toBe('Bash')
@@ -357,6 +391,16 @@ describe('ToolRow', () => {
   it('an error row without an error summary keeps the args summary', () => {
     const view = render(<ToolRow {...rowProps} state="error" errorSummary={null} />)
     expect(view.getByText('List files')).toBeTruthy()
+  })
+
+  it('shows the outcome label in the suffix slot, in place of summarySuffix and beside a failure line', () => {
+    const view = render(<ToolRow {...rowProps} state="error" outcomeKey="outcome.timeout" summarySuffix="+2" />)
+    expect(view.getByText('List files').contains(view.getByText('超时'))).toBe(false)
+    expect(view.queryByText('+2')).toBeNull()
+    view.unmount()
+    const failed = render(<ToolRow {...rowProps} state="error" errorSummary="boom" outcomeKey="outcome.policyDenied" />)
+    expect(failed.getByText('boom')).toBeTruthy()
+    expect(failed.getByText('被策略拒绝')).toBeTruthy()
   })
 
   it('renders summarySuffix outside the ellipsized summary span, and drops it on a failure line', () => {

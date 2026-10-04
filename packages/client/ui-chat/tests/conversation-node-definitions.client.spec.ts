@@ -1087,6 +1087,25 @@ describe('built-in conversation node Definitions', () => {
     })
   })
 
+  it('carries a tool result\'s recorded outcome onto its Tool node, and none when its event records none (Epic P3-03 acceptance[1])', () => {
+    const settle = (outcome?: unknown) => snapshot(assembler([
+      at(1, 'turn/start', { turn: 1 }),
+      at(2, 'step/start', { turn: 1, step: 1 }),
+      at(3, 'tool/call', { turn: 1, step: 1, callId: 'root', name: 'bash', arguments: '{"command":"exit 3"}' }),
+      at(4, 'tool/result', {
+        turn: 1,
+        step: 1,
+        message: toolResult('root', ''),
+        ...(outcome === undefined ? {} : { outcome }),
+      }, { surfaceOp: 'append' }),
+    ]))
+    const root = (value: ChatSnapshot) => (node(value, 'tool-call')?.data as ToolChatData).root
+    expect(root(settle({ kind: 'tool_failed', exitCode: 3 }))).toMatchObject({
+      kind: 'tool-result', callId: 'root', isError: false, outcome: { kind: 'tool_failed', exitCode: 3 },
+    })
+    expect(root(settle())).not.toHaveProperty('outcome')
+  })
+
   it('keeps one keyed Tool node from running through settlement and replays nested dispatch after prepend', () => {
     const value = assembler([
       at(1, 'turn/start', { turn: 1 }),

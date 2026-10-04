@@ -51,6 +51,7 @@ export function readFamilyRow(
       output={model.output}
       errorSummary={model.errorSummary}
       {...card}
+      outcomeKey={model.outcomeKey}
       state={model.state}
       filePath={model.filePath}
       onOpenFile={openFile}

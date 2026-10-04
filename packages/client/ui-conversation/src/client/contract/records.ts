@@ -7,6 +7,7 @@ import type { MessageId } from '@deepseek-ai/dsh-llm/brand'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm/types'
 import type { ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
 import type { LlmRetryEventData } from '@deepseek-ai/dsh-llm-retry/types'
+import type { ToolResultOutcome } from '@deepseek-ai/dsh-session/types'
 import type { TodoItem } from '@deepseek-ai/dsh-tool-todo/client'
 import type { ContextProvenanceView, KnownContextForm } from './context-provenance.ts'
 export type { TodoItem }
@@ -167,6 +168,8 @@ export interface ToolResultNode {
   content: readonly ContentBlock[]
   isError: boolean
   error?: { name: string; code: string }
+  /** How the execution did not succeed, as the tool/result event recorded it (Epic P3-03); absent when it succeeded. */
+  outcome?: ToolResultOutcome
   meta?: unknown
   /** Child calls owned by this call, in dispatch order. */
   subCalls: readonly ToolCallBlock[]

@@ -200,6 +200,17 @@
   color: var(--dsw-alias-state-error-primary);
 }
 
+/* Recorded outcome kind after the summary, kept out of its ellipsis (ToolRow's
+   .summarySuffix type). */
+.outcome {
+  flex: none;
+  margin-left: 4px;
+  white-space: nowrap;
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+  line-height: calc(24px + var(--dsh-content-font-delta, 0px));
+  color: var(--dsw-alias-label-tertiary);
+}
+
 /* Hover-revealed Inspect pill under the expanded terminal's bottom-left —
    ToolRow's .bodyWrap/.inspectButton treatment, replicated per the registrant
    posture: real flow (it reserves its line), revealed by hovering anywhere on
