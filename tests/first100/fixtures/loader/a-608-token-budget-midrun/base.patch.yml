@@ -1,0 +1,29 @@
+# Test-only overlay over the SHIPPED headless profile for A-608 (P4-09
+# acceptance[3], B-714 red first). The dsh-base layer owns the rows the case
+# depends on — the workflow worker-thread engine, the `workflow` tool, the spawn
+# in-process subagent provider, token-meter, and the permission preset whose
+# shipped riskRules classify `filesystem-read` as `read` — so this overlay mounts
+# none of them. It turns off the rows that would run a task of their own, keeps
+# the session log uncompressed, and shrinks the tree token allowance so one child
+# response overspends it. The driver pins the Trust Kernel, registers the keyless
+# MockAdapter and the burn tool, and creates the agent after boot.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- id: workflow-worker-thread
+  config:
+    maxNestedTokens: 5
