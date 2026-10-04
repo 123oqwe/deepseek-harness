@@ -14,6 +14,7 @@ import { llmFailureFacts } from '@deepseek-ai/dsh-llm'
 import type { LlmFailure, ResolvedRetryPolicy } from '@deepseek-ai/dsh-llm'
 import type {} from '@deepseek-ai/dsh-session-projection'
 import { chargedRun, classifyFailure } from '@deepseek-ai/dsh-retry'
+import { outcomeOfModelFailure, retryClassOf } from '@deepseek-ai/dsh-execution-world'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { RetryId } from './brand.ts'
@@ -69,15 +70,27 @@ function localDelay(config: ResolvedRetryPolicy, retry: number, random: () => nu
 
 /**
  * Whether llm-retry may retry one failed model request, in either mode
- * (Epic P4-11 must[0]).
+ * (Epic P4-11 must[0], Epic P3-03 acceptance[2]).
  *
- * The circuit breaker in `dsh-llm` decides a first-chunk failure with the same
- * `classifyFailure(llmFailureFacts(...))` over the same normalized failure the
- * finish chunk carries, so the two layers give one verdict for one failure.
+ * A failure that carries no status is decided by its typed outcome's retry
+ * class (`retryClassOf(outcomeOfModelFailure(...))`): `permanent` is not
+ * retried, `transient` is, and `by-tool` falls through. A failure with a
+ * status, and any that falls through, is decided by the shared
+ * `classifyFailure(llmFailureFacts(...))`, which the circuit breaker in
+ * `dsh-llm` applies to a first-chunk failure. For every code without a status
+ * the two give the same verdict (ABORTED and QUOTA are caller-side,
+ * CONTEXT_WINDOW_EXCEEDED malformed, TIMEOUT transient), so the two layers
+ * still give one verdict for one failure; a status keeps the conservative
+ * classifier because a request that reached the provider may have had effects
+ * (delegate ruling Q-U4b).
  * @param failure - the failed step's normalized failure.
- * @returns true when the shared classifier calls the failure retryable.
+ * @returns true when the failure may be retried.
  */
 export function isRetryableLlmFailure(failure: LlmFailure): boolean {
+  if (failure.status === undefined) {
+    const retryClass = retryClassOf(outcomeOfModelFailure(failure))
+    if (retryClass !== 'by-tool') return retryClass === 'transient'
+  }
   return classifyFailure(llmFailureFacts(failure)).retryable
 }
 

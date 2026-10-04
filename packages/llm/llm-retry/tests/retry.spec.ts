@@ -1091,3 +1091,19 @@ describe('BLOCKED-339: llm-retry decides with the shared classifier', () => {
     expect(retry.isRetryableLlmFailure(failure)).toBe(retryable)
   })
 })
+
+// P3-03 acceptance[2] (delegate ruling Q-U4b): a failure with no status is
+// decided by its typed outcome's retry class; one with a status, and one whose
+// class is `by-tool`, keeps the shared classifier.
+describe('P3-03 acceptance[2]: a failure with no status is decided by its typed outcome', () => {
+  it.each([
+    ['ABORTED, cancelled: permanent', false, { message: 'cancelled', code: 'ABORTED' }],
+    ['QUOTA with no status, resource_exhausted: permanent', false, { message: 'balance', code: 'QUOTA' }],
+    ['CONTEXT_WINDOW_EXCEEDED with no status, resource_exhausted: permanent', false, { message: 'too long', code: 'CONTEXT_WINDOW_EXCEEDED' }],
+    ['TIMEOUT with no status, timeout: transient', true, { message: 'idle', code: 'TIMEOUT' }],
+    ['TIMEOUT with a status keeps the shared classifier', false, { message: 'bad request', code: 'TIMEOUT', status: 400 }],
+    ['SERVER with no status, tool_failed: by-tool, then the shared classifier', true, { message: 'down', code: 'SERVER' }],
+  ] as const)('%s, retryable: %s', (_label, retryable, failure) => {
+    expect(retry.isRetryableLlmFailure(failure)).toBe(retryable)
+  })
+})

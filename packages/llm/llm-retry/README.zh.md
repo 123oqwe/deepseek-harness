@@ -82,7 +82,7 @@ kind: "package-reference"
 
 ### 恢复流程
 
-失败步骤连同其提供方与解析后的策略一起到达 waterfall。两种模式都先询问 `isRetryableLlmFailure`，并委派它拒绝的失败。always mode 随后先结算下游恢复，并遵循下游的 `retry` 决定；normal mode 检查预算是否未耗尽。插件计算延迟——有效且在边界内的提供方 `Retry-After`，否则带对称抖动的本地有界指数退避——追加 `llm/retry` 事件，在可取消定时器上等待，追加 `llm/retry-started`，然后返回 `{ kind: 'retry' }`。loop 随后在同一个打开的轮次内重跑失败步骤（仍基于同一份持久历史）。
+失败步骤连同其提供方与解析后的策略一起到达 waterfall。两种模式都先询问 `isRetryableLlmFailure`，并委派它拒绝的失败。没有状态码的失败按它的类型化结局判定（`dsh-execution-world` 的 `retryClassOf(outcomeOfModelFailure(...))`，Epic P3-03）：`permanent` 拒绝、`transient` 重试，结论与共享分类器对这些错误码的判定相同；带状态码的失败，或类别为 `by-tool` 的失败，交给共享分类器，因为已经到达提供方的请求可能已经产生了效果。always mode 随后先结算下游恢复，并遵循下游的 `retry` 决定；normal mode 检查预算是否未耗尽。插件计算延迟——有效且在边界内的提供方 `Retry-After`，否则带对称抖动的本地有界指数退避——追加 `llm/retry` 事件，在可取消定时器上等待，追加 `llm/retry-started`，然后返回 `{ kind: 'retry' }`。loop 随后在同一个打开的轮次内重跑失败步骤（仍基于同一份持久历史）。
 
 ### Waterfall 组合
 

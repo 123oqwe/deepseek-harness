@@ -1624,7 +1624,7 @@ Requires: `agents` · `sessionProjections`
 export type Config = Readonly<Record<string, never>>
 ```
 
-Source: [`packages/llm/llm-retry/src/index.ts:29`](../packages/llm/llm-retry/src/index.ts)
+Source: [`packages/llm/llm-retry/src/index.ts:30`](../packages/llm/llm-retry/src/index.ts)
 
 <a id="deepseek-aidsh-logger-stderr"></a>
 
