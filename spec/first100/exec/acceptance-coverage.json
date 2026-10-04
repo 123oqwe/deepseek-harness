@@ -4012,6 +4012,21 @@
         {
           "stage": "F",
           "title": "P1-02 Provider — a real signature refuses all three acceptance[0] vectors vector 3: a swapped source repo and a forged builder identity each fail the signature"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 4,
+          "title": "P1-02 on the shipped install path: dsh plugin add verifies the claim beside a local tarball P1-02 acceptance[0]: a package changed by one byte after signing is refused as a digest mismatch"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 4,
+          "title": "P1-02 on the shipped install path: dsh plugin add verifies the claim beside a local tarball P1-02 acceptance[0]: a claim whose source repo was replaced is refused"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 4,
+          "title": "P1-02 on the shipped install path: dsh plugin add verifies the claim beside a local tarball P1-02 acceptance[0]: a claim whose builder identity was forged is refused"
         }
       ]
     },
@@ -4034,6 +4049,26 @@
         {
           "stage": "F",
           "title": "P1-02 Contract — acceptance[1]: 同一锁定包在离线模式可验证 the identical locked package input verifies as trusted through the offline entrypoint, with no network-shaped parameter"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686) acceptance[1]/[2]: a locked trusted package whose declaration file is gone at boot refuses to start, not silently carried as trusted"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686) acceptance[1]: a locked trusted package whose signing anchor was removed refuses to start when re-verified offline (revoked signing identity)"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686) acceptance[1] (blind 2-1(a)): a locked package whose tarball bytes no longer match the lock's recorded digest refuses to start, even when its re-signed claim verifies"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "P1-02 on the shipped install path: a reinstall whose claim file is gone does not silently keep the trusted record (A-573 install-side downgrade) a package trusted in the lock, reinstalled from the same spec with its claim file removed, is refused as claim-file-missing rather than silently kept trusted (red first for B-686)"
         }
       ]
     },
@@ -4056,6 +4091,21 @@
         {
           "stage": "F",
           "title": "P1-02 Contract — acceptance[2]: Inventory 和审计事件记录验证结果而不记录密钥 recordProvenanceAudit produces a record naming the verdict and trust anchor id, with no field capable of holding key or signature material"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686) acceptance[2]: the startup verification of a locked package appends a key-free plugin-provenance audit record"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686) acceptance[2]: the boot inventory records a mounted plugin's locked trusted verdict and its anchor, not unverified"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 2,
+          "title": "P1-02 on the shipped install path: dsh plugin add verifies the claim beside a local tarball P1-02 acceptance[2]: the genuine install is recorded trusted in the plugin lock, naming its anchor"
         }
       ]
     },
