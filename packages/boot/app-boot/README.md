@@ -64,7 +64,7 @@ Before you boot, you can print the exact configuration the app will mount: the d
 
 ### What you see when startup fails
 
-Startup failure is a single labelled line plus a nonzero exit — never a silent hang or a raw stack dump. The message names the failing plugin; a plugin that threw keeps its original error, and an entry that never started is reported with the services it was waiting for.
+Startup failure is a single labelled line plus a nonzero exit — never a silent hang or a raw stack dump. The message names the failing plugin; a plugin that threw keeps its original error, and an entry that never started is reported with the services it was waiting for. With a Trust Kernel pinned, a boot also fails when `policy`, `policySet` or `permissionPresets` was provided by a plugin other than its profile row (`policy-engine`, `policy-language`, `permission`); the message names the service and both rows (B-728).
 
 If your app owns the terminal, it can hand the terminal back before the process exits, so your shell is never left in raw mode. The handoff is bounded: a stuck cleanup delays the fatal exit but never cancels it.
 

@@ -10,7 +10,9 @@
  */
 
 import { join } from 'node:path'
-import type { TrustKernelTrustAnchor } from '@deepseek-ai/dsh-trust-kernel'
+import type { Context } from '@deepseek-ai/cordis'
+import type {} from '@deepseek-ai/cordis-plugin-loader'
+import { KERNEL_SEALED_SERVICES, type TrustKernelTrustAnchor } from '@deepseek-ai/dsh-trust-kernel'
 import { readProfileManifest } from './profile.ts'
 
 const NAME = 'dsh'
@@ -99,4 +101,39 @@ export function enforceTrustKernelPosture(
     throw new Error(`${name}: Trust Kernel not initialized -- refusing to boot (set ${TRUST_KERNEL_INSECURE_ENV} to explicitly opt into an insecure development boot)`)
   }
   warn(`${name}: WARNING: booting with no Trust Kernel (${TRUST_KERNEL_INSECURE_ENV} set) -- root identity, signature roots, policy enforcement, audit append, secret broker, and sandbox attestation are all unavailable; never use in production.\n`)
+}
+
+/**
+ * The profile row each service the Trust Kernel seals must be provided by (B-728): the rows the shipped
+ * bundles compose, by id. A fixed table, because which row may hold an enforcement service is a security
+ * invariant, not a deployment choice; a deployment may change a row's package or config, not its id.
+ */
+const SEALED_SERVICE_ROWS: Readonly<Record<string, string>> = {
+  policy: 'policy-engine',
+  policySet: 'policy-language',
+  permissionPresets: 'permission',
+}
+
+/**
+ * Refuse a booted tree whose sealed service was first provided by a plugin other than its profile row
+ * (B-728; P2-05 acceptance[2], P2-04 acceptance[1]).
+ *
+ * The Trust Kernel seals each of `KERNEL_SEALED_SERVICES` at its first provide, and the plugin that
+ * provides it first holds it until the host restarts. Once every config-tree entry has mounted, each
+ * sealed service that is provided must come from the row {@link SEALED_SERVICE_ROWS} names, mounted in
+ * the profile tree (the tree of the include `boot()` mounts at the root). A service no row provides
+ * passes: a composition without it has no such policy.
+ * @param ctx - the settled root context.
+ * @throws when a sealed service was provided by another row, by a nested tree's row, or outside the Loader.
+ */
+export function assertSealedServiceRows(ctx: Context): void {
+  for (const service of KERNEL_SEALED_SERVICES) {
+    if (ctx.fiber.sealedServiceState(service) !== 'live') continue
+    const row = SEALED_SERVICE_ROWS[service]
+    const entry = ctx.reflect._getImpl(service, false)?.fiber.entry
+    const include = entry?.parent.tree.ctx.fiber.entry
+    if (row === undefined || entry?.options.id !== row || include === undefined || include.parent.tree.ctx.fiber.entry !== undefined) {
+      throw new Error(`service ${JSON.stringify(service)} is sealed by the Trust Kernel and was provided by ${JSON.stringify(entry?.id ?? null)}, not by the profile row ${JSON.stringify(row ?? null)}`)
+    }
+  }
 }

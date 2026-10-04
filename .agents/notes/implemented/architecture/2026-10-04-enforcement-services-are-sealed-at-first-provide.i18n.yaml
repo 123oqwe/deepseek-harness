@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-10-04-enforcement-services-are-sealed-at-first-provide.md
+2026-10-04-enforcement-services-are-sealed-at-first-provide.md: 118f39e50b2905408a7dbf7d7bbe3342bd8f6ed5
+2026-10-04-enforcement-services-are-sealed-at-first-provide.zh.md: 19ad7cb70f6d1f93c4c67513f6fd4f65fe4a65d0

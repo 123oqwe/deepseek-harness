@@ -22,6 +22,7 @@ import type { RunId } from '@deepseek-ai/dsh-principal/types'
 import { createLaunchEnvironmentSnapshot, type LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
 import type {} from '@deepseek-ai/cordis-plugin-hmr'
 import type {} from '@deepseek-ai/dsh-system-prompt'
+import { assertSealedServiceRows } from './trust-anchors.ts'
 
 declare module '@deepseek-ai/cordis' {
   interface Context {
@@ -821,7 +822,9 @@ export async function assertEntriesActivated(ctx: Context, binName: string): Pro
  * settlement rejects startup failures, which `boot` wraps after disposing the
  * partial context; a missing fiber or never-activating entry is rejected by
  * the final audit, {@link assertEntriesActivated}, which rethrows a plugin's
- * init rejection with its original stack; later unhandled rejections remain
+ * init rejection with its original stack; a service the Trust Kernel sealed
+ * and a plugin other than its profile row provided is rejected after it
+ * (`assertSealedServiceRows`, B-728); later unhandled rejections remain
  * covered by {@link installFailLoud}. Built bins need the Loader's native
  * helper for bare plugin specifiers; relative specifiers do not.
  * @param binName - the diagnostic prefix for load-failure errors.
@@ -877,6 +880,7 @@ export async function boot(
     await ctx.get('loader')?.await()
     if (ctx.get('loader') === undefined) return ctx
     await assertEntriesActivated(ctx, binName)
+    assertSealedServiceRows(ctx)
     return ctx
   } catch (cause) {
     // Root-fiber disposal contains cleanup failures per observer (Cordis

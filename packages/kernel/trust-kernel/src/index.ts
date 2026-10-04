@@ -185,6 +185,16 @@ export function createTrustKernel(config: TrustKernelConfig = {}): TrustKernel {
 }
 
 /**
+ * The services the Trust Kernel seals at their first provide (B-728): the
+ * policy engine `enforceAction` decides with (`policy`), the policy set the
+ * engine reads (`policySet`), and the risk policy the dispatch paths gate
+ * approvals and the hard-deny band with (`permissionPresets`). A fixed list:
+ * which services a plugin may not replace is a security invariant, not a
+ * deployment choice (P2-05 acceptance[2], P2-04 acceptance[1]–[2]).
+ */
+export const KERNEL_SEALED_SERVICES: readonly string[] = Object.freeze(['policy', 'policySet', 'permissionPresets'])
+
+/**
  * Pin `kernel` into `ctx` as the process's one `trustKernel`, then close
  * every live bypass found against the naive `ctx.provide` + single-freeze
  * pin (Epic P0-02 must[3]; see this module's own doc comment for the
@@ -223,6 +233,13 @@ export function createTrustKernel(config: TrustKernelConfig = {}): TrustKernel {
  *    whose setter re-seals pinned names, so a wholesale replacement seals
  *    itself, and the pin applies to every fiber in the tree rather than
  *    only the root.
+ * 6. `Fiber.sealOnProvide` with {@link KERNEL_SEALED_SERVICES} -- the
+ *    services the enforcement point decides with are ordinary plugins that
+ *    mount after this pin, so they cannot be pinned here. They are sealed at
+ *    their first provide instead (`vendor/README.md` local modification 23):
+ *    a sealed name resolves only to that provide's frozen record, a second
+ *    provide is refused, and after the provider unloads the name stays
+ *    unprovided until the host restarts (B-728).
  *
  * `ctx.get('trustKernel')` was correct throughout all of the above, and so
  * was the root Context's own DIRECT property read (never through another
@@ -325,6 +342,9 @@ export function pinTrustKernel(ctx: Context, kernel: TrustKernel): void {
     configurable: false,
     enumerable: true,
   })
+  // Fix 6: before any entry mounts, so the first provide of each name is the
+  // one the seal records.
+  ctx.root.fiber.sealOnProvide(KERNEL_SEALED_SERVICES)
 }
 
 declare module '@deepseek-ai/cordis' {

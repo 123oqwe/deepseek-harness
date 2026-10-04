@@ -76,6 +76,8 @@ Everything the kernel does not name above stays an ordinary, replaceable Cordis 
 
 A plugin in this list may itself call into the kernel's narrow entrypoints (`policyEnforcement`, `auditAppend`, `sandboxAttestationVerifier`) or present its `secretBroker` handle to a consumer that expects one; it can never replace what issued them.
 
+Three plugins the enforcement point decides with are sealed at their first provide: the policy engine (`policy`), the policy set it reads (`policySet`), and the risk policy (`permissionPresets`). A profile still composes and configures them as rows, but `pinTrustKernel` seals the names before any entry mounts, so once provided no plugin can replace what they resolve to, a reload of their rows takes effect only when the host restarts, and a boot whose provider is not the named row fails (B-728; `vendor/README.md` local modification 23).
+
 ## What is never a plugin
 
 The inverse of the owned-capability list above: root identity, deny enforcement (the kernel's policy-enforcement entrypoint), the audit-chain root, and the signature-verification root never move behind `ctx.plugin(...)`, regardless of what composition, patch, or profile is loaded.

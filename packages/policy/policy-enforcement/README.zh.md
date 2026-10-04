@@ -38,6 +38,8 @@ kind: "package-reference"
 
 决策是 `deny`,reason 为 `policy-unavailable`,并写明本上下文最后见到的 policy-set digest。provider 是普通插件,可以在会话中途被卸载;不可丢失的是**执行**。
 
+若 Trust Kernel 封存了引擎或其策略集，且该 provider 已卸载（B-728），决策仍是同一个拒绝；审计记录的 diagnostics 带有 `POLICY_ROW_CHANGED`，模型读到的拒绝文本会补充一句：宿主重启后改动才会生效。在此之前，被封存名字的任何 provide 都不会被接受。引擎若因所读的已封存策略集已卸载而抛错，得到同样的拒绝；其他引擎错误照常抛出。
+
 没有钉住 Trust Kernel 的组合会**抛错**而不是作出决策:无法执行的 harness 不得装作已经执行过。
 
 -----

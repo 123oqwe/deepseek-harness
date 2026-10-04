@@ -76,6 +76,8 @@ kernel 上文未命名的一切，仍是普通的、可替换的 Cordis 插件�
 
 此清单中的插件本身可以调用 kernel 的窄 entrypoint（`policyEnforcement`、`auditAppend`、`sandboxAttestationVerifier`），或把自己的 `secretBroker` handle 呈递给期望它的 consumer；但它绝不能替换发出这些 handle 的一方。
 
+执行点据以决策的三个插件会在首次 provide 时被封存：策略引擎（`policy`）、它读取的策略集（`policySet`）与风险策略（`permissionPresets`）。profile 仍以行的形式组合并配置它们，但 `pinTrustKernel` 在任何条目挂载之前就封存了这些名字；因此一经提供，任何插件都无法替换它们解析到的值，对这些行的重载只在宿主重启后生效，而 provider 不是指定行的启动会失败（B-728；`vendor/README.md` 本地修改 23）。
+
 ## 哪些绝不是插件
 
 上述所拥有能力清单的反面：root identity、deny enforcement（kernel 的 policy-enforcement entrypoint）、audit-chain root，以及 signature-verification root，无论加载了何种组合、补丁或 profile，都绝不会移到 `ctx.plugin(...)` 之后。

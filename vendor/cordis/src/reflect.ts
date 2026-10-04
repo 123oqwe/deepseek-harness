@@ -2,7 +2,7 @@ import { defineProperty, isNullable } from '@deepseek-ai/cosmokit'
 import type { Dict } from '@deepseek-ai/cosmokit'
 import { Context } from './context.ts'
 import { getTraceable, symbols, withProps } from './utils.ts'
-import { Fiber, FiberState } from './fiber.ts'
+import { Fiber, FiberState, recordSealedDispose, recordSealedProvide, sealedRecord } from './fiber.ts'
 
 declare module './context.ts' {
   interface Context {
@@ -137,6 +137,19 @@ export class ReflectService {
       if (isSpecialProperty(prop)) {
         return Reflect.get(target, prop, ctx)
       }
+      // LOCAL MODIFICATION (dsh), modification 23: a sealed name resolves from the
+      // seal table only, before an own or inherited context property, a `props`
+      // accessor, any fiber store or an `internal/get` listener. The fiber is read
+      // off the target, not through this trap, which would recurse; a root still
+      // under construction has none yet.
+      const owner = Reflect.get(target, 'fiber') as Fiber | undefined
+      const sealed = owner === undefined ? undefined : sealedRecord(owner, prop)
+      if (sealed !== undefined) {
+        if (sealed.impl) return getTraceable(ctx, sealed.impl.value)
+        throw enhanceError(new Error(sealed.impl === null
+          ? `cannot get sealed service "${String(prop)}": its provider unloaded, and it is provided again only when the host restarts`
+          : `cannot get sealed service "${String(prop)}": it is not provided`))
+      }
       if (Reflect.has(target, prop)) {
         return getTraceable(ctx, Reflect.get(target, prop, ctx))
       }
@@ -235,8 +248,10 @@ export class ReflectService {
   }
 
   _getImpl(name: string, strict = true) {
+    // LOCAL MODIFICATION (dsh), modification 23: a sealed name ignores the store.
+    const sealed = sealedRecord(this.ctx.fiber, name)
     const key = this.ctx[symbols.isolate][name]
-    const impl = key && this.store[key]
+    const impl = sealed !== undefined ? sealed.impl : key && this.store[key]
     if (!impl) return
     if (strict && impl.fiber.state !== FiberState.ACTIVE) return
     return impl
@@ -289,12 +304,20 @@ export class ReflectService {
       if (this.store[key]) {
         throw new Error(`service "${name}" has been registered at <${this.store[key].fiber.name}>`)
       }
+      // LOCAL MODIFICATION (dsh), modification 23: a sealed name is provided once
+      // per tree; after that provider unloads, it stays unprovided until restart.
+      const sealed = sealedRecord(this.ctx.fiber, name)
+      if (sealed !== undefined && sealed.impl !== undefined) {
+        throw new Error(`service "${name}" is sealed by the Trust Kernel and was already provided; a change to its provider takes effect when the host restarts`)
+      }
       this.store[key] = impl
       this.ctx.fiber.store![name] = impl
+      if (sealed !== undefined) recordSealedProvide(this.ctx.fiber, name, impl)
       if (this.ctx.fiber.state === FiberState.ACTIVE) {
         this.notify([name])
       }
       return async () => {
+        if (sealed !== undefined) recordSealedDispose(this.ctx.fiber, name, impl)
         // LOCAL MODIFICATION (dsh): a key its consumer locked non-configurable
         // (`pinTrustKernel`) stays registered until the process ends. Deleting
         // it throws in strict mode, which the unload then logged on every root

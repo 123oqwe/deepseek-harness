@@ -120,7 +120,7 @@ Read these pages when the package-level contract is not enough. They move from t
 <a id="model-experience"></a>
 ## Model Experience
 
-Indirectly, through `dsh-user-approval` and `dsh-tool-bash`, which render the approval-policy prompt, switch notice, and sandboxed tool outcomes selected by this service's knob events; `permission/preset` itself is log-only.
+Indirectly, through `dsh-user-approval` and `dsh-tool-bash`, which render the approval-policy prompt, switch notice, and sandboxed tool outcomes selected by this service's knob events; `permission/preset` itself is log-only. Once the Trust Kernel sealed this service and its provider has unloaded, `@deepseek-ai/dsh-tools`' risk gate refuses every call with a fixed text that names the restart (B-728).
 
 #### KV Cache effect
 
@@ -135,7 +135,7 @@ These limits define what the preset service does not offer. They are current pac
 
 - **Only two mechanism knobs are bundled** — presets select sandbox mode and approval policy; an agent/profile choice is not part of `PresetSpec` yet.
 - **`custom` is derived-only** — callers can switch away from an unmatched knob combination but cannot target or persist a named custom preset through this service.
-- **The preset table is process-level** — configuration is fixed for the plugin lifetime; changing available presets requires reloading the plugin.
+- **The preset table is process-level** — configuration is fixed for the plugin lifetime; changing available presets requires restarting the host. The Trust Kernel seals `permissionPresets` at its first provide (B-728), so a reloaded plugin cannot provide it again, and until the restart every action is refused with a restart reason. A live reload that provides a service this plugin injects (`shell`, `approval`, `sessions`, `sessionProjections`) again has the same effect, because Cordis restarts this plugin then.
 - **Stored defaults must remain in the preset table** — removing the referenced preset makes Permission settings registration fail until the `permission` section in `settings.yaml` is updated or reset.
 
 <a id="dev-note"></a>

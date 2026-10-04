@@ -23,6 +23,8 @@ export type { ClosedDecision } from '@deepseek-ai/dsh-policy-engine'
 import type {
   ClosedDecision,
   PolicyConstraint,
+  PolicyEngineContract,
+  PolicyEvaluation,
   PolicyRequest,
   PolicySetDigest,
 } from '@deepseek-ai/dsh-policy-engine'
@@ -143,6 +145,26 @@ export function endorseComposedDecision(query: TrustKernelPolicyQuery): TrustKer
 }
 
 /**
+ * Why a sealed policy provider that has unloaded refuses every action (B-728).
+ *
+ * The Trust Kernel seals `policy` and `policySet` at their first provide, so
+ * once either provider unloads, no provide of that name is accepted until the
+ * host restarts. An operator reading this refusal therefore restarts the host
+ * rather than retrying.
+ */
+export const POLICY_ROW_CHANGED = 'the policy engine row (or a service it depends on) changed; restart the host for it to take effect'
+
+/**
+ * Whether the policy engine or the policy set it reads was sealed by the Trust
+ * Kernel and its provider has since unloaded (B-728).
+ * @param ctx - any context of the host's tree.
+ * @returns `true` when `policy` or `policySet` is a tombstone.
+ */
+export function policyRowChanged(ctx: Context): boolean {
+  return ctx.fiber.sealedServiceState('policy') === 'tombstone' || ctx.fiber.sealedServiceState('policySet') === 'tombstone'
+}
+
+/**
  * Decide one action, bind the decision in the kernel, and record it.
  *
  * The order is the contract. The engine answers, the plugins may narrow, the
@@ -153,7 +175,9 @@ export function endorseComposedDecision(query: TrustKernelPolicyQuery): TrustKer
  * When no policy service is mounted the decision is `policy-unavailable`, by
  * name. The provider is an ordinary plugin and may be unmounted mid-session;
  * what may not be lost is the enforcement, so the enforcement point answers
- * for itself rather than falling open (acceptance[2]).
+ * for itself rather than falling open (acceptance[2]). When the Trust Kernel
+ * sealed the engine or its policy set and that provider has unloaded, the audit
+ * record's diagnostics carry {@link POLICY_ROW_CHANGED} (B-728).
  * @param ctx - the context the action is being executed in.
  * @param request - the five declared policy inputs.
  * @param origin - which originator started the action, for the audit.
@@ -167,13 +191,7 @@ export function enforceAction(ctx: Context, request: PolicyRequest, origin: stri
     throw new Error('policy enforcement requires a pinned Trust Kernel; this composition has none')
   }
   const engine = ctx.get('policy')
-  const evaluation = engine === undefined
-    ? {
-      decision: decisionWhenUnavailable(lastKnownDigest(ctx)),
-      explain: { matched: [], diagnostics: [] },
-    }
-    : engine.evaluate(request)
-  if (engine !== undefined) rememberDigest(ctx, engine.digest)
+  const evaluation = engine === undefined ? evaluationWhenUnavailable(ctx) : evaluateWith(ctx, engine, request)
 
   const composed = composeDecision(evaluation, ctx.get('policyConstraints')?.all() ?? [], request)
 
@@ -204,6 +222,40 @@ export function enforceAction(ctx: Context, request: PolicyRequest, origin: stri
   kernel.auditAppend({ payload: record })
 
   return decision
+}
+
+/**
+ * The evaluation to act on when no engine can be consulted.
+ * @param ctx - the context the action is being executed in.
+ * @returns the `policy-unavailable` refusal, with {@link POLICY_ROW_CHANGED} as its one diagnostic when a sealed provider unloaded.
+ */
+function evaluationWhenUnavailable(ctx: Context): PolicyEvaluation {
+  return {
+    decision: decisionWhenUnavailable(lastKnownDigest(ctx)),
+    explain: { matched: [], diagnostics: policyRowChanged(ctx) ? [POLICY_ROW_CHANGED] : [] },
+  }
+}
+
+/**
+ * Ask the mounted engine, and remember the digest it decided against.
+ *
+ * An engine whose sealed policy set has unloaded throws when it reads the set,
+ * until Cordis disposes the engine's own fiber; that throw is the same state
+ * as an unloaded engine and gets the same refusal. Any other throw propagates.
+ * @param ctx - the context the action is being executed in.
+ * @param engine - the mounted policy engine.
+ * @param request - the five declared policy inputs.
+ * @returns the engine's evaluation, or the `policy-unavailable` one.
+ */
+function evaluateWith(ctx: Context, engine: PolicyEngineContract, request: PolicyRequest): PolicyEvaluation {
+  try {
+    const evaluation = engine.evaluate(request)
+    rememberDigest(ctx, engine.digest)
+    return evaluation
+  } catch (error) {
+    if (!policyRowChanged(ctx)) throw error
+    return evaluationWhenUnavailable(ctx)
+  }
 }
 
 /**

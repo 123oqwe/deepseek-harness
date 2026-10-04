@@ -120,7 +120,7 @@ kind: "package-reference"
 <a id="model-experience"></a>
 ## 模型体验
 
-间接地，通过 `dsh-user-approval` 和 `dsh-tool-bash`：二者渲染由此服务的旋钮事件所选择的审批策略提示词、切换通知与经沙箱执行的工具结果；`permission/preset` 本身只写入日志。
+间接地，通过 `dsh-user-approval` 和 `dsh-tool-bash`：二者渲染由此服务的旋钮事件所选择的审批策略提示词、切换通知与经沙箱执行的工具结果；`permission/preset` 本身只写入日志。Trust Kernel 封存了本服务且其 provider 已卸载后，`@deepseek-ai/dsh-tools` 的风险闸门会以一段写明需要重启的固定文本拒绝每个调用（B-728）。
 
 #### KV Cache 影响
 
@@ -135,7 +135,7 @@ kind: "package-reference"
 
 - **只组合两个机制级旋钮**：预设选择沙箱模式和审批策略；agent（智能体）／profile 选择尚未纳入 `PresetSpec`。
 - **`custom` 只能推导得出**：调用方可以从不匹配的旋钮组合切换出去，但无法通过此服务选中或持久化一个名为 `custom` 的预设。
-- **预设表是进程级配置**：配置在插件生命周期内固定；更改可用预设必须重新加载插件。
+- **预设表是进程级配置**：配置在插件生命周期内固定；更改可用预设必须重启宿主。Trust Kernel 在 `permissionPresets` 首次 provide 时将其封存（B-728），重新加载的插件无法再次提供它，在重启之前每个动作都会被拒绝，并写明需要重启。在线重载让本插件注入的服务（`shell`、`approval`、`sessions`、`sessionProjections`）被再次提供时效果相同，因为 Cordis 会随之重启本插件。
 - **已存储的默认值必须保留在预设表中**：移除被引用的预设会导致权限设置注册失败，直到更新或重置 `settings.yaml` 中的 `permission` 分节。
 
 <a id="dev-note"></a>

@@ -38,6 +38,8 @@ The order inside is the contract: the engine answers, plugins may narrow, the ke
 
 The decision is `deny` with reason `policy-unavailable`, naming the last policy-set digest this context saw. The provider is an ordinary plugin and may be unmounted mid-session; what may not be lost is the enforcement.
 
+When the Trust Kernel sealed the engine or its policy set and that provider has unloaded (B-728), the decision is the same refusal; the audit record's diagnostics carry `POLICY_ROW_CHANGED`, and the refusal the model reads adds that the host must restart for the change to take effect. Until then no provide of a sealed name is accepted. An engine that throws because the sealed policy set it reads has unloaded gets the same refusal; any other engine fault propagates.
+
 A composition with no pinned Trust Kernel THROWS rather than deciding: a harness that cannot enforce must not proceed as though it had.
 
 -----

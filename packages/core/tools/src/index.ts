@@ -2135,7 +2135,7 @@ export class ToolRuntime extends Service {
     const refusal = agent === undefined ? undefined : refuseNewAction(agent, Date.now())
     if (refusal !== undefined) return refusedDispatchResult(refusal, exec.name)
     return decision !== undefined && decision.effect !== 'permit'
-      ? refusedPolicyResult(decision.effect, decision.reason, exec.name)
+      ? refusedPolicyResult(decision.effect, decision.reason, exec.name, this.ctx)
       : undefined
   }
 

@@ -297,7 +297,7 @@ async function runGroup(
     if (policy !== undefined && policy.effect !== 'permit') {
       slots[index] = {
         exec: call.exec as unknown as ToolRunContext,
-        result: refusedPolicyResult(policy.effect, policy.reason, call.block.name),
+        result: refusedPolicyResult(policy.effect, policy.reason, call.block.name, ctx),
         needsPost: false,
       }
       return

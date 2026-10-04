@@ -726,7 +726,7 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
                 const refusedDecision = manifested.decision
                 reservation = undefined
                 this.settled = true
-                settle(refusedPolicyResult(refusedDecision.effect, refusedDecision.reason, name))
+                settle(refusedPolicyResult(refusedDecision.effect, refusedDecision.reason, name, options.ledgerContext()))
                 return
               }
               // BLOCKED-330, as on the native path: the sub-call's capability

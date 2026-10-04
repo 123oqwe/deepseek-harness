@@ -210,6 +210,57 @@ function applyStoreGuard<T extends Dict<any>>(fiber: Fiber, store: T): T {
 }
 
 /**
+ * Service names sealed at their first provide, per tree (keyed like the pins
+ * above). A name maps to `undefined` while no provider has come, to the `Impl`
+ * record its first provide produced while that provider is loaded, and to
+ * `null` once the provider unloaded (a tombstone).
+ *
+ * LOCAL MODIFICATION (dsh) — modification 23 in `vendor/README.md`. The Trust
+ * Kernel seals the services the enforcement point decides with (B-728): a
+ * plugin must not rewrite their store slot, provide them a second time, or
+ * unload their provider and provide a forgery. `reflect.ts` resolves a sealed
+ * name from this table only, so `reflect.store` and every `fiber.store` lose
+ * their say over it, and refuses every later provide of it.
+ */
+const sealedServices = new WeakMap<object, Map<string, Impl | null | undefined>>()
+
+/**
+ * The seal record of one service name in `fiber`'s tree.
+ * @param fiber - any fiber of the tree.
+ * @param name - the service name.
+ * @returns `undefined` when the name is not sealed; otherwise `{ impl }`, where `impl` is the live record, `null` for a tombstone, or `undefined` before the first provide.
+ */
+export function sealedRecord(fiber: Fiber, name: string | symbol): { readonly impl: Impl | null | undefined } | undefined {
+  if (typeof name !== 'string') return undefined
+  const table = sealedServices.get(fiber._pinScope)
+  if (table === undefined || !table.has(name)) return undefined
+  return { impl: table.get(name) }
+}
+
+/**
+ * Record the first provide of a sealed name and freeze its record, so
+ * `impl.value = forged` throws instead of replacing what every reader resolves.
+ * @param fiber - any fiber of the tree.
+ * @param name - the sealed service name.
+ * @param impl - the record the provide produced.
+ */
+export function recordSealedProvide(fiber: Fiber, name: string, impl: Impl): void {
+  Object.freeze(impl)
+  sealedServices.get(fiber._pinScope)!.set(name, impl)
+}
+
+/**
+ * Turn a sealed name into a tombstone when the provider that holds it unloads.
+ * @param fiber - any fiber of the tree.
+ * @param name - the sealed service name.
+ * @param impl - the record the unloading provide produced; a stale one changes nothing.
+ */
+export function recordSealedDispose(fiber: Fiber, name: string, impl: Impl): void {
+  const table = sealedServices.get(fiber._pinScope)!
+  if (table.get(name) === impl) table.set(name, null)
+}
+
+/**
  * Runtime instance of one plugin application.
  *
  * A fiber tracks dependency state, validated config, lifecycle effects, and
@@ -272,6 +323,38 @@ export class Fiber {
     pins.set(name, impl)
     pinnedStoreImpls.set(this._pinScope, pins)
     if (this.store !== undefined) applyStoreGuard(this, this.store)
+  }
+
+  /**
+   * Seal service names in this fiber's whole tree at their first provide.
+   *
+   * LOCAL MODIFICATION (dsh), modification 23. Called by the Trust Kernel when
+   * it is pinned, before any plugin mounts. From then on a sealed name resolves
+   * only to the record of its first provide; a second provide of it throws, and
+   * after its provider unloads it resolves to nothing and every provide of it
+   * still throws, so a change to its provider takes effect when the host
+   * restarts. A METHOD for the reason {@link Fiber.pinStoreName} gives.
+   * @param names - the service names to seal.
+   */
+  public sealOnProvide(names: readonly string[]): void {
+    const table = sealedServices.get(this._pinScope) ?? new Map<string, Impl | null | undefined>()
+    for (const name of names) if (!table.has(name)) table.set(name, undefined)
+    sealedServices.set(this._pinScope, table)
+  }
+
+  /**
+   * Whether a service name is sealed in this fiber's tree, and where it stands.
+   *
+   * LOCAL MODIFICATION (dsh), modification 23. A consumer that treats an
+   * absent service as "nothing configured" reads this to tell a tombstone,
+   * whose provider was mounted and has unloaded, from a name never provided.
+   * @param name - the service name.
+   * @returns `unsealed`; `awaiting` before the first provide; `live` while that provider is loaded; `tombstone` after it unloaded.
+   */
+  public sealedServiceState(name: string): 'unsealed' | 'awaiting' | 'live' | 'tombstone' {
+    const record = sealedRecord(this, name)
+    if (record === undefined) return 'unsealed'
+    return record.impl === undefined ? 'awaiting' : record.impl === null ? 'tombstone' : 'live'
   }
 
   /**

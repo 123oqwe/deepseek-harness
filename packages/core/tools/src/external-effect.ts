@@ -47,7 +47,7 @@ import { brandNumber, brandString } from '@deepseek-ai/dsh-brand'
 import { redactTokenForLog } from '@deepseek-ai/dsh-capability-token'
 import type { SignedCapabilityToken } from '@deepseek-ai/dsh-capability-token'
 import type { ClosedDecision, ExecutionWorldFact, PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
-import { dispatchDecisionWithoutKernel, enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
+import { dispatchDecisionWithoutKernel, enforceManifestedAction, POLICY_ROW_CHANGED, policyRowChanged } from '@deepseek-ai/dsh-policy-enforcement'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import { sideEffectClassOf } from '@deepseek-ai/dsh-risk-taxonomy'
 import type { RiskClass, RiskGroundKind } from '@deepseek-ai/dsh-risk-taxonomy'
@@ -892,10 +892,14 @@ interface ApprovalPort {
  * `undeclared` rides both arms because it changes what an operator should DO:
  * an action refused for declaring nothing is fixed by declaring its tags, and
  * one refused on a declared class is fixed by policy or not at all.
+ *
+ * `policy-row-changed` classifies nothing: the risk policy the Trust Kernel
+ * sealed has unloaded, so no action is judged until the host restarts (B-728).
  */
 export type RiskRefusal =
   | { readonly kind: 'hard-deny'; readonly riskClass: string; readonly undeclared: boolean }
   | { readonly kind: 'approval-refused'; readonly riskClass: string; readonly outcome: string; readonly undeclared: boolean }
+  | { readonly kind: 'policy-row-changed' }
 
 /**
  * Decide whether one action may run under this deployment's risk policy
@@ -916,7 +920,10 @@ export type RiskRefusal =
  *
  * Absent policy service means no gate: a composition with no
  * `permissionPresets` has no organisation policy to enforce, which is
- * capability absence rather than an action nobody vouched for.
+ * capability absence rather than an action nobody vouched for. A policy
+ * service that WAS mounted and has unloaded is not that: the Trust Kernel
+ * sealed it at its first provide, so its absence refuses every action with
+ * `policy-row-changed` until the host restarts (B-728, P2-04 acceptance[2]).
  *
  * While an operator is asked the run waits in `waiting_human`, and it is back
  * in `running` when the ask ends, including when the approval service throws.
@@ -941,7 +948,9 @@ export async function gateActionRisk(
   display?: ApprovalDisplay,
 ): Promise<RiskRefusal | undefined> {
   const presets = ctx.get('permissionPresets') as RiskPolicyPort | undefined
-  if (presets === undefined) return undefined
+  if (presets === undefined) {
+    return ctx.fiber.sealedServiceState('permissionPresets') === 'tombstone' ? { kind: 'policy-row-changed' } : undefined
+  }
   const undeclared = riskDomainTags.length === 0
   // The caller takes the verdict first, so the POLICY layer can see the class
   // and the manifest records the same approval decision, and hands it here
@@ -1226,20 +1235,26 @@ export function refusedReservationResult(decision: Exclude<ReserveDecision, { ac
  * uses: the action did not happen, and the model is told in the decision's own
  * CLOSED reason code. No policy text crosses — must[3] keeps the matched rules
  * and the engine's diagnostics in the audit trail, where naming a rule, a
- * tenant or a path is safe.
+ * tenant or a path is safe. A `policy-unavailable` refusal after a provider the
+ * Trust Kernel sealed has unloaded also says that only a restart restores the
+ * policy (B-728); that sentence is the harness's, not a policy's.
  * @param effect - the decision's effect; `ask` means a human answer is owed and none was given.
  * @param reason - the closed reason code, when the decision carried one.
  * @param toolName - the action refused, named so a multi-call turn is readable.
+ * @param ctx - the dispatching context, read for whether a sealed policy provider has unloaded.
  * @returns the tool result to record in place of an execution.
  */
 export function refusedPolicyResult(
   effect: string,
   reason: string | undefined,
   toolName: string,
+  ctx: Context,
 ): ToolExecutionResult {
   const text = effect === 'ask'
     ? `The action "${toolName}" needs a human decision before it runs (${reason ?? 'approval-required'}), and none was given.`
-    : `The action "${toolName}" was refused by policy (${reason ?? 'no-matching-permit'}).`
+    : reason === 'policy-unavailable' && policyRowChanged(ctx)
+      ? `The action "${toolName}" was refused by policy (${reason}): ${POLICY_ROW_CHANGED}.`
+      : `The action "${toolName}" was refused by policy (${reason ?? 'no-matching-permit'}).`
   return {
     content: [{ type: 'text', text: `Error: ${text}` }],
     isError: true,
@@ -1312,17 +1327,29 @@ export function refusedApprovalResult(
  * @returns the tool result to record in place of an execution.
  */
 export function refusedRiskResult(refusal: RiskRefusal, toolName: string): ToolExecutionResult {
-  const cause = refusal.undeclared
-    ? `it declares no risk domain tags, so it classifies at "${refusal.riskClass}" by the unknown default`
-    : `it classifies at "${refusal.riskClass}"`
-  const text = refusal.kind === 'hard-deny'
-    ? `The action "${toolName}" was refused outright: ${cause}, which this deployment hard-denies. No approval can permit it.`
-    : `The action "${toolName}" needs approval before it runs: ${cause}. The request ended "${refusal.outcome}", so it was not performed.`
+  const text = refusal.kind === 'policy-row-changed'
+    ? `The action "${toolName}" was refused: the permission policy row or a service it depends on changed; restart the host for it to take effect.`
+    : classifiedRiskRefusalText(refusal, toolName)
   return {
     content: [{ type: 'text', text: `Error: ${text}` }],
     isError: true,
     error: { message: text, info: { name: 'RiskRefusedError', code: ABORTED_BEFORE_DISPATCH } },
   }
+}
+
+/**
+ * The text of a refusal the risk policy decided from the action's class.
+ * @param refusal - a hard deny or a refused approval.
+ * @param toolName - the action refused.
+ * @returns the model-visible sentence.
+ */
+function classifiedRiskRefusalText(refusal: Exclude<RiskRefusal, { kind: 'policy-row-changed' }>, toolName: string): string {
+  const cause = refusal.undeclared
+    ? `it declares no risk domain tags, so it classifies at "${refusal.riskClass}" by the unknown default`
+    : `it classifies at "${refusal.riskClass}"`
+  return refusal.kind === 'hard-deny'
+    ? `The action "${toolName}" was refused outright: ${cause}, which this deployment hard-denies. No approval can permit it.`
+    : `The action "${toolName}" needs approval before it runs: ${cause}. The request ended "${refusal.outcome}", so it was not performed.`
 }
 
 /**

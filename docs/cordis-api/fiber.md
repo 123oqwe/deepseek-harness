@@ -34,7 +34,7 @@ Register a cleanup-aware effect on this fiber.
 
 **Returns** a disposer that tears the effect down and settles once done.
 
-[Source](../../vendor/cordis/src/fiber.ts#L512)
+[Source](../../vendor/cordis/src/fiber.ts#L595)
 
 ### ctx.fiber
 
@@ -53,7 +53,7 @@ Runtime instance of one plugin application.
 
 A fiber tracks dependency state, validated config, lifecycle effects, and cleanup for the plugin context returned by `ctx.plugin()`.
 
-[Source](../../vendor/cordis/src/fiber.ts#L218)
+[Source](../../vendor/cordis/src/fiber.ts#L269)
 
 ### fiber.uid
 
@@ -64,7 +64,7 @@ public uid: number | null
 
 Unique id within the registry; 0 for the root fiber, `null` once disposed.
 
-[Source](../../vendor/cordis/src/fiber.ts#L220)
+[Source](../../vendor/cordis/src/fiber.ts#L271)
 
 ### fiber.ctx
 
@@ -75,7 +75,7 @@ public readonly ctx: Context
 
 The context this fiber's plugin runs in (extends the parent context).
 
-[Source](../../vendor/cordis/src/fiber.ts#L222)
+[Source](../../vendor/cordis/src/fiber.ts#L273)
 
 ### fiber.config
 
@@ -86,7 +86,7 @@ public config: any
 
 The validated plugin config (updated by `update()`).
 
-[Source](../../vendor/cordis/src/fiber.ts#L224)
+[Source](../../vendor/cordis/src/fiber.ts#L275)
 
 ### fiber.state
 
@@ -97,7 +97,7 @@ public state
 
 Current lifecycle state; transitions emit `internal/status`.
 
-[Source](../../vendor/cordis/src/fiber.ts#L228)
+[Source](../../vendor/cordis/src/fiber.ts#L279)
 
 ### fiber.dispose
 
@@ -108,7 +108,7 @@ public readonly dispose: () => Promise<void>
 
 Dispose this fiber: unload the plugin, then settle once cleanup finished.
 
-[Source](../../vendor/cordis/src/fiber.ts#L230)
+[Source](../../vendor/cordis/src/fiber.ts#L281)
 
 ### fiber.store
 
@@ -130,7 +130,7 @@ Snapshot of required service implementations while loaded; `undefined` otherwise
 
 LOCAL MODIFICATION (dsh): an accessor rather than a plain field, so that every assignment — the two internal ones and any a plugin makes — passes through `applyStoreGuard`. Sealing only the objects this class creates would leave `ctx.fiber.store = { trustKernel: forged }` working, which replaces the guarded object wholesale instead of writing into it.
 
-[Source](../../vendor/cordis/src/fiber.ts#L241)
+[Source](../../vendor/cordis/src/fiber.ts#L292)
 
 ### fiber.pinStoreName(name, impl)
 
@@ -168,7 +168,57 @@ A METHOD, not a module export, because the repository's rule 4 (`kernel-forbidde
 - `name` — the service name to pin.
 - `impl` — the implementation record every fiber in this tree must resolve `name` to.
 
-[Source](../../vendor/cordis/src/fiber.ts#L270)
+[Source](../../vendor/cordis/src/fiber.ts#L321)
+
+### fiber.sealOnProvide(names)
+
+```ts cordis-catalog
+/**
+ * Seal service names in this fiber's whole tree at their first provide.
+ *
+ * LOCAL MODIFICATION (dsh), modification 23. Called by the Trust Kernel when
+ * it is pinned, before any plugin mounts. From then on a sealed name resolves
+ * only to the record of its first provide; a second provide of it throws, and
+ * after its provider unloads it resolves to nothing and every provide of it
+ * still throws, so a change to its provider takes effect when the host
+ * restarts. A METHOD for the reason {@link Fiber.pinStoreName} gives.
+ * @param names - the service names to seal.
+ */
+public sealOnProvide(names: readonly string[]): void
+```
+
+Seal service names in this fiber's whole tree at their first provide.
+
+LOCAL MODIFICATION (dsh), modification 23. Called by the Trust Kernel when it is pinned, before any plugin mounts. From then on a sealed name resolves only to the record of its first provide; a second provide of it throws, and after its provider unloads it resolves to nothing and every provide of it still throws, so a change to its provider takes effect when the host restarts. A METHOD for the reason Fiber.pinStoreName gives.
+
+- `names` — the service names to seal.
+
+[Source](../../vendor/cordis/src/fiber.ts#L339)
+
+### fiber.sealedServiceState(name)
+
+```ts cordis-catalog
+/**
+ * Whether a service name is sealed in this fiber's tree, and where it stands.
+ *
+ * LOCAL MODIFICATION (dsh), modification 23. A consumer that treats an
+ * absent service as "nothing configured" reads this to tell a tombstone,
+ * whose provider was mounted and has unloaded, from a name never provided.
+ * @param name - the service name.
+ * @returns `unsealed`; `awaiting` before the first provide; `live` while that provider is loaded; `tombstone` after it unloaded.
+ */
+public sealedServiceState(name: string): 'unsealed' | 'awaiting' | 'live' | 'tombstone'
+```
+
+Whether a service name is sealed in this fiber's tree, and where it stands.
+
+LOCAL MODIFICATION (dsh), modification 23. A consumer that treats an absent service as "nothing configured" reads this to tell a tombstone, whose provider was mounted and has unloaded, from a name never provided.
+
+- `name` — the service name.
+
+**Returns** `unsealed`; `awaiting` before the first provide; `live` while that provider is loaded; `tombstone` after it unloaded.
+
+[Source](../../vendor/cordis/src/fiber.ts#L354)
 
 ### fiber.inertia
 
@@ -179,7 +229,7 @@ public inertia: Promise<void> | undefined
 
 The in-flight load/unload transition, if one is currently running.
 
-[Source](../../vendor/cordis/src/fiber.ts#L294)
+[Source](../../vendor/cordis/src/fiber.ts#L377)
 
 ### fiber.name
 
@@ -190,7 +240,7 @@ get name()
 
 The plugin's display name, inherited from the nearest named ancestor, else `'root'`.
 
-[Source](../../vendor/cordis/src/fiber.ts#L433)
+[Source](../../vendor/cordis/src/fiber.ts#L516)
 
 ### fiber.assertActive()
 
@@ -208,7 +258,7 @@ Throw if the fiber has already been disposed.
 
 **Returns** nothing when the fiber is still active.
 
-[Source](../../vendor/cordis/src/fiber.ts#L448)
+[Source](../../vendor/cordis/src/fiber.ts#L531)
 
 ### fiber.effect(execute, label?)
 
@@ -239,7 +289,7 @@ Register a cleanup-aware effect on this fiber.
 
 **Returns** a disposer that tears the effect down and settles once done.
 
-[Source](../../vendor/cordis/src/fiber.ts#L512)
+[Source](../../vendor/cordis/src/fiber.ts#L595)
 
 ### fiber.getEffects()
 
@@ -256,7 +306,7 @@ Return metadata for currently registered effects.
 
 **Returns** one `EffectMeta` tree per labeled live effect.
 
-[Source](../../vendor/cordis/src/fiber.ts#L665)
+[Source](../../vendor/cordis/src/fiber.ts#L748)
 
 ### fiber.await()
 
@@ -274,7 +324,7 @@ Wait for current lifecycle work and rethrow startup errors.
 
 **Returns** this fiber, once it has settled into a stable state.
 
-[Source](../../vendor/cordis/src/fiber.ts#L801)
+[Source](../../vendor/cordis/src/fiber.ts#L884)
 
 ### fiber.restart()
 
@@ -292,7 +342,7 @@ Dispose and immediately reload this plugin with its current config.
 
 **Returns** a promise resolving once the reload settled.
 
-[Source](../../vendor/cordis/src/fiber.ts#L815)
+[Source](../../vendor/cordis/src/fiber.ts#L898)
 
 ### fiber.update(config, noSave?)
 
@@ -320,7 +370,7 @@ Runs the `internal/update` waterfall first, so update hooks (and HMR) can veto o
 
 **Returns** the update waterfall result; the default restart returns a promise.
 
-[Source](../../vendor/cordis/src/fiber.ts#L833)
+[Source](../../vendor/cordis/src/fiber.ts#L916)
 
 ## Effect
 
