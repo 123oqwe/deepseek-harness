@@ -320,6 +320,71 @@ export interface HumanQuestionResult {
 }
 
 /**
+ * One approval as the SDK carries it (Epic P2-07 validation[2]): enough for a
+ * client that reconnects to list what still waits and decide it against the
+ * revision it read. The approval states are `@deepseek-ai/dsh-approval-store`'s.
+ *
+ * Not yet on the wire: the server answers `approval/list` and
+ * `approval/decide`, sends `approval.changed`, and registers their schemas in
+ * the Use stage.
+ */
+export interface SdkApproval {
+  /** The approval request's id. */
+  id: string
+  /** The session the approval was asked in. */
+  sessionId: string
+  /** The durable Run waiting for it; absent for an approval asked within one turn. */
+  runId?: string
+  /** The tool whose call asked for approval. */
+  toolName: string
+  /** The digest of the bound request the approval covers. */
+  requestDigest: string
+  /** The approval's state, read as `expired` from its deadline on. */
+  state: 'requested' | 'approved' | 'denied' | 'expired' | 'revoked' | 'consumed'
+  /** The revision a decision must name; it grows by one on every move. */
+  revision: number
+  /** From this instant on the approval can no longer be decided or consumed. */
+  deadlineMs: number
+}
+
+/** `approval/list` params: the client's tenant's pending approvals, of one session when `sessionId` is set. */
+export interface ApprovalListParams {
+  /** Narrow the list to one session's approvals. */
+  sessionId?: string
+}
+
+/** `approval/list` result: the pending approvals, oldest first. */
+export interface ApprovalListResult {
+  /** The `requested` and `approved` approvals whose deadline has not come. */
+  approvals: SdkApproval[]
+}
+
+/** `approval/decide` params: approve or deny one approval, from the revision the client read. */
+export interface ApprovalDecideParams {
+  /** The approval's id. */
+  id: string
+  /** The revision the client read; a decision from an older read is refused as `stale-revision`. */
+  revision: number
+  /** Approve or deny. */
+  decision: 'approved' | 'denied'
+}
+
+/**
+ * `approval/decide` result: the decided approval, or why the decision did not
+ * happen and, when the client may read it, the approval as it now stands.
+ * Two clients deciding from the same read get one `ok` and one `stale-revision`.
+ */
+export type ApprovalDecideResult =
+  | { ok: true; approval: SdkApproval }
+  | { ok: false; conflict: 'stale-revision' | 'invalid-transition' | 'expired' | 'not-found'; approval?: SdkApproval }
+
+/** `approval.changed` notification: one approval's new state, sent to every client of its tenant. */
+export interface ApprovalChangedNotification {
+  /** The approval after its move. */
+  approval: SdkApproval
+}
+
+/**
  * Server-to-client request methods with their param and result shapes.
  *
  * Separate from {@link HarnessSdkRequestMap} because the direction decides who

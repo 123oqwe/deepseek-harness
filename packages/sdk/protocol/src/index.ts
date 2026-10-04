@@ -12,6 +12,11 @@ export { JsonRpcLineTransport, JsonRpcResponseError } from './transport.ts'
 export type { JsonRpcTransportPeer } from './transport.ts'
 export { HOST_LEVEL_NOTIFICATION_METHODS, INITIALIZE_PARAMS_SCHEMA_VERSION } from './types.ts'
 export type {
+  ApprovalChangedNotification,
+  ApprovalDecideParams,
+  ApprovalDecideResult,
+  ApprovalListParams,
+  ApprovalListResult,
   HarnessSdkNotificationMap,
   HarnessSdkRequestMap,
   HarnessSdkServerRequestMap,
@@ -22,6 +27,7 @@ export type {
   HumanQuestionResult,
   InitializeParams,
   InitializeResult,
+  SdkApproval,
   SdkEncodedImageBlock,
   SdkHumanAnswerItem,
   SdkHumanQuestionItem,
