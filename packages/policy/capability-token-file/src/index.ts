@@ -366,11 +366,14 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
 
   /**
    * Re-derive a delegated child whose token has expired or whose visible tools
-   * have grown past it, bounded by what its parent NOW holds and by the
-   * parent's original filter.
+   * have grown past it by a name it may gain, bounded by what its parent NOW
+   * holds and by the parent's original filter.
    *
    * Growth: a tool registered into the child's scope after its token was
-   * minted would otherwise be refused for the rest of the session. Expiry: a
+   * minted would otherwise be refused for the rest of the session. A name is
+   * gainable only when the child's filter and every delegated ancestor's
+   * filter admit it; a visible name no filter chain admits re-derives nothing,
+   * so it costs no signature. Expiry: a
    * child's token carries its parent's expiry, so it is re-derived from the
    * parent's current token, which {@link deriveFromParent} renews first
    * (BLOCKED-331). It can never widen past the parent — the filter is
@@ -390,34 +393,50 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
     const parent = this.sessionTokens.get(delegation.parent)
     if (parent === undefined && !expired) return undefined
     const authorized = new Set(held.token.resources)
-    const visible = this.ctx.tools.schemas(agent).map(schema => schema.name)
-    if (!expired && !visible.some(name => !authorized.has(name))) return undefined
 
-    // Names the child can see that its parent's ROOT does not carry. They are
-    // there because the COMPOSITION put them there — `attachStructuredRuntime`
+    // Names the child can see that its token does not carry. Some are there
+    // because the COMPOSITION put them there — `attachStructuredRuntime`
     // registers `structured_output` into the child's scope, and Ralph's rounds
     // require a structured-output provider — not because the child asked for
-    // them. Measured: without this the child is refused `structured_output`
+    // them. Measured: without growth the child is refused `structured_output`
     // with `tool-not-in-scope` and Ralph loses its second round.
     //
-    // So the ROOT grows to cover them, and this is not an escalation of the
-    // parent: the token bounds AUTHORITY while the registry scope bounds
-    // VISIBILITY, and both must hold at dispatch. A name the parent's scope
-    // cannot see is a name the parent still cannot call. Growing the root is
-    // what lets the child's own filter remain the only narrowing that decides.
+    // A delegated session's authority is what its filter admits, not what its
+    // scope can see, so a name survives only the filters of the child and of
+    // every delegated ancestor. The chain ends at the first session this mount
+    // did not delegate. A root grows to cover what survives: the token bounds
+    // AUTHORITY while the registry scope bounds VISIBILITY, and a root's
+    // authority is what it can see. An adopted session is never re-issued or
+    // re-derived, so it bounds the names by what it holds.
+    let gainable = delegatedChildResources(
+      this.ctx.tools.schemas(agent).map(schema => schema.name).filter(name => !authorized.has(name)),
+      delegation.filter,
+    )
+    const ancestors: { session: SessionId; parent: SessionId; filter: ChildResourceFilter | undefined }[] = []
+    let top = delegation.parent
+    for (let hop = this.delegations.get(top); hop !== undefined; hop = this.delegations.get(top)) {
+      gainable = delegatedChildResources(gainable, hop.filter)
+      ancestors.push({ session: top, ...hop })
+      top = hop.parent
+    }
+    const topResources = new Set(this.sessionTokens.get(top)?.token.resources ?? [])
+    if (this.adopted.has(top)) gainable = gainable.filter(name => topResources.has(name))
+    if (!expired && gainable.length === 0) return undefined
+
     // A parent that holds no token here has nothing to grow; the re-derivation
     // below asks for its current token either way.
     const parentResources = new Set(parent?.token.resources ?? [])
-    const composedForChild = parent === undefined ? [] : visible.filter(name => !parentResources.has(name))
-    const parentAgent = this.sessions.get(delegation.parent)
+    const grows = parent !== undefined && gainable.some(name => !parentResources.has(name))
+    const missingAtTop = gainable.filter(name => !topResources.has(name))
+    const topAgent = this.sessions.get(top)
     const rederive = async (): Promise<SignedCapabilityToken> => {
-      if (composedForChild.length > 0 && parentAgent !== undefined) {
-        await this.issueSessionToken(
-          parentAgent,
-          parentAgent.identity?.principal.id,
-          parentAgent.identity?.principal.tenantId,
-          composedForChild,
-        )
+      if (grows) {
+        if (missingAtTop.length > 0 && topAgent !== undefined) {
+          await this.issueSessionToken(topAgent, topAgent.identity?.principal.id, topAgent.identity?.principal.tenantId, missingAtTop)
+        }
+        // Top down, so each delegated ancestor derives from its parent's grown
+        // token under its own filter before the child derives from it.
+        for (const hop of ancestors.reverse()) await this.deriveFromParent(hop.parent, hop.session, hop.filter)
       }
       return this.deriveFromParent(delegation.parent, agent.id, delegation.filter)
     }
