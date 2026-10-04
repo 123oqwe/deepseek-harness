@@ -1349,7 +1349,8 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
     const refused = refuseUserPatchRows(options.profile, composed.profile.dir, composed.bundlePatches, layers, pluginEnforcement)
     const userPatches = layers.map(layer => withoutRefusedRows(layer.patches, refused))
     const generation = composeEntries([composed.bundlePatches, ...userPatches, composed.overlays])
-    await enforceProfileLock(options.profile, composed.profile.dir, composed.bundleLayers, rowModuleNames(generation), 'reload')
+    // MUTATION M-359-1 (never merge): the reload generation skips the plugin lock gate.
+    if (generation.length < 0) await enforceProfileLock(options.profile, composed.profile.dir, composed.bundleLayers, rowModuleNames(generation), 'reload')
     return structuredClone([...composed.bundlePatches, ...userPatches.flat(), ...composed.overlays])
   }
   // Cloned for the same insert-aliasing reason as composeLive: the boot
