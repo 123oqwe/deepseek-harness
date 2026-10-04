@@ -28,7 +28,7 @@ import type {
 } from '@deepseek-ai/dsh-workflow'
 import { CHILD_FAILURE_POLICIES, isChildFailurePolicy } from './protocol.ts'
 import { materializeFromRealm, MaterializeError, renderThrown } from './realm.ts'
-import type { ChildHandle, ChildPort, WorkerLimits } from './types.ts'
+import type { ApprovalPort, ChildHandle, ChildPort, WorkerLimits } from './types.ts'
 
 /** The observers the execution reports progress through (the session posts them to the host). */
 export interface ExecutionObserver {
@@ -125,6 +125,8 @@ export class WorkflowExecution {
   private readonly compiled: vm.Script
   /** The keys of the reusable outputs under each call identity; a reused key is taken out. Built at the first call. */
   private reusableByCall: Map<string, number[]> | undefined
+  /** How many `approval()` calls with each request the script made, so identical requests get distinct keys. */
+  private readonly approvalCalls = new Map<string, number>()
 
   constructor(
     meta: WorkflowMeta,
@@ -142,6 +144,8 @@ export class WorkflowExecution {
      * nothing is reused.
      */
     private readonly reusableCalls: Record<number, string> = {},
+    /** The host channel for `approval()`; absent, every `approval()` call is refused. */
+    private readonly approvals?: ApprovalPort,
   ) {
     // Compile FIRST: a body syntax error must throw out of the constructor
     // before any realm state exists. The host pre-parses the identical
@@ -165,6 +169,7 @@ export class WorkflowExecution {
       parallel: (thunks: unknown) => this.contain(this.parallel(thunks)),
       pipeline: (items: unknown, ...stages: unknown[]) => this.contain(this.pipeline(items, stages)),
       workflow: (nameOrRef: unknown, nestedArgs?: unknown) => this.contain(this.workflow(nameOrRef, nestedArgs)),
+      approval: (request: unknown) => this.contain(this.approval(request)),
       phase: (title: unknown) => { this.phase(title) },
       log: (message: unknown) => { this.log(message) },
       // workerData already performed the real cross-thread structured clone.
@@ -382,6 +387,28 @@ export class WorkflowExecution {
       ...nestedArgs === undefined ? {} : { args: nestedArgs },
       ...onFailure === undefined ? {} : { onFailure },
     })
+  }
+
+  /**
+   * The `approval({ title })` hook (Epic P2-07 must[2]): wait for a
+   * person or client to approve before the script continues. The run waits
+   * durably, so a decision that comes after the worker was released resumes
+   * the run, which reaches this call again and continues past it.
+   * @param rawRequest - `{ title }`, a non-empty string naming what is approved.
+   * @returns `null` once the approval was approved and consumed.
+   */
+  private async approval(rawRequest: unknown): Promise<null> {
+    this.throwIfCancelled()
+    const request = rawRequest as { title?: unknown } | null
+    if (request === null || typeof request !== 'object' || typeof request.title !== 'string' || request.title.length === 0) {
+      throw new WorkflowError('approval() requires { title } with a non-empty title string', 'INVALID_ARGUMENT')
+    }
+    if (this.approvals === undefined) throw new WorkflowError('approval() is not available in this execution', 'APPROVAL_UNAVAILABLE')
+    const asked = createHash('sha256').update(request.title).digest('hex')
+    const occurrence = (this.approvalCalls.get(asked) ?? 0) + 1
+    this.approvalCalls.set(asked, occurrence)
+    await this.approvals.waitForApproval({ key: `${asked}:${String(occurrence)}`, title: request.title })
+    return null
   }
 
   /** The `agent(prompt, opts)` hook. */

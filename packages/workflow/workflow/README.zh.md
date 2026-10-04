@@ -50,7 +50,7 @@ return { reviewed: reviews.length }
 
 插件消费方可以直接启动运行：`ctx.workflowEngine.start({ script, meta, args?, parent, signal? })`。`parent` 把每个子 agent 归属于调用它的 agent；`signal` 在中止时取消运行。`start()` 在运行存在之前校验 meta 块并解析脚本，因此格式错误的请求会立即以违规清单失败。
 
-返回的运行公开 `id`、`meta`、`result`、`cancel(reason?)` 与 `dispose()`。result 绝不拒绝：脚本失败以 `stopReason: 'error'` 兑现，取消以 `'cancelled'` 兑现。调用方拥有该运行——每条路径都要调用 `dispose()`；它会取消剩余工作，并在有界宽限期内等待脚本与子 agent 完全停稳。
+返回的运行公开 `id`、`meta`、`result`、`cancel(reason?)` 与 `dispose()`。result 绝不拒绝：脚本失败以 `stopReason: 'error'` 兑现，取消以 `'cancelled'` 兑现，脚本的 `approval()` 等待判定的 detached 运行以 `'waiting_for_approval'` 与 `waitingFor.approvalId` 兑现（Epic P2-07），之后引擎以同一个 id 恢复它。调用方拥有该运行——每条路径都要调用 `dispose()`；它会取消剩余工作，并在有界宽限期内等待脚本与子 agent 完全停稳。
 
 ### 失败与恢复
 
@@ -74,7 +74,7 @@ return { reviewed: reviews.length }
 
 | 文件 | 职责 |
 |---|---|
-| [`src/index.ts`](src/index.ts) | 服务定义、`workflow/*` 事件声明、`WorkflowError` 及其 fatal 标志 |
+| [`src/index.ts`](src/index.ts) | 服务定义、`workflow/*` 事件声明、`WorkflowError` 及其 fatal 标志、`ApprovalRefusedError` |
 | [`src/types.ts`](src/types.ts) | 浏览器安全词汇：`WorkflowMeta`、`WorkflowResult`、运行与 agent 事件信息 |
 | [`src/runtime-types.ts`](src/runtime-types.ts) | 仅宿主的 `WorkflowStartRequest` 与 `WorkflowRun` 句柄 |
 | [`src/invariant.ts`](src/invariant.ts) | 不变式伴生插件：事件配对与身份校验 |
@@ -87,7 +87,7 @@ return { reviewed: reviews.length }
 
 ### 失败纪律
 
-`WorkflowError` 携带机器可路由的 code 与 `fatal` 标志；每个 code 都是致命的，`parallel()` 与 `pipeline()` 会重新抛出致命错误，而不是把条目映射为 `null`——拼错的选项必须明确终止脚本。code 覆盖启动失败、约定违规、超出上限、提供方与结果故障、不可序列化值与取消；完整集合与含义见 [`src/index.ts`](src/index.ts)。
+`WorkflowError` 携带机器可路由的 code 与 `fatal` 标志；每个 code 都是致命的，`parallel()` 与 `pipeline()` 会重新抛出致命错误，而不是把条目映射为 `null`——拼错的选项必须明确终止脚本。code 覆盖启动失败、约定违规、超出上限、提供方与结果故障、不可序列化值与取消；完整集合与含义见 [`src/index.ts`](src/index.ts)。`approval()` 在其运行无法等待时抛出 `APPROVAL_UNAVAILABLE`。被拒的审批不是 `WorkflowError`：`approval()` 抛出 `ApprovalRefusedError`，带 `approvalId` 与取值为 `denied`、`revoked`、`expired` 或 `consumed` 的 `refusal`；脚本可以捕获它，`parallel()` 与 `pipeline()` 像对待普通步骤失败一样把它映射为 `null`。
 
 逐项 `null` 只保留给子运行失败与阶段内普通脚本错误，因此以非完成结束原因正常结算的子 agent 不属于基础设施异常：`agent()` 返回 `null`，让脚本处理普通子 agent 失败。
 

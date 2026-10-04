@@ -124,6 +124,12 @@ export type WorkflowErrorCode =
   | 'RUN_HELD_BY_ANOTHER_HOST'
   /** An emergency stop is in force, so no run may be started or resumed (P2-12 must[2]). */
   | 'EMERGENCY_STOP_IN_FORCE'
+  /**
+   * The run cannot wait for an approval: it is not a detached run, or no
+   * approval store is mounted (Epic P2-07). Only a detached run outlives the
+   * turn that started it, so only one can be woken later.
+   */
+  | 'APPROVAL_UNAVAILABLE'
 
 /**
  * Typed error for workflow-seam failures. Extends {@link HarnessError}, so the
@@ -152,6 +158,35 @@ export class WorkflowError extends HarnessError {
  */
 export function isFatalWorkflowError(error: unknown): boolean {
   return error instanceof WorkflowError && error.fatal
+}
+
+/** Why an approval a script waited for did not let it continue. */
+export type ApprovalRefusal = 'denied' | 'revoked' | 'expired' | 'consumed'
+
+/**
+ * Thrown by a workflow script's `approval()` when the approval it waited for
+ * was denied, revoked or lapsed, or was already consumed by another run of
+ * the same id (Epic P2-07). The script may catch it and take another branch;
+ * the action the approval was asked for is never performed on its behalf.
+ * Not a {@link WorkflowError}: a refusal is an ordinary step failure, so a
+ * combinator maps it to a `null` item rather than killing the run.
+ */
+export class ApprovalRefusedError extends HarnessError {
+  /** The approval in the durable approval queue. */
+  readonly approvalId: string
+  /** How it ended. */
+  readonly refusal: ApprovalRefusal
+
+  /**
+   * @param approvalId - the approval the script waited for.
+   * @param refusal - how it ended.
+   */
+  constructor(approvalId: string, refusal: ApprovalRefusal) {
+    super(`the approval ${approvalId} was ${refusal}, so the workflow did not continue past it`, 'APPROVAL_REFUSED')
+    this.name = 'ApprovalRefusedError'
+    this.approvalId = approvalId
+    this.refusal = refusal
+  }
 }
 
 /**

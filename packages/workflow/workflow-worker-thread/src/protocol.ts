@@ -7,7 +7,7 @@
  * @module @deepseek-ai/dsh-workflow-worker-thread/protocol
  */
 
-import type { WorkflowAgentEndInfo, WorkflowAgentInfo, WorkflowResult } from '@deepseek-ai/dsh-workflow'
+import type { ApprovalRefusal, WorkflowAgentEndInfo, WorkflowAgentInfo, WorkflowResult } from '@deepseek-ai/dsh-workflow'
 import type { ChildFailurePolicy } from '@deepseek-ai/dsh-workflow-registry'
 import type { ChildResult, ChildStartRequest } from './types.ts'
 
@@ -45,6 +45,12 @@ export enum WorkerToHostType {
   ChildDispose = 'child-dispose',
   /** Nested-run RPC: start a nested workflow (answered by NestedSettled or NestedRefused). */
   NestedStart = 'nested-start',
+  /**
+   * Approval RPC: wait for an approval (Epic P2-07), answered by ApprovalGranted,
+   * ApprovalRefused or ApprovalUnavailable; when nobody has decided yet the
+   * host settles the run as waiting and terminates the worker instead.
+   */
+  ApprovalRequest = 'approval-request',
   /** The run's single terminal result. */
   Result = 'result',
 }
@@ -71,6 +77,8 @@ export interface WorkerToHostPayloads {
    * wire because the host checks it again with {@link isChildFailurePolicy}.
    */
   [WorkerToHostType.NestedStart]: { callId: number; name: string; digest: string; args?: unknown; onFailure?: string }
+  /** The RPC correlation id, the asking call's identity, and what the approval is for. */
+  [WorkerToHostType.ApprovalRequest]: { callId: number; key: string; title: string }
   /** The run's terminal outcome. */
   [WorkerToHostType.Result]: { result: WorkflowResult }
 }
@@ -95,6 +103,12 @@ export enum HostToWorkerType {
   NestedSettled = 'nested-settled',
   /** Nested-run RPC reply: the nested run was refused, or it failed under a `fail-parent` policy. */
   NestedRefused = 'nested-refused',
+  /** Approval RPC reply: the approval was approved and this run consumed it; the script continues. */
+  ApprovalGranted = 'approval-granted',
+  /** Approval RPC reply: the approval was denied, revoked, lapsed or already consumed. */
+  ApprovalRefused = 'approval-refused',
+  /** Approval RPC reply: this run cannot wait for an approval at all. */
+  ApprovalUnavailable = 'approval-unavailable',
 }
 
 /** The payload each host→worker tag carries. */
@@ -117,6 +131,12 @@ export interface HostToWorkerPayloads {
   [HostToWorkerType.NestedSettled]: { callId: number; value: unknown }
   /** The RPC correlation id and why the nested run did not produce a value. */
   [HostToWorkerType.NestedRefused]: { callId: number; rendered: string }
+  /** The RPC correlation id. */
+  [HostToWorkerType.ApprovalGranted]: { callId: number }
+  /** The RPC correlation id, the approval, and how it ended. */
+  [HostToWorkerType.ApprovalRefused]: { callId: number; approvalId: string; refusal: ApprovalRefusal }
+  /** The RPC correlation id and why this run cannot wait. */
+  [HostToWorkerType.ApprovalUnavailable]: { callId: number; rendered: string }
 }
 
 /**

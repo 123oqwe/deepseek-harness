@@ -1157,6 +1157,20 @@ revokeSession(session: SessionIdLike): Promise<'revoked' | 'nothing-to-revoke'>
  * @param filter - the parent's declared restriction on the child, or `undefined` for none.
  */
 deriveChild(parentSession: SessionIdLike, childSession: SessionIdLike, filter?: ChildResourceFilter): void
+
+/**
+ * Hold, for a session resumed after its process ended, the delegated token
+ * recorded for it before (Epic P2-07: a waiting workflow run woken after a
+ * restart, whose launcher is gone). The SAME token, so its scope cannot
+ * widen and a revocation of its lineage still reaches it. The session is
+ * never issued a root and never re-derived: when the recorded token expired
+ * or was revoked, or none was recorded, it holds nothing and its tool calls
+ * are refused. Called before the session is resumed, so no on-demand
+ * issuance can run for it first.
+ * @param session - the session about to be resumed.
+ * @returns whether the session now holds a token.
+ */
+adoptDelegatedToken(session: SessionIdLike): boolean
 ```
 
 Source: [`packages/policy/capability-token/src/types.ts`](../../packages/policy/capability-token/src/types.ts)

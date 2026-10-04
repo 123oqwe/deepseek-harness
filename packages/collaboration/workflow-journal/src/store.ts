@@ -17,7 +17,7 @@
  * @module @deepseek-ai/dsh-workflow-journal/store
  */
 
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { WorkflowJournal } from './types.ts'
 
@@ -80,6 +80,25 @@ export function readJournal(directory: string, runId: string): WorkflowJournal |
     return JSON.parse(readFileSync(fileFor(directory, runId), 'utf8')) as WorkflowJournal
   } catch (error: unknown) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined
+    throw error
+  }
+}
+
+/**
+ * The runs that have a journal, for a scan when a process starts (Epic P2-07:
+ * a scheduler looks for the runs waiting on an approval). A journal set aside
+ * under `refused/` is not listed, nor a write still in flight, and a
+ * directory that was never written lists none.
+ * @param directory - the directory holding one file per run.
+ * @returns the run ids, in no particular order.
+ */
+export function listJournals(directory: string): string[] {
+  try {
+    return readdirSync(directory, { withFileTypes: true })
+      .filter(entry => entry.isFile() && entry.name.endsWith('.json'))
+      .map(entry => entry.name.slice(0, -'.json'.length))
+  } catch (error: unknown) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return []
     throw error
   }
 }

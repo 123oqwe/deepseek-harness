@@ -4037,10 +4037,17 @@ export interface Config {
    * token limit is off; `maxTotalAgents` still bounds every tree.
    */
   maxNestedTokens?: number
+  /**
+   * How long an approval a script's `approval()` asked for stays decidable,
+   * in milliseconds (default 86400000, one day; Epic P2-07). At most the
+   * capability-token lifetime: a run woken after its session's token expired
+   * holds no token and every tool call it makes is refused.
+   */
+  approvalWaitMs?: number
 }
 ```
 
-Source: [`packages/workflow/workflow-worker-thread/src/index.ts:56`](../packages/workflow/workflow-worker-thread/src/index.ts)
+Source: [`packages/workflow/workflow-worker-thread/src/index.ts:59`](../packages/workflow/workflow-worker-thread/src/index.ts)
 
 <a id="deepseek-aidsh-workspace-trust-local"></a>
 

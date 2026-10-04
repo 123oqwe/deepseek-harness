@@ -37,7 +37,7 @@ Success returns the canonical envelope `{ runId, agentsStarted, result }`, rende
 
 ### Detached runs
 
-`detached: true` starts the run and returns its `runId` at once, leaving it running after the turn ends; `attach: "<runId>"` — with no `script` or `meta` — collects that run's value, in the same turn or a later one. A detached run holds its OWN agent and session, inheriting the launcher's LLM route, so nothing about it depends on the turn that started it, and it is deliberately NOT bound to the turn's abort signal. An id that reaches no run is refused by name: it was never started here, or its outcome was already collected. The foreground path is unchanged and remains the default, because a run whose value arrives in the same call cannot be forgotten.
+`detached: true` starts the run and returns its `runId` at once, leaving it running after the turn ends; `attach: "<runId>"` — with no `script` or `meta` — collects that run's value, in the same turn or a later one. A detached run holds its OWN agent and session, inheriting the launcher's LLM route, so nothing about it depends on the turn that started it, and it is deliberately NOT bound to the turn's abort signal. An id that reaches no run is refused by name: it was never started here, or its outcome was already collected. Attaching to a run whose script waits for an approval returns an error naming that approval: the run resumes on its own once the approval is decided, and a later `attach` collects its value. The foreground path is unchanged and remains the default, because a run whose value arrives in the same call cannot be forgotten.
 
 ### What to expect during a run
 

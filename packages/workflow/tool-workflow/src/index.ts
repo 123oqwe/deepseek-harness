@@ -196,6 +196,8 @@ function stopReasonError(result: WorkflowResult): string | undefined {
       return `workflow run was cancelled${result.error !== undefined ? ` (${result.error})` : ''}`
     case 'error':
       return `workflow run failed: ${result.error ?? 'unknown error'}`
+    case 'waiting_for_approval':
+      return `workflow run is waiting for approval ${String(result.waitingFor?.approvalId)}; it resumes on its own once the approval is decided`
     /* v8 ignore start -- defensive: WorkflowStopReason is a closed union, exhaustive by construction; a future variant fails here loudly */
     default:
       return `workflow run ended abnormally (${String(result.stopReason satisfies never)})`

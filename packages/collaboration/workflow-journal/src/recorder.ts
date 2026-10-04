@@ -21,6 +21,8 @@ import type {
   CallDigest,
   ChildReceipt,
   JournalEntry,
+  JournaledApproval,
+  JournaledStart,
   PhaseName,
   ScriptDigest,
   StepEffectClass,
@@ -56,6 +58,16 @@ export interface JournalRecorder {
   readonly stepEnded: (end: StepEnd) => void
   /** Mark a completed step's result as checked (must[1]'s second half). */
   readonly stepVerified: (seq: number) => void
+  /**
+   * Record an approval the script waits for (Epic P2-07), and what the run was
+   * started with, so a scheduler can resume it; the start is kept from the
+   * first approval the run recorded.
+   */
+  readonly approvalRecorded: (approval: JournaledApproval, start: JournaledStart) => void
+  /** Mark a recorded approval consumed; a key never recorded is ignored. */
+  readonly approvalConsumed: (key: string) => void
+  /** The approval recorded for one asking call, when there is one. */
+  readonly approvalFor: (key: string) => JournaledApproval | undefined
   /** The journal as it stands, safe to persist at any moment. */
   readonly journal: () => WorkflowJournal
 }
@@ -101,6 +113,10 @@ export function createJournalRecorder(
     (seed?.entries ?? []).map(entry => [Number(entry.stepId.replace(/^step-/u, '')), entry]),
   )
   const displaced: JournalEntry[] = [...seed?.displaced ?? []]
+  // A resumed run continues the seed's approvals and start, so a re-run of the
+  // asking call finds what the first run recorded.
+  const approvals = new Map<string, JournaledApproval>((seed?.approvals ?? []).map(approval => [approval.key, approval]))
+  let start: JournaledStart | undefined = seed?.start
 
   const phaseOf = (phase: string | undefined): PhaseName =>
     brandString<PhaseName>(phase ?? 'unphased')
@@ -142,6 +158,17 @@ export function createJournalRecorder(
       if (existing === undefined || existing.outcome !== 'completed') return
       entries.set(seq, { ...existing, verified: true })
     },
+    approvalRecorded(approval, started) {
+      approvals.set(approval.key, approval)
+      start ??= started
+    },
+    approvalConsumed(key) {
+      const existing = approvals.get(key)
+      if (existing !== undefined) approvals.set(key, { ...existing, state: 'consumed' })
+    },
+    approvalFor(key) {
+      return approvals.get(key)
+    },
     journal() {
       // The seed's nesting outlives a resume that was not told any: a resumed
       // run reads its own record, and dropping the field here would erase on
@@ -152,6 +179,8 @@ export function createJournalRecorder(
         entries: [...entries.keys()].sort((left, right) => left - right).map(seq => entries.get(seq) as JournalEntry),
         ...inherited === undefined ? {} : { nesting: inherited },
         ...displaced.length === 0 ? {} : { displaced: [...displaced] },
+        ...start === undefined ? {} : { start },
+        ...approvals.size === 0 ? {} : { approvals: [...approvals.values()] },
       }
     },
   }

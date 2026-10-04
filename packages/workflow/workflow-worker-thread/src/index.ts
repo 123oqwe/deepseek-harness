@@ -28,8 +28,11 @@ import type {
   RegisteredDefinition,
   RunBudget,
 } from '@deepseek-ai/dsh-workflow-registry'
-import type { RunNesting } from '@deepseek-ai/dsh-workflow-journal'
-import type { Agent } from '@deepseek-ai/dsh-agent'
+import { listJournals, readJournal } from '@deepseek-ai/dsh-workflow-journal'
+import type { JournaledStart, RunNesting, WorkflowJournal } from '@deepseek-ai/dsh-workflow-journal'
+import type { Agent, AgentOptions } from '@deepseek-ai/dsh-agent'
+// Also merges `approval-store/changed` and the `ctx.approvalStore` slot.
+import type { ApprovalRequestId, PrincipalId, TenantId } from '@deepseek-ai/dsh-approval-store'
 import { currentPrincipal } from '@deepseek-ai/dsh-principal'
 import type { NestedStartRequest } from './types.ts'
 import { reusableSteps } from './resume.ts'
@@ -102,9 +105,28 @@ export interface Config {
    * token limit is off; `maxTotalAgents` still bounds every tree.
    */
   maxNestedTokens?: number
+  /**
+   * How long an approval a script's `approval()` asked for stays decidable,
+   * in milliseconds (default 86400000, one day; Epic P2-07). At most the
+   * capability-token lifetime: a run woken after its session's token expired
+   * holds no token and every tool call it makes is refused.
+   */
+  approvalWaitMs?: number
 }
 
 type ResolvedConfig = Required<Config>
+
+/**
+ * The model route an agent's options carry, as plain JSON for a journal: the
+ * fields a woken run's agent needs to give its children the route its
+ * launcher gave it. A JSON round trip drops the fields the agent had none of.
+ * @param options - the run's own agent's options.
+ * @returns the route.
+ */
+function routeOf(options: AgentOptions): JournaledStart['route'] {
+  const { provider, model, reasoningEffort, maxTokens } = options
+  return JSON.parse(JSON.stringify({ provider, model, reasoningEffort, maxTokens })) as JournaledStart['route']
+}
 
 /** A body that still carries the Claude Code-style meta header (meta rides the seam as data here). */
 const META_STATEMENT = /^\s*export\s+const\s+meta\b/
@@ -207,6 +229,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     heartbeatMs: z.natural().min(1).default(10_000),
     maxNestingDepth: z.natural().min(1).default(3),
     maxNestedTokens: z.natural().default(1_000_000),
+    approvalWaitMs: z.natural().min(1).default(86_400_000),
   })
 
   private readonly config: ResolvedConfig
@@ -293,6 +316,107 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     // where a run's recovery record lives is not a deployment CHOICE, it
     // follows the storage root the profile already set (§12.22-2).
     this.journalDirectory = dshHomePath('journals')
+    // Epic P2-07 must[3]: the scheduler half of a script's `approval()`. A
+    // decided run-scoped approval wakes the run waiting on it, and once both
+    // the approval store and the agent registry are mounted, every run this
+    // home's journals leave waiting on a decided approval is woken too.
+    ctx.on('approval-store/changed', (record) => {
+      if (record.scope.kind === 'run' && record.state !== 'requested') void this.wake(WorkflowRunId(record.scope.runId), record.id)
+    })
+    ctx.inject(['approvalStore', 'agents'], () => { this.wakeWaitingRuns() })
+  }
+
+  /** Runs being woken, so two decisions arriving together resume a run once. */
+  private readonly waking = new Set<WorkflowRunId>()
+
+  /** Detached runs whose agent and lease are still being given back after they settled, by id. */
+  private readonly releasing = new Map<WorkflowRunId, Promise<void>>()
+
+  /**
+   * Wake every run this home's journals leave waiting on an approval that is
+   * no longer `requested` (Epic P2-07 acceptance[0]): one decided while no
+   * process ran, or one whose deadline passed. Each approval is read as the
+   * viewer its run journaled.
+   */
+  private wakeWaitingRuns(): void {
+    const store = this.ctx.get('approvalStore')
+    for (const id of listJournals(this.journalDirectory)) {
+      const runId = WorkflowRunId(id)
+      for (const waiting of this.readSafely(runId)?.approvals?.filter(approval => approval.state === 'waiting') ?? []) {
+        const viewer = { tenant: brandString<TenantId>(waiting.tenant), principal: brandString<PrincipalId>(waiting.principal) }
+        const row = store?.get(brandString<ApprovalRequestId>(waiting.approvalId), viewer, Date.now())
+        if (row?.state !== 'requested') void this.wake(runId, waiting.approvalId)
+      }
+    }
+  }
+
+  /**
+   * One run's journal, or `undefined` when it has none or cannot be read; an
+   * unreadable journal is logged, since a scan must not stop at one bad file.
+   * @param runId - the run.
+   * @returns the journal, or `undefined`.
+   */
+  private readSafely(runId: WorkflowRunId): WorkflowJournal | undefined {
+    try {
+      return readJournal(this.journalDirectory, runId)
+    } catch (error: unknown) {
+      this.ctx.logger.warn(`workflow-worker-thread: journal of run ${runId} is unreadable: ${error instanceof Error ? error.message : String(error)}`)
+      return undefined
+    }
+  }
+
+  /**
+   * Resume a detached run that waits on `approvalId` (Epic P2-07 must[3]).
+   *
+   * The run continues in its OWN session, resumed from its log, which also
+   * restores its identity; its model route comes from the journal. Before the
+   * session is resumed it is given back the token delegated to it before
+   * (the delegate's ruling D8): the same one, never a root, or none when that
+   * token expired or was revoked. The run is then resumed as `resume` would:
+   * its lease first, so of two processes waking one run only one proceeds,
+   * then its journal reconciled. The re-run script reaches the same
+   * `approval()` call, which consumes the approval or refuses.
+   * A run that is live, already being woken, or no longer waiting on this
+   * approval is left alone; a failure to resume is logged.
+   * @param runId - the waiting run.
+   * @param approvalId - the approval that was decided.
+   */
+  private async wake(runId: WorkflowRunId, approvalId: string): Promise<void> {
+    if (this.liveRuns.has(runId) || this.waking.has(runId)) return
+    const journal = this.readSafely(runId)
+    const start = journal?.start
+    const agents = this.ctx.get('agents')
+    if (start === undefined || agents === undefined
+      || !(journal?.approvals ?? []).some(approval => approval.approvalId === approvalId && approval.state === 'waiting')) return
+    this.waking.add(runId)
+    const session = brandString<SessionId>(start.session)
+    try {
+      await this.releasing.get(runId)
+      this.ctx.get('capabilityTokens')?.adoptDelegatedToken(session)
+      const handle = await agents.resume({ resumeSessionId: session, agentOptions: start.route as AgentOptions })
+      try {
+        const preAcquired = this.takeRunLease(runId)
+        const request: WorkflowStartRequest = {
+          script: start.script,
+          meta: start.meta as WorkflowStartRequest['meta'],
+          parent: handle.agent,
+          ...start.args === undefined ? {} : { args: start.args },
+          ...start.subagentProvider === undefined ? {} : { subagentProvider: start.subagentProvider },
+          ...start.maxTotalAgents === undefined ? {} : { maxTotalAgents: start.maxTotalAgents },
+        }
+        const reconciled = await reusableSteps(
+          this.journalDirectory, runId, request.script, childId => this.childFinished(childId), this.effectStateLookup(handle.agent),
+        )
+        this.launch(request, runId, reconciled, undefined, preAcquired, { session, dispose: () => handle.dispose() })
+      } catch (error: unknown) {
+        await handle.dispose()
+        throw error
+      }
+    } catch (error: unknown) {
+      this.ctx.logger.warn(`workflow-worker-thread: run ${runId} waiting on approval ${approvalId} was not resumed: ${error instanceof Error ? error.message : String(error)}`)
+    } finally {
+      this.waking.delete(runId)
+    }
   }
 
   /**
@@ -841,6 +965,20 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       nested === undefined ? undefined : nesting,
       detached?.session,
       tree,
+      // Epic P2-07: only a detached run can wait for an approval, because only
+      // it outlives the turn that started it.
+      detached === undefined ? undefined : {
+        start: {
+          session: detached.session,
+          script: request.script,
+          meta,
+          ...request.args === undefined ? {} : { args: request.args },
+          ...request.subagentProvider === undefined ? {} : { subagentProvider: request.subagentProvider },
+          ...request.maxTotalAgents === undefined ? {} : { maxTotalAgents: request.maxTotalAgents },
+          route: routeOf(request.parent.options),
+        },
+        waitMs: this.config.approvalWaitMs,
+      },
       reconciled,
     )
     // must[2]/acceptance[0] live with the RUN, not with the engine: the lease's
@@ -863,9 +1001,9 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     // terminal state -- completed, failed or cancelled alike. Nothing else can:
     // the launching turn does not hold the handle, and leaving it alive would
     // leak one session per detached run for the process's lifetime.
-    if (detached !== undefined) {
-      void workerRun.result.then(() => detached.dispose(), () => detached.dispose())
-    }
+    const agentReleased = detached === undefined
+      ? undefined
+      : workerRun.result.then(() => detached.dispose(), () => detached.dispose())
     void workerRun.result.then((settled) => {
       this.liveRuns.delete(id)
       // Only a detached run's outcome is kept. Every other run was handed to a
@@ -883,6 +1021,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       this.emitWorkflowEvent('workflow/end', info, {
         stopReason: settled.stopReason,
         ...settled.error !== undefined ? { error: settled.error } : {},
+        ...settled.waitingFor !== undefined ? { waitingFor: settled.waitingFor } : {},
         agentsStarted: settled.agentsStarted,
       })
     })
@@ -893,9 +1032,13 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     // rejects when giving the lease back throws, and no caller holds this
     // promise, so the failure is logged here.
     if (detached !== undefined) {
-      void workerRun.result.then(() => workerRun.dispose()).catch((error: unknown) => {
+      const runReleased = workerRun.result.then(() => workerRun.dispose()).catch((error: unknown) => {
         this.ctx.logger.warn(`workflow-worker-thread: detached run ${id} was not disposed: ${error instanceof Error ? error.message : String(error)}`)
       })
+      // A run settled waiting for an approval is woken under the same id, its
+      // session and lease reused: the wake waits for both to be given back.
+      const released = Promise.allSettled([agentReleased, runReleased]).then(() => { this.releasing.delete(id) })
+      this.releasing.set(id, released)
     }
 
     return workerRun

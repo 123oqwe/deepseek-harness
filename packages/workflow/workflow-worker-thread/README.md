@@ -49,7 +49,9 @@ An owning consumer may set `WorkflowStartRequest.subagentProvider` and `Workflow
 
 ### What a run gives you
 
-When a run starts, the script body executes in the worker with top-level `await` and the hooks `agent()`, `parallel()`, `pipeline()`, `phase()`, and `log()`; `meta` and `args` arrive as plain JSON data, never evaluated code. Every `agent()` call starts a host-side subagent under the configured provider, with the run's parent as the parent of every child. The run settles with the script's final JSON value; an ordinary child failure resolves `agent()` to `null` so the script can handle it.
+When a run starts, the script body executes in the worker with top-level `await` and the hooks `agent()`, `parallel()`, `pipeline()`, `phase()`, `log()`, and `approval()`; `meta` and `args` arrive as plain JSON data, never evaluated code. Every `agent()` call starts a host-side subagent under the configured provider, with the run's parent as the parent of every child. The run settles with the script's final JSON value; an ordinary child failure resolves `agent()` to `null` so the script can handle it.
+
+A detached run's `await approval({ title })` waits for a person to decide (Epic P2-07). The call records a run-scoped approval in `ctx.approvalStore` as the run's own session, journals which call asked and what the run was started with, and the run settles `waiting_for_approval` with `waitingFor.approvalId`, giving back its worker, lease and agent. Once the approval is decided, which this process learns from `approval-store/changed` and a process started later learns by scanning this home's journals once the approval store and the agent registry are mounted, the engine resumes the run in its own session with its journaled model route and the token delegated to it before (`ctx.capabilityTokens.adoptDelegatedToken`), and re-runs the script, reusing its finished steps. The same call then consumes an approved approval by compare-and-swap, reading it as the tenant and principal the run journaled, so of two processes resuming one run at most one continues past it; a denied, revoked, lapsed or already consumed approval throws `ApprovalRefusedError`, whose `refusal` names which, for the script to catch. In a run that is not detached, or where no approval store is mounted, `approval()` throws `APPROVAL_UNAVAILABLE`. `approvalWaitMs` (default one day) sets how long a new approval stays decidable.
 
 A malformed meta block, a body that does not parse, an unavailable provider route, or a per-run cap above the ceiling is rejected synchronously before a worker exists, so the caller sees a violation list and can correct the call. During execution, hook misuse and tripped caps kill the script with a fatal workflow error. Cancellation is bounded: a script that ignores it is force-settled as cancelled and its worker terminated after `disposeGraceMs`.
 
@@ -85,6 +87,7 @@ One worker thread per run keeps a misbehaving script from stalling the host and 
 | [`src/protocol.ts`](src/protocol.ts) | Typed host/worker message protocol |
 | [`src/meta.ts`](src/meta.ts) | `meta` shape validation and normalization |
 | [`src/session.ts`](src/session.ts) | Child run projection and snapshotting before crossing to the worker |
+| [`src/approvals.ts`](src/approvals.ts) | What one `approval()` call resolves to: record a run-scoped approval and wait, consume a decided one, or refuse |
 | — | No runtime invariant companion is published; this process-boundary implementation exposes no same-process event relation; worker protocol and built-worker tests cover it. |
 
 ### Run sequence
@@ -190,6 +193,8 @@ These limits define when the engine is a poor fit or needs special operational c
 - **A tree's count lives in memory** — a resumed run starts its tree again from the budget its journal recorded, so what its siblings spent before the restart no longer counts against it.
 - **`maxNestedTokens: 0` sets no token limit** — the tree then meters no tokens and refuses no child for its token use; `maxTotalAgents` still bounds how many nested runs and `agent()` children it starts.
 - **A child in another process runs only in a tree with no token limit** — its token usage cannot be read here, so a tree with a token limit refuses it, and a deployment whose workflow children run on a remote subagent provider sets `maxNestedTokens: 0`, which turns its token limit off. The subagent seam says a child is remote only once its provider has started it, so the refusal disposes a child that has already started: the prompt the provider sent cannot be recalled, and what the child does between its start and its disposal is not stopped.
+- **A lapsed approval wakes its run only at the next scan** — an approval reads as `expired` from its deadline on without any write, so no `approval-store/changed` announces it; the run waiting on it is woken, and its `approval()` throws `ApprovalRefusedError`, when a process next mounts the engine beside the approval store and the agent registry. A decision another process makes in a shared store is likewise seen only at the next scan.
+- **A woken run's authority is the token delegated to it before** — when that token has expired (`approvalWaitMs` may exceed the session token's lifetime) or was revoked, the run is resumed holding none, so where tool calls require a token every one in it and its children is refused.
 
 <a id="dev-note"></a>
 ### Dev Note
