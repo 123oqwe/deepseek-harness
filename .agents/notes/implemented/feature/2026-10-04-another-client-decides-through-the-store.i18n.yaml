@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-04-another-client-decides-through-the-store.md
-2026-10-04-another-client-decides-through-the-store.md: 2b95661471f8ebbad4f9d73c7dcecda0d33020e0
-2026-10-04-another-client-decides-through-the-store.zh.md: 8c8b849d0b7e5e5e2e9757632bd314d5fe60563c
+2026-10-04-another-client-decides-through-the-store.md: 0b44b95648da70fe79bdf3a064536b60fc250c91
+2026-10-04-another-client-decides-through-the-store.zh.md: 07772c3438879cce70113c186f436dc466870f93

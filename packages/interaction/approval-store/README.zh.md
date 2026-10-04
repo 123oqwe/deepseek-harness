@@ -51,7 +51,7 @@ kind: "package-reference"
 <a id="known-limitations-and-deferred-work"></a>
 ## 已知限制与延期工作
 
-- Run 还不能在 `waiting_for_approval` 里等待，SDK 的 list 与 decide 请求也还不在线上；它们随 Use 阶段后续的提交到来。
+- Run 还不能在 `waiting_for_approval` 里等待；它随 Use 阶段后续的一次提交到来。
 - 另一个进程在共享的 `approvals.sqlite` 中做出的转移不会在本进程宣布；下次读取时才看得到。
 - 不发布运行时不变式伴随包：在 Use 阶段把会话日志写在它旁边之前，存储是审批状态的唯一记录，所以还没有两个可能各执一词的观察；届时再考虑。
 

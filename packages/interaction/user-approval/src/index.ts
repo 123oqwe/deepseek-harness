@@ -66,6 +66,7 @@ export type { ApprovalOutcome } from './types.ts'
 export type { ApprovalConflict } from '@deepseek-ai/dsh-approval-store'
 export {
   approvalViewerOf,
+  approvalViewerOfIdentity,
   consumeApprovalAtDispatch,
   consumeRecordedApproval,
   recordApprovalOutcome,

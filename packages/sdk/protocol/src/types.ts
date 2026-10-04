@@ -322,11 +322,12 @@ export interface HumanQuestionResult {
 /**
  * One approval as the SDK carries it (Epic P2-07 validation[2]): enough for a
  * client that reconnects to list what still waits and decide it against the
- * revision it read. The approval states are `@deepseek-ai/dsh-approval-store`'s.
+ * revision it read. The approval states are `@deepseek-ai/dsh-approval-store`'s,
+ * read against the server's clock, so a lapsed approval arrives as `expired`.
  *
- * Not yet on the wire: the server answers `approval/list` and
- * `approval/decide`, sends `approval.changed`, and registers their schemas in
- * the Use stage.
+ * Carried by `approval/list`, `approval/decide` and `approval.changed`. The
+ * server answers for the tenant its connection acts as and never for another:
+ * an approval of another tenant is `not-found`, as if it did not exist.
  */
 export interface SdkApproval {
   /** The approval request's id. */
@@ -378,9 +379,16 @@ export type ApprovalDecideResult =
   | { ok: true; approval: SdkApproval }
   | { ok: false; conflict: 'stale-revision' | 'invalid-transition' | 'expired' | 'not-found'; approval?: SdkApproval }
 
-/** `approval.changed` notification: one approval's new state, sent to every client of its tenant. */
+/**
+ * `approval.changed` notification: an approval was recorded or moved. Sent to
+ * a client that declared the `approval` capability, for every approval of the
+ * tenant its connection acts as that this runtime records or moves; a move
+ * another process makes in a shared store is seen on the next `approval/list`.
+ */
 export interface ApprovalChangedNotification {
-  /** The approval after its move. */
+  /** The session the approval was asked in, so clients that route by session deliver it. */
+  sessionId: string
+  /** The approval as recorded, or after its move. */
   approval: SdkApproval
 }
 
@@ -455,6 +463,7 @@ export interface HarnessSdkNotificationMap {
   'subagent.started': SubagentStartedNotification
   'subagent.finished': SubagentFinishedNotification
   'host.control': HostControlNotification
+  'approval.changed': ApprovalChangedNotification
 }
 
 /** The members, checked against the notification map at the literal. */
@@ -479,5 +488,7 @@ export const HOST_LEVEL_NOTIFICATION_METHODS: ReadonlySet<string> = new Set(HOST
 export interface HarnessSdkRequestMap {
   'initialize': { params: InitializeParams; result: InitializeResult }
   'session/prompt': { params: SessionPromptParams; result: SessionPromptResult }
+  'approval/list': { params: ApprovalListParams; result: ApprovalListResult }
+  'approval/decide': { params: ApprovalDecideParams; result: ApprovalDecideResult }
   'shutdown': { params: undefined; result: Record<string, never> }
 }

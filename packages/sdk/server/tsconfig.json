@@ -42,6 +42,12 @@
       "path": "../../interaction/control-plane"
     },
     {
+      "path": "../../interaction/approval-store"
+    },
+    {
+      "path": "../../interaction/user-approval"
+    },
+    {
       "path": "../../interaction/user-questions"
     },
     {

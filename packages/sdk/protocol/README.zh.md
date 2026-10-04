@@ -33,18 +33,21 @@ kind: "package-library"
 
 ### SDK 方法
 
-两个协议端共享同一套方法：三个客户端到服务端请求与四个服务端到客户端通知。
+两个协议端共享同一套方法：五个客户端到服务端请求与六个服务端到客户端通知。
 
 | 方向 | 方法 | 载荷类型 |
 |---|---|---|
 | client→server | `initialize` | `InitializeParams` → `InitializeResult` |
 | client→server | `session/prompt` | `SessionPromptParams` → `SessionPromptResult`（持久入队回执） |
+| client→server | `approval/list` | `ApprovalListParams` → `ApprovalListResult`（本连接租户的待决审批） |
+| client→server | `approval/decide` | `ApprovalDecideParams` → `ApprovalDecideResult`（一次比较并交换；其他租户的审批答 `not-found`） |
 | client→server | `shutdown` | 无参数 → `{}` |
 | server→client | `session.event` | `SessionEventNotification`（运行时内每个会话，不过滤） |
 | server→client | `session.status` | `SessionStatusNotification`（整个 agent（智能体）的 `running`/`idle` 转换） |
 | server→client | `subagent.started` | `SubagentStartedNotification` |
 | server→client | `subagent.finished` | `SubagentFinishedNotification`（仅进程内运行） |
 | server→client | `host.control` | `HostControlNotification`（主机全局停机；需申请，且是唯一不带 `sessionId` 的消息） |
+| server→client | `approval.changed` | `ApprovalChangedNotification`（以 `approval` 申请；只发本连接租户的审批） |
 
 `HarnessSdkRequestMap` 与 `HarnessSdkNotificationMap` 按方法名索引这些结构；包根与传输一起导出它们。
 

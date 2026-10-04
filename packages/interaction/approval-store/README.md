@@ -51,7 +51,7 @@ Nothing here enters a request, so provider cache reuse is unaffected. What a mod
 <a id="known-limitations-and-deferred-work"></a>
 ## Known Limitations and Deferred Work
 
-- A Run cannot yet wait in `waiting_for_approval`, and the SDK's list and decide requests are not on the wire; they arrive with the Use stage's later commits.
+- A Run cannot yet wait in `waiting_for_approval`; it arrives with a later Use-stage commit.
 - A move another process makes in a shared `approvals.sqlite` is not announced in this one; it is seen on the next read.
 - No runtime invariant companion is published: the store is the only record of an approval's state until the Use stage writes the session log beside it, so no two observations can disagree yet; one is reconsidered then.
 

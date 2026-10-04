@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-04-approvals-go-through-the-durable-queue.md
-2026-10-04-approvals-go-through-the-durable-queue.md: f1c6c82d307869f5ec603d2d74fa737e36f39d68
-2026-10-04-approvals-go-through-the-durable-queue.zh.md: 2401568569edcda0108858c67906adbaf782d47c
+2026-10-04-approvals-go-through-the-durable-queue.md: 5f5a953ef0424d4bebe6aca47af4e44d32fe53bc
+2026-10-04-approvals-go-through-the-durable-queue.zh.md: 782be1c13b9a1812bd4d76042fe82a8b30701aa7

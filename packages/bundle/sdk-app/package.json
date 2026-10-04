@@ -57,6 +57,10 @@
         "mode": "emit"
       },
       {
+        "name": "approval-store/changed",
+        "mode": "emit"
+      },
+      {
         "name": "control/state-changed",
         "mode": "emit"
       },
