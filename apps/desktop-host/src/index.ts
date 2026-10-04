@@ -27,6 +27,7 @@ import {
 } from '@deepseek-ai/dsh-app-boot'
 import { provideCmdline } from '@deepseek-ai/dsh-cmdline'
 import { DSH_LAUNCH_ENVIRONMENT_KEY } from '@deepseek-ai/dsh-launch-environment'
+import { sealTrustAnchors } from '@deepseek-ai/dsh-plugin-provenance'
 import { createTrustKernel, pinTrustKernel, type TrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import { DEVELOPMENT_PROFILE_KEY, endorseComposedDecision } from '@deepseek-ai/dsh-policy-enforcement'
 import type {} from '@deepseek-ai/dsh-api-gateway'
@@ -320,7 +321,12 @@ export async function runDesktopHost(
     provideCmdline(hostCtx, { args: [], exit: () => {} })
     // Never ctx.plugin(...): pinTrustKernel freezes the store entry so no plugin
     // can replace or delete-then-reprovide the kernel (Epic P0-02 must[2]/[3]).
-    if (kernel !== undefined) pinTrustKernel(hostCtx, kernel)
+    // Sealing its anchor set means no plugin can admit or withdraw a trust
+    // anchor on the kernel it reaches (Epic P1-02 must[3]), as in runProfile.
+    if (kernel !== undefined) {
+      pinTrustKernel(hostCtx, kernel)
+      sealTrustAnchors(kernel.signatureRoots)
+    }
     enforceTrustKernelPosture(hostCtx.get('trustKernel') !== undefined, insecure, undefined, 'dsh desktop')
     hostCtx.provide(DEVELOPMENT_PROFILE_KEY, development)
   })

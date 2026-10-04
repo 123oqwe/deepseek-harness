@@ -649,6 +649,9 @@ importers:
       '@deepseek-ai/dsh-launch-environment':
         specifier: workspace:^
         version: link:../../packages/util/launch-environment
+      '@deepseek-ai/dsh-plugin-provenance':
+        specifier: workspace:^
+        version: link:../../packages/plugin/plugin-provenance
       '@deepseek-ai/dsh-policy-enforcement':
         specifier: workspace:^
         version: link:../../packages/policy/policy-enforcement
