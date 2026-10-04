@@ -22,6 +22,13 @@ interface ToolOutputDefinition {
    * `undefined` persists no `meta` for that call.
    */
   presentationMeta?(args: unknown, value: JsonValue): JsonValue | undefined
+  /**
+   * How a successful body's execution nevertheless did not succeed (Epic
+   * P3-03), read from the value's structured fields only, never from the
+   * rendered content: a command that exited non-zero, timed out or was
+   * aborted. `undefined` records no outcome for that call.
+   */
+  outcome?(args: unknown, value: JsonValue): ExecutionOutcome | undefined
 }
 ```
 

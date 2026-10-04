@@ -62,7 +62,7 @@ interface WorkflowMeta {
 
 ## The terminal result: `WorkflowResult`
 
-The outcome of one run, resolved by `WorkflowRun.result`. `value` is the script's materialized return value — plain host-realm JSON data (`null` when the script returned nothing) — meaningful only for `completed`. `stopReason` is a CLOSED union (engine-owned; consumers may exhaust it): `completed` | `cancelled` | `error`. A non-`completed` reason carries the failure in `error`, and the consumer maps it to an `isError` tool result rather than reporting partial output as success.
+The outcome of one run, resolved by `WorkflowRun.result`. `value` is the script's materialized return value — plain host-realm JSON data (`null` when the script returned nothing) — meaningful only for `completed`. `stopReason` is a CLOSED union (engine-owned; consumers may exhaust it): `completed` | `cancelled` | `error` | `waiting_for_approval`. `cancelled` and `error` carry the failure in `error`, and the consumer maps it to an `isError` tool result rather than reporting partial output as success; `waiting_for_approval` carries the approval the run waits for in `waitingFor`.
 
 ```ts type-equiv
 /**
@@ -77,8 +77,10 @@ interface WorkflowResult {
   value: unknown
   /** Why the run settled. */
   stopReason: WorkflowStopReason
-  /** The failure message (present iff `stopReason` is not `completed`). */
+  /** The failure message (present iff `stopReason` is `cancelled` or `error`). */
   error?: string
+  /** The approval the run waits for (present iff `stopReason` is `waiting_for_approval`). */
+  waitingFor?: { readonly approvalId: string }
   /**
    * How many `agent()` calls the run accepted over its whole lifetime. On a
    * graceful settlement this is the script-side count (calls still queued for
