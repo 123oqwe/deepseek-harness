@@ -14,6 +14,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import { brandString } from '@deepseek-ai/dsh-brand'
+import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import type { ApprovalRecord, ApprovalStoreContract, RunId } from '@deepseek-ai/dsh-approval-store'
 import ApprovalStoreSqlitePlugin from '@deepseek-ai/dsh-approval-store/sqlite'
 import type { PrincipalId } from '@deepseek-ai/dsh-principal/types'
@@ -107,7 +108,7 @@ describe('P2-07 U1a: every ask goes through the durable queue', () => {
   it('records a bound ask before it is logged, and an allowed-once grant approves it without consuming it', async () => {
     const { ctx, store } = await mounted('allowed-once')
     const { agent, appended } = fakeAgent()
-    expect(await ctx.approval.request({ agent, toolName: 'fs.write', callId: 'call-1', binding: { inputs: inputs(), askedAtMs: Date.now() } }))
+    expect(await ctx.approval.request({ agent, toolName: 'fs.write', callId: ToolCallId('call-1'), binding: { inputs: inputs(), askedAtMs: Date.now() } }))
       .toBe('allowed-once')
     const bound = appended.find(event => event.type === 'approval/bound')
     expect(rowOf(store, agent, appended)).toMatchObject({
@@ -134,7 +135,7 @@ describe('P2-07 U1a: every ask goes through the durable queue', () => {
   it('consumes an unbound grant at once, under the digest of its tool and call', async () => {
     const { ctx, store } = await mounted('allowed-once')
     const { agent, appended } = fakeAgent()
-    expect(await ctx.approval.request({ agent, toolName: 'workspace-trust', callId: 'call-2' })).toBe('allowed-once')
+    expect(await ctx.approval.request({ agent, toolName: 'workspace-trust', callId: ToolCallId('call-2') })).toBe('allowed-once')
     expect(rowOf(store, agent, appended)).toMatchObject({ state: 'consumed', requestDigest: unboundRequestDigest('workspace-trust', 'call-2') })
     expect(appended.find(event => event.type === 'approval/decided')?.data).toMatchObject({ outcome: 'allowed-once' })
   })
