@@ -1,0 +1,53 @@
+# Test-only overlay over the SHIPPED headless profile for A-589 (P0-02 U-2
+# probe). The dsh-base layer owns the policy engine, the Cedar policy language
+# (baseline-permit + the safety-critical kernel hard-deny), the permission preset
+# risk policy, and the capability-token provider — the rows this probe depends
+# on — so this overlay mounts none of them. It turns off the rows that would run
+# a task of their own and keeps the session log uncompressed; the driver pins the
+# Trust Kernel in `prepare`, registers the keyless MockAdapter, creates the agent
+# after boot, and then builds the isolated subtree and dispatches.
+#
+# The `permission` config is restated in full (a config patch sets the whole
+# config) with one added rule — `a589-safety` → `safety-critical` — so the
+# forbidden fixture tool classifies into the kernel hard-deny band the base Cedar
+# policy forbids. Every other row is the shipped one.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- id: permission
+  config:
+    defaultPreset: workspace-write
+    presets:
+      read-only: { sandbox: read-only, approval: ask, approvalThreshold: destructive }
+      workspace-write: { sandbox: workspace-write, approval: ask, approvalThreshold: destructive }
+      danger-full-access: { sandbox: danger-full-access, approval: never, approvalThreshold: safety-critical }
+    riskRules:
+      - { domainTag: filesystem-read, riskClass: read }
+      - { domainTag: catalog-read, riskClass: read }
+      - { domainTag: session-state-read, riskClass: read }
+      - { domainTag: process-observe, riskClass: read }
+      - { domainTag: session-state-write, riskClass: local-reversible }
+      - { domainTag: context-inject, riskClass: local-reversible }
+      - { domainTag: filesystem-write, riskClass: internal-write }
+      - { domainTag: shell-execute, riskClass: internal-write }
+      - { domainTag: process-control, riskClass: internal-write }
+      - { domainTag: agent-spawn, riskClass: internal-write }
+      - { domainTag: agent-control, riskClass: internal-write }
+      - { domainTag: orchestration, riskClass: internal-write }
+      - { domainTag: network-fetch, riskClass: external-communication }
+      - { domainTag: network-search, riskClass: external-communication }
+      - { domainTag: a589-safety, riskClass: safety-critical }
