@@ -210,4 +210,18 @@ describe('dsh --profile web with the documented GitHub webhook patch, booted in-
     expect(actor).toBe(identity.principal?.id)
     expect(String(actor)).not.toMatch(/^anonymous:/)
   })
+
+  // PROBE — never merge: what the webhook session recorded, carried whole in the custom message.
+  it('PROBE: the webhook session records', () => {
+    const records = observation?.webhookLogs[0]?.records ?? []
+    const keep = /tool|assistant|error|refus|denied|model|step|turn\/end|approval|policy/u
+    const summary = {
+      logs: observation?.webhookLogs.length ?? null,
+      types: records.map(record => record.type),
+      detail: records.filter(record => keep.test(record.type)).map(record => ({
+        type: record.type, data: JSON.stringify(record.data ?? null).slice(0, 400),
+      })),
+    }
+    expect(false, `PROBE ${JSON.stringify(summary).slice(0, 12_000)}`).toBe(true)
+  })
 })
