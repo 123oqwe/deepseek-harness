@@ -53,8 +53,12 @@ function validateWorkflowEnd(trace: WorkflowTrace, result: WorkflowResultInfo, f
   if (!Number.isSafeInteger(result.agentsStarted) || result.agentsStarted < trace.starts) {
     fail('workflow/end agentsStarted must be a safe integer covering every observed agent start')
   }
-  if (result.stopReason === 'completed' ? result.error !== undefined : typeof result.error !== 'string') {
-    fail('workflow/end error must be absent exactly for completed runs')
+  const failed = result.stopReason === 'cancelled' || result.stopReason === 'error'
+  if (failed ? typeof result.error !== 'string' : result.error !== undefined) {
+    fail('workflow/end error must be present exactly for cancelled and failed runs')
+  }
+  if ((result.stopReason === 'waiting_for_approval') !== (result.waitingFor !== undefined)) {
+    fail('workflow/end waitingFor must be present exactly for a run waiting on an approval')
   }
 }
 

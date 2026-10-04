@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-`dsh-approval-store` 是 Epic P2-07 持久审批队列的契约：在一个回合或进程里提出的审批，可以在另一个回合或进程里被判定、至多消费一次，或者过期。`src/types.ts` 持有词汇表——审批的 id、它的范围（一个回合里的一次工具调用，或一个等待它的持久 Run）、六种状态、存储保存的记录（请求摘要、策略版本、actor、截止时间、租户），以及每个 provider 以 `ctx.approvalStore` 实现的存储操作。`src/transitions.ts` 持有每个 provider 都执行的判定：转移表、截止时间、租户隔离与比较并交换的写入。`src/sqlite.ts` 是 SQLite provider，以 `./sqlite` 导出，由它的插件发布为 `ctx.approvalStore`；目前还没有任何东西挂载它，它的消费方随后到来。
+`dsh-approval-store` 是 Epic P2-07 持久审批队列的契约：在一个回合或进程里提出的审批，可以在另一个回合或进程里被判定、至多消费一次，或者过期。`src/types.ts` 持有词汇表——审批的 id、它的范围（一个回合里的一次工具调用，或一个等待它的持久 Run）、六种状态、存储保存的记录（请求摘要、策略版本、actor、截止时间、租户），以及每个 provider 以 `ctx.approvalStore` 实现的存储操作。`src/transitions.ts` 持有每个 provider 都执行的判定：转移表、截止时间、租户隔离与比较并交换的写入。`src/sqlite.ts` 是 SQLite provider，以 `./sqlite` 导出，由它的插件发布为 `ctx.approvalStore`，`dsh-base` 挂载它。
 
 ## 目录
 
@@ -51,7 +51,7 @@ kind: "package-reference"
 <a id="known-limitations-and-deferred-work"></a>
 ## 已知限制与延期工作
 
-- Run 还不能在 `waiting_for_approval` 里等待；它随 Use 阶段后续的一次提交到来。
+- 只有 detached 的 workflow run 会持久等待，处于 `waiting_for_approval`（[`dsh-workflow-worker-thread`](../../workflow/workflow-worker-thread/README.zh.md)）；一个回合里的工具调用仍在提出它的那个回合里等待审批。
 - 另一个进程在共享的 `approvals.sqlite` 中做出的转移不会在本进程宣布；下次读取时才看得到。
 - 不发布运行时不变式伴随包：在 Use 阶段把会话日志写在它旁边之前，存储是审批状态的唯一记录，所以还没有两个可能各执一词的观察；届时再考虑。
 

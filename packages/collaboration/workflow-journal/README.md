@@ -14,6 +14,7 @@ kind: "package-reference"
 - [Completed is not the same as reusable](#completed-is-not-the-same-as-reusable)
 - [A changed script refuses the whole resume](#a-changed-script-refuses-the-whole-resume)
 - [Compaction keeps what cannot be regenerated](#compaction-keeps-what-cannot-be-regenerated)
+- [A run that waits records what resumes it](#a-run-that-waits-records-what-resumes-it)
 - [No closure is ever serialized](#no-closure-is-ever-serialized)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
@@ -44,6 +45,10 @@ A completed and **verified** step's inputs are recomputable from the steps that 
 Purity is deliberately not the gate. Every step this DSL journals is an `agent()` call classed `side-effecting`, so a pure-only compaction could never fire on a real journal. `verified` carries the meaning instead: a step is verified when a resume RECONCILED it — its effects confirmed in the effect ledger and every child it started accounted for — which is the same check that authorizes reusing its output.
 
 **Receipts are never dropped, from any entry.** A receipt is evidence that something happened outside this process, and nothing inside it can regenerate that. `retainsAllReceipts` is exported so a caller can check the property rather than take this page's word for it.
+
+## A run that waits records what resumes it
+
+When a run's script waits for an approval (Epic P2-07), the journal records it in `approvals`: the asking call's key, a digest of its request and of how many identical requests the run made before it; the approval's id in the durable approval queue; and the tenant and principal it was recorded as, which whichever process resumes the run reads and consumes it as. An approval is `waiting` until a resumed run consumes it and `consumed` after, so a later re-run of the same call continues without consuming it again. With the first approval the journal also records `start`, what the run was started with: its own session, its script, `meta`, `args`, per-run overrides and its agent's model route, because the run is resumed by a scheduler that holds no start request. The recorder continues both from a resume's seed, and compaction keeps both. `listJournals` lists the runs a directory holds a journal for, leaving out the ones set aside under `refused/` and a write still in flight, so a process that starts can find the runs left waiting.
 
 ## No closure is ever serialized
 

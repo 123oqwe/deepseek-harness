@@ -65,6 +65,8 @@ function statusFromStopReason(stopReason: WorkflowStopReason): WorkflowRunStatus
     case 'completed': return 'completed'
     case 'cancelled': return 'cancelled'
     case 'error': return 'failed'
+    /* v8 ignore next -- tool-workflow records the end of a foreground run only, and a foreground run never waits for an approval. */
+    case 'waiting_for_approval': return 'interrupted'
     /* v8 ignore next -- WorkflowStopReason is closed and every variant is handled above. */
     default: return stopReason satisfies never
   }

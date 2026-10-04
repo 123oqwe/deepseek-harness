@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-approval-store` is the contract of Epic P2-07's durable approval queue: an approval asked in one turn or process can be decided, consumed at most once, or expire in another. `src/types.ts` holds the vocabulary — the approval's id, its scope (a turn's tool call, or a durable Run that waits), its six states, the record a store keeps (request digest, policy version, actor, deadline, tenant) and the store operations every provider implements as `ctx.approvalStore`. `src/transitions.ts` holds the decisions every provider applies: the transition table, the deadline, tenancy and the compare-and-swap write. `src/sqlite.ts` is the SQLite provider, exported as `./sqlite` and published as `ctx.approvalStore` by its plugin; nothing mounts it yet, and its consumers follow.
+`dsh-approval-store` is the contract of Epic P2-07's durable approval queue: an approval asked in one turn or process can be decided, consumed at most once, or expire in another. `src/types.ts` holds the vocabulary — the approval's id, its scope (a turn's tool call, or a durable Run that waits), its six states, the record a store keeps (request digest, policy version, actor, deadline, tenant) and the store operations every provider implements as `ctx.approvalStore`. `src/transitions.ts` holds the decisions every provider applies: the transition table, the deadline, tenancy and the compare-and-swap write. `src/sqlite.ts` is the SQLite provider, exported as `./sqlite` and published as `ctx.approvalStore` by its plugin, which `dsh-base` mounts.
 
 ## Table of Contents
 
@@ -51,7 +51,7 @@ Nothing here enters a request, so provider cache reuse is unaffected. What a mod
 <a id="known-limitations-and-deferred-work"></a>
 ## Known Limitations and Deferred Work
 
-- A Run cannot yet wait in `waiting_for_approval`; it arrives with a later Use-stage commit.
+- Only a detached workflow run waits durably, in `waiting_for_approval` ([`dsh-workflow-worker-thread`](../../workflow/workflow-worker-thread/README.md)); a turn's tool call waits for its approval within the turn that asked.
 - A move another process makes in a shared `approvals.sqlite` is not announced in this one; it is seen on the next read.
 - No runtime invariant companion is published: the store is the only record of an approval's state until the Use stage writes the session log beside it, so no two observations can disagree yet; one is reconsidered then.
 

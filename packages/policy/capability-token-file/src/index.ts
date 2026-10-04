@@ -186,6 +186,12 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
    * filter still admits.
    */
   private readonly delegations = new Map<SessionId, { parent: SessionId; filter: ChildResourceFilter | undefined }>()
+  /**
+   * Resumed sessions that hold the delegated token recorded for them, or
+   * nothing ({@link adoptDelegatedToken}). Never issued a root and never
+   * re-derived: their launcher is gone, and a root would be wider.
+   */
+  private readonly adopted = new Set<SessionId>()
   private restored: CapabilityTokenService | undefined
 
   /**
@@ -234,6 +240,7 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
       this.sessionRoots.delete(agent.id)
       this.issuanceErrors.delete(agent.id)
       this.delegations.delete(agent.id)
+      this.adopted.delete(agent.id)
     }))
 
     yield () => {
@@ -244,6 +251,7 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
       this.sessionRoots.clear()
       this.issuanceErrors.clear()
       this.delegations.clear()
+      this.adopted.clear()
       this.restored = undefined
     }
   }
@@ -274,7 +282,9 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
     const now = Date.now()
     // One issuance at a time per session: a caller arriving while one is in
     // flight waits for it below rather than minting a second token.
-    const agent = this.unsettled.has(session) ? undefined : this.sessions.get(session)
+    // An adopted session holds what it held before its restart, or nothing:
+    // neither re-derived (its parent is gone) nor issued a root (wider).
+    const agent = this.unsettled.has(session) || this.adopted.has(session) ? undefined : this.sessions.get(session)
     const redelegated = agent === undefined ? undefined : this.redelegateIfNeeded(agent, now)
     if (redelegated !== undefined) {
       this.hold(session, redelegated)
@@ -474,6 +484,20 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
       this.issuanceErrors.set(childSession, error instanceof Error ? error.message : String(error))
       this.ctx.logger.error('capability-token-file: child %s got no delegated token: %s', childSession, String(error))
     })
+  }
+
+  /** @inheritdoc */
+  adoptDelegatedToken(session: SessionId): boolean {
+    this.adopted.add(session)
+    const recorded = this.service.delegatedTokenFor(session)
+    if (recorded === undefined || this.isRevoked(recorded) || recorded.token.expiresAt <= Date.now()) {
+      this.sessionTokens.delete(session)
+      this.issuanceErrors.set(session, `capability-token-file: the token delegated to session ${String(session)} before it was resumed expired, was revoked, or was never recorded, so it holds none`)
+      return false
+    }
+    this.sessionTokens.set(session, recorded)
+    this.issuanceErrors.delete(session)
+    return true
   }
 
   /**

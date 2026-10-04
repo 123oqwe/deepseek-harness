@@ -98,11 +98,33 @@ describe('workflow invariants', () => {
     const completed = await setup()
     completed.emit('workflow/start', info())
     expect(() => { completed.emit('workflow/end', info(), result({ error: 'unexpected' })) })
-      .toThrow(/absent exactly for completed/)
+      .toThrow(/present exactly for cancelled and failed/)
 
     const failed = await setup()
     failed.emit('workflow/start', info())
     expect(() => { failed.emit('workflow/end', info(), result({ stopReason: 'error' })) })
-      .toThrow(/absent exactly for completed/)
+      .toThrow(/present exactly for cancelled and failed/)
+  })
+
+  it('accepts a run that settles waiting on an approval, which names the approval and carries no error (Epic P2-07)', async () => {
+    const waiting = await setup()
+    waiting.emit('workflow/start', info())
+    waiting.emit('workflow/end', info(), result({ stopReason: 'waiting_for_approval', waitingFor: { approvalId: 'approval-1' } }))
+
+    const unnamed = await setup()
+    unnamed.emit('workflow/start', info())
+    expect(() => { unnamed.emit('workflow/end', info(), result({ stopReason: 'waiting_for_approval' })) })
+      .toThrow(/waitingFor must be present exactly for a run waiting/)
+
+    const erred = await setup()
+    erred.emit('workflow/start', info())
+    expect(() => {
+      erred.emit('workflow/end', info(), result({ stopReason: 'waiting_for_approval', waitingFor: { approvalId: 'approval-1' }, error: 'x' }))
+    }).toThrow(/present exactly for cancelled and failed/)
+
+    const stray = await setup()
+    stray.emit('workflow/start', info())
+    expect(() => { stray.emit('workflow/end', info(), result({ waitingFor: { approvalId: 'approval-1' } })) })
+      .toThrow(/waitingFor must be present exactly for a run waiting/)
   })
 })

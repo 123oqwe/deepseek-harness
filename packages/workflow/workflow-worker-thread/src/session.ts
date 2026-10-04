@@ -13,12 +13,15 @@
 
 import type { MessagePort } from 'node:worker_threads'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
+import { ApprovalRefusedError, WorkflowError, type ApprovalRefusal } from '@deepseek-ai/dsh-workflow'
 import { HostToWorkerType, WorkerToHostType } from './protocol.ts'
 import type { HostToWorkerMessage, WorkerToHostPayloads } from './protocol.ts'
 import { renderThrown } from './realm.ts'
 import { WorkflowExecution } from './runtime.ts'
 import type { ExecutionObserver } from './runtime.ts'
 import type {
+  ApprovalPort,
+  ApprovalWaitRequest,
   ChildHandle,
   ChildPort,
   ChildResult,
@@ -66,11 +69,13 @@ class RpcChildHandle implements ChildHandle {
  * book-keeping the session's message handler settles via the `onChild*`
  * entry points.
  */
-class ChildRpcBridge implements ChildPort {
+class ChildRpcBridge implements ChildPort, ApprovalPort {
   private nextCallId = 0
   private readonly pending = new Map<number, PendingChild>()
   /** Nested-run RPCs awaiting the host's single reply, by callId. */
   private readonly nested = new Map<number, PromiseWithResolvers<unknown>>()
+  /** Approval waits awaiting the host's reply, by callId; one that waits durably is never answered. */
+  private readonly approvalWaits = new Map<number, PromiseWithResolvers<void>>()
 
   constructor(private readonly post: Post) {}
 
@@ -114,6 +119,39 @@ class ChildRpcBridge implements ChildPort {
       ...request.onFailure === undefined ? {} : { onFailure: request.onFailure },
     })
     return entry.promise
+  }
+
+  /**
+   * Ask the host to wait for an approval (Epic P2-07). Shares the callId
+   * counter with the other RPCs, for the reason {@link startNested} gives.
+   * @param request - the asking call's identity and what it asks for.
+   * @returns resolves on a grant; rejects on a refusal or when this run cannot wait.
+   */
+  waitForApproval(request: ApprovalWaitRequest): Promise<void> {
+    this.nextCallId += 1
+    const callId = this.nextCallId
+    const entry = Promise.withResolvers<void>()
+    this.approvalWaits.set(callId, entry)
+    this.post(WorkerToHostType.ApprovalRequest, { callId, key: request.key, title: request.title })
+    return entry.promise
+  }
+
+  /** The approval was approved and consumed; releases the `waitForApproval` await. */
+  onApprovalGranted(callId: number): void {
+    this.approvalWaits.get(callId)?.resolve()
+    this.approvalWaits.delete(callId)
+  }
+
+  /** The approval was refused; the hook throws a catchable `ApprovalRefusedError`. */
+  onApprovalRefused(callId: number, approvalId: string, refusal: ApprovalRefusal): void {
+    this.approvalWaits.get(callId)?.reject(new ApprovalRefusedError(approvalId, refusal))
+    this.approvalWaits.delete(callId)
+  }
+
+  /** This run cannot wait for an approval; the hook throws. */
+  onApprovalUnavailable(callId: number, rendered: string): void {
+    this.approvalWaits.get(callId)?.reject(new WorkflowError(rendered, 'APPROVAL_UNAVAILABLE'))
+    this.approvalWaits.delete(callId)
   }
 
   /** The nested run returned a value; releases the `startNested` await. */
@@ -196,7 +234,7 @@ export async function runWorkerSession(port: MessagePort, init: WorkerInit): Pro
   let execution: WorkflowExecution
   try {
     execution = new WorkflowExecution(
-      init.meta, init.body, init.args, init.limits, observer, children, init.reusable ?? {}, init.reusableCalls,
+      init.meta, init.body, init.args, init.limits, observer, children, init.reusable ?? {}, init.reusableCalls, children,
     )
   } catch (error: unknown) {
     post(WorkerToHostType.Result, { result: { value: null, stopReason: 'error', error: renderThrown(error), agentsStarted: 0 } })
@@ -235,6 +273,15 @@ export async function runWorkerSession(port: MessagePort, init: WorkerInit): Pro
         break
       case HostToWorkerType.NestedRefused:
         children.onNestedRefused(message.callId, message.rendered)
+        break
+      case HostToWorkerType.ApprovalGranted:
+        children.onApprovalGranted(message.callId)
+        break
+      case HostToWorkerType.ApprovalRefused:
+        children.onApprovalRefused(message.callId, message.approvalId, message.refusal)
+        break
+      case HostToWorkerType.ApprovalUnavailable:
+        children.onApprovalUnavailable(message.callId, message.rendered)
         break
       /* v8 ignore next 2 -- closed engine-owned union; the arm only makes adding a message type a compile error */
       default:

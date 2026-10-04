@@ -49,7 +49,9 @@ kind: "package-reference"
 
 ### 运行会得到什么
 
-运行启动后，脚本正文在 worker 中以顶层 `await` 执行，并可使用钩子 `agent()`、`parallel()`、`pipeline()`、`phase()` 与 `log()`；`meta` 与 `args` 以普通 JSON 数据到达，绝不作为代码求值。每次 `agent()` 调用都会在配置的提供方下启动一个宿主侧 subagent，并以运行的父级作为每个子 agent（智能体）的父级。运行以脚本的最终 JSON 值结算；普通子 agent 失败会把 `agent()` 兑现为 `null`，由脚本处理。
+运行启动后，脚本正文在 worker 中以顶层 `await` 执行，并可使用钩子 `agent()`、`parallel()`、`pipeline()`、`phase()`、`log()` 与 `approval()`；`meta` 与 `args` 以普通 JSON 数据到达，绝不作为代码求值。每次 `agent()` 调用都会在配置的提供方下启动一个宿主侧 subagent，并以运行的父级作为每个子 agent（智能体）的父级。运行以脚本的最终 JSON 值结算；普通子 agent 失败会把 `agent()` 兑现为 `null`，由脚本处理。
+
+detached 运行里的 `await approval({ title })` 会等待有人判定（Epic P2-07）。这次调用以运行自己的会话身份在 `ctx.approvalStore` 中记录一个 run 范围的审批，在运行日志里记下是哪次调用提出的、运行以什么启动，随后运行以 `waiting_for_approval` 结算并带上 `waitingFor.approvalId`，交还它的 worker、租约与 agent。审批被判定后——本进程从 `approval-store/changed` 得知，之后启动的进程在审批存储与 agent 注册表都挂载后扫描本 home 的运行日志得知——引擎在运行自己的会话中恢复它，带上运行日志记下的模型路由和此前委派给它的 token（`ctx.capabilityTokens.adoptDelegatedToken`），重跑脚本并复用已完成的步骤。同一次调用随后以比较并交换消费已批准的审批，并以运行日志记下的租户与主体读取它，所以两个进程恢复同一个运行时，至多一个越过这次调用继续；被拒绝、被撤销、已过期或已被消费的审批会抛出 `ApprovalRefusedError`，其 `refusal` 指明是哪一种，由脚本捕获。在非 detached 的运行里，或没有挂载审批存储时，`approval()` 抛出 `APPROVAL_UNAVAILABLE`。`approvalWaitMs`（默认一天）设定新审批保持可判定的时长。
 
 格式错误的 meta 块、无法解析的正文、不可用的提供方路由或高于上限的单次运行上限，都会在 worker 存在之前被同步拒绝，调用方因此看到违规清单并可以修正调用。执行期间，钩子误用与超出上限会用致命工作流错误终止脚本。取消是有界的：忽略取消的脚本会在 `disposeGraceMs` 后被强制以取消状态结算，其 worker 被终止。
 
@@ -85,6 +87,7 @@ kind: "package-reference"
 | [`src/protocol.ts`](src/protocol.ts) | 带类型的宿主／worker 消息协议 |
 | [`src/meta.ts`](src/meta.ts) | `meta` 形状校验与规范化 |
 | [`src/session.ts`](src/session.ts) | 子 agent 运行在跨入 worker 前的投影与快照 |
+| [`src/approvals.ts`](src/approvals.ts) | 一次 `approval()` 调用的结果：记录 run 范围的审批并等待、消费已判定的审批，或拒绝 |
 | — | 不发布运行时不变式伴生入口；该进程边界实现不公开同进程事件关系；worker 协议与构建后 worker 测试对此提供覆盖。 |
 
 ### 运行顺序
@@ -184,6 +187,8 @@ kind: "package-reference"
 - **树的计数只在内存里**——恢复的运行从日志记下的预算重新开一棵树，所以重启之前兄弟们用掉的不再算在它头上。
 - **`maxNestedTokens: 0` 表示不设 token 上限**——这棵树不计 token，也不会因为 token 拒任何子；`maxTotalAgents` 照样限制它能起多少嵌套 run 与 `agent()` 子。
 - **跑在别的进程里的子只能在没有 token 上限的树里跑**——这里读不到它的 token 用量，所以有 token 上限的树会拒它；workflow 子跑在远程 subagent provider 上的部署，要把 `maxNestedTokens` 设为 0，token 上限也就随之关掉。subagent 接缝要等 provider 起了子之后才说出它是远程的，所以拒绝的是一个已经起了的子，并立刻 dispose：provider 已经送出的提示词收不回，它从起到 dispose 之间做的事也拦不住。
+- **过期的审批只在下次扫描时唤醒它的运行**——审批从截止时间起不经任何写入就读作 `expired`，所以没有 `approval-store/changed` 宣布它；要等某个进程下次在审批存储与 agent 注册表旁挂载引擎，等待它的运行才被唤醒，其 `approval()` 抛出 `ApprovalRefusedError`。另一个进程在共享存储中做出的判定，同样要到下次扫描才看得到。
+- **被唤醒运行的权限就是此前委派给它的 token**——该 token 已过期（`approvalWaitMs` 可以长于会话 token 的寿命）或已被撤销时，运行在不持有 token 的情况下恢复，所以在工具调用需要 token 的组合里，它和它的子 agent 里的每次工具调用都会被拒绝。
 
 <a id="dev-note"></a>
 ### 开发备注

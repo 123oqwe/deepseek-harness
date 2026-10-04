@@ -11,6 +11,8 @@ export type {
   ChildReceipt,
   JournalAdmission,
   JournalEntry,
+  JournaledApproval,
+  JournaledStart,
   PhaseName,
   RerunReason,
   ResumeAction,
@@ -23,7 +25,7 @@ export type {
   RunNesting,
   WorkflowJournal,
 } from './types.ts'
-export { readJournal, setJournalAside, writeJournal } from './store.ts'
+export { listJournals, readJournal, setJournalAside, writeJournal } from './store.ts'
 export { compactJournal, planResume, receiptsToReconcile, retainsAllReceipts } from './replay.ts'
 export type { PlannedStep, ResumePlan } from './replay.ts'
 export { createJournalRecorder } from './recorder.ts'

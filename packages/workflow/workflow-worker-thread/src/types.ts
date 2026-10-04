@@ -124,6 +124,32 @@ export interface ChildPort {
   startNested(request: NestedStartRequest): Promise<unknown>
 }
 
+/** What a script's `approval()` call asks the host to wait for (Epic P2-07 must[2]). */
+export interface ApprovalWaitRequest {
+  /** The asking call's identity: a digest of the request and of how many identical requests the script made before it. */
+  readonly key: string
+  /** What the approval is for, as the person deciding reads it. */
+  readonly title: string
+}
+
+/**
+ * The worker's channel to the host for `approval()` (Epic P2-07 must[2]).
+ * Separate from {@link ChildPort} so an execution built without it, as a unit
+ * case builds one, refuses `approval()` rather than failing to compile.
+ */
+export interface ApprovalPort {
+  /**
+   * Wait for an approval the host records in the durable approval queue.
+   * @param request - the asking call's identity and what it asks for.
+   * @returns resolves when the approval was approved and this run consumed
+   *   it; rejects with `ApprovalRefusedError` when it was denied, revoked,
+   *   lapsed or already consumed, and with a `WorkflowError` when this run
+   *   cannot wait at all. While nobody has decided it the promise does not
+   *   settle: the host settles the run as waiting and terminates the worker.
+   */
+  waitForApproval(request: ApprovalWaitRequest): Promise<void>
+}
+
 /** What a script's `workflow()` call asks the host to start (P4-09 must[0]/must[1]). */
 export interface NestedStartRequest {
   /** The definition's registered name, which the digest must resolve under. */

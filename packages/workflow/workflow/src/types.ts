@@ -58,9 +58,12 @@ export interface WorkflowMeta {
  * Why a run settled. CLOSED union (engine-owned, consumers may exhaust):
  * `completed` = the script ran to its final `return`; `cancelled` = the run
  * was cancelled (caller `cancel()`/signal); `error` = the script threw, a
- * fatal `WorkflowError` propagated, or the result failed materialization.
+ * fatal `WorkflowError` propagated, or the result failed materialization;
+ * `waiting_for_approval` = the script asked for an approval nobody has decided
+ * yet, so the run stopped, released its worker and lease, and resumes when the
+ * approval is decided (Epic P2-07).
  */
-export type WorkflowStopReason = 'completed' | 'cancelled' | 'error'
+export type WorkflowStopReason = 'completed' | 'cancelled' | 'error' | 'waiting_for_approval'
 
 /**
  * The outcome resolved by a live workflow run. `value` is
@@ -74,8 +77,10 @@ export interface WorkflowResult {
   value: unknown
   /** Why the run settled. */
   stopReason: WorkflowStopReason
-  /** The failure message (present iff `stopReason` is not `completed`). */
+  /** The failure message (present iff `stopReason` is `cancelled` or `error`). */
   error?: string
+  /** The approval the run waits for (present iff `stopReason` is `waiting_for_approval`). */
+  waitingFor?: { readonly approvalId: string }
   /**
    * How many `agent()` calls the run accepted over its whole lifetime. On a
    * graceful settlement this is the script-side count (calls still queued for
@@ -124,8 +129,10 @@ export interface WorkflowAgentEndInfo extends WorkflowAgentInfo {
 export interface WorkflowResultInfo {
   /** Why the run settled. */
   stopReason: WorkflowStopReason
-  /** The failure message (present iff `stopReason` is not `completed`). */
+  /** The failure message (present iff `stopReason` is `cancelled` or `error`). */
   error?: string
+  /** The approval the run waits for (see {@link WorkflowResult.waitingFor}). */
+  waitingFor?: { readonly approvalId: string }
   /** How many `agent()` calls the run accepted (see {@link WorkflowResult.agentsStarted}). */
   agentsStarted: number
 }

@@ -717,6 +717,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         description: 'Derive a child session\'s token from its parent\'s, under the parent\'s own delegation filter (P2-02 acceptance[0]: never wider than its parent).\n\nCalled from the child-composition path, which is the only place that KNOWS the filter — it is the delegating call\'s `toolFilter`, not anything the provider can observe. Starts the derivation and returns; the token settles before the child\'s first tool call because that call awaits whenSessionToken. A child with a derived token is never granted a root of its own.',
         parameters: [{ name: 'parentSession', description: 'the delegating parent\'s session.' }, { name: 'childSession', description: 'the child session receiving the derived token.' }, { name: 'filter', description: 'the parent\'s declared restriction on the child, or `undefined` for none.' }],
       },
+      {
+        signature: 'adoptDelegatedToken(session: SessionIdLike): boolean',
+        description: 'Hold, for a session resumed after its process ended, the delegated token recorded for it before (Epic P2-07: a waiting workflow run woken after a restart, whose launcher is gone). The SAME token, so its scope cannot widen and a revocation of its lineage still reaches it. The session is never issued a root and never re-derived: when the recorded token expired or was revoked, or none was recorded, it holds nothing and its tool calls are refused. Called before the session is resumed, so no on-demand issuance can run for it first.',
+        parameters: [{ name: 'session', description: 'the session about to be resumed.' }],
+        returns: 'whether the session now holds a token.',
+      },
     ],
   },
   {
@@ -7900,11 +7906,11 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'WorkflowResult',
-    declaration: 'export interface WorkflowResult {\n    value: unknown;\n    stopReason: WorkflowStopReason;\n    error?: string;\n    agentsStarted: number;\n}',
+    declaration: 'export interface WorkflowResult {\n    value: unknown;\n    stopReason: WorkflowStopReason;\n    error?: string;\n    waitingFor?: {\n        readonly approvalId: string;\n    };\n    agentsStarted: number;\n}',
   },
   {
     name: 'WorkflowResultInfo',
-    declaration: 'export interface WorkflowResultInfo {\n    stopReason: WorkflowStopReason;\n    error?: string;\n    agentsStarted: number;\n}',
+    declaration: 'export interface WorkflowResultInfo {\n    stopReason: WorkflowStopReason;\n    error?: string;\n    waitingFor?: {\n        readonly approvalId: string;\n    };\n    agentsStarted: number;\n}',
   },
   {
     name: 'WorkflowRun',
@@ -7924,7 +7930,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'WorkflowStopReason',
-    declaration: 'export type WorkflowStopReason = \'completed\' | \'cancelled\' | \'error\';',
+    declaration: 'export type WorkflowStopReason = \'completed\' | \'cancelled\' | \'error\' | \'waiting_for_approval\';',
   },
   {
     name: 'WorkItemId',
