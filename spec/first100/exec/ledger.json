@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-10-03T20:56:55.789Z",
-  "inputDigest": "07f39b77f5bd8f2f1607b00668477f651f03cf8df5a6fa10cd3cc22b7dfba746",
+  "lastUpdatedUtc": "2026-10-04T02:22:34.004Z",
+  "inputDigest": "70242b6cbf5a86b57018fff81d976b1d5be8aec51bc0d64013d8b3a17f02ed73",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -92,24 +92,30 @@
         },
         "F.2": {
           "status": "GREEN",
-          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
-          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "release/baseline-fingerprint restore contract, per class (P0-01 acceptance[2]) verify passes again once a tampered SDK protocol types file is restored",
             "release/baseline-fingerprint restore contract, per class (P0-01 acceptance[2]) verify passes again once a tampered known-event-types file is restored",
             "release/baseline-fingerprint restore contract, per class (P0-01 acceptance[2]) verify passes again once a tampered pnpm-lock.yaml is restored",
             "release/baseline-fingerprint restore contract, per class (P0-01 acceptance[2]) verify passes again once a drifted workspace package manifest is restored"
           ],
-          "capturedAtUtc": "2026-09-27T05:33:54.941Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:25.623Z"
         },
         "F.3": {
           "status": "GREEN",
-          "candidateSha": "7c9083d18eaeb829f70c157e0f165bde28e0c93b",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37148738514",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37148738514/first100-vitest-report-7c9083d18eaeb829f70c157e0f165bde28e0c93b/vitest-report.json",
-          "observationSha256": "aee79ccf312f3a71c6032278bf29a90aa91d744a1712c11634b0f5423379e21c",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P0-01 acceptance[0]: one checkout, one normalised fingerprint, whatever captures it two captures of one checkout under different pnpm versions write the same baseline",
             "P0-01 acceptance[0]: one checkout, one normalised fingerprint, whatever captures it a baseline captured under another pnpm version verifies without drift",
@@ -120,17 +126,17 @@
           "exitRecord": {
             "exitCode": 0,
             "unhandledErrors": 0,
-            "runId": "37148738514",
-            "sha256": "aee79ccf312f3a71c6032278bf29a90aa91d744a1712c11634b0f5423379e21c"
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
           },
-          "capturedAtUtc": "2026-10-03T20:56:48.251Z"
+          "capturedAtUtc": "2026-10-04T02:22:31.574Z"
         },
         "F.4": {
           "status": "GREEN",
-          "candidateSha": "7c9083d18eaeb829f70c157e0f165bde28e0c93b",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37148738514",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37148738514/first100-vitest-report-7c9083d18eaeb829f70c157e0f165bde28e0c93b/vitest-report.json",
-          "observationSha256": "aee79ccf312f3a71c6032278bf29a90aa91d744a1712c11634b0f5423379e21c",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P0-01 acceptance[1]: a change to a bundle row, a package manifest or a key schema fails verify with its minimal difference a bundle row whose name changed",
             "P0-01 acceptance[1]: a change to a bundle row, a package manifest or a key schema fails verify with its minimal difference a bundle row whose config changed",
@@ -150,17 +156,17 @@
           "exitRecord": {
             "exitCode": 0,
             "unhandledErrors": 0,
-            "runId": "37148738514",
-            "sha256": "aee79ccf312f3a71c6032278bf29a90aa91d744a1712c11634b0f5423379e21c"
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
           },
-          "capturedAtUtc": "2026-10-03T20:56:48.645Z"
+          "capturedAtUtc": "2026-10-04T02:22:31.919Z"
         },
         "F.5": {
           "status": "GREEN",
-          "candidateSha": "7c9083d18eaeb829f70c157e0f165bde28e0c93b",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37148738514",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37148738514/first100-vitest-report-7c9083d18eaeb829f70c157e0f165bde28e0c93b/vitest-report.json",
-          "observationSha256": "aee79ccf312f3a71c6032278bf29a90aa91d744a1712c11634b0f5423379e21c",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names it even without import.meta.main (red first for B-688) guard: the committed baseline records a different commit than this checkout, so verify has drift to find",
             "P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names it even without import.meta.main (red first for B-688) the dsh bin prints its version when imported with argv[1] naming it",
@@ -169,44 +175,44 @@
           "exitRecord": {
             "exitCode": 0,
             "unhandledErrors": 0,
-            "runId": "37148738514",
-            "sha256": "aee79ccf312f3a71c6032278bf29a90aa91d744a1712c11634b0f5423379e21c"
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
           },
-          "capturedAtUtc": "2026-10-03T20:56:48.991Z"
+          "capturedAtUtc": "2026-10-04T02:22:32.625Z"
         },
         "F.6": {
           "status": "GREEN",
-          "candidateSha": "7c9083d18eaeb829f70c157e0f165bde28e0c93b",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37148738514",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37148738514/first100-vitest-report-7c9083d18eaeb829f70c157e0f165bde28e0c93b/vitest-report.json",
-          "observationSha256": "aee79ccf312f3a71c6032278bf29a90aa91d744a1712c11634b0f5423379e21c",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P0-01 acceptance[1]: the key-schema set is derived from the SDK protocol package, not a fixed path list (red first for B-703) a key schema source file added to the protocol package after capture fails verify and names it"
           ],
           "exitRecord": {
             "exitCode": 0,
             "unhandledErrors": 0,
-            "runId": "37148738514",
-            "sha256": "aee79ccf312f3a71c6032278bf29a90aa91d744a1712c11634b0f5423379e21c"
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
           },
-          "capturedAtUtc": "2026-10-03T20:56:49.340Z"
+          "capturedAtUtc": "2026-10-04T02:22:32.967Z"
         },
         "F.7": {
           "status": "GREEN",
-          "candidateSha": "7c9083d18eaeb829f70c157e0f165bde28e0c93b",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37148738514",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37148738514/first100-vitest-report-7c9083d18eaeb829f70c157e0f165bde28e0c93b/vitest-report.json",
-          "observationSha256": "aee79ccf312f3a71c6032278bf29a90aa91d744a1712c11634b0f5423379e21c",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P0-01 acceptance[0]: the baseline fingerprint is identical on Linux and macOS for this commit a freshly captured Linux baseline byte-matches the macOS capture, and both record this commit"
           ],
           "exitRecord": {
             "exitCode": 0,
             "unhandledErrors": 0,
-            "runId": "37148738514",
-            "sha256": "aee79ccf312f3a71c6032278bf29a90aa91d744a1712c11634b0f5423379e21c"
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
           },
-          "capturedAtUtc": "2026-10-03T20:56:49.693Z"
+          "capturedAtUtc": "2026-10-04T02:22:33.301Z"
         }
       },
       "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
@@ -358,10 +364,10 @@
       "supplements": {
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
-          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P0-02 acceptance[2] -- in-process launch of each factory profile refuses to boot the factory acp profile in-process when the Trust Kernel fails to pin and DSH_TRUST_KERNEL_INSECURE is unset, before any config-tree entry mounts",
             "P0-02 acceptance[2] -- in-process launch of each factory profile refuses to boot the factory web profile in-process when the Trust Kernel fails to pin and DSH_TRUST_KERNEL_INSECURE is unset, before any config-tree entry mounts",
@@ -374,14 +380,20 @@
             "Trust Kernel runtime module src/index.ts (Epic P0-02 acceptance[1]) authors no model-facing text: src/ holds only index.ts and types.ts, and every string literal in src/index.ts is a service key, an algorithm id, a verdict or a caller-facing error, and the list is complete",
             "Trust Kernel runtime module src/index.ts (Epic P0-02 acceptance[1]) imports only node:crypto, @deepseek-ai/cordis and its own types, and exports no Cordis plugin entry"
           ],
-          "capturedAtUtc": "2026-09-27T14:07:24.090Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:16.662Z"
         },
         "U.2": {
           "status": "GREEN",
-          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
-          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) acceptance[2]: the shipped acp profile launched with DSH_TRUST_KERNEL_INSECURE set refuses to start before any config-tree entry mounts",
             "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) acceptance[2]: the shipped web profile launched with DSH_TRUST_KERNEL_INSECURE set refuses to start before any config-tree entry mounts",
@@ -396,14 +408,20 @@
             "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) acceptance[3]: an explicit development profile launched with DSH_TRUST_KERNEL_INSECURE set starts without a kernel, warns on stderr, and tells the model it runs insecure",
             "P0-02 on real `dsh --profile` launches: only an explicit development profile accepts DSH_TRUST_KERNEL_INSECURE (B-672) control: the same development profile launched with DSH_TRUST_KERNEL_INSECURE empty pins its kernel, prints no warning, and tells the model nothing of the kind"
           ],
-          "capturedAtUtc": "2026-09-27T14:07:23.423Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:27.531Z"
         },
         "U.3": {
           "status": "GREEN",
-          "candidateSha": "a510723a1926f44aad7c9884970a89bcd7aabadb",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36363020312",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36363020312/first100-vitest-report-a510723a1926f44aad7c9884970a89bcd7aabadb/vitest-report.json",
-          "observationSha256": "df8f203446e255c6368fa8309b83bd5a92166d7fe76a28a1eb97a88daf31cfb8",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) acceptance[2] (native): a tool call is refused and its body never runs",
             "P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) acceptance[2] (code-mode): a tool called from a run_code program never runs",
@@ -412,7 +430,13 @@
             "P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) acceptance[2] (direct call, B-675): a plugin calling ToolRuntime.execute, on behalf of the root agent or with no agent, is refused and the tool body never runs",
             "P0-02 on the shipped headless composition booted in-process: with no Trust Kernel pinned and no opt-in, dispatch is refused (B-672) control (direct call, B-675): with the kernel pinned, the call on behalf of the root agent presenting its session token runs the tool once"
           ],
-          "capturedAtUtc": "2026-09-28T02:03:00.695Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:27.880Z"
         },
         "U.4": {
           "status": "GREEN",
@@ -967,10 +991,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "94c8fc5c9f5171811b737527e4026cea6607d9ed",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37099515654",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37099515654/first100-vitest-report-94c8fc5c9f5171811b737527e4026cea6607d9ed/vitest-report.json",
-          "observationSha256": "3a136209a43b60d91e83d4a4b1a3b611f384396e7d18a01840e0967c7d2694f7",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "upper-cases the gate id and collapses non-alphanumeric runs to one underscore",
             "contributes no override when unset or empty",
@@ -996,10 +1020,10 @@
           "exitRecord": {
             "exitCode": 0,
             "unhandledErrors": 0,
-            "runId": "37099515654",
-            "sha256": "3a136209a43b60d91e83d4a4b1a3b611f384396e7d18a01840e0967c7d2694f7"
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
           },
-          "capturedAtUtc": "2026-10-03T06:53:53.645Z"
+          "capturedAtUtc": "2026-10-04T02:22:28.877Z"
         },
         "F": {
           "status": "GREEN",
@@ -1052,7 +1076,7 @@
           "capturedAtUtc": "2026-09-15T07:11:34.257Z"
         }
       },
-      "candidateSha": "94c8fc5c9f5171811b737527e4026cea6607d9ed",
+      "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -1570,10 +1594,10 @@
         },
         "P.1": {
           "status": "GREEN",
-          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
-          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: configuration the package binds, changed after collection, makes verify fail detects pnpm-lock.yaml content changed after collection, with .dsh/baseline.json itself untouched",
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[0]: configuration the package binds, changed after collection, makes verify fail detects a protocol schema file changed after collection, with .dsh/baseline.json itself untouched",
@@ -1586,7 +1610,13 @@
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[2] (narrowed): the result line of verify names the package path and its accepted status prints the package path and its accepted status on its result line (a package that verifies clean and is not accepted)",
             "release/collect-evidence + verify-evidence (Epic P0-07 P-stage) acceptance[2] (narrowed): the result line of verify names the package path and its accepted status prints the package path and its accepted status on its result line (an accepted package that fails verification)"
           ],
-          "capturedAtUtc": "2026-09-25T22:04:52.874Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:18.456Z"
         },
         "F.3": {
           "status": "GREEN",
@@ -1742,10 +1772,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "94c8fc5c9f5171811b737527e4026cea6607d9ed",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37099515654",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37099515654/first100-vitest-report-94c8fc5c9f5171811b737527e4026cea6607d9ed/vitest-report.json",
-          "observationSha256": "3a136209a43b60d91e83d4a4b1a3b611f384396e7d18a01840e0967c7d2694f7",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P0-08 redo: the keyless lanes of the harness capability benchmark run the shipped product R2: each lane declares exactly its fixed set of metrics not applicable and computes every other standard metric",
             "P0-08 redo: the keyless lanes of the harness capability benchmark run the shipped product R2: verification_precision and router_regret, which have no shipped producer, say so and report no number",
@@ -1759,17 +1789,17 @@
           "exitRecord": {
             "exitCode": 0,
             "unhandledErrors": 0,
-            "runId": "37099515654",
-            "sha256": "3a136209a43b60d91e83d4a4b1a3b611f384396e7d18a01840e0967c7d2694f7"
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
           },
-          "capturedAtUtc": "2026-10-03T06:53:57.542Z"
+          "capturedAtUtc": "2026-10-04T02:22:29.544Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "94c8fc5c9f5171811b737527e4026cea6607d9ed",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37099515654",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37099515654/first100-vitest-report-94c8fc5c9f5171811b737527e4026cea6607d9ed/vitest-report.json",
-          "observationSha256": "3a136209a43b60d91e83d4a4b1a3b611f384396e7d18a01840e0967c7d2694f7",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "enforcement: a unanimous sample does not report a zero-width interval",
             "enforcement: zero trials report full uncertainty rather than a confident zero",
@@ -1779,10 +1809,10 @@
           "exitRecord": {
             "exitCode": 0,
             "unhandledErrors": 0,
-            "runId": "37099515654",
-            "sha256": "3a136209a43b60d91e83d4a4b1a3b611f384396e7d18a01840e0967c7d2694f7"
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
           },
-          "capturedAtUtc": "2026-10-03T06:53:56.713Z"
+          "capturedAtUtc": "2026-10-04T02:22:29.211Z"
         }
       },
       "supplements": {
@@ -1806,7 +1836,7 @@
           "capturedAtUtc": "2026-10-03T06:54:00.864Z"
         }
       },
-      "candidateSha": "94c8fc5c9f5171811b737527e4026cea6607d9ed",
+      "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",
@@ -1851,10 +1881,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
-          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "accepts a fully-declared benign manifest",
             "rejects a manifest that is not an object",
@@ -1931,14 +1961,20 @@
             "rejects the undeclared-network fixture against the JSON Schema document",
             "agrees with the hand-written TypeScript validator on every fixture"
           ],
-          "capturedAtUtc": "2026-09-27T14:05:31.696Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:29.888Z"
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
-          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "builds an active permission state when observed registrations exactly match the declared manifest",
             "builds a quarantined permission state when the plugin registered a tool its manifest never declared",
@@ -1961,14 +1997,20 @@
             "decides active for the benign fixture compared against its own matching observation",
             "decides quarantined for the overprivileged fixture even when every declared capability was observed"
           ],
-          "capturedAtUtc": "2026-09-27T14:05:32.026Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:30.232Z"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "94c8fc5c9f5171811b737527e4026cea6607d9ed",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37099515654",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37099515654/first100-vitest-report-94c8fc5c9f5171811b737527e4026cea6607d9ed/vitest-report.json",
-          "observationSha256": "3a136209a43b60d91e83d4a4b1a3b611f384396e7d18a01840e0967c7d2694f7",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "composes every bundle layer unconditionally outside production, regardless of declaration",
             "excludes a missing-manifest bundle layer's patches in production, admitting only the clean manifest-v2 layer",
@@ -2019,10 +2061,10 @@
           "exitRecord": {
             "exitCode": 0,
             "unhandledErrors": 0,
-            "runId": "37099515654",
-            "sha256": "3a136209a43b60d91e83d4a4b1a3b611f384396e7d18a01840e0967c7d2694f7"
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
           },
-          "capturedAtUtc": "2026-10-03T06:53:59.767Z"
+          "capturedAtUtc": "2026-10-04T02:22:28.550Z"
         },
         "F": {
           "status": "GREEN",
@@ -2050,7 +2092,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "94c8fc5c9f5171811b737527e4026cea6607d9ed",
+      "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",
@@ -2150,10 +2192,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
-          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "records the unverified state a package shipping no provenance claim actually has, naming no-provenance-claim and carrying no package digest",
             "carries no trust anchor id on an unverified record, so an unverified package cannot be read as anchored to anything",
@@ -2166,7 +2208,13 @@
             "records the same manifest digest for two entries staged from byte-identical package.json files, so the digest does not depend on the temp path",
             "keeps every value of a signature and key fingerprint the package own dsh field carries out of the built permission state, checked over the whole serialized state and not only its top-level field names"
           ],
-          "capturedAtUtc": "2026-09-27T14:07:25.347Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:30.569Z"
         },
         "F": {
           "status": "GREEN",
@@ -2267,10 +2315,10 @@
         },
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "7c9083d18eaeb829f70c157e0f165bde28e0c93b",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37148738514",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37148738514/first100-vitest-report-7c9083d18eaeb829f70c157e0f165bde28e0c93b/vitest-report.json",
-          "observationSha256": "aee79ccf312f3a71c6032278bf29a90aa91d744a1712c11634b0f5423379e21c",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686) control: a clean, install-time-trusted package boots normally",
             "P1-02 on the shipped startup path: the next boot re-verifies the locked package and refuses a stale verdict (red first for B-686) acceptance[1]/[2]: a locked trusted package whose declaration file is gone at boot refuses to start, not silently carried as trusted",
@@ -2283,10 +2331,10 @@
           "exitRecord": {
             "exitCode": 0,
             "unhandledErrors": 0,
-            "runId": "37148738514",
-            "sha256": "aee79ccf312f3a71c6032278bf29a90aa91d744a1712c11634b0f5423379e21c"
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
           },
-          "capturedAtUtc": "2026-10-03T20:56:52.083Z"
+          "capturedAtUtc": "2026-10-04T02:22:33.635Z"
         },
         "U.2": {
           "status": "GREEN",
@@ -2310,10 +2358,10 @@
         },
         "U.3": {
           "status": "GREEN",
-          "candidateSha": "7c9083d18eaeb829f70c157e0f165bde28e0c93b",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37148738514",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37148738514/first100-vitest-report-7c9083d18eaeb829f70c157e0f165bde28e0c93b/vitest-report.json",
-          "observationSha256": "aee79ccf312f3a71c6032278bf29a90aa91d744a1712c11634b0f5423379e21c",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P1-02 must[3]: a mounted plugin cannot register a trust anchor on the pinned kernel, on the shipped launcher (red first for B-690) a plugin that reaches the pinned kernel through ctx and calls registerTrustAnchor is refused, not quietly allowed to modify the anchor set",
             "P1-02 must[3]: a mounted plugin cannot register a trust anchor on the pinned kernel, on the shipped launcher (red first for B-690) control: a kernel the host did not pin and seal still accepts registration, so the refusal is specific to the sealed pinned handle"
@@ -2321,13 +2369,13 @@
           "exitRecord": {
             "exitCode": 0,
             "unhandledErrors": 0,
-            "runId": "37148738514",
-            "sha256": "aee79ccf312f3a71c6032278bf29a90aa91d744a1712c11634b0f5423379e21c"
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
           },
-          "capturedAtUtc": "2026-10-03T20:56:52.838Z"
+          "capturedAtUtc": "2026-10-04T02:22:33.979Z"
         }
       },
-      "candidateSha": "7c9083d18eaeb829f70c157e0f165bde28e0c93b",
+      "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",
@@ -2502,10 +2550,10 @@
       "supplements": {
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36321096282/first100-vitest-report-278c53cfa17244af2c9cbc1d9b9d22f08cefaea2/vitest-report.json",
-          "observationSha256": "11fb12b7890fe8cbe644bfaf5d98b5b2ec372b646b3859412405852ea73c6cf3",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P1-03 Usage — a production boot consults the lock (must[2]) must[2]: a profile whose manifest digest has DRIFTED since the lock is refused at boot",
             "P1-03 Usage — a production boot consults the lock (must[2]) must[2]: the SAME profile with an untouched install is admitted and reports itself verified",
@@ -2517,7 +2565,13 @@
             "P1-03 Usage — the unlocked-profile policy comes from the bundles (must[2]) must[2]: a profile whose layers declare NO policy fails loudly, because the policy is required with no default",
             "P1-03 Usage — the lock `dsh plugin` writes is the lock boot reads (must[1] to must[2]) must[1]: a lock built from the real installed packages admits the boot it describes"
           ],
-          "capturedAtUtc": "2026-09-27T14:07:24.460Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:07.381Z"
         },
         "U.2": {
           "status": "GREEN",
@@ -2747,10 +2801,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "93d52207338066bd65494f6044f1ec5920d63cb8",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34652643903",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/34652643903/first100-evidence-93d52207338066bd65494f6044f1ec5920d63cb8/vitest-report.json",
-          "observationSha256": "3c15dc184ed1d2854dd1c87ad45663960fbf87da8553d79ead6000250dd3da09",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "offers the model neither the clone's executable skills nor its instructions while the workspace is untrusted",
             "offers the model both the clone's executable skills and its instructions once that same clone is granted trusted-execute",
@@ -2784,7 +2838,13 @@
             "drops a granted workspace to untrusted once the symlink it was opened through is retargeted to another directory",
             "drops a granted workspace to untrusted once the directory is moved out from under the path it was granted at"
           ],
-          "capturedAtUtc": "2026-09-12T00:13:05.463Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:11.010Z"
         },
         "F": {
           "status": "GREEN",
@@ -2835,33 +2895,45 @@
         },
         "U.3": {
           "status": "GREEN",
-          "candidateSha": "2daa2e484f74575e219e1401081fa43b3013019a",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35485497126",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-35485497126/vitest-report/first100-vitest-report-2daa2e484f74575e219e1401081fa43b3013019a/vitest-report.json",
-          "observationSha256": "ecaacc2228ed3dbd7f17c4de6619e5a17f3a165c2108c97bdc51fb93818e3c31",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "the sdk profile's project-trust boundary leaves an ungranted workspace's own AGENTS.md out of what the model is given",
             "the sdk profile's project-trust boundary reads it after `--trust-workspace=read` alone, with no overlay granting anything",
             "the sdk profile's project-trust boundary reads the same AGENTS.md once the host grants that directory"
           ],
-          "capturedAtUtc": "2026-09-23T19:00:41.164Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:14.814Z"
         },
         "U.4": {
           "status": "GREEN",
-          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
-          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P1-07 U.4 — `--trust-workspace=read` passes both parsers on the way to the trust plugin the launcher hands it to the headless app intact, and that app's own program accepts it on the second pass",
             "P1-07 U.4 — `--trust-workspace=read` passes both parsers on the way to the trust plugin the trust plugin on that headless command line asks for a trusted-read grant from the launch argument",
             "P1-07 U.4 — `--trust-workspace=read` passes both parsers on the way to the trust plugin the launcher hands it to the sdk app intact, and that app's own program accepts it on the second pass",
             "P1-07 U.4 — `--trust-workspace=read` passes both parsers on the way to the trust plugin the trust plugin on that sdk command line asks for a trusted-read grant from the launch argument"
           ],
-          "capturedAtUtc": "2026-09-27T05:34:06.069Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:15.558Z"
         }
       },
-      "candidateSha": "191aa1e502ff7e96a7ce306cdf57ccb742c745fb",
+      "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",
@@ -2955,10 +3027,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
-          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "mounts the healthy bundle and never the blocked one, and says why on stderr",
             "reads runtime API range, schema ranges, required/optional capabilities, and provider constraints from a real package.json",
@@ -2973,14 +3045,20 @@
             "must[2]: a graph-level requires/excludes contradiction over the sole provider returns the minimal unsat core, never a partition",
             "acceptance[0]: the same profile negotiated twice produces the same planId and the same partition"
           ],
-          "capturedAtUtc": "2026-09-24T12:21:20.493Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:05.849Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
-          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "fault[A]: two manifests sharing a pluginId fail loud, naming the duplicated id, rather than producing an order-dependent plan",
             "fault[A]: the provider stage inherits the same rejection, so no cascade ever runs over a graph with an ambiguous plugin identity",
@@ -2998,16 +3076,22 @@
             "characterization: the same property holds through the provider stage, so cascade and provider bindings are order-independent too",
             "characterization: solving the same graph twice is referentially stable — a solve never depends on state carried between calls"
           ],
-          "capturedAtUtc": "2026-09-24T12:21:20.987Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:06.232Z"
         }
       },
       "supplements": {
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/35993689868",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-lane-b/8b02fb82-3870-4132-a011-e227bf35804e/scratchpad/b2/first100-vitest-report-60e641150b95479becafde64de5c2776c8154807/vitest-report.json",
-          "observationSha256": "352423e59337f9a096bab2d5dc378c554b97fd114c2b1ebea84f96dc25b8b9e9",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P1-08 composition: seven declared bundles through one real `dsh --profile compat` launch acceptance[1]: a bundle missing a required capability that is not security-critical is never evaluated, and its exclusion is shown whole",
             "P1-08 composition: seven declared bundles through one real `dsh --profile compat` launch acceptance[1]: a bundle missing a required security-critical capability is never evaluated, and its exclusion is shown whole",
@@ -3017,10 +3101,16 @@
             "P1-08 composition: seven declared bundles through one real `dsh --profile compat` launch acceptance[2]: a bundle missing an optional capability is evaluated and runs, and the disabled capability is shown whole on the launch output",
             "P1-08 composition: seven declared bundles through one real `dsh --profile compat` launch control: a bundle declaring nothing it cannot get is evaluated and runs"
           ],
-          "capturedAtUtc": "2026-09-24T12:17:26.175Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:15.914Z"
         }
       },
-      "candidateSha": "60e641150b95479becafde64de5c2776c8154807",
+      "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -3095,10 +3185,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "c732e7c07331d3e298402b354a258c3a2aa10019",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36205389837",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36205389837/first100-vitest-report-c732e7c07331d3e298402b354a258c3a2aa10019/vitest-report.json",
-          "observationSha256": "52ddac59b8e9e76f5201f42d1e9117ddfed268c22ca6668e243a87aeb1cf3199",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "control: a single plugin claiming one uncontested, unreserved name boots and owns it",
             "validation[0]/gate: the two-plugin collision is rejected before the second plugin activates",
@@ -3133,7 +3223,13 @@
             "control: a dynamic package claiming a fresh, unreserved, uncontested name is still admitted",
             "gate: stopping a dynamic package leaves zero tools, services, and events behind for it"
           ],
-          "capturedAtUtc": "2026-09-26T01:33:04.015Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:16.268Z"
         },
         "F": {
           "status": "GREEN",
@@ -3158,17 +3254,23 @@
       "supplements": {
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "c732e7c07331d3e298402b354a258c3a2aa10019",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36205389837",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36205389837/first100-vitest-report-c732e7c07331d3e298402b354a258c3a2aa10019/vitest-report.json",
-          "observationSha256": "52ddac59b8e9e76f5201f42d1e9117ddfed268c22ca6668e243a87aeb1cf3199",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P1-09 ownership gate composition (U-stage) with a Loader in the tree, a fiber outside every Loader entry that writes itself a forged fiber.entry is still refused"
           ],
-          "capturedAtUtc": "2026-09-26T01:33:07.606Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:17.008Z"
         }
       },
-      "candidateSha": "c732e7c07331d3e298402b354a258c3a2aa10019",
+      "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -3271,10 +3373,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P1-10 must[0]: reading a plugin's declared migrations from its installed package takes the schema version from the declarations, never from the package version",
             "P1-10 must[0]: reading a plugin's declared migrations from its installed package carries each step's DECLARED reversibility, so must[2] can be reached",
@@ -3350,14 +3452,20 @@
             "P1-10 must[1]: the migration facet in this medium discards a snapshot without disturbing the live medium",
             "P1-10 must[1]: the migration facet in this medium snapshots a unit whose medium does not exist yet as a no-op"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:32.978Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:31.233Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P1-10 Fault — the module a plugin ships fault boundary 01 a migration module that THROWS on import is refused by name, not propagated",
             "P1-10 Fault — the module a plugin ships fault boundary 02 a module exporting `descriptor` but no `migrate` is refused for the half it is missing",
@@ -3375,7 +3483,13 @@
             "P1-10 Fault — a medium primitive that fails mid-transaction fault boundary 12 a materialize that fails leaves the live unit alone, having made no copy to strand",
             "P1-10 Fault — a medium primitive that fails mid-transaction fault boundary 15 a copy that EXISTS when a later primitive fails is discarded, not stranded"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:33.318Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:10.634Z"
         }
       },
       "supplements": {
@@ -3399,10 +3513,10 @@
         },
         "F.2": {
           "status": "GREEN",
-          "candidateSha": "7de79a1658bc4baff424522f433a02221fa462fb",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36264470501",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36264470501/first100-vitest-report-7de79a1658bc4baff424522f433a02221fa462fb/vitest-report.json",
-          "observationSha256": "57d97d2bab55b5f4e9c88414e96976efa572c2b52e08835de8e8523f7ad36357",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version control: an upgrade that is not killed leaves version 2 code and version 2 data, readable",
             "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version killed once the new code is installed and before the transaction starts, the rerun leaves code and data at one version",
@@ -3411,7 +3525,13 @@
             "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version killed once the switch is recorded and before the health check is, the rerun leaves code and data at one version",
             "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version killed once the upgrade is recorded as achieved, the rerun leaves code and data at one version"
           ],
-          "capturedAtUtc": "2026-09-26T19:54:59.310Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:22.823Z"
         },
         "U.1": {
           "status": "GREEN",
@@ -3434,7 +3554,7 @@
           "capturedAtUtc": "2026-10-03T20:56:50.282Z"
         }
       },
-      "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
+      "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",
@@ -3698,10 +3818,10 @@
         },
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "6bbc302797c3b62b3e7adf8421fd2473aee3ff85",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36232722555",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36232722555/first100-vitest-report-6bbc302797c3b62b3e7adf8421fd2473aee3ff85/vitest-report.json",
-          "observationSha256": "402153efc916046825dd8d41514fcd8f2723ab3b3711c59bc2ff5d4d6706b605",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "attaches the HOST USER as the root, and the first action is attributed to exactly that principal",
             "delegates ONE hop to the child, whose chain still roots at the same host user",
@@ -3711,7 +3831,13 @@
             "attributes every recorded action to the principal its own log attached, on all three surfaces",
             "names more than one principal across those attributions, so the join is not one constant satisfying itself"
           ],
-          "capturedAtUtc": "2026-09-26T10:40:22.827Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:15.179Z"
         },
         "U.4": {
           "status": "GREEN",
@@ -3808,44 +3934,44 @@
         },
         "U.8": {
           "status": "GREEN",
-          "candidateSha": "7c9083d18eaeb829f70c157e0f165bde28e0c93b",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37148738514",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37148738514/first100-vitest-report-7c9083d18eaeb829f70c157e0f165bde28e0c93b/vitest-e2e-acp.json",
-          "observationSha256": "a4ceb2bbb67198511568467ed196c64cba384da436504cc21a690d86a4c329b4",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-e2e-acp.json",
+          "observationSha256": "f325c655574eb0a31323aeb829637ea4ffae78dc9541c5167821adc718e79d5a",
           "expectCasesMatched": [
             "acp-agent over real stdio (no key required) P2-01 acceptance[0]: a launched acp session acts as the host user, attached once"
           ],
           "exitRecord": {
             "exitCode": 0,
             "unhandledErrors": 0,
-            "runId": "37148738514",
-            "sha256": "a4ceb2bbb67198511568467ed196c64cba384da436504cc21a690d86a4c329b4"
+            "runId": "37158956685",
+            "sha256": "f325c655574eb0a31323aeb829637ea4ffae78dc9541c5167821adc718e79d5a"
           },
-          "capturedAtUtc": "2026-10-03T20:56:55.367Z"
+          "capturedAtUtc": "2026-10-04T02:22:19.840Z"
         },
         "U.9": {
           "status": "GREEN",
-          "candidateSha": "7c9083d18eaeb829f70c157e0f165bde28e0c93b",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37148738514",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37148738514/first100-vitest-report-7c9083d18eaeb829f70c157e0f165bde28e0c93b/vitest-e2e-sdk-keyless-smoke.json",
-          "observationSha256": "6eb20b83ddfe8626064659bef296b4a1a7749a20104ca481823185f5cd057379",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-e2e-sdk-keyless-smoke.json",
+          "observationSha256": "82cb86bbeb6206f2942333f86a637f0ab164732642fdf2bce3004131bca30419",
           "expectCasesMatched": [
             "Python SDK dsh profile keyless smoke P2-01 acceptance[0]: a launched sdk session acts as the host user, attached once"
           ],
           "exitRecord": {
             "exitCode": 0,
             "unhandledErrors": 0,
-            "runId": "37148738514",
-            "sha256": "6eb20b83ddfe8626064659bef296b4a1a7749a20104ca481823185f5cd057379"
+            "runId": "37158956685",
+            "sha256": "82cb86bbeb6206f2942333f86a637f0ab164732642fdf2bce3004131bca30419"
           },
-          "capturedAtUtc": "2026-10-03T20:56:55.571Z"
+          "capturedAtUtc": "2026-10-04T02:22:20.075Z"
         },
         "U.10": {
           "status": "GREEN",
-          "candidateSha": "7c9083d18eaeb829f70c157e0f165bde28e0c93b",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37148738514",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37148738514/first100-vitest-report-7c9083d18eaeb829f70c157e0f165bde28e0c93b/vitest-e2e-workflow.json",
-          "observationSha256": "af24fbceb73ee2ce248dc64bf7d56a2925b79ca587bb1a20b2abc75442fb5f06",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-e2e-workflow.json",
+          "observationSha256": "6ac772fbc66cd0bc4e0b132fc1938d310183dd82697aae33f805ceeef13f14fe",
           "expectCasesMatched": [
             "dsh --profile web with the documented GitHub webhook patch, booted in-process through the launcher (no key required) control: the signed delivery is accepted and creates one webhook session whose first action manifest names an actor",
             "dsh --profile web with the documented GitHub webhook patch, booted in-process through the launcher (no key required) P2-01 acceptance[0]: an action a webhook delivery triggers traces to the integration ServicePrincipal the HMAC key stands for"
@@ -3853,10 +3979,10 @@
           "exitRecord": {
             "exitCode": 0,
             "unhandledErrors": 0,
-            "runId": "37148738514",
-            "sha256": "af24fbceb73ee2ce248dc64bf7d56a2925b79ca587bb1a20b2abc75442fb5f06"
+            "runId": "37158956685",
+            "sha256": "6ac772fbc66cd0bc4e0b132fc1938d310183dd82697aae33f805ceeef13f14fe"
           },
-          "capturedAtUtc": "2026-10-03T20:56:55.773Z"
+          "capturedAtUtc": "2026-10-04T02:22:26.521Z"
         }
       },
       "candidateSha": "6bbc302797c3b62b3e7adf8421fd2473aee3ff85",
@@ -4048,10 +4174,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34439518421",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-2d2e8f89ac/first100-evidence-2d2e8f89ac9cccff7d92f165b5436105986e6c11/vitest-report.json",
-          "observationSha256": "80d9eb727295cb43bedea8ee032942968f75a5653f9ffe25981cef8520d11f6f",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "must[3]: a scope requiring a capability token refuses a call that presents none, before the tool body runs",
             "control: the same call succeeds and reaches the tool body when an authorizing token is presented",
@@ -4086,38 +4212,13 @@
             "keeps the token out of the child session log and out of tool results",
             "keeps a continuable child able to act after its parent turn is cancelled"
           ],
-          "capturedAtUtc": "2026-09-10T05:32:56.399Z",
-          "admittedUnderRedRun": {
-            "runId": "34439518421",
-            "redSteps": [
-              {
-                "step": "Lint the files this program changed since the frozen baseline",
-                "failingCases": [
-                  "typescript(no-unnecessary-type-conversion) at packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38"
-                ],
-                "evidence": "× typescript(no-unnecessary-type-conversion): This type conversion does not change the type or value of the expression.\n     ╭─[packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts:395:38]",
-                "subjectPaths": [
-                  "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts"
-                ]
-              },
-              {
-                "step": "Recorded-session snapshots",
-                "failingCases": [
-                  "headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless"
-                ],
-                "evidence": "× replays cordis-inspect-jsdoc through dsh --profile headless 2954ms\n FAIL  snapshots/session/headless.snapshot.ts > headless recorded-session snapshots > replays cordis-inspect-jsdoc through dsh --profile headless\nAssertionError: cordis-inspect-jsdoc: session 0: expected '{\"type\":\"session\",\"version\":0,\"id\":\"{…' to be '{\"type\":\"session\",\"version\":0,\"id\":\"{…' // Object.is equality",
-                "subjectPaths": [
-                  "snapshots/session/cordis-inspect-jsdoc",
-                  "packages/collaboration/lease-contract/src/types.ts",
-                  "packages/collaboration/lease-contract/src/run-lease.ts"
-                ]
-              }
-            ],
-            "diagnosedCause": "Both red steps are P4-09's, and neither reaches an admitted epic's reality set. (1) An oxlint no-unnecessary-type-conversion at nested-run.spec.ts:395 is a lint defect in a P4-09 test file. (2) The cordis-inspect-jsdoc snapshot is stale because RunLeaseDenial gained holder: WorkerId | undefined when the resume guard extended the lease contract; that declaration text is model-visible and its refresh postdates the change. Both are fixed and refreshed in the next batch; P4-09 is NOT admitted on this run.",
-            "unrelatedBecause": "the epic's reality set (25 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts\",\"snapshots/session/cordis-inspect-jsdoc\",\"packages/collaboration/lease-contract/src/types.ts\",\"packages/collaboration/lease-contract/src/run-lease.ts\"]",
-            "admittedBy": "delegate guanjieqiao-92",
-            "diagnosedAtUtc": "2026-09-10T05:34:17.561Z"
-          }
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:09.930Z"
         },
         "F": {
           "status": "GREEN",
@@ -4196,24 +4297,30 @@
         },
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
-          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "BLOCKED-330: a call a revoked session token will refuse is not put to the operator",
             "BLOCKED-330: a call a revoked session token will refuse is refused as a revoked capability token and its body does not run",
             "BLOCKED-330 on the code-mode path: a call an expired session token will refuse is not put to the operator",
             "BLOCKED-330 on the code-mode path: a call an expired session token will refuse is refused as an expired capability token and its body does not run"
           ],
-          "capturedAtUtc": "2026-09-27T05:33:55.251Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:25.989Z"
         },
         "U.2": {
           "status": "GREEN",
-          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
-          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "BLOCKED-331 condition 1: a root token past its expiry is re-issued under the same policy control: the probe runs before the expiry, and the second turn starts after it",
             "BLOCKED-331 condition 1: a root token past its expiry is re-issued under the same policy after the expiry the probe runs and no result says the token has expired",
@@ -4233,10 +4340,16 @@
             "BLOCKED-331 condition 3, workflow half: the children of a detached workflow are re-derived when their tokens expire and never born expired the second workflow child, started after the root token expired, is not born expired: its probe runs and its token has not expired when it calls",
             "BLOCKED-331 condition 3, workflow half: the children of a detached workflow are re-derived when their tokens expire and never born expired guard: when each workflow child calls, its token is derived from the detached session token of that moment, which is derived from the root token of that moment, and neither outlives its parent"
           ],
-          "capturedAtUtc": "2026-09-27T05:34:05.239Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:26.325Z"
         }
       },
-      "candidateSha": "2d2e8f89ac9cccff7d92f165b5436105986e6c11",
+      "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -4316,10 +4429,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36072903015",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36072903015/first100-vitest-report-9a8c696b312913451ceb55414c5095e688dcfa93/vitest-report.json",
-          "observationSha256": "b8916b9e30a5457b396accccb85b808d725fae6d2c025a92cc301de49a923854",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P2-03 — every appended manifest carries its own position the first manifest is 1, and a second call in the same session is 2",
             "P2-03 — every appended manifest carries its own position a manifest precedes the tool/call it describes, which is what the position is for",
@@ -4328,7 +4441,13 @@
             "P2-03 Usage — every dispatched call is preceded by its own manifest acceptance[2]: an unclassifiable action reaches the LOG as highest-risk and approval-requiring, not merely as a return value",
             "P2-03 Usage — every dispatched call is preceded by its own manifest validation[0]: a deliberately created bypass — a tool/call with no manifest — is DETECTED by the same reading"
           ],
-          "capturedAtUtc": "2026-09-25T02:52:26.565Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:06.616Z"
         },
         "F": {
           "status": "GREEN",
@@ -4348,52 +4467,76 @@
       "supplements": {
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36072903015",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36072903015/first100-vitest-report-9a8c696b312913451ceb55414c5095e688dcfa93/vitest-report.json",
-          "observationSha256": "b8916b9e30a5457b396accccb85b808d725fae6d2c025a92cc301de49a923854",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "the sub-dispatch scheduler (native concurrency contract) P2-03 must[2] — every code-mode sub-dispatch is preceded by its manifest a manifest precedes each dispatch-start, and each names the sub-call that follows it",
             "the sub-dispatch scheduler (native concurrency contract) P2-03 must[2] — every code-mode sub-dispatch is preceded by its manifest the manifest records the code-mode origin and the highest-risk default, so the log says which path ran",
             "the sub-dispatch scheduler (native concurrency contract) P2-03 must[2] — every code-mode sub-dispatch is preceded by its manifest a dispatch abandoned before it starts writes NO manifest, so the log records no action that never happened"
           ],
-          "capturedAtUtc": "2026-09-25T02:52:27.029Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:06.997Z"
         },
         "U.2": {
           "status": "GREEN",
-          "candidateSha": "c732e7c07331d3e298402b354a258c3a2aa10019",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36205389837",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36205389837/first100-vitest-report-c732e7c07331d3e298402b354a258c3a2aa10019/vitest-report.json",
-          "observationSha256": "52ddac59b8e9e76f5201f42d1e9117ddfed268c22ca6668e243a87aeb1cf3199",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143) logs a real tool call whose manifest carries a non-empty idempotencyKey, actor and runId",
             "P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143) keys two calls in one session differently, so the key identifies the action and not the run"
           ],
-          "capturedAtUtc": "2026-09-26T01:32:57.158Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:07.727Z"
         },
         "U.3": {
           "status": "GREEN",
-          "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36072903015",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36072903015/first100-vitest-report-9a8c696b312913451ceb55414c5095e688dcfa93/vitest-report.json",
-          "observationSha256": "b8916b9e30a5457b396accccb85b808d725fae6d2c025a92cc301de49a923854",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143) logs the ATTACHED identity's run, not the session id wearing a RunId brand",
             "the sub-dispatch scheduler (native concurrency contract) P2-03 must[2] — every code-mode sub-dispatch is preceded by its manifest records the ATTACHED identity's run, so code mode cannot bypass the run attribution either (must[2])"
           ],
-          "capturedAtUtc": "2026-09-25T02:52:27.841Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:08.070Z"
         },
         "U.4": {
           "status": "GREEN",
-          "candidateSha": "c732e7c07331d3e298402b354a258c3a2aa10019",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36205389837",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36205389837/first100-vitest-report-c732e7c07331d3e298402b354a258c3a2aa10019/vitest-report.json",
-          "observationSha256": "52ddac59b8e9e76f5201f42d1e9117ddfed268c22ca6668e243a87aeb1cf3199",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143) logs EVERY must[0] field, so a reader with only the log can say what the action declared (§12.33)",
             "P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143) records whether the side-effect class was DECLARED, which the class alone cannot say (acceptance[2])"
           ],
-          "capturedAtUtc": "2026-09-26T01:32:57.707Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:08.481Z"
         },
         "U.5": {
           "status": "GREEN",
@@ -4411,22 +4554,28 @@
         },
         "U.6": {
           "status": "GREEN",
-          "candidateSha": "db7f3a63ad29a056aa40351b479f9487fba9460d",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36213775071",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36213775071/first100-vitest-report-db7f3a63ad29a056aa40351b479f9487fba9460d/vitest-report.json",
-          "observationSha256": "062d5540107a65559bbc4614ef4429c4809e192f6a7ed4175a164606c413c57d",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P2-03 acceptance[2] through the risk gate on the shipped headless profile at its default preset control: a probe declaring filesystem-read is allowed by the preset without an approval request, and runs",
             "P2-03 acceptance[2] through the risk gate on the shipped headless profile at its default preset a probe declaring no risk domain tags reaches an approval request, and is refused without running when the operator rejects it"
           ],
-          "capturedAtUtc": "2026-09-26T04:28:32.241Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:21.650Z"
         },
         "U.7": {
           "status": "GREEN",
-          "candidateSha": "9501e34f518251c5f33ab25eab3a22e908d36587",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36268793542",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36268793542/first100-vitest-report-9501e34f518251c5f33ab25eab3a22e908d36587/vitest-report.json",
-          "observationSha256": "dbd7550fdf781d40b7599415f2ff2de65f633838b57bf1f5d358cecb48ec70f6",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "BLOCKED-315 condition 1 on the native path: the manifest classifies a probe as the risk gate does a probe the gate classifies read is recorded classified, as read, and not requiring approval",
             "BLOCKED-315 condition 1 on the native path: the manifest classifies a probe as the risk gate does control: a probe the gate cannot classify is recorded unclassified and requiring approval",
@@ -4435,35 +4584,53 @@
             "BLOCKED-315 condition 1 on the code-mode path: approval for an unclassifiable probe, and the manifest as the risk gate classifies the code-mode manifest of a probe the gate classifies read is recorded classified, as read, and not requiring approval",
             "BLOCKED-315 condition 1 on the code-mode path: approval for an unclassifiable probe, and the manifest as the risk gate classifies control: the code-mode manifest of a probe the gate cannot classify is recorded unclassified and requiring approval"
           ],
-          "capturedAtUtc": "2026-09-26T22:35:29.245Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:23.219Z"
         },
         "U.8": {
           "status": "GREEN",
-          "candidateSha": "9501e34f518251c5f33ab25eab3a22e908d36587",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36268793542",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36268793542/first100-vitest-report-9501e34f518251c5f33ab25eab3a22e908d36587/vitest-report.json",
-          "observationSha256": "dbd7550fdf781d40b7599415f2ff2de65f633838b57bf1f5d358cecb48ec70f6",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P2-03 acceptance[2] × BLOCKED-294: an unclassifiable call nested through ToolRuntime.execute reaches an approval request control: the model's own call to the unclassifiable writer reaches an approval request and, rejected, does not run",
             "P2-03 acceptance[2] × BLOCKED-294: an unclassifiable call nested through ToolRuntime.execute reaches an approval request a plugin tool's nested call to the unclassifiable writer reaches an approval request before it runs and, rejected, does not run"
           ],
-          "capturedAtUtc": "2026-09-26T22:35:29.636Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:23.607Z"
         },
         "U.9": {
           "status": "GREEN",
-          "candidateSha": "9501e34f518251c5f33ab25eab3a22e908d36587",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36268793542",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36268793542/first100-vitest-report-9501e34f518251c5f33ab25eab3a22e908d36587/vitest-report.json",
-          "observationSha256": "dbd7550fdf781d40b7599415f2ff2de65f633838b57bf1f5d358cecb48ec70f6",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P2-03 acceptance[0] × BLOCKED-294: a plugin tool nests a write through ToolRuntime.execute under its inherited capability token control: the model's own write has its manifest appended before the file is written",
             "P2-03 acceptance[0] × BLOCKED-294: a plugin tool nests a write through ToolRuntime.execute under its inherited capability token the probe's body ran once and held the capability token it was admitted with",
             "P2-03 acceptance[0] × BLOCKED-294: a plugin tool nests a write through ToolRuntime.execute under its inherited capability token the nested write is refused, or its manifest is appended before the file is written"
           ],
-          "capturedAtUtc": "2026-09-26T22:35:29.939Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:24.007Z"
         }
       },
-      "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
+      "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -4612,10 +4779,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "191aa1e502ff7e96a7ce306cdf57ccb742c745fb",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34992480706",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-first100-delegate/d3a94c8b-056a-44b5-9397-315997b4088a/scratchpad/artifacts/34992480706/first100-vitest-report-191aa1e502ff7e96a7ce306cdf57ccb742c745fb/vitest-report.json",
-          "observationSha256": "bbd33400cce2f168a3a0d55498dd3f2d462dc2699e47a49319c2b84a4a56724f",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P2-04 must[1]: every shipped tool declares its risk domain tags finds the shipped tool packages from the bundles, so the set cannot drift from what ships",
             "P2-04 must[1]: every shipped tool declares its risk domain tags leaves NO shipped tool undeclared, because an undeclared tool classifies by the unknown default",
@@ -4629,7 +4796,13 @@
             "P2-04: a composition with no policy service has no gate runs an undeclared tool when no permission service is composed, which is capability absence",
             "records an allow-by-preset decision, with its preset, where the manifest says approval was intrinsic"
           ],
-          "capturedAtUtc": "2026-09-15T17:17:48.865Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:10.283Z"
         },
         "F": {
           "status": "GREEN",
@@ -4799,7 +4972,7 @@
           "capturedAtUtc": "2026-09-19T15:40:28.511Z"
         }
       },
-      "candidateSha": "191aa1e502ff7e96a7ce306cdf57ccb742c745fb",
+      "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -4898,10 +5071,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36072903015",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36072903015/first100-vitest-report-9a8c696b312913451ceb55414c5095e688dcfa93/vitest-report.json",
-          "observationSha256": "b8916b9e30a5457b396accccb85b808d725fae6d2c025a92cc301de49a923854",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P2-05 acceptance[2]: losing the provider mid-session denies by name permits while the provider is mounted, and denies `policy-unavailable` after it unmounts",
             "P2-05 acceptance[2]: losing the provider mid-session denies by name records WHICH policy set it could not reach, so a replay can tell the two failures apart",
@@ -4915,7 +5088,13 @@
             "P2-05 must[0]: the capability token is a policy input, not a placeholder permits the same action when the policy accepts the token that was presented",
             "P2-05 must[0]: the capability token is a policy input, not a placeholder refuses when NO token was presented and the policy requires one"
           ],
-          "capturedAtUtc": "2026-09-25T02:52:31.654Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:13.415Z"
         },
         "F": {
           "status": "GREEN",
@@ -4937,10 +5116,10 @@
       "supplements": {
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36072903015",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36072903015/first100-vitest-report-9a8c696b312913451ceb55414c5095e688dcfa93/vitest-report.json",
-          "observationSha256": "b8916b9e30a5457b396accccb85b808d725fae6d2c025a92cc301de49a923854",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "forbids the kernel hard-deny band by POLICY, because the action's risk class now reaches Cedar",
             "permits the same action when its declared tag classifies below that band, so the rule is not a constant",
@@ -4949,7 +5128,13 @@
             "CHARACTERIZATION (BLOCKED-203): the posture Cedar sees is the constant `default`, whatever preset is mounted",
             "CHARACTERIZATION (BLOCKED-203): a rule naming `default` matches under the read-only preset, which is the defect stated positively"
           ],
-          "capturedAtUtc": "2026-09-25T02:52:29.717Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:11.366Z"
         },
         "U.3": {
           "status": "GREEN",
@@ -5006,16 +5191,22 @@
         },
         "U.5": {
           "status": "GREEN",
-          "candidateSha": "db7f3a63ad29a056aa40351b479f9487fba9460d",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36213775071",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36213775071/first100-vitest-report-db7f3a63ad29a056aa40351b479f9487fba9460d/vitest-report.json",
-          "observationSha256": "062d5540107a65559bbc4614ef4429c4809e192f6a7ed4175a164606c413c57d",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P2-05 acceptance[0]: every originator the shipped headless profile drives passes one enforcement point the root agent's own read appends one manifest and is decided once before it runs",
             "P2-05 acceptance[0]: every originator the shipped headless profile drives passes one enforcement point a child the shipped subagent tool delegates to has its read manifested and decided once before it runs",
             "P2-05 acceptance[0]: every originator the shipped headless profile drives passes one enforcement point a child a workflow script's agent() call starts has its read manifested and decided once before it runs"
           ],
-          "capturedAtUtc": "2026-09-26T04:28:29.831Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:20.900Z"
         },
         "U.6": {
           "status": "GREEN",
@@ -5032,31 +5223,43 @@
         },
         "U.8": {
           "status": "GREEN",
-          "candidateSha": "5f780c4d7ef3ed7f5090a70e060b4e37f4750876",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36225020149",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36225020149/first100-vitest-report-5f780c4d7ef3ed7f5090a70e060b4e37f4750876/vitest-report.json",
-          "observationSha256": "00be6090279a881dcfdb8d9044df837b3858580c2556ee1ee7496468773e33ce",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "BLOCKED-294: the public ToolRuntime.execute seam passes the one enforcement point control: the model's own read appends one manifest and is decided once, so this probe reads both",
             "BLOCKED-294: the public ToolRuntime.execute seam passes the one enforcement point a plugin calling the seam directly on behalf of an agent appends one manifest to that agent's session and is decided once",
             "BLOCKED-294: the public ToolRuntime.execute seam passes the one enforcement point a plugin calling the seam directly with no agent, as the tutorial teaches, is decided once"
           ],
-          "capturedAtUtc": "2026-09-26T08:06:44.915Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:22.434Z"
         },
         "U.7": {
           "status": "GREEN",
-          "candidateSha": "5f780c4d7ef3ed7f5090a70e060b4e37f4750876",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36225020149",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36225020149/first100-vitest-report-5f780c4d7ef3ed7f5090a70e060b4e37f4750876/vitest-report.json",
-          "observationSha256": "00be6090279a881dcfdb8d9044df837b3858580c2556ee1ee7496468773e33ce",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P2-05 acceptance[0]: an action a code-mode program originates passes the one enforcement point control: the model's own run_code call appends one native manifest and is decided once",
             "P2-05 acceptance[0]: an action a code-mode program originates passes the one enforcement point the program's read appends one code-mode manifest and the same audited enforcement point decides it once before it runs"
           ],
-          "capturedAtUtc": "2026-09-26T09:05:11.834Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:22.048Z"
         }
       },
-      "candidateSha": "9a8c696b312913451ceb55414c5095e688dcfa93",
+      "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -5105,10 +5308,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P2-06 must[1]: an approval is bound to the tuple the decider decided about admits the SAME tuple, which is the control every refusal below is measured against",
             "P2-06 must[1]: an approval is bound to the tuple the decider decided about digests the whole tuple, so a change in ANY bound field moves the digest",
@@ -5127,14 +5330,20 @@
             "P2-06 acceptance[1]: display may be redacted; the digest covers the real value refuses the second value against the first's binding, which is the same fact through the verifier",
             "P2-06 acceptance[1]: display may be redacted; the digest covers the real value digests a redacted PLACEHOLDER differently from the value it stands for"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:40.624Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:12.037Z"
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36062190705",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36062190705/first100-vitest-report-5b41cb717350500afe8aeff54c98c6ac21f124b7/vitest-report.json",
-          "observationSha256": "eb9b0b205bcf623806adf630fcf3bc795a0d40950c2a7b77a4a4144e70fdc786",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P2-06 must[1]: the service binds at the ASK, from the asker's clock records a binding when the asker supplies a tuple",
             "P2-06 must[1]: the service binds at the ASK, from the asker's clock records NOTHING when the asker supplies none, rather than an empty binding",
@@ -5150,14 +5359,20 @@
             "P2-06 acceptance[2]: the record is the one-to-one reference gives two asks two ids, so one action's two approvals stay distinguishable",
             "P2-06 acceptance[0]: what the record supports is a real re-verification refuses the substituted account when the recorded fields are read back from the log"
           ],
-          "capturedAtUtc": "2026-09-24T23:23:40.942Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:12.372Z"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "a510723a1926f44aad7c9884970a89bcd7aabadb",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36363020312",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36363020312/first100-vitest-report-a510723a1926f44aad7c9884970a89bcd7aabadb/vitest-report.json",
-          "observationSha256": "df8f203446e255c6368fa8309b83bd5a92166d7fe76a28a1eb97a88daf31cfb8",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P2-06 must[0]: the ACP decider is shown the action, not only its id carries all six fields into the standard's own toolCall projection",
             "P2-06 must[0]: the ACP decider is shown the action, not only its id shows the REDACTED arguments and never the raw ones",
@@ -5177,14 +5392,20 @@
             "P2-06 acceptance[2]: one dispatch records exactly ONE binding records ONE even when BOTH gates ask about the same dispatch",
             "P2-06 acceptance[2]: one dispatch records exactly ONE binding records NONE when the gate does not ask, so a binding never outlives its question"
           ],
-          "capturedAtUtc": "2026-09-28T02:03:01.076Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:12.725Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "a510723a1926f44aad7c9884970a89bcd7aabadb",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36363020312",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36363020312/first100-vitest-report-a510723a1926f44aad7c9884970a89bcd7aabadb/vitest-report.json",
-          "observationSha256": "df8f203446e255c6368fa8309b83bd5a92166d7fe76a28a1eb97a88daf31cfb8",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P2-06 validation[1]: a Unicode confusable is two values, not one refuses a DECOMPOSED spelling of the approved name, because the canonical form preserves the form it was given",
             "P2-06 validation[1]: a Unicode confusable is two values, not one refuses a HOMOGLYPH substitution, where the rendered name is the one a human read",
@@ -5203,16 +5424,22 @@
             "P2-06 acceptance[2]: the record names the DISPATCH, not only the tool REFUSES when two decisions about one tool name no dispatch, rather than settling the question by position",
             "P2-06 acceptance[2]: the record names the DISPATCH, not only the tool still ADMITS a single actionId-less decision, so the refusal above is about the ambiguity and not about the fallback"
           ],
-          "capturedAtUtc": "2026-09-28T02:03:01.601Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:13.077Z"
         }
       },
       "supplements": {
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "93a01a0112748bbca729a29e898d826ce79666ad",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36389363977",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36389363977/first100-vitest-report-93a01a0112748bbca729a29e898d826ce79666ad/vitest-report.json",
-          "observationSha256": "c2ab97f24720d6eb75ba45d1adec4b2a455ec97388bd34673402e3ad88f25314",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) control (native): an approved call whose declared file is unchanged runs once, and its approval is found by the call's action id (acceptance[2])",
             "P2-06 on the shipped headless profile: an approval bound to the file its action declares (BLOCKED-318) acceptance[0] (native): an approved call whose declared file changed after the ask does not run",
@@ -5237,13 +5464,13 @@
           "exitRecord": {
             "exitCode": 0,
             "unhandledErrors": 0,
-            "runId": "36389363977",
-            "sha256": "c2ab97f24720d6eb75ba45d1adec4b2a455ec97388bd34673402e3ad88f25314"
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
           },
-          "capturedAtUtc": "2026-09-28T08:15:25.920Z"
+          "capturedAtUtc": "2026-10-04T02:22:28.217Z"
         }
       },
-      "candidateSha": "a510723a1926f44aad7c9884970a89bcd7aabadb",
+      "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -5754,10 +5981,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36307835499",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36307835499/first100-vitest-report-29d8024c12f4d5a75c0141fe0254a9a3491dd5b9/vitest-report.json",
-          "observationSha256": "8555878cc4fd0eed6a60e9f6a16e013fdbd6b468ce4061e3ca0e305502e13a8e",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P3-01 must[1]: the request becomes a complete spec, with every default stated once answers all nine dimensions from a request that states none",
             "P3-01 must[1]: the request becomes a complete spec, with every default stated once carries a stated request through instead of the default, which is what makes a refusal reachable",
@@ -5785,7 +6012,13 @@
             "P3-01 acceptance[0]: the bound world reaches the policy question and the audit records the world, the provider and the confinement digest, which is what makes a swap auditable",
             "P2-05 must[0]: the request translation lets the SAME rule admit an action whose world is bound, with no change to the translation"
           ],
-          "capturedAtUtc": "2026-09-27T10:07:34.175Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:11.703Z"
         },
         "F": {
           "status": "GREEN",
@@ -5837,10 +6070,10 @@
         },
         "U.2": {
           "status": "GREEN",
-          "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36307835499",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36307835499/first100-vitest-report-29d8024c12f4d5a75c0141fe0254a9a3491dd5b9/vitest-report.json",
-          "observationSha256": "8555878cc4fd0eed6a60e9f6a16e013fdbd6b468ce4061e3ca0e305502e13a8e",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile control: a plugin provider that reports its own identity binds the call's world under its id and the digest it computed",
             "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[2] / BLOCKED-316 condition 3: a plugin provider whose handle claims local with a digest it did not compute is refused at binding — the tool does not run, the result names the mismatch, and nothing binds under the claim",
@@ -5852,10 +6085,16 @@
             "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[1] / BLOCKED-316 condition 2b: a requested world no provider can hold records exactly one visible action/world-unbound, kind unavailable, naming the unmet network dimension, and the tool runs under the absent fact a deployment rule can then refuse",
             "P3-01 acceptance[1] and [2]: the world a call is bound to on the shipped headless profile P3-01 acceptance[1] / BLOCKED-316 condition 2a: a deployment rule forbidding an absent world refuses the call (the tool does not run), and the same request with the same policy set MINUS that one rule runs the tool — so the rule is what denies, not the absence of a world"
           ],
-          "capturedAtUtc": "2026-09-27T10:06:08.135Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:27.197Z"
         }
       },
-      "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9",
+      "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -6516,10 +6755,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "4e932e474bb387c0e8780f33811bb33dfbdb929e",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36088846692",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36088846692/first100-vitest-report-4e932e474bb387c0e8780f33811bb33dfbdb929e/vitest-report.json",
-          "observationSha256": "06577a68e2201ac79cd8b46b68e236cf546b492481610ce706cc0260366eaabf",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "opens a durable Run for the agent session a real harness boot starts",
             "owns that Run with RUN_SERVICE_OWNER_ID, never the agent session that started it",
@@ -6540,7 +6779,13 @@
             "restores the Runs an earlier mount left behind, rather than starting empty",
             "reconciles a real WorkflowRunId into the Run event log's Workflow reference brand"
           ],
-          "capturedAtUtc": "2026-09-25T22:04:54.481Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:18.796Z"
         },
         "F": {
           "status": "GREEN",
@@ -6628,7 +6873,7 @@
           "capturedAtUtc": "2026-09-25T22:04:55.428Z"
         }
       },
-      "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9",
+      "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -7131,16 +7376,22 @@
       "supplements": {
         "C.1": {
           "status": "GREEN",
-          "candidateSha": "a510723a1926f44aad7c9884970a89bcd7aabadb",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36363020312",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36363020312/first100-vitest-report-a510723a1926f44aad7c9884970a89bcd7aabadb/vitest-report.json",
-          "observationSha256": "df8f203446e255c6368fa8309b83bd5a92166d7fe76a28a1eb97a88daf31cfb8",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P4-05 must[0]: `failed` is a state a run can actually reach ends a run whose last activity was an unrecovered error in `failed`, not `completed`",
             "P4-05 must[0]: `failed` is a state a run can actually reach still ends a run that did its work in `completed`, so the failure path is not simply the new default",
             "P4-05 must[0]: `waiting_human` is a state a run can actually reach holds the run in `waiting_human` WHILE an operator is being asked, and returns it to `running`"
           ],
-          "capturedAtUtc": "2026-09-28T02:03:01.991Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:09.573Z"
         },
         "U.2": {
           "status": "GREEN",
@@ -7203,32 +7454,44 @@
         },
         "U.6": {
           "status": "GREEN",
-          "candidateSha": "a510723a1926f44aad7c9884970a89bcd7aabadb",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36363020312",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36363020312/first100-vitest-report-a510723a1926f44aad7c9884970a89bcd7aabadb/vitest-report.json",
-          "observationSha256": "df8f203446e255c6368fa8309b83bd5a92166d7fe76a28a1eb97a88daf31cfb8",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P4-05 must[0]: an approval wait on the shipped headless profile is labelled waiting_human, apart from a tool wait"
           ],
-          "capturedAtUtc": "2026-09-28T02:03:02.367Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:19.208Z"
         },
         "U.7": {
           "status": "GREEN",
-          "candidateSha": "a510723a1926f44aad7c9884970a89bcd7aabadb",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36363020312",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36363020312/first100-vitest-report-a510723a1926f44aad7c9884970a89bcd7aabadb/vitest-report.json",
-          "observationSha256": "df8f203446e255c6368fa8309b83bd5a92166d7fe76a28a1eb97a88daf31cfb8",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P4-05 must[0]: `waiting_human` is a state a run can actually reach warns when the run cannot enter `waiting_human`, and still asks, so a refused advance is not silent"
           ],
-          "capturedAtUtc": "2026-09-28T02:03:02.739Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:19.603Z"
         },
         "U.8": {
           "status": "GREEN",
-          "candidateSha": "a510723a1926f44aad7c9884970a89bcd7aabadb",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36363020312",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36363020312/first100-vitest-report-a510723a1926f44aad7c9884970a89bcd7aabadb/vitest-report.json",
-          "observationSha256": "df8f203446e255c6368fa8309b83bd5a92166d7fe76a28a1eb97a88daf31cfb8",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "BLOCKED-332: a live agent whose Run was advanced to failed from inside a tool call, on the shipped headless profile control: the probe runs in a live Run, and the fail-run call advances the Run to failed",
             "BLOCKED-332: a live agent whose Run was advanced to failed from inside a tool call, on the shipped headless profile control: a turn after the Run is failed starts no step",
@@ -7236,19 +7499,31 @@
             "BLOCKED-332: a live agent whose Run was advanced to failed from inside a tool call, on the shipped headless profile condition 1: the call that did not start gets its own error result, named apart from fenced and lease-refused",
             "BLOCKED-332: a live agent whose Run was advanced to failed from inside a tool call, on the shipped headless profile condition 2: a turn stopped because the Run is terminal records the state it reached and the reason given for it"
           ],
-          "capturedAtUtc": "2026-09-28T02:03:03.195Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:24.814Z"
         },
         "U.9": {
           "status": "GREEN",
-          "candidateSha": "a510723a1926f44aad7c9884970a89bcd7aabadb",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36363020312",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36363020312/first100-vitest-report-a510723a1926f44aad7c9884970a89bcd7aabadb/vitest-report.json",
-          "observationSha256": "df8f203446e255c6368fa8309b83bd5a92166d7fe76a28a1eb97a88daf31cfb8",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "BLOCKED-332 on the shipped sdk profile: a client of the real host when the session's Run is advanced to failed control: the test tool advanced the Run, and the turn ended because the next step was refused",
             "BLOCKED-332 on the shipped sdk profile: a client of the real host when the session's Run is advanced to failed condition 3: a session.event or session.status the client receives carries the state failed and the reason the transition was given"
           ],
-          "capturedAtUtc": "2026-09-28T02:03:03.644Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:25.217Z"
         },
         "U.10": {
           "status": "GREEN",
@@ -7556,6 +7831,24 @@
             "P4-06 Provider: the bus is a mounted service opens a directory that does not exist yet, so a first boot is not a failure"
           ],
           "capturedAtUtc": "2026-09-24T23:23:51.304Z"
+        },
+        "U.5": {
+          "status": "GREEN",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
+          "expectCasesMatched": [
+            "P4-06 acceptance[0]: a settlement acked around a host crash still takes effect exactly once control: the settlement whose flush survived the crash is in the parent's record exactly once after the restart",
+            "P4-06 acceptance[0]: a settlement acked around a host crash still takes effect exactly once the settlement acked before its flush, then lost to the crash, still takes effect exactly once after the restart"
+          ],
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:32.261Z"
         }
       },
       "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
@@ -7699,10 +7992,10 @@
       "supplements": {
         "U.2": {
           "status": "GREEN",
-          "candidateSha": "6bbc302797c3b62b3e7adf8421fd2473aee3ff85",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36232722555",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36232722555/first100-vitest-report-6bbc302797c3b62b3e7adf8421fd2473aee3ff85/vitest-report.json",
-          "observationSha256": "402153efc916046825dd8d41514fcd8f2723ab3b3711c59bc2ff5d4d6706b605",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) takes a lease for every Run it opens, so the Run has an owner before it has work",
             "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) starts the lifecycle at queued, so a run that never steps is never running",
@@ -7721,7 +8014,13 @@
             "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) executes ZERO tools for an agent whose lease was REFUSED, and names the refusal apart from a fencing (§12.31-A)",
             "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) EXECUTES normally with NO Run Service mounted, so capability absence is not read as a refusal"
           ],
-          "capturedAtUtc": "2026-09-26T10:40:23.736Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:17.726Z"
         },
         "U.3": {
           "status": "GREEN",
@@ -7750,10 +8049,10 @@
         },
         "U.4": {
           "status": "GREEN",
-          "candidateSha": "dd9641528408fd6c9d8a95f110f7ead55964f851",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36317072734",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36317072734/first100-vitest-report-dd9641528408fd6c9d8a95f110f7ead55964f851/vitest-report.json",
-          "observationSha256": "f23f181edf8eba95db7fdbc25862d57c5868a17f0f4da6d6abf864812a0078db",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P4-07 on the shipped profile: a displaced host and a failing lease store a displaced host's session end leaves the Run's recorded outcome unchanged (acceptance[0])",
             "P4-07 on the shipped profile: a displaced host and a failing lease store the host that still holds the lease records the Run's outcome when its session ends (control)",
@@ -7761,7 +8060,13 @@
             "P4-07 on the shipped profile: a displaced host and a failing lease store a lease store that throws while the predecessor is read stops the agent's tool calls (acceptance[2])",
             "P4-07 on the shipped profile: a displaced host and a failing lease store the same tool call executes when the lease store is healthy (control)"
           ],
-          "capturedAtUtc": "2026-09-27T12:52:56.413Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:17.377Z"
         },
         "U.5": {
           "status": "GREEN",
@@ -7802,16 +8107,22 @@
         },
         "U.8": {
           "status": "GREEN",
-          "candidateSha": "6bbc302797c3b62b3e7adf8421fd2473aee3ff85",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36232722555",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36232722555/first100-vitest-report-6bbc302797c3b62b3e7adf8421fd2473aee3ff85/vitest-report.json",
-          "observationSha256": "402153efc916046825dd8d41514fcd8f2723ab3b3711c59bc2ff5d4d6706b605",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P4-07 must[1] / BLOCKED-265: the fencing check reaches a call this run has already started making refuses the PTC sub-call issued after another host took the Run, and ends the program",
             "P4-07 must[1] / BLOCKED-265: the fencing check reaches a call this run has already started making runs the same program to the end while this host still holds its Run",
             "P4-07 must[1] / BLOCKED-265: the fencing check reaches a call this run has already started making refuses the rest of a NATIVE batch once the takeover lands mid-batch, with the same sentence"
           ],
-          "capturedAtUtc": "2026-09-26T10:40:25.381Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:18.080Z"
         }
       },
       "candidateSha": "6bbc302797c3b62b3e7adf8421fd2473aee3ff85",
@@ -8894,16 +9205,22 @@
         },
         "U.7": {
           "status": "GREEN",
-          "candidateSha": "5d886b87cfca4610cb11110927c2546b8b7c084e",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36229132720",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36229132720/first100-vitest-report-5d886b87cfca4610cb11110927c2546b8b7c084e/vitest-report.json",
-          "observationSha256": "8b04a3611fae1de1783654dac85b112b9c3b2200273b8554f23a8ab40ec81cf3",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing control: without the deployment rule the probe runs once, and the kernel audits one permit for its call",
             "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing with the deployment rule, the kernel audits the call as denied by the shipped kernel-hard-deny policy, and the probe does not run",
             "P4-11 acceptance[0] on the shipped mount: a policy-denied tool call is not dispatched again and charges nothing the denied call is not dispatched again and charges the run retry budget nothing"
           ],
-          "capturedAtUtc": "2026-09-26T09:09:35.872Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:20.503Z"
         }
       },
       "candidateSha": "5d886b87cfca4610cb11110927c2546b8b7c084e",
@@ -8956,10 +9273,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
-          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reserves an unseen key, which is the only decision that authorizes sending",
             "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reserves again for a PREPARED entry at a HIGHER generation, because nothing left the harness yet",
@@ -8984,14 +9301,20 @@
             "P4-12 must[2]: an idempotency key is unique PER CLIENT, never globally carries the requesting principal into the reservation, which is what the store persists",
             "P4-12 must[2]: an idempotency key is unique PER CLIENT, never globally still refuses a second reservation WITHIN one principal, so scoping did not disable dedup"
           ],
-          "capturedAtUtc": "2026-09-27T05:50:26.334Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:13.755Z"
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
-          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P4-12 must[2]: the reservation is durable BEFORE the request is sent reports a SENT key as a duplicate after a restart, which is the crash this epic exists for",
             "P4-12 must[2]: the reservation is durable BEFORE the request is sent still reserves a PREPARED key after a restart at the NEXT generation, because nothing was sent",
@@ -9007,28 +9330,40 @@
             "P4-12 must[2]: the durable store keeps two principals apart (BLOCKED-142) keeps one key reserved by two principals as two rows, neither visible to the other",
             "P4-12 must[2]: the durable store keeps two principals apart (BLOCKED-142) refuses a transition presented under the WRONG principal, so a key cannot be moved from outside its scope"
           ],
-          "capturedAtUtc": "2026-09-27T05:50:26.662Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:14.101Z"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
-          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P4-12 must[4]: the dispatch path reserves before it runs a tool RUNS the tool once and confirms the reservation, so an ordinary call is unaffected",
             "P4-12 must[4]: the dispatch path reserves before it runs a tool REFUSES a second call whose key was already reserved, and the tool does NOT run",
             "P4-12 must[4]: the dispatch path reserves before it runs a tool runs BOTH calls when the arguments differ, so the key identifies the action and not the tool",
             "P4-12 must[4]: the dispatch path reserves before it runs a tool runs the tool when NO ledger is mounted, because absence is not an approval to record"
           ],
-          "capturedAtUtc": "2026-09-27T05:50:26.971Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:09.222Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
-          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects commits each effect exactly once across 10,000 random crashes, counted at the SERVICE",
             "P4-12 acceptance[0]: a crash campaign produces zero duplicate external effects commits each effect exactly once across the same campaign run UNFENCED, which is where at-least-once stands alone",
@@ -9038,7 +9373,13 @@
             "P4-12 validation: a provider that timed out AFTER committing leaves the effect committed once when the ledger is told the outcome is unknown",
             "P4-12 validation: a batch action is ledgered item by item reserves each item separately, so one item failing does not resend the others"
           ],
-          "capturedAtUtc": "2026-09-27T05:50:27.296Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:14.466Z"
         }
       },
       "supplements": {
@@ -9057,23 +9398,29 @@
         },
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
-          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "the sub-dispatch scheduler (native concurrency contract) P4-12 must[4] — a code-mode sub-dispatch reserves against the ledger like a native call (§12.35-2) RESERVES and CONFIRMS each sub-call, so the ledger records a code-mode effect as it records a native one",
             "the sub-dispatch scheduler (native concurrency contract) P4-12 must[4] — a code-mode sub-dispatch reserves against the ledger like a native call (§12.35-2) REFUSES a sub-call replayed by the SAME run_code call, so a retried program cannot repeat its effect",
             "the sub-dispatch scheduler (native concurrency contract) P4-12 must[4] — a code-mode sub-dispatch reserves against the ledger like a native call (§12.35-2) records an ERRORING sub-call as ambiguous, so a retry cannot repeat an effect that may have happened"
           ],
-          "capturedAtUtc": "2026-09-27T05:50:36.837Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:08.868Z"
         },
         "F.3": {
           "status": "GREEN",
-          "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36284563089",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36284563089/first100-vitest-report-4418e311253df568452146710c0f57e584d39b1f/vitest-report.json",
-          "observationSha256": "aeb6588a2db4804dbf8bd17fde637c72aa304fc19acb1938c097d23640c03914",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve the entry is ambiguous before the resolve, and an approved resolve moves it to confirmed, never prepared (acceptance[1])",
             "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve an approved resolve to compensated settles the entry, never prepared (acceptance[1])",
@@ -9082,21 +9429,33 @@
             "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve an approved resolve records who resolved the entry and to what",
             "P4-12 on the shipped profile: an ambiguous effect is reconciled by an operator resolve after an approved resolve, a fresh reserve on the same key is no longer refused as ambiguous (acceptance[1])"
           ],
-          "capturedAtUtc": "2026-09-27T05:50:37.150Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:24.406Z"
         },
         "F.4": {
           "status": "GREEN",
-          "candidateSha": "29d8024c12f4d5a75c0141fe0254a9a3491dd5b9",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36307835499",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36307835499/first100-vitest-report-29d8024c12f4d5a75c0141fe0254a9a3491dd5b9/vitest-report.json",
-          "observationSha256": "8555878cc4fd0eed6a60e9f6a16e013fdbd6b468ce4061e3ca0e305502e13a8e",
+          "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37158956685/first100-vitest-report-aa7dbb02db91841ae50e638706c346fed862cd4d/vitest-report.json",
+          "observationSha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623",
           "expectCasesMatched": [
             "P4-12 B-515 v2 (BLOCKED-311): the host resolves an ambiguous entry whose scope is not its own the host lists and resolves a child agent's ambiguous entry, and the resolution keeps the original (child) scope"
           ],
-          "capturedAtUtc": "2026-09-27T10:06:09.117Z"
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37158956685",
+            "sha256": "24aae1a16daac2ed299c30a6a5fc9b7c0c4705181c88c137c1a743e14ad7c623"
+          },
+          "capturedAtUtc": "2026-10-04T02:22:26.858Z"
         }
       },
-      "candidateSha": "4418e311253df568452146710c0f57e584d39b1f",
+      "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
