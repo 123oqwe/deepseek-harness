@@ -99,7 +99,7 @@ Values leaving the script pass through realm materialization, which accepts plai
 
 ### Cancellation and disposal
 
-`cancel()` records the first reason, tells the worker to cancel, aborts the one signal shared by every pending and published child, and arms the `disposeGraceMs` timer; worker hooks then throw `CANCELLED` at their next await. If the run remains unsettled at the deadline, the host resolves it as cancelled, pairs stranded child lifecycle events, and terminates the worker.
+`cancel()` records the first reason, tells the worker to cancel, aborts the one signal shared by every pending and published child, and arms the `disposeGraceMs` timer; worker hooks then throw `CANCELLED` at their next await. If the run remains unsettled at the deadline, the host resolves it as cancelled, pairs stranded child lifecycle events, and terminates the worker. A nested `workflow()` run is cancelled with its parent. A nested start the worker sends after the cancel is refused, and a nested run the cancel overtakes while it is starting is disposed and its call refused.
 
 `dispose()` is idempotent: it cancels the run, starts host-driven disposal immediately, waits for result and child quiescence up to the same grace, terminates the worker unconditionally, and performs a final survivor sweep. Per-child disposal is memoized so worker RPC, host cancellation, death cleanup, and public disposal all join one operation.
 

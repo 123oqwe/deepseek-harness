@@ -840,6 +840,13 @@ export class WorkerRun implements WorkflowRun {
    */
   private onNestedStart(message: WorkerToHostMessage<WorkerToHostType.NestedStart>): void {
     const { callId, onFailure } = message
+    // A worker can still ask after its run was cancelled, before it reads the
+    // Cancel message; a run started then would outlive its cancelled parent.
+    const admission = this.childAdmissionFailure()
+    if (admission !== undefined) {
+      this.post(HostToWorkerType.NestedRefused, { callId, rendered: `nested workflow "${message.name}" was not started: ${admission.rendered}` })
+      return
+    }
     if (onFailure !== undefined && !isChildFailurePolicy(onFailure)) {
       this.post(HostToWorkerType.NestedRefused, {
         callId,
@@ -869,9 +876,15 @@ export class WorkerRun implements WorkflowRun {
   private async nest(request: NestedStartRequest): Promise<unknown> {
     const nested = await this.nesting.startNested(request, this)
     if (!nested.started) throw new Error(nested.rendered)
-    // acceptance[1]: the parent's cancellation reaches the child. Registered
-    // before the await so a cancel arriving while the nested run is starting
-    // still finds something to cancel.
+    // acceptance[1]: the parent's cancellation reaches the child. The run is
+    // registered only after it has started, and cancel() reaches only the runs
+    // already registered, so a cancel that arrived while it was starting is
+    // checked here: the run is disposed and the call refused.
+    const admission = this.childAdmissionFailure()
+    if (admission !== undefined) {
+      await nested.run.dispose()
+      throw new Error(`nested workflow "${request.name}" was not started: ${admission.rendered}`)
+    }
     this.nestedRuns.add(nested.run)
     try {
       const result = await nested.run.result

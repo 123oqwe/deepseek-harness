@@ -99,7 +99,7 @@ kind: "package-reference"
 
 ### 取消与 dispose
 
-`cancel()` 记录第一个原因、通知 worker 取消、中止所有待处理与已发布子 agent 共享的唯一信号，并启动 `disposeGraceMs` 定时器；worker 钩子随后在下次 await 时抛出 `CANCELLED`。如果运行到期限仍未结算，宿主会将其以取消状态兑现、为悬空的子 agent 生命周期事件配对，并终止 worker。
+`cancel()` 记录第一个原因、通知 worker 取消、中止所有待处理与已发布子 agent 共享的唯一信号，并启动 `disposeGraceMs` 定时器；worker 钩子随后在下次 await 时抛出 `CANCELLED`。如果运行到期限仍未结算，宿主会将其以取消状态兑现、为悬空的子 agent 生命周期事件配对，并终止 worker。嵌套的 `workflow()` 运行随父运行一起取消。取消之后 worker 再发来的嵌套启动会被拒绝；启动期间被取消赶上的嵌套运行会被 dispose，这次调用也被拒绝。
 
 `dispose()` 是幂等的：它取消运行、立即启动宿主驱动的 dispose、在同一宽限期内等待结果与子 agent 完全停稳、无条件终止 worker，并执行最后一次幸存项扫描。每个子 agent 的 dispose 都会记忆化，使 worker RPC、宿主取消、死亡清理与公开 dispose 都汇入同一操作。
 

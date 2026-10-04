@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-10-04-a-nested-workflow-does-not-outlive-its-cancelled-parent.md
+2026-10-04-a-nested-workflow-does-not-outlive-its-cancelled-parent.md: 518dfe9204abde6e17f20ae839e284bb7bb67f6f
+2026-10-04-a-nested-workflow-does-not-outlive-its-cancelled-parent.zh.md: e0181f2d12b3c9556b9078d3b5472c5766590dba
