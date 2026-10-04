@@ -160,7 +160,6 @@ Approval prompts are disabled in this session: actions that require approval are
 
 - **请求只在尚未结束的轮次内有效**：在空闲时或轮次之间发起调用，会在审计前抛出异常；持久化的轮次外审批工作流仍属延期工作。
 - **仅存在一次性授权**：结果词汇包含 `allowed-once`，但不含 `allow-always` 或已记住的规则；会话策略只有 `ask`／`never`。
-- **出厂 profile 尚未挂载审批存储**：持久审批队列只作用于挂载了 `@deepseek-ai/dsh-approval-store/sqlite` 的组合。
 - **请求不携带工具参数**：应答者会看到工具名称、原因和可选调用 id；ACP（Agent Client Protocol）机器通道要求调用 id，并会委托不含 id 的请求。
 - **没有内置应答者**：无头或组合不完整的部署会返回 `unavailable` 并以拒绝方式关闭；服务自身绝不会提示人类。
 

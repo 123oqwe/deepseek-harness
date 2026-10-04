@@ -24,5 +24,5 @@ Epic P2-07 的 acceptance[1] 与 acceptance[2] 要求一项审批至多运行一
 
 ## 后果
 
-- 出厂 profile 尚未挂载存储。挂载与快照刷新、SDK 的列出与决定请求、Run 的 `waiting_for_approval`，依次在 Use 切片后续的提交中跟进。
+- 基于 `dsh-base` 的每个 profile 都在 `dshHomePath('approvals')` 挂载 SQLite 存储，共用同一个 home 的宿主共用同一个队列。SDK 的列出与决定请求、Run 的 `waiting_for_approval`，依次在 Use 切片后续的提交中跟进。
 - 撤销会在为会话创建的每个 agent 上运行，包括新会话，那时没有可撤销的审批。
