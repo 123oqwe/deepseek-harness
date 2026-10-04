@@ -1572,6 +1572,9 @@ importers:
       '@deepseek-ai/dsh-attachment-local':
         specifier: workspace:^
         version: link:../../attachment/attachment-local
+      '@deepseek-ai/dsh-attachment-security':
+        specifier: workspace:^
+        version: link:../../attachment/attachment-security
       '@deepseek-ai/dsh-baseline-preflight':
         specifier: workspace:^
         version: link:../../guard/baseline-preflight
@@ -12728,6 +12731,9 @@ importers:
       '@deepseek-ai/dsh-attachment-local':
         specifier: workspace:^
         version: link:../../packages/attachment/attachment-local
+      '@deepseek-ai/dsh-attachment-security':
+        specifier: workspace:^
+        version: link:../../packages/attachment/attachment-security
       '@deepseek-ai/dsh-authorization':
         specifier: workspace:^
         version: link:../../packages/credentials/authorization
