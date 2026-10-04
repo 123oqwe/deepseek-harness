@@ -286,6 +286,15 @@
       config:
         policy: !!js "(process.env.DSH_PERMISSION_MODE ?? 'workspace-write') === 'danger-full-access' ? 'never' : 'ask'"
 
+    # P2-07: the durable approval queue. The approval service records every
+    # ask here, and each dispatch consumes the approval it rests on, so an
+    # approval runs its action at most once and never after it expired or was
+    # revoked. Hosts that share one home share one queue.
+    - id: approval-store
+      name: '@deepseek-ai/dsh-approval-store/sqlite'
+      config:
+        directory: !!js dshHomePath('approvals')
+
     # P2-05: the policy engine the enforcement point queries. The enforcement
     # point is already wired into both dispatch paths, and it FAILS CLOSED —
     # with no engine mounted, `decisionWhenUnavailable` denies every action

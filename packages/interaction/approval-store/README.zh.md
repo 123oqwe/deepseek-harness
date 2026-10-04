@@ -49,8 +49,7 @@ kind: "package-reference"
 <a id="known-limitations-and-deferred-work"></a>
 ## 已知限制与延期工作
 
-- 还没有任何 profile 挂载 SQLite provider，所以每个出厂组合里都没有 `ctx.approvalStore`；Use 阶段把它挂进 `dsh-base`，放在 `approval` 旁边。
-- 还没有任何东西写穿到存储：`@deepseek-ai/dsh-user-approval` 仍在回合内等待每个判定，Run 还不能在 `waiting_for_approval` 里等待，SDK 的 list 与 decide 请求也还不在线上。它们随 Use 阶段到来。
+- Run 还不能在 `waiting_for_approval` 里等待，SDK 的 list 与 decide 请求也还不在线上；它们随 Use 阶段后续的提交到来。
 - 不发布运行时不变式伴随包：在 Use 阶段把会话日志写在它旁边之前，存储是审批状态的唯一记录，所以还没有两个可能各执一词的观察；届时再考虑。
 
 <a id="dev-note"></a>

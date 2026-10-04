@@ -49,8 +49,7 @@ Nothing here enters a request, so provider cache reuse is unaffected. What a mod
 <a id="known-limitations-and-deferred-work"></a>
 ## Known Limitations and Deferred Work
 
-- No profile mounts the SQLite provider yet, so `ctx.approvalStore` is absent from every shipped composition; the Use stage mounts it in `dsh-base` beside `approval`.
-- Nothing writes through to the store yet: `@deepseek-ai/dsh-user-approval` still awaits each decision inline, a Run cannot yet wait in `waiting_for_approval`, and the SDK's list and decide requests are not on the wire. They arrive with the Use stage.
+- A Run cannot yet wait in `waiting_for_approval`, and the SDK's list and decide requests are not on the wire; they arrive with the Use stage's later commits.
 - No runtime invariant companion is published: the store is the only record of an approval's state until the Use stage writes the session log beside it, so no two observations can disagree yet; one is reconsidered then.
 
 <a id="dev-note"></a>
