@@ -3,8 +3,10 @@ scenario: text-turn
 profile: sdk
 composition: sdk-upload
 recording: live
+# This scenario mounts a file:// test fixture with no Manifest v2, which plugin-manifest enforcement would refuse.
 environment:
   DSH_SNAPSHOT_FEEDBACK: '1'
+  DSH_FEATURE_GATE_PLUGIN_MANIFEST_ENFORCEMENT: shadow
 header:
   class: sdk-upload
   pin: true

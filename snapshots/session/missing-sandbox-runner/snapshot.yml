@@ -7,5 +7,7 @@ header:
   class: sandbox
 platform: posix
 permission: read-only
+# This scenario mounts a file:// test fixture with no Manifest v2, which plugin-manifest enforcement would refuse.
 environment:
   DSH_SNAPSHOT_MISSING_SANDBOX_RUNNER: '1'
+  DSH_FEATURE_GATE_PLUGIN_MANIFEST_ENFORCEMENT: shadow
