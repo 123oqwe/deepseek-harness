@@ -3380,6 +3380,8 @@ accept-blocked: P4-09
 accept-blocked: P6-07
 accept-blocked: P1-06
 accept-blocked: P1-07
+accept-blocked: P2-05
+accept-blocked: P4-12
 ACCEPT-BLOCKED-END -->
 
 
@@ -3418,6 +3420,8 @@ This is the single place to check at wave close. A lock means the ledger row can
 | **P6-07** | 损坏日志读取返回最小可恢复范围和证据 (acceptance[3]) | The real corrupted-log path is `session-persistence-jsonl/src/format.ts`'s `SessionLogScanner`: it records `this.issue` on an unparsable committed event but `finish()` never returns it, throwing only if a later row happens to carry a `turn/end`. A real corrupted read therefore returns the recoverable range **with the evidence dropped**. The Contract stage's `readSessionLogWithRepair` is a parallel surface that path never calls. | `format.ts`, in no P6-07 stage's scope and nowhere in the registry — being fixed as an independent defect. | ~~`finish()` returns the recorded issue and the real read path surfaces it.~~ **LIFTED 2026-09-04 by the delegate (`guanjieqiao-92`), verified independently, not accepted on report.** `finish()` now returns `corruption` when defined (`format.ts:500-509`), and `recordCorruption` keeps both the throwable and the structured form. Three cases confirmed present-and-passing in run 33890642950 @ `1e420e2f5b`, all in `session-persistence-jsonl/tests/jsonl.spec.ts` — the real `SessionLogScanner` path this lock named, **not** the `readSessionLogWithRepair` surface the lock explicitly excluded. The second case ("reports no corruption for a fully recovered log, so the field distinguishes damage from its absence") is what stops an implementation that always returns `undefined` from satisfying the first. **The lock is lifted; the row still needs its F stage before it can be ACCEPTED.** |
 | **P6-07** *(added 2026-09-25 — the 2026-09-04 row above is LIFTED and stays lifted; this lock is [BLOCKED-193](#blocked-193)'s, added by the delegate's ruling of 2026-09-25T22:14:10Z after A-414 found no live lock for P6-07.)* | Every clause; P6-07's sign-off was withdrawn under §12.75. | BLOCKED-193's census: of three parallel implementations, the shipped list and archive paths reach none of this epic's, and the clauses with no second implementation (soft delete, legal hold, hard erase, propagation) have no production consumer. | lane B: P6-07.U's rebuild under the delegate's OQ9–OQ13, after the current defect fixes and sign-off batch; its work order goes draft → verify → approve. | BLOCKED-193 closes: P6-07.U's rebuild under OQ9–OQ13 lands. |
 | **P1-07** *(added 2026-10-03; [BLOCKED-353](#blocked-353) withdrew the acceptance in the same commit.)* | `must[2]` (「信任升级必须由宿主用户交互完成并写审计。」) when the workspace contains $DSH_HOME: the model can grant a directory trust without the host user. | Lane A's red-first A-597 ④ v4 (run 37150723230 at `ec87a9c926`, base `7e35c3d9dd`): with $DSH_HOME inside the workspace, the model writes a `workspace-trust-local` grant into the harness home patch for a directory not yet resolved, and a later launch in that directory resolves it as trusted and gives its project `AGENTS.md` to the model with no host-user interaction (`P1-07.workspace-trust-self-grant.spec.ts:195`). The workspace-write writable roots do not exclude $DSH_HOME (`packages/sandbox/sandbox/src/roots.ts:52`), and `stateFor` binds a directory with no record from the configured grant (`packages/workspace/workspace-trust-local/src/index.ts:306-311`). | lane B, fix B-715 (`4f9df894ba`); lane A's case is the red-first one | BLOCKED-353's closing conditions: B-715 lands; A-597 ④ v4 is frozen as a P1-07 supplement and observed green on a full run at a candidate that carries B-715; the mutation that removes the exclusion turns it red; then a fresh 4.4 and a PASS sign-off. |
+| **P2-05** *(added 2026-10-04; [BLOCKED-355](#blocked-355) withdrew the acceptance in the same commit.)* | The purpose (「把所有执行路径统一到不可绕过的 permit/deny/require-approval 决策，并保证 deny 不能被后置插件翻转。」), `changes[1]` (「decision 由 TrustKernel enforce，插件只能增加约束或建议，不能扩大。」) and `acceptance[2]` (「Policy 服务不可被 Cordis replace/unmount。」): a plugin mounted after the kernel is pinned replaces the engine `enforceAction` uses, and a deployment deny becomes a permit. | Lane A's red-first A-588 v2 (run 37157397751 at `c0a81c5979`, base `7e35c3d9dd`): on the shipped headless launcher with a deployment `forbid`, a plugin that injects `policy` and `trustKernel` rewrites the `policy` store slot in place, and the forbidden call is dispatched and performed. `enforceAction` reads the engine from `ctx.get('policy')` (`packages/policy/policy-enforcement/src/index.ts:169`), the kernel only endorses the composed decision (`:138`), and the pin seals the `trustKernel` slot, not the `policy` one. | lane B, fix B-728 (option 甲, gate3 2026-10-03T22:40:21Z); lane A's A-588, A-588c and A-588d are the red-first cases | BLOCKED-355's closing conditions: B-728 lands; A-588 (routes a and b), A-588c (unmount) and A-588d are frozen as P2-05 supplements and observed green on a full run at a candidate that carries B-728; the mutation that removes the protection turns them red; then a fresh 4.4 and a PASS sign-off. |
+| **P4-12** *(added 2026-10-04; [BLOCKED-354](#blocked-354) withdrew the acceptance in the same commit.)* | `acceptance[1]` (「ambiguous 状态不盲目重试，进入 reconciliation。」): after a crash, a retry of a sent-but-unconfirmed effect under a new call id runs it a second time, and the stranded entry never reaches reconciliation. | Lane A's red-first A-610 (run 37170663623 at `bd9985ce13`, on `3640423fa8`): on the shipped headless launcher, after a SIGKILL while the charge tool hangs, the recovered session's model re-sends the same action under a new call id and the tool body runs a second time; `/resolve-effect` lists nothing and refuses to settle the `sent` entry. The idempotency key is derived from the call id (`packages/core/tools/src/external-effect.ts:151`, `:162`), and B-720 routes only a same-key replay to `ambiguous`. | lane B, fix B-726 (approach (a)+(d), gate3 2026-10-03T22:09:11Z and 2026-10-04T01:59:03Z); lane A's A-610 is the red-first case | BLOCKED-354's closing conditions: B-726 lands; A-610 is frozen as a P4-12 supplement and observed green on a full run at a candidate that carries B-726; the two mutations (remove (a); remove (d)) turn it red; then a fresh 4.4 and a PASS sign-off. |
 
 | **P6-01** | model-visible memory ⟺ logged projection event (`validation[3]`) | `memory/access` is declared in `SessionEventMap` but **absent from `packages/core/session/src/known-event-types.ts`**, and it carries no `ignorable: true`. Harmless while nothing emits it — but the moment the Usage stage appends it to a real JSONL log, replay refuses the unknown type. The stage would then be manufacturing the corrupt logs it is supposed to prevent. The Contract stage's own Dev Note flagged this as unregistered and it was never acted on. | P6-01's Usage stage, before it greens. | ~~The type is registered **and** a case proves the round trip: a log written with the event is read back by replay. Registration alone does not lift this lock — delegate condition, 2026-09-03.~~ **LIFTED 2026-09-04 by the delegate (`guanjieqiao-92`), verified independently.** Both halves hold: `memory/access` is registered at `packages/core/session/src/known-event-types.ts:43`, and the round-trip case ("a log written with memory/access is read back by replay, not refused") passes in run 33890642950 @ `1e420e2f5b`, asserting on the type list **replay returns**, not the one written. The registration half alone would not have lifted this. **The lock is lifted; the row still needs its F stage before it can be ACCEPTED.** |
 
@@ -3759,6 +3763,16 @@ P4-06 must[2] requires a consumer to deduplicate by message id and epoch. The ag
 - **Corrected (A-class, gate3 2026-09-27T09:3xZ).** A claimed key is consumed only once its message is recorded in the transcript. A turn that ends before recording it, by any path above, releases the claim, and the message is redelivered.
 - Red first: lane A's A-567. Fix: lane B's B-677. Lock (a) stays NOT lifted.
 - The same review's Tier-2 findings are registered and do not block: F3, a redelivery inside one turn claimed twice; F4, an uncaught `DuplicateArrivalError` stalling the drain; F5, lock (a)'s cases unfrozen, with the frozen U.3 green under the old semantics.
+
+**BLOCKED-088 addendum (2026-10-04, forward; P4-06 incremental review N2, gate3 2026-10-03T20:37:18Z): not every path above redelivers in the same process.**
+
+- The corrected paragraph above says that a turn that ends before recording its claim, "by any path above", releases the claim and the message is redelivered. That holds for an abort and for a pre-step refusal that names no message in `dropped`: the claim goes back to the front of `next-step` and is claimed again in this process (`packages/core/agent-loop/src/agent.ts:461`).
+- It does not hold for three paths, as the rulings after it built them:
+  - a turn that ends in an error: the claim is put back and removed again by a `canceled` splice (`:463`; B-677c `2f3f0c76a3`, gate3 2026-09-28T05:04:03Z);
+  - an ancestor's interruption or a user Stop, which cancels with `cancelClaim` while the claim is out (`:191`): the same cancellation (B-677 `9acd5ab43a` for the interruption, gate3 2026-09-28T04:21:27Z; B-677b `827ef97d20` for the Stop, 04:44:01Z);
+  - a pre-step refusal that names the message in `dropped`: it stays out (`:459`), and the turn's `blocked` end records who dropped it (gate3 2026-09-28T03:05:41Z).
+- A subagent settlement among those messages has no effect in this process, because its bus row was acked when it was delivered. B-676 delivers it again when the parent session next starts (`packages/subagent/subagent/src/continuation-activation.ts:261`, `:991`). A parent that never starts again never receives it.
+- The cancellations are deliberate: a turn that keeps failing, such as one with no model route, leaves no input pending. Nothing here reopens lock (a).
 
 ### BLOCKED-089 — "Same batch" is not "same transaction", and must[0] only reaches the first
 
@@ -10570,3 +10584,84 @@ The repository already records the problem and a version-independent guard: `scr
 2. A-597 ④ v4 is frozen as a P1-07 supplement and observed green on a full run at a candidate that carries B-715.
 3. The mutation that removes the exclusion turns it red.
 4. A fresh 4.4 and a PASS sign-off.
+
+**Addendum (2026-10-04, from the delegate's ruling at gate3 2026-10-03T22:29:00Z): closing condition 2 now names A-597 ④ v5.**
+- v4 was written on `7e35c3d9dd`, which does not carry B-715. Its cases first assert that the model's write landed in the harness home patch (`P1-07.workspace-trust-self-grant.spec.ts:154`, `:185` at `ec87a9c926`). With B-715 the write is refused, so on batch 28's tree v4 reds on that precondition before its subject: the fix working, not a regression.
+- v5 asserts the subject as the clause reads it: the directory does not become trusted without the host user, and its project `AGENTS.md` does not reach the model. It asserts only that the model issued the write.
+- Batch 28 carries neither v3 nor v4, nor the earlier diagnostic guard `8e95e96c5a` (gate3 2026-10-03T22:29:00Z, 22:35:25Z). v5 goes into batch 29, and P1-07's re-sign with it.
+- Condition 1's mechanism is frozen in 28r as P1-07 U-stage supplement 5 (A-597 ①②).
+
+### BLOCKED-354 — P4-12 acceptance[1] does not hold: after a crash, a new-call-id retry of a sent-but-unconfirmed effect runs it a second time, and the stranded entry never reaches reconciliation; P4-12 is withdrawn (duplicate external side effect, S10/S12)
+
+**Status:** OPEN (2026-10-04). Red first: A-610 (lane A, `bd9985ce13`). Fix: B-726 (lane B, approach (a)+(d), ruled 2026-10-03T22:09:11Z, refined 2026-10-04T01:59:03Z). Ruled by the delegate (first100-delegate-52).
+
+**The clause.**
+- P4-12 purpose: 「保证邮件、数据库、CRM、部署、支付模拟等外部写在崩溃重试中不会重复。」
+- P4-12 problem: 「在请求发送后、结果持久化前崩溃会产生不确定状态。」
+- P4-12 acceptance_criteria[1]: 「ambiguous 状态不盲目重试，进入 reconciliation。」
+
+**What was observed (narrow run 37170663623, `bd9985ce13` on `3640423fa8`, prediction `a-610-predictions.md` sha256 `9ce293d4`, matched in full).**
+- The shipped headless launcher and the A-600 crash harness. A charge tool declares an external effect. The first launch is SIGKILLed while the tool body hangs; the entry is `sent` before the kill, and the body ran once.
+- Mode resend-newid. After a recovery, the host lists entries waiting for reconciliation through `/resolve-effect`. The list reads 「No external effect is waiting for reconciliation.」 Then a scripted model re-sends the same action with a new call id. The tool body runs a second time (`toolRuns` 2), and the model gets `charged`.
+- Mode settle. `/resolve-effect <key> confirmed` is refused: 「… is sent, not ambiguous, so there is nothing to resolve.」
+- Control (different arguments, no crash): the call executes once. Green.
+- Mechanism, read at `aa7dbb02db` (the batch 28 code tip):
+  - The idempotency key is `manifestIdempotencyKey(scope, actionId, argumentsHash)` with `actionId = request.callId` (`packages/core/tools/src/external-effect.ts:151`, `:162`). A new call id is a new key.
+  - B-720 (in batch 28) routes only a same-key replay of an older generation's `sent` entry to `ambiguous`. A new-id retry never meets that entry, and without a same-key replay the entry stays `sent` and is not listed.
+  - The synthesized TOOL_OUTCOME_UNKNOWN result tells the model 「Do not retry blindly」 (`packages/core/session/src/repair.ts:100-121`). That text is advisory and does not block the retry.
+
+**What this does NOT claim.**
+- It does not claim that acceptance[0] fails. The crash campaign replays the same key, so its zero-duplicate count holds as the campaign is designed.
+- It does not claim that acceptance[2] (same key, different arguments refused) fails.
+- It does not claim that two different runs' in-flight sends collide. The fix compares generations only within one run (`lease_run`), because lease epochs are counted per work item (`packages/run/lease-sqlite/src/store.ts:110-115`).
+
+**Disposition.** P4-12 is withdrawn, recorded as a forward write (WITHDRAWN). Its row goes into ACCEPTANCE LOCKS citing this entry. The push checklist names the change in the ACCEPTED set.
+
+**Closing condition.**
+1. B-726 lands:
+   - (a) a reservation with the same scope, tool and arguments hash as an `ambiguous` entry, or as a `sent` entry an older generation of the same run left, is answered `ambiguous-needs-reconciliation`, and that `sent` entry moves to `ambiguous` in the same transaction;
+   - (d) on session recovery, every call for which the recovery wrote TOOL_OUTCOME_UNKNOWN has its `sent` entry moved to `ambiguous`.
+2. A-610 is frozen as a P4-12 supplement and observed green on a full run at a candidate that carries B-726.
+3. The two mutations (remove (a); remove (d)) turn it red.
+4. A fresh 4.4 and a PASS sign-off.
+
+### BLOCKED-355 — P2-05 does not hold: a plugin mounted after the kernel is pinned replaces the policy engine through the Cordis store, and a deployment deny is flipped to permit; P2-05 is withdrawn (security defect, S10)
+
+**Status:** OPEN (2026-10-03). Red first: A-588 v2 (lane A, `c0a81c5979`). Fix: B-728 (lane B, plan first). Ruled by the delegate (first100-delegate-52).
+
+**The clauses.**
+- P2-05 purpose: 「把所有执行路径统一到不可绕过的 permit/deny/require-approval 决策，并保证 deny 不能被后置插件翻转。」
+- P2-05 changes[1]: 「decision 由 TrustKernel enforce，插件只能增加约束或建议，不能扩大。」
+- P2-05 acceptance_criteria[2]: 「Policy 服务不可被 Cordis replace/unmount。」
+- The same reading also bears on P0-02 acceptance_criteria[0] (「任意插件卸载、覆盖 service 或动态 mount 都不能替换 kernel policy/audit/signature verifier」). P0-02 is not ACCEPTED, so nothing is withdrawn there; its blind-review item U-1 is now confirmed.
+
+**What was observed (narrow run 37157397751, `c0a81c5979` on the base `7e35c3d9dd`; prediction `a-588-predictions-v2.md` sha256 `2bd4803c`, matched in full).**
+- The shipped headless launcher, a stub model, and a profile that configures its own deployment `forbid` for `context.riskClass == "external-communication"`. The fixture tool is tagged `network-fetch`. Its body writes a marker on disk.
+- Positive control (no forbid, no tamper): the tool runs. Rule control (forbid, no tamper): the call is dispatched and refused. Both are green.
+- With a plugin that declares `inject: ['policy', 'trustKernel']` (so it runs after the Cedar engine registered `policy` and after the kernel is pinned):
+  - Route (a) rewrites the `policy` store slot's value in place (`ctx.reflect.store[key].value = forged`). It reads `overrode`.
+  - Route (b) is a second `ctx.provide('policy', forged)`. It is refused with "service "policy" has been registered at <CedarPolicyEngine>".
+  - The forbidden call is dispatched and **performed** (the marker is written). Exit code 0.
+- Mechanism, read at `7e35c3d9dd`:
+  - `enforceAction` (`packages/policy/policy-enforcement/src/index.ts:164`) reads the engine from `ctx.get('policy')` (`:169`).
+  - The pinned kernel only endorses the composed decision (`endorseComposedDecision`, `:138`).
+  - The pin seals the `trustKernel` slot but not the `policy` slot.
+- `7e35c3d9dd..d1f3fc0f75` (the current remote) changes nothing under `packages/kernel/trust-kernel`, `packages/policy`, or `vendor/cordis`, so the reading holds on the remote.
+
+**What this does NOT claim.**
+- It does not claim the unmount route (dispose the Cedar engine, then provide) succeeds. A-588 has not tried it yet; A-588c measures it.
+- It does not claim the kernel-hard-deny band (safety-critical) is bypassed. The forbid used here is a deployment rule; the hard-deny band is measured with the fix.
+- It does not re-examine P2-05 acceptance[0], [1], or validation[1], [2].
+
+**Disposition.** P2-05 is withdrawn under S10, recorded as a forward write (WITHDRAWN). Its row goes into ACCEPTANCE LOCKS citing this entry. The push checklist names the change in the ACCEPTED set (23 → 22).
+
+**Closing condition.**
+1. B-728 lands. After the kernel is pinned, no plugin can change the engine that `enforceAction` uses: not by rewriting the store slot, not by a second provide, and not by unmounting the engine and providing another. Legitimate host-side policy reloads, if the product has any, still work.
+2. A-588 (routes a and b) and A-588c (unmount route) are frozen as P2-05 supplements and observed green on a full run at a candidate that carries B-728.
+3. A mutation that removes the protection turns them red.
+4. A fresh 4.4 and a PASS sign-off.
+
+**Addendum (2026-10-04, from the delegate's ruling at gate3 2026-10-03T22:40:21Z): the agent-less hard deny joins this entry.**
+- A dispatch with no agent behind it skips the risk gate (`packages/core/tools/src/ptc.ts:765`; `packages/core/tools/src/index.ts:2164`). The base bundle states the kernel hard-deny band as a `forbid` in the engine's policy set (`packages/bundle/base/cordis.patch.yml:331`), so under a forged engine a `safety-critical` call with no agent is not refused. That violates P2-05 acceptance[1] (any hard deny is the final deny) and is recorded here rather than in a new entry.
+- A dispatch with an agent is still refused by `gateActionRisk`, which reads `permissionPresets` (`packages/core/tools/src/external-effect.ts:943`, `:966-968`).
+- Red first: lane A's A-588d, which also poisons `policySet` in an ancestor fiber's store (route (d)). B-728's option 甲 covers both, and closing condition 2 adds A-588d to the frozen cases.

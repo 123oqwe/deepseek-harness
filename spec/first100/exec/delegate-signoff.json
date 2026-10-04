@@ -934,6 +934,22 @@
       "delegateSession": "first100-delegate-52",
       "signedAtUtc": "2026-10-03T20:58:44.774Z",
       "reason": "P1-07 was last signed PASS on 2026-09-23T20:33:49Z (first100-delegate-1a). BLOCKED-353: lane A's red-first A-597 ④ v4 (run 37150723230 at ec87a9c926, base 7e35c3d9dd; P1-07.workspace-trust-self-grant.spec.ts:195) shows on the shipped launcher that, when the workspace contains $DSH_HOME, the model writes a workspace-trust-local grant into the harness home patch for a directory not yet resolved, and a later launch in that directory resolves it as trusted and gives its project AGENTS.md to the model with no host-user interaction, so must[2] (「信任升级必须由宿主用户交互完成并写审计。」) does not hold. Withdrawn under S10 by the delegate (first100-delegate-52); the fix is B-715 (4f9df894ba)."
+    },
+    {
+      "epic": "P2-05",
+      "rowDigestSha256": "58cc4d9b6cc24f3cb8afa80d6c14e449862015f9327d16c62dfd128b06c0e3d6",
+      "conclusion": "WITHDRAWN",
+      "delegateSession": "first100-delegate-52",
+      "signedAtUtc": "2026-10-04T02:27:39.101Z",
+      "reason": "P2-05 was last signed PASS on 2026-09-26T09:08:11Z (first100-delegate-1a). BLOCKED-355: lane A's red-first A-588 v2 (run 37157397751 at c0a81c5979, base 7e35c3d9dd) shows on the shipped headless launcher that a plugin mounted after the kernel is pinned rewrites the policy service's store slot in place, and a call the deployment forbids is dispatched and performed, so the purpose (「把所有执行路径统一到不可绕过的 permit/deny/require-approval 决策，并保证 deny 不能被后置插件翻转。」), changes[1] (「decision 由 TrustKernel enforce，插件只能增加约束或建议，不能扩大。」) and acceptance[2] (「Policy 服务不可被 Cordis replace/unmount。」) do not hold. Withdrawn under S10 by the delegate (first100-delegate-52); the fix is B-728."
+    },
+    {
+      "epic": "P4-12",
+      "rowDigestSha256": "07a2491ae8f3cef553bb346beb14df138477be07ee7e65d97a8ff6999712b1b4",
+      "conclusion": "WITHDRAWN",
+      "delegateSession": "first100-delegate-52",
+      "signedAtUtc": "2026-10-04T02:27:39.262Z",
+      "reason": "P4-12 was last signed PASS on 2026-09-27T06:00:27Z (first100-delegate-1a). BLOCKED-354: lane A's red-first A-610 (run 37170663623 at bd9985ce13, on 3640423fa8) shows on the shipped headless launcher that after a crash a retry of a sent-but-unconfirmed effect under a new call id runs the tool a second time and the stranded entry never reaches reconciliation, so acceptance[1] (「ambiguous 状态不盲目重试，进入 reconciliation。」) does not hold. Withdrawn under S10 by the delegate (first100-delegate-52); the fix is B-726."
     }
   ]
 }

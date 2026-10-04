@@ -226,22 +226,6 @@
       "reason": "P8-01 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/sdk/protocol/tests/transport.spec.ts, packages/sdk/protocol/tests/types.spec.ts and this row is removed."
     },
     {
-      "index": 295,
-      "epic": "P2-05",
-      "stage": "P",
-      "frozenAtUtc": "2026-09-12T22:04:10.000Z",
-      "expiresOn": "2026-10-12",
-      "reason": "P2-05 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/policy/policy-engine-cedar/tests/policy-set-seam.spec.ts and this row is removed."
-    },
-    {
-      "index": 296,
-      "epic": "P2-05",
-      "stage": "U",
-      "frozenAtUtc": "2026-09-12T22:04:11.000Z",
-      "expiresOn": "2026-10-12",
-      "reason": "P2-05 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/policy/policy-enforcement/tests/dispatch-convergence.spec.ts, packages/policy/policy-enforcement/tests/facts.spec.ts, packages/policy/policy-enforcement/tests/fault.spec.ts, packages/policy/policy-enforcement/tests/no-kernel-dispatch-decision.spec.ts, packages/policy/policy-enforcement/tests/service-lifetime.spec.ts and this row is removed."
-    },
-    {
       "index": 313,
       "epic": "P2-04",
       "stage": "C",

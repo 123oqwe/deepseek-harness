@@ -30,7 +30,7 @@ This table lists main cells only: a supplement cell (`U.1`, `C.2`, ...) has no r
 | 22 | P2-02 | 可衰减 Capability Token 与子 Agent 委托 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P2-01 | W4 | GREEN | GREEN | GREEN | GREEN | aa7dbb02db91841ae50e638706c346fed862cd4d | APPROVED | ACCEPTED |
 | 23 | P2-03 | 一等公民 ActionManifest | L1_CONTRACT | P2-03 | P0-06, P2-01 | W4 | GREEN | N/A | GREEN | GREEN | aa7dbb02db91841ae50e638706c346fed862cd4d | APPROVED | ACCEPTED |
 | 24 | P2-04 | 通用副作用与风险分类体系 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P2-03 | W5 | GREEN | GREEN | GREEN | GREEN | aa7dbb02db91841ae50e638706c346fed862cd4d | APPROVED | ACCEPTED |
-| 25 | P2-05 | Policy Decision Service 与单调拒绝 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P0-02, P2-02, P2-03, P2-04 | W6 | GREEN | GREEN | GREEN | GREEN | aa7dbb02db91841ae50e638706c346fed862cd4d | APPROVED | ACCEPTED |
+| 25 | P2-05 | Policy Decision Service 与单调拒绝 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P0-02, P2-02, P2-03, P2-04 | W6 | GREEN | GREEN | GREEN | GREEN | aa7dbb02db91841ae50e638706c346fed862cd4d | PENDING | BLOCKED_ON_ACCEPTANCE |
 | 26 | P2-06 | 审批绑定完整规范化参数、资源与前置状态 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P2-03, P2-05 | W7 | GREEN | GREEN | GREEN | GREEN | aa7dbb02db91841ae50e638706c346fed862cd4d | APPROVED | ACCEPTED |
 | 27 | P2-07 | 持久化、可跨 Turn/进程的 Approval Queue | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P2-06, P4-01 | W8 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
 | 28 | P2-08 | 可复用 Grant、范围规则、过期与撤销 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P2-05, P2-07 | W9 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
@@ -62,7 +62,7 @@ This table lists main cells only: a supplement cell (`U.1`, `C.2`, ...) has no r
 | 54 | P4-09 | Detached、Saved、Versioned 与 Nested Workflow | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P1-02, P4-08 | W8 | GREEN | GREEN | GREEN | GREEN | 5b41cb717350500afe8aeff54c98c6ac21f124b7 | PENDING | BLOCKED_ON_ACCEPTANCE |
 | 55 | P4-10 | Workflow 预算、Scheduler、Backpressure、公平性与资源锁 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P3-10, P4-07 | W9 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
 | 56 | P4-11 | 统一 Retry Classifier、Circuit Breaker 与 Retry Budget | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P4-01, P4-12 | W8 | GREEN | GREEN | GREEN | GREEN | 5d886b87cfca4610cb11110927c2546b8b7c084e | APPROVED | ACCEPTED |
-| 57 | P4-12 | 外部副作用 Idempotency Ledger | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P2-03, P4-06, P4-07 | W7 | GREEN | GREEN | GREEN | GREEN | aa7dbb02db91841ae50e638706c346fed862cd4d | APPROVED | ACCEPTED |
+| 57 | P4-12 | 外部副作用 Idempotency Ledger | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P2-03, P4-06, P4-07 | W7 | GREEN | GREEN | GREEN | GREEN | aa7dbb02db91841ae50e638706c346fed862cd4d | PENDING | BLOCKED_ON_ACCEPTANCE |
 | 58 | P4-13 | Reconciliation Engine 与 Saga Compensation | L3_CONSUMER | UNASSIGNED_UNTIL_APPROVAL | P4-12, P7-02 | W13 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
 | 59 | P4-14 | Partial-Turn Resume、Durable Schedule/Goal Trigger | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P4-08, P4-12, P4-13 | W14 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
 | 60 | P5-01 | Strategy Router：Direct / ReAct / Plan / Workflow / Multi-Agent | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P0-05, P4-02, P4-03 | W9 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |

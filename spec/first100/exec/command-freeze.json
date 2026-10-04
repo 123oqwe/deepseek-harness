@@ -13716,7 +13716,8 @@
         "mutationDescription": "Five mutations of `policy-engine-cedar/src/index.ts`, each run against this argv on def38d52a1 (P2-10 U's final tree) and restored byte-identical, with the file's sha256 and `git status` asserted after every one. (M58) a Cedar `failure` is denied as `no-matching-permit` instead of the named `policy-set-invalid`. (M59) the policy set reaches Cedar as one joined source string instead of the id-to-source map. (M60a) the decision records `this.digest`, a second read of the source, instead of `current.digest` from the read the set came from. (M60b) the decision records a freshly computed `policySetDigest(current.policies)` instead of `current.digest`. (M61) the digest concatenates ids and sources without length prefixes.",
         "failureSummary": "M58 reddens exactly the failure-mapping case, M59 exactly the audit-id case, M61 exactly the case that does not confuse a set whose id and source were split — each 1 of 12, as the superseded entry recorded for 13. M60a and M60b redden 0 of 12. P2-10 U rewrote the recorded digest to come from the policy-set provider, and no frozen case here can tell which digest a decision records — by construction: the only provider these cases mount, `FixedPolicySet` (`provider.spec.ts:52`), builds its pin as `policySetDigest(policies)` and recomputes it from fixed config on every call, so the pin, a fresh recomputation and a second read are the same value, and the acceptance[1] case (`:186`) compares the recorded digest with `engine.digest`, which reads that same source. The superseded entry's M60 claim is therefore not carried: this proof states that the digest SOURCE is unguarded by these cases rather than implying it is."
       },
-      "note": "Re-frozen by P2-10's Usage stage: identical to the superseded entry minus the one case whose behaviour moved subject. Same argv, same files[], same expectExit; the sensitivity proof carries forward because the retained cases are unchanged. NOT the full output of this argv — the argv runs a whole package whose other cases belong to other entries."
+      "note": "Re-frozen by P2-10's Usage stage: identical to the superseded entry minus the one case whose behaviour moved subject. Same argv, same files[], same expectExit; the sensitivity proof carries forward because the retained cases are unchanged. NOT the full output of this argv — the argv runs a whole package whose other cases belong to other entries.",
+      "supersededBy": "2026-10-04T02:29:20.000Z"
     },
     {
       "epic": "P2-05",
@@ -13764,7 +13765,8 @@
         "mutationDescription": "Five mutations, each run against this argv on def38d52a1 (P2-10 U's final tree) and restored byte-identical, with the file's sha256 and `git status` asserted after every one. (M62) with no policy service mounted, the enforcement point permits instead of answering `policy-unavailable`. (M63) the constraint registry is not consulted: `composeDecision` receives no constraints. (M64) the kernel's deny verdict never overrides a permit. (M65) the native dispatch stops acting on a non-permit decision. (M66) the presented capability token is passed to the manifest decision as `undefined`.",
         "failureSummary": "M62 reddens 2 of 11: the case that permits while the provider is mounted and denies by name once it is lost, and the case that runs with no policy service at all. M63 reddens exactly the 2 constraint cases. M64 reddens exactly the kernel-binding case. M65 reddens 7 of 11 — every case whose evidence is a refused tool result, including the three capability-token cases. M66 reddens exactly one, the permit case where a token is presented and the policy accepts it; the two refusal cases still refuse for their own reasons under it. Re-run rather than carried: the mutated source was untouched by P2-10 U, but this command's tests (`enforcement.spec.ts`, `fixtures/stack.ts`) changed, and two of the superseded entry's counts no longer hold — M62 recorded 3 and reddens 2, M65 recorded 4 and reddens 7. A carried summary would have stated both wrong."
       },
-      "note": "Re-frozen by P2-10's Usage stage: identical to the superseded entry minus the one case whose behaviour moved subject. Same argv, same files[], same expectExit; the sensitivity proof carries forward because the retained cases are unchanged. NOT the full output of this argv — the argv runs a whole package whose other cases belong to other entries."
+      "note": "Re-frozen by P2-10's Usage stage: identical to the superseded entry minus the one case whose behaviour moved subject. Same argv, same files[], same expectExit; the sensitivity proof carries forward because the retained cases are unchanged. NOT the full output of this argv — the argv runs a whole package whose other cases belong to other entries.",
+      "supersededBy": "2026-10-04T02:29:20.000Z"
     },
     {
       "epic": "P6-02",
@@ -23018,6 +23020,104 @@
         "failureSummary": "Read from each round's own narrow report; every round carried build. M-603-1 `b0ef8e37031835dba02c3bee1a720b78da5ade03` run 37169632124 (stops a restarted parent from draining owed settlements at session start and before a step, keeping the commit-signal drain and B-676's redelivery): 2 passed, 1 failed in tests/first100/fixtures/P4-06.settlement-crash.composition.spec.ts: «P4-06 acceptance[0]: a settlement acked around a host crash still takes effect exactly once evidence (BLOCKED-350 condition 3): a settlement killed BEFORE its ack is redelivered on restart and takes effect exactly once»."
       },
       "note": "P4-06 U-stage supplement 8: BLOCKED-350 condition 3 on the shipped headless composition. A settlement killed before its ack persisted stays pending in the durable bus; after the restart the ordinary drain redelivers it and the parent's inbox keeps it to one effect. The file's other two cases are frozen in P4-06 U-stage supplements 5 and 6. Lane A's A-603. dryRunProof: batch 28's full run 37158956685 on aa7dbb02db91841ae50e638706c346fed862cd4d."
+    },
+    {
+      "epic": "P2-05",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/policy-engine-cedar",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-05 must[0]: the request translation routes a decision by the CAPABILITY the manifest names, not by a tool name",
+        "P2-05 must[0]: the request translation keeps the target KIND in the resource id, so a path and a command are different resources",
+        "P2-05 must[0]: the request translation exposes the declared context facts, including the absent execution world",
+        "P2-05 must[0]: the request translation distinguishes a declared side-effect class from a defaulted one",
+        "P2-05 must[3]: what the audit sees and what the model sees names the matched policy by ITS OWN id, from the id-to-source map",
+        "P2-05 must[3]: what the audit sees and what the model sees tells a forbid apart from nothing-permitted",
+        "P2-05 acceptance[1]: every decision carries the policy-set digest records the digest on a permit and on a deny alike",
+        "P2-05 acceptance[1]: every decision carries the policy-set digest changes the digest when a policy CHANGES, and not when the set is merely reordered",
+        "P2-05 acceptance[1]: every decision carries the policy-set digest does not confuse a set whose id and source were split differently",
+        "P2-05 acceptance[2]: a broken policy set is not a strict one maps a Cedar FAILURE to its own named deny, not to an ordinary refusal",
+        "P2-05 acceptance[2]: a broken policy set is not a strict one still tells an ordinary deny apart from that failure",
+        "P2-05 acceptance[2]: a broken policy set is not a strict one unloads with its fiber, and a remount starts from the configured set again"
+      ],
+      "files": [
+        "packages/policy/policy-engine-cedar/src/index.ts",
+        "packages/policy/policy-engine-cedar/tests/provider.spec.ts",
+        "packages/policy/policy-engine/src/types.ts",
+        "packages/policy/policy-engine-cedar/tests/policy-set-seam.spec.ts"
+      ],
+      "frozenAtUtc": "2026-10-04T02:29:20.000Z",
+      "supersedes": "2026-09-12T22:04:10.000Z",
+      "supersessionReason": "B-584: the argv runs every test under packages/policy/policy-engine-cedar/, and files did not name packages/policy/policy-engine-cedar/tests/policy-set-seam.spec.ts. P2-05 is withdrawn in 28r (BLOCKED-355), so the freeze-argv-files exception that excused this entry while its row was ACCEPTED no longer holds; the entry is superseded with its files completed. Titles, argv, cases and the sensitivity proof are unchanged, as the B-584 ruling (2026-09-24T19:06:12Z) sets for these supersessions.",
+      "dryRunProof": {
+        "treeSha": "5d9e8a54c065dee72b761392635ac08d9b974914",
+        "testsDiscovered": 15
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Five mutations of `policy-engine-cedar/src/index.ts`, each run against this argv on def38d52a1 (P2-10 U's final tree) and restored byte-identical, with the file's sha256 and `git status` asserted after every one. (M58) a Cedar `failure` is denied as `no-matching-permit` instead of the named `policy-set-invalid`. (M59) the policy set reaches Cedar as one joined source string instead of the id-to-source map. (M60a) the decision records `this.digest`, a second read of the source, instead of `current.digest` from the read the set came from. (M60b) the decision records a freshly computed `policySetDigest(current.policies)` instead of `current.digest`. (M61) the digest concatenates ids and sources without length prefixes.",
+        "failureSummary": "M58 reddens exactly the failure-mapping case, M59 exactly the audit-id case, M61 exactly the case that does not confuse a set whose id and source were split — each 1 of 12, as the superseded entry recorded for 13. M60a and M60b redden 0 of 12. P2-10 U rewrote the recorded digest to come from the policy-set provider, and no frozen case here can tell which digest a decision records — by construction: the only provider these cases mount, `FixedPolicySet` (`provider.spec.ts:52`), builds its pin as `policySetDigest(policies)` and recomputes it from fixed config on every call, so the pin, a fresh recomputation and a second read are the same value, and the acceptance[1] case (`:186`) compares the recorded digest with `engine.digest`, which reads that same source. The superseded entry's M60 claim is therefore not carried: this proof states that the digest SOURCE is unguarded by these cases rather than implying it is."
+      },
+      "note": "Re-frozen by P2-10's Usage stage: identical to the superseded entry minus the one case whose behaviour moved subject. Same argv, same files[], same expectExit; the sensitivity proof carries forward because the retained cases are unchanged. NOT the full output of this argv — the argv runs a whole package whose other cases belong to other entries."
+    },
+    {
+      "epic": "P2-05",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/policy-enforcement",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-05 acceptance[2]: losing the provider mid-session denies by name permits while the provider is mounted, and denies `policy-unavailable` after it unmounts",
+        "P2-05 acceptance[2]: losing the provider mid-session denies by name records WHICH policy set it could not reach, so a replay can tell the two failures apart",
+        "P2-05 acceptance[0]: one PEP, whichever originator dispatches refuses a forbidden tool on the NATIVE path, with the audit naming the matched policy",
+        "P2-05 acceptance[0]: one PEP, whichever originator dispatches decides every dispatch against the same manifest the log records",
+        "P2-05 acceptance[0]: one PEP, whichever originator dispatches lets the KERNEL bind: a kernel deny refuses a call the policy permitted",
+        "P2-05 acceptance[0]: one PEP, whichever originator dispatches runs with no policy service at all exactly as it did before this epic",
+        "P2-05 must[2]: a plugin constraint narrows and never widens turns a permitted call into a deny, and records the constraint reason for the audit",
+        "P2-05 must[2]: a plugin constraint narrows and never widens stops constraining when its plugin unmounts",
+        "P2-05 must[0]: the capability token is a policy input, not a placeholder decides by the CAPABILITY the presented token carries",
+        "P2-05 must[0]: the capability token is a policy input, not a placeholder permits the same action when the policy accepts the token that was presented",
+        "P2-05 must[0]: the capability token is a policy input, not a placeholder refuses when NO token was presented and the policy requires one"
+      ],
+      "files": [
+        "packages/policy/policy-enforcement/src/index.ts",
+        "packages/policy/policy-enforcement/tests/enforcement.spec.ts",
+        "packages/policy/policy-engine/src/types.ts",
+        "packages/policy/policy-engine-cedar/src/index.ts",
+        "packages/kernel/trust-kernel/src/index.ts",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/core/tools/src/ptc.ts",
+        "packages/core/tools/src/external-effect.ts",
+        "packages/policy/policy-enforcement/tests/dispatch-convergence.spec.ts",
+        "packages/policy/policy-enforcement/tests/facts.spec.ts",
+        "packages/policy/policy-enforcement/tests/fault.spec.ts",
+        "packages/policy/policy-enforcement/tests/no-kernel-dispatch-decision.spec.ts",
+        "packages/policy/policy-enforcement/tests/service-lifetime.spec.ts"
+      ],
+      "frozenAtUtc": "2026-10-04T02:29:20.000Z",
+      "supersedes": "2026-09-12T22:04:11.000Z",
+      "supersessionReason": "B-584: the argv runs every test under packages/policy/policy-enforcement/, and files did not name packages/policy/policy-enforcement/tests/dispatch-convergence.spec.ts, packages/policy/policy-enforcement/tests/facts.spec.ts, packages/policy/policy-enforcement/tests/fault.spec.ts, packages/policy/policy-enforcement/tests/no-kernel-dispatch-decision.spec.ts, packages/policy/policy-enforcement/tests/service-lifetime.spec.ts. P2-05 is withdrawn in 28r (BLOCKED-355), so the freeze-argv-files exception that excused this entry while its row was ACCEPTED no longer holds; the entry is superseded with its files completed. Titles, argv, cases and the sensitivity proof are unchanged, as the B-584 ruling (2026-09-24T19:06:12Z) sets for these supersessions.",
+      "dryRunProof": {
+        "treeSha": "5d9e8a54c065dee72b761392635ac08d9b974914",
+        "testsDiscovered": 36
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Five mutations, each run against this argv on def38d52a1 (P2-10 U's final tree) and restored byte-identical, with the file's sha256 and `git status` asserted after every one. (M62) with no policy service mounted, the enforcement point permits instead of answering `policy-unavailable`. (M63) the constraint registry is not consulted: `composeDecision` receives no constraints. (M64) the kernel's deny verdict never overrides a permit. (M65) the native dispatch stops acting on a non-permit decision. (M66) the presented capability token is passed to the manifest decision as `undefined`.",
+        "failureSummary": "M62 reddens 2 of 11: the case that permits while the provider is mounted and denies by name once it is lost, and the case that runs with no policy service at all. M63 reddens exactly the 2 constraint cases. M64 reddens exactly the kernel-binding case. M65 reddens 7 of 11 — every case whose evidence is a refused tool result, including the three capability-token cases. M66 reddens exactly one, the permit case where a token is presented and the policy accepts it; the two refusal cases still refuse for their own reasons under it. Re-run rather than carried: the mutated source was untouched by P2-10 U, but this command's tests (`enforcement.spec.ts`, `fixtures/stack.ts`) changed, and two of the superseded entry's counts no longer hold — M62 recorded 3 and reddens 2, M65 recorded 4 and reddens 7. A carried summary would have stated both wrong."
+      },
+      "note": "Re-frozen by P2-10's Usage stage: identical to the superseded entry minus the one case whose behaviour moved subject. Same argv, same files[], same expectExit; the sensitivity proof carries forward because the retained cases are unchanged. NOT the full output of this argv — the argv runs a whole package whose other cases belong to other entries."
     }
   ]
 }
