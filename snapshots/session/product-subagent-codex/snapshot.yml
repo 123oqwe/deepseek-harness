@@ -6,3 +6,6 @@ recording: authored
 header:
   class: product-subagent-codex
   pin: true
+# This scenario names tool-subagent tools by a toolName its Manifest v2 does not list, which plugin-manifest enforcement would quarantine.
+environment:
+  DSH_FEATURE_GATE_PLUGIN_MANIFEST_ENFORCEMENT: shadow
