@@ -1601,7 +1601,8 @@ interface LockGateLayer {
  * option 2′), whichever way the boot reaches them: its declared dependencies,
  * its admitted bundle layers, and the modules its composed rows name. Each is
  * kept only when the installation does not resolve the same name to the same
- * directory, because a package the installation ships is never locked.
+ * directory and it is not a module proxy forwarding to the installation,
+ * because a package the installation ships is never locked.
  * @param profileDir - the profile directory.
  * @param layers - the admitted bundle layers.
  * @param rowModules - the module each composed row names.
@@ -1618,9 +1619,11 @@ function profileResolvedPackageDirs(profileDir: string, layers: readonly LockGat
   const dirs = new Set<string>()
   for (const name of [...Object.keys(dependencies ?? {}), ...rowModules]) {
     const dir = resolveEntryPackageDir(name, anchor)
-    if (dir !== undefined && resolveEntryPackageDir(name, installAnchor) !== dir) dirs.add(dir)
+    // A module proxy forwards to the installation's own package, so it is a shipped package, never locked.
+    if (dir !== undefined && !isModuleProxy(dir) && resolveEntryPackageDir(name, installAnchor) !== dir) dirs.add(dir)
   }
   for (const layer of layers) {
+    if (isModuleProxy(layer.packageDir)) continue
     if (resolveEntryPackageDir(layer.packageName, installAnchor) !== layer.packageDir) dirs.add(layer.packageDir)
   }
   return [...dirs]
