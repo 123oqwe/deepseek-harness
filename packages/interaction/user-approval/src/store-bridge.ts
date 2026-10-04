@@ -114,6 +114,7 @@ export function recordApprovalOutcome(
     case 'unavailable':
       store.revoke(id, row.revision, viewer, nowMs)
       return
+    /* v8 ignore next -- closed-union exhaustiveness guard */
     default:
       assertNever(outcome, 'ApprovalOutcome')
   }
