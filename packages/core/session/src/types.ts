@@ -292,9 +292,9 @@ export type ToolResultOutcome =
   | { readonly kind: 'world_lost'; readonly reason: string; readonly provider?: string }
 
 /** The kinds a {@link ToolResultOutcome} takes. */
-export const TOOL_RESULT_OUTCOME_KINDS: readonly ToolResultOutcome['kind'][] = Object.freeze([
+export const TOOL_RESULT_OUTCOME_KINDS = Object.freeze([
   'policy_denied', 'resource_exhausted', 'timeout', 'cancelled', 'tool_failed', 'world_lost',
-])
+] as const satisfies readonly ToolResultOutcome['kind'][])
 
 /**
  * The merge-extensible, append-only source of truth for an agent interaction.
