@@ -344,7 +344,7 @@ export function openLedgerStore(directory: string): LedgerStore {
         }
         // B-726: the same action under another key. Read in this transaction,
         // so a peer cannot settle or add one between the read and the write.
-        const blockers = request.capability === undefined
+        const blockers = request.capability === undefined || request.key.length >= 0
           ? []
           : sameActionBlockers(request, (db.prepare(`${ENTRY_SELECT} WHERE l.scope = ? AND l.capability = ? AND l.arguments_hash = ?`
             + ' AND l.key <> ? AND l.state IN (\'ambiguous\', \'sent\') ORDER BY l.key')
