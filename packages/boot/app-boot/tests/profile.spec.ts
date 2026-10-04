@@ -17,6 +17,7 @@ import {
   healProfilesModuleFallback,
   initProfile,
   INSTALL_WILDCARD_GRANTS,
+  installationPackageWildcardGrants,
   installationWildcardGrants,
   isInstallationPackage,
   loadProfile,
@@ -534,6 +535,28 @@ describe('isInstallationPackage (BLOCKED-360)', () => {
     expect(isInstallationPackage('dep-y', fallback, anchor, home)).toBe(true)
     expect(isInstallationPackage('dep-y', profileCopy, anchor, home)).toBe(false)
     expect(isInstallationPackage('dep-y', profileCopy, anchor, tmp())).toBe(false)
+  })
+
+  it('grants a package the installation carries only transitively, as in a pnpm workspace (tool-lsp)', () => {
+    // apps/cli links a bundle from the workspace; only that bundle's own node_modules links tool-lsp.
+    const root = tmp()
+    const app = join(root, 'apps', 'cli')
+    const bundle = join(root, 'packages', 'bundle-x')
+    const lsp = join(root, 'packages', 'tool-lsp')
+    const write = (dir: string, name: string, dependencies: Record<string, string>): void => {
+      mkdirSync(dir, { recursive: true })
+      writeFileSync(join(dir, 'package.json'), JSON.stringify({ name, version: '0.0.0', dependencies }))
+    }
+    write(app, 'dsh-app', { 'bundle-x': '0.0.0' })
+    write(bundle, 'bundle-x', { '@deepseek-ai/dsh-tool-lsp': '0.0.0' })
+    write(lsp, '@deepseek-ai/dsh-tool-lsp', {})
+    mkdirSync(join(app, 'node_modules'), { recursive: true })
+    symlinkSync(bundle, join(app, 'node_modules', 'bundle-x'), 'junction')
+    const linked = join(bundle, 'node_modules', '@deepseek-ai', 'dsh-tool-lsp')
+    mkdirSync(join(linked, '..'), { recursive: true })
+    symlinkSync(lsp, linked, 'junction')
+    expect(installationPackageWildcardGrants('@deepseek-ai/dsh-tool-lsp', linked, join(app, 'package.json')))
+      .toBe(INSTALL_WILDCARD_GRANTS['@deepseek-ai/dsh-tool-lsp'])
   })
 
   it('does not count a same-named copy that is not a module proxy', () => {
