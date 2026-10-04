@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-10-04-installation-grants-stop-at-the-installation-boundary.md
+2026-10-04-installation-grants-stop-at-the-installation-boundary.md: 596d2fe52af69d36614c04eb1bd6cc7c38ea8bcb
+2026-10-04-installation-grants-stop-at-the-installation-boundary.zh.md: 04ed1936eef14ed8233db5bbd2eb86221d927bd8

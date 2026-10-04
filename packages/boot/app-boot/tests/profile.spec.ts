@@ -456,6 +456,20 @@ describe('installationWildcardGrants (question 27 (a))', () => {
     expect(installationWildcardGrants(layerFor(join(modules, 'plain-bundle'), 'plain-bundle'), anchor)).toEqual([])
   })
 
+  it('finds the installation\'s own copy hoisted beside it inside the outermost node_modules, and gives a layer it does not carry none', () => {
+    const modules = join(tmp(), 'node_modules')
+    const app = join(modules, 'dsh-app')
+    const base = join(modules, '@deepseek-ai', 'dsh-base')
+    for (const [dir, name] of [[app, 'dsh-app'], [base, '@deepseek-ai/dsh-base']] as const) {
+      mkdirSync(dir, { recursive: true })
+      writeFileSync(join(dir, 'package.json'), JSON.stringify({ name, version: '0.0.0' }))
+    }
+    const anchor = join(app, 'package.json')
+    expect(installationWildcardGrants(layerFor(base, '@deepseek-ai/dsh-base'), anchor))
+      .toBe(INSTALL_WILDCARD_GRANTS['@deepseek-ai/dsh-base'])
+    expect(installationWildcardGrants(layerFor(tmp(), '@deepseek-ai/dsh-sdk-minimal'), anchor)).toEqual([])
+  })
+
   it('grants dsh-base its eight wildcard tools and dsh-sdk-minimal run_code, each with a purpose', () => {
     const shown = (layer: string): string[] => (INSTALL_WILDCARD_GRANTS[layer] ?? [])
       .map(grant => `${grant.tool} ${grant.destinationKind} ${grant.pattern}`)

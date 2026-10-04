@@ -28,7 +28,7 @@ import {
   existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, readlinkSync, realpathSync, rmSync, statSync,
   symlinkSync, unlinkSync, writeFileSync,
 } from 'node:fs'
-import { basename, dirname, join, relative, resolve } from 'node:path'
+import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { withFileLock } from '@deepseek-ai/dsh-atomic-write'
 import type { EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
@@ -196,10 +196,38 @@ export const INSTALL_WILDCARD_GRANTS: Readonly<Record<string, readonly WildcardG
 }
 
 /**
+ * The real path of the installation's own copy of `packageName`: the first
+ * `node_modules` directory on Node's lookup path from `installAnchor` that
+ * holds it, searching only inside the installation. The installation ends at
+ * the outermost `node_modules` directory above its real path, or, when no such
+ * directory exists (a source checkout), at its own `node_modules`. An ancestor
+ * directory outside that bound, such as a `node_modules` in the user's home,
+ * is never searched, so a name the installation does not carry has no copy.
+ * @param installAnchor - absolute package.json path of the running dsh installation.
+ * @param packageName - the package name.
+ * @returns the real package directory, or `undefined` when the installation does not carry it.
+ */
+function installationPackageDir(installAnchor: string, packageName: string): string | undefined {
+  const appDir = realpathSync.native(dirname(installAnchor))
+  const segments = appDir.split(sep)
+  const outermost = segments.indexOf('node_modules')
+  const bound = outermost === -1 ? join(appDir, 'node_modules') : segments.slice(0, outermost + 1).join(sep)
+  // resolve.paths returns null only for builtins, which no bundle name is.
+  /* v8 ignore next */
+  for (const searchPath of createRequire(join(appDir, 'package.json')).resolve.paths(packageName) ?? []) {
+    if (searchPath !== bound && !searchPath.startsWith(bound + sep)) continue
+    const candidate = join(searchPath, packageName)
+    if (existsSync(join(candidate, 'package.json'))) return realpathSync.native(candidate)
+  }
+  return undefined
+}
+
+/**
  * The grants {@link INSTALL_WILDCARD_GRANTS} gives one resolved layer: its
  * entry, but only when the layer is this installation's own copy, its package
- * directory being the one resolved from `installAnchor`. A layer of the same
- * name resolved anywhere else, such as a profile's own install, gets none.
+ * directory having the real path of {@link installationPackageDir}. A layer
+ * of the same name resolved anywhere else, such as a profile's own install or
+ * a `node_modules` above the installation, gets none.
  * @param layer - a bundle layer {@link loadProfile} resolved.
  * @param installAnchor - absolute package.json path of the running dsh installation.
  * @returns the layer's grants, empty when it has none or is not the installation's copy.
@@ -207,7 +235,8 @@ export const INSTALL_WILDCARD_GRANTS: Readonly<Record<string, readonly WildcardG
 export function installationWildcardGrants(layer: ProfileLayer, installAnchor: string): readonly WildcardGrant[] {
   const grants = INSTALL_WILDCARD_GRANTS[layer.packageName]
   if (grants === undefined) return []
-  return packageDirFromAnchor(installAnchor, layer.packageName) === layer.packageDir ? grants : []
+  const own = installationPackageDir(installAnchor, layer.packageName)
+  return own !== undefined && own === realpathSync.native(layer.packageDir) ? grants : []
 }
 
 /** Custom profiles retain the historical live patch-file behavior. */
