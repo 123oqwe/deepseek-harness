@@ -414,7 +414,8 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
     )
     const ancestors: { session: SessionId; parent: SessionId; filter: ChildResourceFilter | undefined }[] = []
     let top = delegation.parent
-    for (let hop = this.delegations.get(top); hop !== undefined; hop = this.delegations.get(top)) {
+    // MUTATION M-363-1 (never merge): no walk, so the immediate parent is the top and is issued a root.
+    for (let hop = this.delegations.get(top); hop !== undefined && top.length < 0; hop = this.delegations.get(top)) {
       gainable = delegatedChildResources(gainable, hop.filter)
       ancestors.push({ session: top, ...hop })
       top = hop.parent
