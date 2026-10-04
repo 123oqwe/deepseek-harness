@@ -10,10 +10,10 @@ The native dispatch marks an external effect `sent` before the tool runs. When t
 
 ## Decision
 
-- `decideReservation` refuses a `sent` entry that an older generation holds as `ambiguous-needs-reconciliation`. The fence proves that holder gone, so it can never confirm or record a failure.
+- `decideReservation` refuses a `sent` entry that an older generation holds as `ambiguous-needs-reconciliation`. The fence proves only that the holder's lease lapsed; the holder may still be running. It cannot confirm or record a failure afterwards because the entry is then `ambiguous`, which only a host resolution leaves.
 - The ledger store's `reserve` moves such an entry to `ambiguous` in the same transaction as the decision, under the holder's own generation, which is the transition `markAmbiguous` makes. `listAmbiguous` then lists it, and `/resolve-effect` settles it.
 - The model gets the existing reconciliation reply: the outcome is unknown, cannot be settled by retrying, and awaits reconciliation. The tool is not run again.
-- At the same generation, or with either side unfenced, a `sent` entry is still a `duplicate`: there a live holder may still be sending, and nothing proves it gone.
+- At the same generation, or with either side unfenced, a `sent` entry is still a `duplicate`: there a live holder may still be sending, and no lapsed lease is proven.
 
 ## Alternatives considered
 
@@ -22,5 +22,5 @@ The native dispatch marks an external effect `sent` before the tool runs. When t
 
 ## Consequences
 
-- A replay after a crash reports the outcome as unknown and lists the effect for the host user to resolve; it is still never performed twice.
+- A replay of the same call after a crash reports the outcome as unknown and lists the effect for the host user to resolve; under that idempotency key it is never performed twice. A retry under a new call id presents a new key, which this decision does not see; [the same-action check](2026-10-03-a-retry-under-a-new-call-id-is-the-same-action.md) covers it.
 - Not covered: an unfenced profile (no Run lease) cannot tell a dead holder from a live one, so there a stranded `sent` entry is still answered as a duplicate.

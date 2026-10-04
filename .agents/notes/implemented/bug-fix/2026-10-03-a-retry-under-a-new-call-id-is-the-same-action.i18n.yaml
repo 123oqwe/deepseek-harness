@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-10-03-a-retry-under-a-new-call-id-is-the-same-action.md
+2026-10-03-a-retry-under-a-new-call-id-is-the-same-action.md: 944f008042aa2fd449c789067bc718f021ec692a
+2026-10-03-a-retry-under-a-new-call-id-is-the-same-action.zh.md: 39b7de0d41c9133e0740ea9c981dfbc9ad4ef7c8

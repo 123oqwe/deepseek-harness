@@ -17,6 +17,7 @@ English | [中文](README.zh.md)
 - [The five states are permissions, not labels](#the-five-states-are-permissions-not-labels)
 - [Check order](#check-order)
 - [A reservation is exclusive only when both sides are fenced](#a-reservation-is-exclusive-only-when-both-sides-are-fenced)
+- [A retry under a new call id is the same action](#a-retry-under-a-new-call-id-is-the-same-action)
 - [The host user resolves an ambiguous effect](#the-host-user-resolves-an-ambiguous-effect)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
@@ -43,9 +44,15 @@ A generation comes from a run's lease, and a run without one presents `'unfenced
 
 With generations on both sides, a `prepared` entry may be taken over by a HIGHER generation and is refused to the SAME one as `held-at-same-epoch`: the higher generation's fence proves the previous holder is out, while a caller at the holder's own generation is a live peer, and two holders of one reservation is what must[2] forbids. That refusal is distinct from `duplicate`, which asserts the effect already happened, and from `stale-epoch`, which asserts a successor fenced this caller out — one says wait, the other says stop.
 
-A `sent` entry that a HIGHER generation finds is refused as `ambiguous-needs-reconciliation`, and `reserve` moves it to `ambiguous` in the same transaction, under the holder's generation: the fence proves the holder that sent is gone, so nobody can confirm whether the effect landed (question 33 (a)). At the same generation, or with either side unfenced, it is still a `duplicate`.
+A `sent` entry that a HIGHER generation finds is refused as `ambiguous-needs-reconciliation`, and `reserve` moves it to `ambiguous` in the same transaction, under the holder's generation: the fence proves the sending holder's lease lapsed, so nobody can say whether the effect landed (question 33 (a)). That holder may still be running; it cannot confirm afterwards because the entry is `ambiguous`. At the same generation, or with either side unfenced, it is still a `duplicate`.
 
 With either side unfenced the ledger cannot tell a live peer from the same worker restarting, so it re-takes the `prepared` entry and keeps at-least-once instead of stranding a key nobody can prove abandoned. The decision then carries `fenced: false`, including when a well-fenced caller takes over an entry whose own holder had no generation: the old holder can still send. `sent`, `confirmed` and `ambiguous` entries are unaffected — the degraded rule re-takes what was never sent and nothing else.
+
+## A retry under a new call id is the same action
+
+A key is derived from the call id, so a model that retries an action whose outcome is unknown under a new call id presents a new key. A reservation therefore also names its capability and the run whose lease issued its generation. `reserve` refuses it as `ambiguous-needs-reconciliation` when another key's entry in the same scope records the same capability and arguments and is either `ambiguous`, from any run, or `sent` and held by an older generation of the same run (`sameActionBlockers`, B-726). Each such `sent` entry moves to `ambiguous` in the same transaction. Lease epochs are counted per run, so a `sent` entry of another run, or of this generation, may be live and does not stop the reservation. A settled entry does not stop it either, and neither does an entry with other arguments or another tool. A reservation that names no capability is matched by its key alone.
+
+`markInterrupted` moves the `sent` entries of the calls a resumed session closes as interrupted (`TOOL_OUTCOME_UNKNOWN`) to `ambiguous` in one transaction, so they are listed for reconciliation before any retry. It compares no generation: the resume holds the session's write ownership before it repairs the log, so the holder that recorded the call no longer writes that session, and if it is still running its later `confirm` is refused. The file's schema version is 3, and an older file is refused at open.
 
 ## The host user resolves an ambiguous effect
 
@@ -68,6 +75,7 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 - **The receipt digest is over the tool's own content**, which is what the harness observed rather than what the provider returned. Until a transport carries a real receipt, the digest proves the same outcome was recorded twice, not that the outside world committed once.
 - **`ambiguous` cannot tell unknowable from merely failed.** The dispatch path writes it for every errored tool result, which is the fail-closed reading: a tool that threw may or may not have committed. Distinguishing a request that never left from one whose outcome is genuinely unknown needs target-state queries this package does not have.
 - **Without a lease, must[2] does not hold.** Only the Run Service assigns a lease generation, so a profile that does not mount it — `sdk-minimal` ships without it — reserves unfenced, and two concurrent workers there can both hold one reservation and both send. The ledger reports that as `fenced: false` on the decision rather than silently promising exclusivity, and the session log records it as an `action/manifest-appended` event with no `leaseEpoch`; making the guarantee hold for those profiles needs a generation source they do not have.
+- **A session nobody resumes keeps its stranded `sent` entries.** They move to `ambiguous` when that session is resumed. Until then, a retry from another session meets them only within the same run under a newer generation.
 - No runtime invariant companion is published: this package holds no state and observes nothing, so there is no owned relation two observers could disagree about.
 
 ### Dev Note

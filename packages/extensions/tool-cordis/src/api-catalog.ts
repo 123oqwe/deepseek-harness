@@ -109,6 +109,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         parameters: [{ name: 'scope', description: 'the reservation\'s owning principal.' }, { name: 'key', description: 'the idempotency key.' }, { name: 'epoch', description: 'the generation that holds the reservation, or `\'unfenced\'` when its holder had none.' }],
       },
       {
+        signature: 'markInterrupted(keys: readonly { readonly scope: LedgerScope; readonly key: string }[]): readonly LedgerEntry[]',
+        description: 'Send the `sent` entries of calls a resumed session closed as interrupted to reconciliation, in one transaction (B-726).',
+        parameters: [{ name: 'keys', description: 'the scoped keys of the interrupted calls\' manifests.' }],
+        returns: 'the entries moved to `ambiguous`.',
+      },
+      {
         signature: 'entry(scope: LedgerScope, key: string): LedgerEntry | undefined',
         description: 'The entry for one scoped key.',
         parameters: [{ name: 'scope', description: 'the reservation\'s owning principal.' }, { name: 'key', description: 'the idempotency key.' }],
@@ -5435,7 +5441,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'LedgerEntry',
-    declaration: 'export interface LedgerEntry {\n    readonly scope: LedgerScope;\n    readonly key: IdempotencyKey;\n    readonly argumentsHash: ArgumentsHash;\n    readonly state: LedgerState;\n    readonly epoch: LedgerGeneration;\n    readonly receiptDigest?: ReceiptDigest;\n    readonly resolution?: LedgerResolution;\n}',
+    declaration: 'export interface LedgerEntry {\n    readonly scope: LedgerScope;\n    readonly key: IdempotencyKey;\n    readonly argumentsHash: ArgumentsHash;\n    readonly state: LedgerState;\n    readonly epoch: LedgerGeneration;\n    readonly capability?: CapabilityRef;\n    readonly leaseRun?: RunId;\n    readonly receiptDigest?: ReceiptDigest;\n    readonly resolution?: LedgerResolution;\n}',
   },
   {
     name: 'LedgerEpoch',
@@ -6151,7 +6157,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ReserveRequest',
-    declaration: 'export interface ReserveRequest {\n    readonly scope: LedgerScope;\n    readonly key: IdempotencyKey;\n    readonly argumentsHash: ArgumentsHash;\n    readonly epoch: LedgerGeneration;\n}',
+    declaration: 'export interface ReserveRequest {\n    readonly scope: LedgerScope;\n    readonly key: IdempotencyKey;\n    readonly argumentsHash: ArgumentsHash;\n    readonly epoch: LedgerGeneration;\n    readonly capability?: CapabilityRef;\n    readonly leaseRun?: RunId;\n}',
   },
   {
     name: 'ResolvedAlwaysRetryPolicy',

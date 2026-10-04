@@ -661,6 +661,7 @@ function appendActionManifest(
   return {
     key: appended.manifest.idempotencyKey,
     argumentsHash,
+    capability: appended.manifest.capability,
     scope: attribution.actor.id,
     // Carried so the approval ask can SHOW what the decision is about. must[0]
     // names six fields a decider must see, and four of them — the target, the
@@ -744,6 +745,8 @@ interface ManifestRecord {
   readonly decision?: PolicyDecisionSummary
   readonly key: IdempotencyKey
   readonly argumentsHash: ArgumentsHash
+  /** The tool the effect runs, which the ledger matches a retry under a new call id by (B-726). */
+  readonly capability: CapabilityRef
   /** The manifest itself, so an approval ask can show what the action does. */
   readonly manifest: ActionManifest
   readonly scope: LedgerScope

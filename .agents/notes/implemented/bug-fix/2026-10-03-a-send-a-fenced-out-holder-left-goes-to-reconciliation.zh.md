@@ -10,10 +10,10 @@ Status: implemented
 
 ## 决定
 
-- `decideReservation` 遇到更旧的代持有的 `sent` 记录，以 `ambiguous-needs-reconciliation` 拒绝。围栏证明那个持有者已经出局，它再也不能确认，也不能记下失败。
+- `decideReservation` 遇到更旧的代持有的 `sent` 记录，以 `ambiguous-needs-reconciliation` 拒绝。围栏只证明那个持有者的租约已经失效，它可能还在运行。它之后不能确认，也不能记下失败，是因为这条记录已经是 `ambiguous`，只有宿主用户的结清能让它离开这个状态。
 - 账本存储的 `reserve` 在做出这个决定的同一事务里，按持有者自己的代把这条记录改成 `ambiguous`，也就是 `markAmbiguous` 做的那一步迁移。之后 `listAmbiguous` 会列出它，`/resolve-effect` 可以结清它。
 - 模型拿到的是已有的对账答复：结果未知，重试解决不了，等待对账。工具不会再跑一次。
-- 同一代、或任一边没有代时，`sent` 记录仍是 `duplicate`：那里可能有活着的持有者还在发送，没有东西能证明它已出局。
+- 同一代、或任一边没有代时，`sent` 记录仍是 `duplicate`：那里可能有活着的持有者还在发送，没有能证明的租约失效。
 
 ## 考虑过的替代方案
 
@@ -22,5 +22,5 @@ Status: implemented
 
 ## 后果
 
-- 崩溃之后的重放把结果报成未知，并把这个副作用列出来等宿主用户结清；它仍然永远不会被执行两次。
+- 崩溃之后重放同一个调用，会把结果报成未知，并把这个副作用列出来等宿主用户结清；在这个幂等键下它永远不会被执行两次。换一个 call id 重试会带来新的键，这个决定看不到；它由[同一动作检查](2026-10-03-a-retry-under-a-new-call-id-is-the-same-action.zh.md)覆盖。
 - 不涵盖：没有代的 profile（没有 Run 租约）分不出持有者是死是活，那里滞留的 `sent` 记录仍按 duplicate 回答。
