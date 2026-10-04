@@ -40,6 +40,10 @@
  * and post-fix tree — the positive marker that the reload generation ran, so the
  * manifest-less read below is never taken before the reload settles.
  *
+ * The manifest-less package is a profile dependency recorded in the profile's
+ * lock, as `dsh plugin add` leaves a package, so the plugin lock gate a live
+ * reload runs (BLOCKED-359) passes it and admission alone decides.
+ *
  * @module apps/cli/tests/plugin-live-reload-admission
  */
 
@@ -50,6 +54,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import type { Context } from '@deepseek-ai/cordis'
 import { loadLayeredEnv } from '@deepseek-ai/dsh-app-boot'
 import { runProfile } from '../src/profile-boot.ts'
+import { lockStagedPackages } from './fixtures/locked-profile.ts'
 
 /**
  * The enforcement gate's env override
@@ -116,7 +121,7 @@ describe('P1-01 step 3 (A-579b, B-708 sibling B-519 red first): a live-reload pr
     writeFileSync(join(profileDir, 'package.json'), `${JSON.stringify({
       name: `dsh-profile-${name}`,
       private: true,
-      dependencies: {},
+      dependencies: { 'manifestless-pkg': '1.0.0' },
       // patchReload:'live' is the web profile's reload lifecycle; development
       // keeps the base Trust Kernel's development posture, as the plugin-grants
       // real-boot cases do.
@@ -124,6 +129,7 @@ describe('P1-01 step 3 (A-579b, B-708 sibling B-519 red first): a live-reload pr
     }, undefined, 2)}\n`)
     writeFileSync(join(profileDir, 'cordis.patch.yml'), '[]\n')
     stageLoadablePackage(profileDir, 'manifestless-pkg')
+    await lockStagedPackages(profileDir, ['manifestless-pkg'])
 
     process.env.DSH_HOME = home
     delete process.env.DSH_TRUST_KERNEL_INSECURE
