@@ -187,7 +187,8 @@ const ATTACKS: Readonly<Record<string, Attack>> = {
   // One step fails the Run, then writes; the write comes after the Run is terminal (BLOCKED-332).
   'terminal-run-same-batch': {
     permission: 'workspace-write',
-    env: {},
+    // The fail-run tool is a test fixture with no Manifest v2, which plugin-manifest enforcement would refuse to mount.
+    env: { DSH_FEATURE_GATE_PLUGIN_MANIFEST_ENFORCEMENT: 'shadow' },
     patches: world => [failRunPatch(world)],
     target: world => join(world.cwd, 'written.txt'),
     calls: world => [
