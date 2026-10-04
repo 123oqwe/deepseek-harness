@@ -172,6 +172,7 @@ function install(agent: Agent, ctx: Context, config: Required<Config>): () => vo
 
     register(scoped.tools.register(defineTool({
       name: 'spawn_teammate',
+      riskDomainTags: ['agent-spawn'],
       description: 'Create one named, durable teammate. Only the Team Lead may call this tool.',
       parameters: {
         name: { type: 'string', required: true, description: 'Unique lower-kebab-case teammate name.' },
@@ -200,6 +201,7 @@ function install(agent: Agent, ctx: Context, config: Required<Config>): () => vo
 
     register(scoped.tools.register(defineTool({
       name: 'send_message',
+      riskDomainTags: ['agent-control'],
       description: 'Send one durable message to another Team member. A running target receives it at the nearest step boundary; an idle target starts a turn; an inactive teammate cold-resumes.',
       parameters: {
         target: { type: 'string', required: true, description: 'Team member name, or lead.' },
@@ -217,6 +219,7 @@ function install(agent: Agent, ctx: Context, config: Required<Config>): () => vo
 
     register(scoped.tools.register(defineTool({
       name: 'list_agents',
+      riskDomainTags: ['catalog-read'],
       description: 'List the Lead and every durable teammate with current runtime status.',
       parameters: {},
       output: jsonOutput(MEMBER_LIST_VALUE_SCHEMA),
@@ -227,6 +230,7 @@ function install(agent: Agent, ctx: Context, config: Required<Config>): () => vo
 
     register(scoped.tools.register(defineTool({
       name: 'wait_agent',
+      riskDomainTags: ['catalog-read'],
       description: 'Wait for the next teammate status, mailbox, or shared-task change after this call starts. This never wakes inactive members and returns noProgress immediately when no other member is running or provisioning. Re-list after wakeup or timeout instead of polling.',
       parameters: {
         timeout_ms: {
@@ -262,6 +266,7 @@ function install(agent: Agent, ctx: Context, config: Required<Config>): () => vo
 
     register(scoped.tools.register(defineTool({
       name: 'interrupt_agent',
+      riskDomainTags: ['agent-control'],
       description: 'Interrupt one teammate\'s current turn while preserving its pending inbox. Team Lead only.',
       parameters: {
         target: { type: 'string', required: true, description: 'Teammate name.' },
@@ -277,6 +282,7 @@ function install(agent: Agent, ctx: Context, config: Required<Config>): () => vo
 
     register(scoped.tools.register(defineTool({
       name: 'team_task_create',
+      riskDomainTags: ['session-state-write'],
       description: 'Create one unowned pending task on the shared Team task board.',
       parameters: {
         subject: { type: 'string', required: true, description: 'Concise task title.' },
@@ -301,6 +307,7 @@ function install(agent: Agent, ctx: Context, config: Required<Config>): () => vo
 
     register(scoped.tools.register(defineTool({
       name: 'team_task_list',
+      riskDomainTags: ['catalog-read'],
       description: 'List shared tasks, including readiness, owner, revision, blockers, and write-scope warnings.',
       parameters: {
         status: {
@@ -333,6 +340,7 @@ function install(agent: Agent, ctx: Context, config: Required<Config>): () => vo
 
     register(scoped.tools.register(defineTool({
       name: 'team_task_get',
+      riskDomainTags: ['catalog-read'],
       description: 'Read the complete latest value of one shared task before changing or executing it.',
       parameters: {
         task_id: { type: 'string', required: true, description: 'Shared task id.' },
@@ -348,6 +356,7 @@ function install(agent: Agent, ctx: Context, config: Required<Config>): () => vo
 
     register(scoped.tools.register(defineTool({
       name: 'team_task_update',
+      riskDomainTags: ['session-state-write'],
       description: 'Compare-and-set a shared task action using the latest revision from team_task_get or team_task_list.',
       parameters: {
         task_id: { type: 'string', required: true, description: 'Shared task id.' },
