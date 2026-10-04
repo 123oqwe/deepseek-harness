@@ -36,7 +36,7 @@ effect(execute: () => Effect, label?: string): AsyncDisposable<Promise<void>>
 
 **返回**一个用于撤销该作用的清理函数，并在清理完成后结算。
 
-[源码](../../vendor/cordis/src/fiber.ts#L512)
+[源码](../../vendor/cordis/src/fiber.ts#L595)
 
 ### ctx.fiber
 
@@ -55,7 +55,7 @@ fiber: Fiber
 
 fiber 会跟踪 `ctx.plugin()` 返回的插件上下文所对应的依赖状态、经过校验的配置、生命周期作用和清理操作。
 
-[源码](../../vendor/cordis/src/fiber.ts#L218)
+[源码](../../vendor/cordis/src/fiber.ts#L269)
 
 ### fiber.uid
 
@@ -66,7 +66,7 @@ public uid: number | null
 
 在注册表中的唯一 id；根 fiber 的 id 为 0，dispose 后为 `null`。
 
-[源码](../../vendor/cordis/src/fiber.ts#L220)
+[源码](../../vendor/cordis/src/fiber.ts#L271)
 
 ### fiber.ctx
 
@@ -77,7 +77,7 @@ public readonly ctx: Context
 
 此 fiber 的插件运行所在的上下文（扩展自父上下文）。
 
-[源码](../../vendor/cordis/src/fiber.ts#L222)
+[源码](../../vendor/cordis/src/fiber.ts#L273)
 
 ### fiber.config
 
@@ -88,7 +88,7 @@ public config: any
 
 经过校验的插件配置（由 `update()` 更新）。
 
-[源码](../../vendor/cordis/src/fiber.ts#L224)
+[源码](../../vendor/cordis/src/fiber.ts#L275)
 
 ### fiber.state
 
@@ -99,7 +99,7 @@ public state
 
 当前生命周期状态；状态转换会发出 `internal/status`。
 
-[源码](../../vendor/cordis/src/fiber.ts#L228)
+[源码](../../vendor/cordis/src/fiber.ts#L279)
 
 ### fiber.dispose
 
@@ -110,7 +110,7 @@ public readonly dispose: () => Promise<void>
 
 dispose 此 fiber：卸载插件，并在清理完成后结算。
 
-[源码](../../vendor/cordis/src/fiber.ts#L230)
+[源码](../../vendor/cordis/src/fiber.ts#L281)
 
 ### fiber.store
 
@@ -132,7 +132,7 @@ public get store(): Dict<Impl> | undefined
 
 本地修改（dsh）：改为访问器而不是普通字段，使每一次赋值——两处内部赋值以及插件所做的任何赋值——都经过 `applyStoreGuard`。只密封本类创建的对象，会让 `ctx.fiber.store = { trustKernel: forged }` 依然生效：它整体替换掉被守卫的对象，而不是往里写。
 
-[源码](../../vendor/cordis/src/fiber.ts#L241)
+[源码](../../vendor/cordis/src/fiber.ts#L292)
 
 ### fiber.pinStoreName(name, impl)
 
@@ -170,7 +170,57 @@ public pinStoreName(name: string, impl: any): void
 - `name` — 要固定的服务名。
 - `impl` — 本树中每个 fiber 解析 `name` 都必须得到的实现记录。
 
-[源码](../../vendor/cordis/src/fiber.ts#L270)
+[源码](../../vendor/cordis/src/fiber.ts#L321)
+
+### fiber.sealOnProvide(names)
+
+```ts cordis-catalog
+/**
+ * Seal service names in this fiber's whole tree at their first provide.
+ *
+ * LOCAL MODIFICATION (dsh), modification 23. Called by the Trust Kernel when
+ * it is pinned, before any plugin mounts. From then on a sealed name resolves
+ * only to the record of its first provide; a second provide of it throws, and
+ * after its provider unloads it resolves to nothing and every provide of it
+ * still throws, so a change to its provider takes effect when the host
+ * restarts. A METHOD for the reason {@link Fiber.pinStoreName} gives.
+ * @param names - the service names to seal.
+ */
+public sealOnProvide(names: readonly string[]): void
+```
+
+在本 fiber 整棵树中，于首次 provide 时封存这些服务名。
+
+本地修改（dsh），修改 23。由信任内核在被钉住时调用，早于任何插件挂载。此后被封存的名字只解析到其首次 provide 的记录；再次 provide 它会抛出；其 provider 卸载后它解析为空，任何 provide 仍会抛出，因此对其 provider 的改动在宿主重启后才生效。它是一个**方法**，理由与 Fiber.pinStoreName 相同。
+
+- `names` — 要封存的服务名。
+
+[源码](../../vendor/cordis/src/fiber.ts#L339)
+
+### fiber.sealedServiceState(name)
+
+```ts cordis-catalog
+/**
+ * Whether a service name is sealed in this fiber's tree, and where it stands.
+ *
+ * LOCAL MODIFICATION (dsh), modification 23. A consumer that treats an
+ * absent service as "nothing configured" reads this to tell a tombstone,
+ * whose provider was mounted and has unloaded, from a name never provided.
+ * @param name - the service name.
+ * @returns `unsealed`; `awaiting` before the first provide; `live` while that provider is loaded; `tombstone` after it unloaded.
+ */
+public sealedServiceState(name: string): 'unsealed' | 'awaiting' | 'live' | 'tombstone'
+```
+
+某个服务名是否在本 fiber 的树中被封存，以及它处于什么状态。
+
+本地修改（dsh），修改 23。把缺失的服务视为「未配置」的使用方读取它，以区分墓碑（其 provider 曾挂载、现已卸载）与从未提供过的名字。
+
+- `name` — 服务名。
+
+**返回**：未封存时为 `unsealed`；首次 provide 之前为 `awaiting`；该 provider 加载期间为 `live`；卸载之后为 `tombstone`。
+
+[源码](../../vendor/cordis/src/fiber.ts#L354)
 
 ### fiber.inertia
 
@@ -181,7 +231,7 @@ public inertia: Promise<void> | undefined
 
 当前正在进行的加载或卸载转换；如果没有此类转换，则为 undefined。
 
-[源码](../../vendor/cordis/src/fiber.ts#L294)
+[源码](../../vendor/cordis/src/fiber.ts#L377)
 
 ### fiber.name
 
@@ -192,7 +242,7 @@ get name()
 
 插件的显示名称，继承自最近的具名祖先；如果不存在，则为 `'root'`。
 
-[源码](../../vendor/cordis/src/fiber.ts#L433)
+[源码](../../vendor/cordis/src/fiber.ts#L516)
 
 ### fiber.assertActive()
 
@@ -210,7 +260,7 @@ assertActive()
 
 **返回**：fiber 仍处于活动状态时不返回任何内容。
 
-[源码](../../vendor/cordis/src/fiber.ts#L448)
+[源码](../../vendor/cordis/src/fiber.ts#L531)
 
 ### fiber.effect(execute, label?)
 
@@ -241,7 +291,7 @@ effect(execute: () => Effect, label?: string): AsyncDisposable<Promise<void>>
 
 **返回**一个用于撤销该作用的清理函数，并在清理完成后结算。
 
-[源码](../../vendor/cordis/src/fiber.ts#L512)
+[源码](../../vendor/cordis/src/fiber.ts#L595)
 
 ### fiber.getEffects()
 
@@ -258,7 +308,7 @@ getEffects()
 
 **返回**：每个带标签的活动作用对应一棵 `EffectMeta` 树。
 
-[源码](../../vendor/cordis/src/fiber.ts#L665)
+[源码](../../vendor/cordis/src/fiber.ts#L748)
 
 ### fiber.await()
 
@@ -276,7 +326,7 @@ async await()
 
 **返回**：进入稳定状态后的此 fiber。
 
-[源码](../../vendor/cordis/src/fiber.ts#L801)
+[源码](../../vendor/cordis/src/fiber.ts#L884)
 
 ### fiber.restart()
 
@@ -294,7 +344,7 @@ dispose 此插件，并立即使用其当前配置重新加载。
 
 **返回**一个在重新加载完成后兑现的 promise。
 
-[源码](../../vendor/cordis/src/fiber.ts#L815)
+[源码](../../vendor/cordis/src/fiber.ts#L898)
 
 ### fiber.update(config, noSave?)
 
@@ -322,7 +372,7 @@ update(config: any, noSave = false)
 
 **返回**更新 waterfall 的结果；默认的重新启动操作返回一个 promise。
 
-[源码](../../vendor/cordis/src/fiber.ts#L833)
+[源码](../../vendor/cordis/src/fiber.ts#L916)
 
 ## Effect
 
