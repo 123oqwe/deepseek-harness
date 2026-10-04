@@ -136,6 +136,11 @@ const GENERIC_SKIPS: readonly GenericSkip[] = [
   { file: 'packages/extensions/ui-cordis/src/client/CordisPanel.tsx', upstream: ['cordis'] },
   { file: 'packages/extensions/ui-cordis/src/client/CordisRunRow.tsx', upstream: ['cordis'] },
   { file: 'packages/extensions/ui-cordis/src/client/locales.ts', upstream: ['cordis'] },
+  // The bundle manifest declares the `cordis/*` extensions events its layers
+  // register (`cordis/dynamic-package`, `cordis/inspect-query`, ...); they are
+  // wire ids, not package names, and renaming them would break every producer
+  // and consumer of those events.
+  { file: 'packages/bundle/web-app/package.json', upstream: ['cordis'] },
 ]
 
 /** A string that must appear exactly `count` times once the rescope has run. */
