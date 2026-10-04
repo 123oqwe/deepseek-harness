@@ -66,5 +66,104 @@
     "@deepseek-ai/dsh-tools": "workspace:^",
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-session-projection": "workspace:^"
+  },
+  "dsh": {
+    "manifestVersion": 2,
+    "executionMode": "in-process",
+    "compatibility": {
+      "dshVersionRange": ">=0.1.0 <0.2.0"
+    },
+    "tools": [
+      {
+        "name": "terminal_open",
+        "sideEffectClass": "process",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [
+          {
+            "kind": "process",
+            "commandPattern": "bash"
+          },
+          {
+            "kind": "process",
+            "commandPattern": "pwsh"
+          }
+        ],
+        "dataClassification": "confidential"
+      },
+      {
+        "name": "terminal_send",
+        "sideEffectClass": "process",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [
+          {
+            "kind": "process",
+            "commandPattern": "bash"
+          },
+          {
+            "kind": "process",
+            "commandPattern": "pwsh"
+          }
+        ],
+        "dataClassification": "confidential"
+      },
+      {
+        "name": "terminal_read",
+        "sideEffectClass": "read",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "confidential"
+      },
+      {
+        "name": "terminal_signal",
+        "sideEffectClass": "process",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [
+          {
+            "kind": "process",
+            "commandPattern": "bash"
+          },
+          {
+            "kind": "process",
+            "commandPattern": "pwsh"
+          }
+        ],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "terminal_close",
+        "sideEffectClass": "process",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [
+          {
+            "kind": "process",
+            "commandPattern": "bash"
+          },
+          {
+            "kind": "process",
+            "commandPattern": "pwsh"
+          }
+        ],
+        "dataClassification": "internal"
+      },
+      {
+        "name": "terminal_list",
+        "sideEffectClass": "read",
+        "authAudience": [
+          "model"
+        ],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      }
+    ]
   }
 }

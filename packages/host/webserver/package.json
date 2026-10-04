@@ -45,5 +45,24 @@
     "@deepseek-ai/cordis": "workspace:^",
     "@types/compression": "^1.8.1",
     "@types/negotiator": "^0.6.5"
+  },
+  "dsh": {
+    "manifestVersion": 2,
+    "executionMode": "in-process",
+    "compatibility": {
+      "dshVersionRange": ">=0.1.0 <0.2.0"
+    },
+    "services": [
+      {
+        "ctxKey": "webServer",
+        "role": "provides"
+      }
+    ],
+    "events": [
+      {
+        "name": "webserver/index-inject",
+        "mode": "emit"
+      }
+    ]
   }
 }

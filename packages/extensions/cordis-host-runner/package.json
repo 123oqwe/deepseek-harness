@@ -89,5 +89,48 @@
     "@deepseek-ai/dsh-session": "workspace:^",
     "@deepseek-ai/dsh-tools": "workspace:^",
     "@deepseek-ai/dsh-typert-protocol": "workspace:^"
+  },
+  "dsh": {
+    "manifestVersion": 2,
+    "executionMode": "in-process",
+    "compatibility": {
+      "dshVersionRange": ">=0.1.0 <0.2.0"
+    },
+    "services": [
+      {
+        "ctxKey": "dynamicCordisRunner",
+        "role": "provides"
+      },
+      {
+        "ctxKey": "cordisInspect",
+        "role": "provides"
+      }
+    ],
+    "events": [
+      {
+        "name": "cordis/request-run",
+        "mode": "emit"
+      },
+      {
+        "name": "cordis/request-run-resolved",
+        "mode": "emit"
+      },
+      {
+        "name": "cordis/dynamic-package",
+        "mode": "emit"
+      },
+      {
+        "name": "cordis/dynamic-retract",
+        "mode": "emit"
+      },
+      {
+        "name": "cordis/inspect-query",
+        "mode": "emit"
+      },
+      {
+        "name": "cordis/inspect-query-resolved",
+        "mode": "emit"
+      }
+    ]
   }
 }
