@@ -126,7 +126,8 @@ async function showUnit(
  * @returns the exit facts, with `resourceExhausted` when it did.
  */
 async function withOutOfMemory(outcome: SubprocessOutcome, read: () => Promise<'memory' | undefined>): Promise<SubprocessOutcome> {
-  if (outcome.exitCode === 0 && outcome.signal === null) return outcome
+  // MUTATION M-U3-1: every exit has a code or a signal, so the out-of-memory read never runs.
+  if (outcome.exitCode !== null || outcome.signal !== null) return outcome
   const exhausted = await read()
   return exhausted === undefined ? outcome : { ...outcome, resourceExhausted: exhausted }
 }
