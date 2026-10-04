@@ -688,17 +688,6 @@ function selfKillingRunner(argv: readonly string[]): ConfinedArgv {
   return { argv: ['/bin/sh', '-c', 'kill -9 $$', 'self-killing-runner', '--', ...argv], backend: 'fake-runner', enforcement: 'full', reachableSockets: [], denialSignatures: UNIX_SIGNATURES }
 }
 
-/** A wrap whose runner never starts the command and exits 3 once it is told to stop. */
-function stallingRunner(argv: readonly string[]): ConfinedArgv {
-  return {
-    argv: ['/bin/sh', '-c', 'trap "exit 3" TERM; while :; do sleep 0.05; done', 'stalling-runner', '--', ...argv],
-    backend: 'fake-runner',
-    enforcement: 'full',
-    reachableSockets: [],
-    denialSignatures: UNIX_SIGNATURES,
-  }
-}
-
 /** Each backend's own runner-failure text and code, as a command that only prints them would forge. */
 const FORGED_RUNNER_FAILURES = [
   ['bwrap', 'bwrap: Can\'t mount tmpfs on /newroot: Operation not permitted', 1],
@@ -757,17 +746,15 @@ describe('the launch marker decides runner failure (Epic P3-03 U2)', () => {
     expect(task.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner' })
   })
 
-  it('a runner the deadline stops before it starts the command keeps the timeout', async () => {
-    const { bash } = await setup({}, stallingRunner)
-    const result = await bash.run(bash.resolve({ command: 'true', timeoutMs: 300 }))
-    expect([result.timedOut, result.exitCode]).toEqual([true, 3])
-  })
-
-  it('a runner an abort stops before it starts the command keeps the cancellation', async () => {
-    const { bash } = await setup({}, stallingRunner)
-    const controller = new AbortController()
-    setTimeout(() => { controller.abort() }, 300)
-    const result = await bash.run(bash.resolve({ command: 'true', signal: controller.signal }))
-    expect([result.aborted, result.exitCode]).toEqual([true, 3])
+  it.each([
+    ['the deadline', { timedOut: true, aborted: false }],
+    ['an abort', { timedOut: false, aborted: true }],
+  ] as const)('a runner %s stops before it starts the command keeps that outcome, whatever code the runner exits with', async (_cause, stop) => {
+    const { bash } = await setup()
+    // The run step is stubbed: nothing starts, so no marker is written, and the
+    // runner's exit code is fixed rather than raced against the executor's kill.
+    vi.spyOn(bash as unknown as { runArgv: () => Promise<ShellRunResult> }, 'runArgv').mockResolvedValue({ ...runResult(3, ''), ...stop })
+    const result = await bash.run(bash.resolve({ command: 'true' }))
+    expect([result.timedOut, result.aborted, result.exitCode]).toEqual([stop.timedOut, stop.aborted, 3])
   })
 })

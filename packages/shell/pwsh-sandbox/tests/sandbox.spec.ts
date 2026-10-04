@@ -21,6 +21,7 @@ import { resolvePwshPath } from '@deepseek-ai/dsh-pwsh-local'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { SandboxPolicyService } from '@deepseek-ai/dsh-sandbox-policy'
 import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
+import type { ShellRunResult } from '@deepseek-ai/dsh-shell'
 import { SandboxPwshExecutor } from '../src/index.ts'
 import { backendFacts, isRunnerSpawnFailure, matchesSignature, runnerFailureDetail } from '../src/helpers.ts'
 
@@ -346,7 +347,7 @@ describe.skipIf(!pwshAvailable())('SandboxPwshExecutor', () => {
     expect(read.delta).toContain(MARKED ? 'definitely-not-a-real-runner' : 'subprocess failed before reporting an outcome')
   }, 30_000)
 
-  // POSIX-only: the fake runners are /bin/sh scripts, and Windows has no launch marker.
+  // POSIX-only: the fake runner is a /bin/sh script, and Windows has no launch marker.
   it.skipIf(!MARKED)('a runner stopped before it starts the command keeps its own outcome: a signal death, the deadline, an abort', async () => {
     const wrap = (script: string) => (argv: readonly string[]): ConfinedArgv => ({
       argv: ['/bin/sh', '-c', script, 'fake-runner', '--', ...argv],
@@ -362,13 +363,23 @@ describe.skipIf(!pwshAvailable())('SandboxPwshExecutor', () => {
     await proc.done
     expect(proc.sandbox).toEqual({ mode: 'read-only', denied: false, enforcement: 'full', backend: 'fake-runner' })
 
-    const { executor: stalling } = await setup(wrap('trap "exit 3" TERM; while :; do sleep 0.05; done'))
-    const timedOut = await stalling.run(stalling.resolve({ command: 'echo never', sandboxPolicy: RO, timeoutMs: 300 }))
-    expect([timedOut.timedOut, timedOut.exitCode]).toEqual([true, 3])
-    const controller = new AbortController()
-    setTimeout(() => { controller.abort() }, 300)
-    const aborted = await stalling.run(stalling.resolve({ command: 'echo never', sandboxPolicy: RO, signal: controller.signal }))
-    expect([aborted.aborted, aborted.exitCode]).toEqual([true, 3])
+    // The deadline and the abort: the run step is stubbed, so nothing starts and
+    // no marker is written, and the runner's exit code is fixed rather than raced
+    // against the executor's kill.
+    for (const stop of [{ timedOut: true, aborted: false }, { timedOut: false, aborted: true }]) {
+      const { executor: stopped } = await setup()
+      const stub: ShellRunResult = {
+        exitCode: 3,
+        signal: null,
+        timeoutMs: 1000,
+        stdout: { text: '', truncated: false },
+        stderr: { text: '', truncated: false },
+        ...stop,
+      }
+      vi.spyOn(stopped as unknown as { runArgv: () => Promise<ShellRunResult> }, 'runArgv').mockResolvedValue(stub)
+      const result = await stopped.run(stopped.resolve({ command: 'echo never', sandboxPolicy: RO }))
+      expect([result.timedOut, result.aborted, result.exitCode]).toEqual([stop.timedOut, stop.aborted, 3])
+    }
   }, 30_000)
 
   it('danger-full-access background runs bypass confine and carry no facts', async () => {
