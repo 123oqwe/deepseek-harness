@@ -46,7 +46,7 @@ import type {} from '@deepseek-ai/dsh-user-approval'
 import { MockAdapter, textResponse, toolCallResponse } from '../../../../../packages/core/agent-loop/tests/mock-adapter.ts'
 import { createFixtureRootAgent } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/fixture-root-agent.ts'
 import { bootProductionProfile } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/production-profile.ts'
-import { CHARGE_TOOL, CONTROL_CALL_ID, ORIGINAL_CALL_ID, REPORT_PREFIX, RESEND_CALL_ID, type BeforeReading, type ControlReading, type ControlReport, type PhaseResult, type ResendAfterReading, type ResendReport, type SettleAfterReading, type SettleReport } from './shared.ts'
+import { CHARGE_TOOL, CONTROL_CALL_ID, ERRORED_MARK, ORIGINAL_CALL_ID, REPORT_PREFIX, RESEND_CALL_ID, type BeforeReading, type ControlReading, type ControlReport, type ErroredReading, type ErroredReport, type PhaseResult, type ResendAfterReading, type ResendReport, type SettleAfterReading, type SettleReport } from './shared.ts'
 
 const PROVIDER = 'p4-12-dup-mock'
 /** The line prefix one phase reports under. */
@@ -257,6 +257,58 @@ async function single(ctx: Context): Promise<void> {
 }
 
 /**
+ * Register the scripted model and a charge tool that RECORDS its run then THROWS
+ * (a tool error, not a crash). The model opens with the original id; after the
+ * first error result it re-sends the same action under a NEW id; after the second
+ * result it ends. So a normal tool error must not block the new-id retry.
+ * @param ctx - the booted root context.
+ */
+function registerErroringModelAndTool(ctx: Context): void {
+  const answer = (options: GenerateOptions): StreamChunk[] => {
+    if (options.purpose !== undefined) return textResponse('ok')
+    const toolResults = options.messages.reduce(
+      (count, message) => count + message.content.filter(block => block.type === 'tool-result').length, 0)
+    if (toolResults === 0) return toolCallResponse(ORIGINAL_CALL_ID, CHARGE_TOOL, { amount: '10' })
+    if (toolResults === 1) return toolCallResponse(RESEND_CALL_ID, CHARGE_TOOL, { amount: '10' })
+    return textResponse('done')
+  }
+  ctx.llm.registerAdapter([PROVIDER], new MockAdapter(Array.from({ length: 8 }, () => answer)))
+  ctx.tools.register(defineContentToolFixture({
+    name: CHARGE_TOOL,
+    description: 'an external effect the ledger reserves',
+    riskDomainTags: ['network-fetch'],
+    parameters: { amount: { type: 'string', required: true, description: 'The amount to charge.' } },
+    execute: async () => {
+      appendFileSync(runsFile(), 'run\n')
+      await Promise.resolve()
+      throw new Error(ERRORED_MARK)
+    },
+  }))
+}
+
+/** The `errored-retry` single phase: a tool error does not block a new-id retry of the same action (B-726 cause-distinction, no crash). */
+async function erroredRetry(ctx: Context): Promise<void> {
+  registerErroringModelAndTool(ctx)
+  await createFixtureRootAgent(ctx, {
+    provider: PROVIDER,
+    model: PROVIDER,
+    cwd: process.cwd(),
+    identity: (ctx.get(HOST_USER_IDENTITY_KEY) as HostUserIdentityFactory | undefined)?.(
+      `run-${randomUUID()}` as Parameters<HostUserIdentityFactory>[0],
+    ),
+  })
+  const agent = hostAgent(ctx)
+  await runFixtureTurn(ctx, { task: `A-610 errored: call ${CHARGE_TOOL}, which errors, then retry under a new id.` })
+  const events = agent.session.snapshotEvents()
+  const reading: ErroredReport['single']['reading'] = {
+    toolRuns: toolRuns(),
+    originalErrored: resultTextsFor(events, ORIGINAL_CALL_ID).join(' ').includes(ERRORED_MARK),
+    retryResultText: resultTextsFor(events, RESEND_CALL_ID).at(-1) ?? '',
+  }
+  writeSync(1, `${PHASE_TAG} ${JSON.stringify(reading)}\n`)
+}
+
+/**
  * Run one phase in a fresh process launched the way this one was.
  * @param args - the phase's arguments after the script path.
  * @returns how it exited and what it reported.
@@ -287,6 +339,10 @@ if (phase === 'orchestrate') {
     const single = runPhase<ControlReading>([configPath, 'single', mode])
     const report: ControlReport = { mode: 'different-params', single }
     process.stdout.write(`${REPORT_PREFIX} ${JSON.stringify(report)}\n`)
+  } else if (mode === 'errored-retry') {
+    const single = runPhase<ErroredReading>([configPath, 'errored', mode])
+    const report: ErroredReport = { mode: 'errored-retry', single }
+    process.stdout.write(`${REPORT_PREFIX} ${JSON.stringify(report)}\n`)
   } else if (mode === 'resend-newid' || mode === 'settle') {
     const before = runPhase<BeforeReading>([configPath, 'before', mode])
     const { sessionId, scope, key } = before.reading
@@ -306,7 +362,7 @@ if (phase === 'orchestrate') {
   } else {
     throw new Error(`a-610 driver: unknown mode ${String(mode)}`)
   }
-} else if (phase === 'before' || phase === 'after' || phase === 'single') {
+} else if (phase === 'before' || phase === 'after' || phase === 'single' || phase === 'errored') {
   const ctx = await bootProductionProfile({
     binName: 'p4-12-duplicate-sideeffect',
     profile: 'headless',
@@ -320,6 +376,8 @@ if (phase === 'orchestrate') {
       await before(ctx)
     } else if (phase === 'single') {
       await single(ctx)
+    } else if (phase === 'errored') {
+      await erroredRetry(ctx)
     } else {
       if (sessionArg === undefined || keyArg === undefined) throw new Error('a-610 driver: `after` requires the session id and key')
       if (mode === 'settle') await afterSettle(ctx, SessionId(sessionArg), keyArg)

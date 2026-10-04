@@ -30,7 +30,7 @@
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
-import { REPORT_PREFIX, type ControlReport, type ResendReport, type SettleReport } from './loader/a-610-duplicate-sideeffect/shared.ts'
+import { REPORT_PREFIX, type ControlReport, type ErroredReport, type ResendReport, type SettleReport } from './loader/a-610-duplicate-sideeffect/shared.ts'
 
 /** The orchestration runs up to two product processes with a Run-lease wait between them. */
 const RESTART_TIMEOUT_MS = 180_000
@@ -106,5 +106,17 @@ describe('P4-12 acceptance[0]/[1] (A-610, B-726 red first): a crashed sent-but-u
     // on both bases.
     expect(report.single.reading.toolRuns, detail).toBe(1)
     expect(report.single.reading.resultText, detail).toBe('charged')
+  }, CASE_TIMEOUT_MS)
+
+  it('errored-retry (B-726 cause-distinction): a tool ERROR does not block a new-id retry of the same action', async () => {
+    const report = await runMode<ErroredReport>('errored-retry')
+    const detail = JSON.stringify(report)
+    // Guard: the first call errored (not crashed), so there is an errored cause to
+    // distinguish from an ambiguous crash.
+    expect(report.single.reading.originalErrored, detail).toBe(true)
+    // The new-id retry of the same action still executes — a plain error is
+    // retryable, unlike a crash-ambiguous effect. Green on both bases: the fix
+    // distinguishes by cause and must not regress to blocking ordinary failures.
+    expect(report.single.reading.toolRuns, detail).toBe(2)
   }, CASE_TIMEOUT_MS)
 })

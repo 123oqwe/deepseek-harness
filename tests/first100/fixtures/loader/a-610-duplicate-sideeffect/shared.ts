@@ -74,6 +74,16 @@ export interface SettleAfterReading {
   readonly postSettleResultText: string
 }
 
+/** The `errored-retry` control reading (B-726 cause-distinction, no crash): a tool call that ERRORED does not block a new-id retry of the same action. */
+export interface ErroredReading {
+  /** How many times the body ran — 2 when the errored call AND the new-id retry both executed. */
+  readonly toolRuns: number
+  /** Whether the first (original-id) call's result carried the thrown error (the scenario: it errored, not crashed). */
+  readonly originalErrored: boolean
+  /** The retry's (new-id) result text. */
+  readonly retryResultText: string
+}
+
 /** The `different-params` control reading (③-b, no crash). */
 export interface ControlReading {
   /** How many times the tool body ran — 1 when an unrelated, different-arguments call executes normally. */
@@ -101,3 +111,12 @@ export interface ControlReport {
   readonly mode: 'different-params'
   readonly single: PhaseResult<ControlReading>
 }
+
+/** The `errored-retry` control report (B-726 cause-distinction). */
+export interface ErroredReport {
+  readonly mode: 'errored-retry'
+  readonly single: PhaseResult<ErroredReading>
+}
+
+/** The thrown message the errored-retry tool body raises, surfaced in its tool result. */
+export const ERRORED_MARK = 'a610-errored-run'
