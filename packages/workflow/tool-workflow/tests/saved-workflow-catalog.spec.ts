@@ -141,3 +141,12 @@ describe('B-729: the saved-workflow catalog reaches the model through a durable 
     expect(catalogs(await step(plain.ctx, plain.agent))).toEqual([])
   })
 })
+
+describe('B-729: the tool description names the hook that nests a saved workflow', () => {
+  it('documents workflow({ name, digest, onFailure? }, args?) and points at the session catalog', async () => {
+    const { ctx } = await setup()
+    const description = ctx.tools.get('workflow')?.description ?? ''
+    expect(description).toContain('`workflow({ name, digest, onFailure? }, args?): Promise<any>`')
+    expect(description).toContain('saved-workflow catalog')
+  })
+})
