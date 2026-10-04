@@ -281,6 +281,7 @@ flowchart TD
     pkg_principal["principal"]
   end
   subgraph group_interaction["packages/interaction"]
+    pkg_approval_store["approval-store"]
     pkg_commands["commands"]
     pkg_control_plane["control-plane"]
     pkg_human_channel["human-channel"]
@@ -488,6 +489,7 @@ flowchart TD
   pkg_principal --> pkg_brand
   pkg_principal --> pkg_invariants
   pkg_principal --> pkg_util_values
+  pkg_approval_store --> pkg_brand
   pkg_trust_kernel --> pkg_invariants
   pkg_lsp --> pkg_brand
   pkg_lsp --> pkg_llm
@@ -1627,6 +1629,7 @@ flowchart TD
 | [`host-frontend-static`](../packages/host/frontend-static) | `host` | [`client-connection`](../packages/client/connection), [`host-webserver`](../packages/host/webserver) |
 | [`anonymous-user-id`](../packages/identity/anonymous-user-id) | `identity` | [`brand`](../packages/util/brand), [`home-paths`](../packages/util/home-paths) |
 | [`principal`](../packages/identity/principal) | `identity` | [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants), [`util-values`](../packages/util/values) |
+| [`approval-store`](../packages/interaction/approval-store) | `interaction` | [`brand`](../packages/util/brand) |
 | [`trust-kernel`](../packages/kernel/trust-kernel) | `kernel` | [`invariants`](../packages/runtime-diagnostics/invariants) |
 | [`lsp`](../packages/lsp/lsp) | `lsp` | [`brand`](../packages/util/brand), [`llm`](../packages/llm/llm) |
 | [`feature-gates`](../packages/migration/feature-gates) | `migration` | [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants) |
