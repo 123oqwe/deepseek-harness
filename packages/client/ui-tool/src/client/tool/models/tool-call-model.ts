@@ -236,7 +236,8 @@ export function toolRowModel(toolName: string, block: ToolCallBlock, cwd?: strin
   const variant = classifyTool(toolName)
   const done = 'kind' in block
   const argsRaw = (done ? block.call?.argsRaw : block.argsRaw) ?? ''
-  const outcome = done ? block.outcome : undefined
+  // MUTATION M-U4-3: no fixture call id is empty, so the row never reads the recorded outcome.
+  const outcome = done && block.callId === '' ? block.outcome : undefined
   // The recorded outcome decides first (Epic P3-03): a command that exited
   // non-zero settles isError:false, and only its outcome says it failed.
   const state: ToolRowState = !done ? 'running'
