@@ -34,7 +34,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent/types'
 import { createSessionManifestAppender } from '@deepseek-ai/dsh-tools/manifest-log'
 // The reserve/confirm pair lives in `dsh-tools` so the code-mode dispatch can
 // reach it too: a second copy here is what left code-mode unreserved (§12.35-2).
-import { APPROVAL_DISPLAY_VALIDITY_MS, approvalBindingFor, approvalDisplayFor, confirmExternalEffect, filePreconditionsFor, gateActionRisk, judgeActionRisk, manifestClassificationOf, readExecutionWorldFact, readPolicyContextFacts, redactArgumentsForDisplay, refuseNewAction, refusedApprovalResult, refusedDispatchResult, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect, verifyRecordedApproval } from '@deepseek-ai/dsh-tools/external-effect'
+import { APPROVAL_DISPLAY_VALIDITY_MS, approvalBindingFor, approvalDisplayFor, confirmExternalEffect, consumeDispatchApproval, filePreconditionsFor, gateActionRisk, judgeActionRisk, manifestClassificationOf, readExecutionWorldFact, readPolicyContextFacts, redactArgumentsForDisplay, refuseNewAction, refusedApprovalResult, refusedConsumedApprovalResult, refusedDispatchResult, refusedPolicyResult, refusedReservationResult, refusedRiskResult, reserveExternalEffect, verifyRecordedApproval } from '@deepseek-ai/dsh-tools/external-effect'
 import type { ActionRiskVerdict } from '@deepseek-ai/dsh-tools/external-effect'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import { brandString } from '@deepseek-ai/dsh-brand'
@@ -363,6 +363,17 @@ async function runGroup(
       slots[index] = {
         exec: call.exec as unknown as ToolRunContext,
         result: refusedApprovalResult(staleApproval, call.block.name),
+        needsPost: false,
+      }
+      return
+    }
+    // Epic P2-07: the approval is consumed, at most once, before the effect is
+    // reserved; a consumed, revoked or lapsed approval refuses the dispatch.
+    const unusable = consumeDispatchApproval(ctx, agent, present.action, binding.actionId, Date.now())
+    if (unusable !== undefined) {
+      slots[index] = {
+        exec: call.exec as unknown as ToolRunContext,
+        result: refusedConsumedApprovalResult(unusable, call.block.name),
         needsPost: false,
       }
       return

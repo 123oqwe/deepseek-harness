@@ -52,7 +52,9 @@ import {
   readPolicyContextFacts,
   redactArgumentsValueForDisplay,
   refuseNewAction,
+  consumeDispatchApproval,
   refusedApprovalResult,
+  refusedConsumedApprovalResult,
   refusedDispatchResult,
   refusedPolicyResult,
   refusedRiskResult,
@@ -2152,6 +2154,8 @@ export class ToolRuntime extends Service {
    * seam too): a declared file changed between the ask and the dispatch refuses
    * the call, as it does on the native and code-mode paths. The ask carries the
    * six-field display drawn from the appended manifest (must[0]), as they do.
+   * With `ctx.approvalStore` mounted, the approval is then consumed (Epic P2-07),
+   * and one already consumed, revoked or lapsed refuses the call.
    *
    * Only in a composition that pins the Trust Kernel, as with the manifest and
    * the decision; a call with no agent has already been refused there.
@@ -2200,7 +2204,10 @@ export class ToolRuntime extends Service {
         Date.now(),
         binding.actionId,
       )
-      return stale === undefined ? undefined : refusedApprovalResult(stale, exec.name)
+      if (stale !== undefined) return refusedApprovalResult(stale, exec.name)
+      // Epic P2-07: consumed at most once, after the verification and before the call runs.
+      const unusable = consumeDispatchApproval(this.ctx, agent, binding.inputs.action, binding.actionId, Date.now())
+      return unusable === undefined ? undefined : refusedConsumedApprovalResult(unusable, exec.name)
     } catch (error: unknown) {
       return toolErrorResult(error)
     }

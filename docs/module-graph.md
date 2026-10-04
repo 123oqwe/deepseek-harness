@@ -830,6 +830,7 @@ flowchart TD
   pkg_control_plane --> pkg_user_questions
   pkg_user_approval --> pkg_action_manifest
   pkg_user_approval --> pkg_agent
+  pkg_user_approval --> pkg_approval_store
   pkg_user_approval --> pkg_brand
   pkg_user_approval --> pkg_commands
   pkg_user_approval --> pkg_invariants
@@ -1731,7 +1732,7 @@ flowchart TD
 | [`compaction`](../packages/compaction/compaction) | `compaction` | [`brand`](../packages/util/brand), [`commands`](../packages/interaction/commands), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`session`](../packages/core/session) |
 | [`command-feedback`](../packages/feedback/command-feedback) | `feedback` | [`anonymous-user-id`](../packages/identity/anonymous-user-id), [`commands`](../packages/interaction/commands), [`session`](../packages/core/session), [`typert-protocol`](../packages/typert/protocol) |
 | [`control-plane`](../packages/interaction/control-plane) | `interaction` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`human-channel`](../packages/interaction/human-channel), [`principal`](../packages/identity/principal), [`user-questions`](../packages/interaction/user-questions) |
-| [`user-approval`](../packages/interaction/user-approval) | `interaction` | [`action-manifest`](../packages/action/action-manifest), [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`commands`](../packages/interaction/commands), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`principal`](../packages/identity/principal), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`system-prompt`](../packages/core/system-prompt), [`util-values`](../packages/util/values) |
+| [`user-approval`](../packages/interaction/user-approval) | `interaction` | [`action-manifest`](../packages/action/action-manifest), [`agent`](../packages/core/agent), [`approval-store`](../packages/interaction/approval-store), [`brand`](../packages/util/brand), [`commands`](../packages/interaction/commands), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`principal`](../packages/identity/principal), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`system-prompt`](../packages/core/system-prompt), [`util-values`](../packages/util/values) |
 | [`jobs-local`](../packages/jobs/jobs-local) | `jobs` | [`agent`](../packages/core/agent), [`jobs`](../packages/jobs/jobs), [`scope`](../packages/core/scope), [`timeout`](../packages/util/timeout) |
 | [`policy-enforcement`](../packages/policy/policy-enforcement) | `policy` | [`policy-engine`](../packages/policy/policy-engine), [`trust-kernel`](../packages/kernel/trust-kernel) |
 | [`policy-engine-cedar`](../packages/policy/policy-engine-cedar) | `policy` | [`action-manifest`](../packages/action/action-manifest), [`brand`](../packages/util/brand), [`policy-engine`](../packages/policy/policy-engine) |

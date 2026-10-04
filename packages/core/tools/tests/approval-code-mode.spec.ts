@@ -24,7 +24,8 @@ import type { CodeRunRequest, CodeRunResult } from '@deepseek-ai/dsh-code-runtim
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
-import ApprovalService, { ApprovalRequestId } from '@deepseek-ai/dsh-user-approval'
+import ApprovalStoreSqlitePlugin from '@deepseek-ai/dsh-approval-store/sqlite'
+import ApprovalService, { ApprovalRequestId, approvalViewerOf, revokeTurnApprovals } from '@deepseek-ai/dsh-user-approval'
 import PermissionPresetService from '@deepseek-ai/dsh-permission-presets'
 import { approvalBindingDigest } from '@deepseek-ai/dsh-user-approval/canonical'
 import type { ApprovalBindingInputs } from '@deepseek-ai/dsh-user-approval/types'
@@ -70,7 +71,7 @@ function registerWriter(ctx: Context, runs: string[]): void {
  * @returns the composition, the agent, and what the tool observed.
  */
 async function composed(
-  options: { gate?: boolean; ledger?: boolean } = {},
+  options: { gate?: boolean; ledger?: boolean; store?: 'kept' | 'revoked' } = {},
 ): Promise<{ ctx: Context; agent: Agent; runs: string[]; runtime: ScriptedRuntime }> {
   const ctx = new Context()
   await ctx.plugin(SessionStore)
@@ -87,8 +88,19 @@ async function composed(
     run() { throw new Error('these cases do not execute bash') },
     start() { throw new Error('these cases do not execute bash') },
   })
+  // `store` mounts the durable approval queue; with `revoked` the operator
+  // revokes the session's open approvals before granting.
+  if (options.store !== undefined) {
+    const directory = mkdtempSync(join(tmpdir(), 'dsh-approval-code-mode-store-'))
+    roots.push(directory)
+    await ctx.plugin(ApprovalStoreSqlitePlugin, { directory, busyTimeoutMs: 1000 })
+  }
   await ctx.plugin(ApprovalService, {})
-  ctx.on('approval/request', () => Promise.resolve<'allowed-once'>('allowed-once'))
+  ctx.on('approval/request', (request) => {
+    const approvals = ctx.get('approvalStore')
+    if (options.store === 'revoked' && approvals !== undefined) revokeTurnApprovals(approvals, request.agent.session, Date.now())
+    return Promise.resolve<'allowed-once'>('allowed-once')
+  })
   // Mounted only where the case is about the ASK. The re-verification cases
   // leave it out on purpose: a live gate asks about the call it is dispatching
   // and records a FRESH binding for it, which supersedes the seeded one and
@@ -268,6 +280,49 @@ describe('P2-06 acceptance[2]: the record names the DISPATCH, not only the tool'
     await runProgram(ctx, runtime, agent, 'one')
 
     expect(runs).toEqual(['one'])
+  })
+})
+
+describe('P2-07 acceptance[1]: a code-mode sub-dispatch consumes the approval it rests on', () => {
+  /**
+   * Run a program that calls `writer` once, asked about through the gate, with the approval store mounted.
+   * @param store - `revoked` revokes the session's open approvals before the operator grants.
+   * @returns the agent, what the tool observed, and what the program was told.
+   */
+  async function dispatched(store: 'kept' | 'revoked'): Promise<{ ctx: Context; agent: Agent; runs: string[]; told: unknown[] }> {
+    const { ctx, agent, runs, runtime } = await composed({ gate: true, store })
+    const told: unknown[] = []
+    runtime.behavior = async (request) => {
+      await request.bindings[0]!.functions.writer!({ contents: 'one' }).catch((error: unknown) => { told.push(error) })
+      return { logs: [], value: 'done' }
+    }
+    await ctx.tools.execute({
+      signal: new AbortController().signal,
+      callId: ToolCallId('call-1'),
+      name: RUN_CODE_NAME,
+      arguments: { code: 'program', description: 'dispatch the writer' },
+      agent,
+    })
+    return { ctx, agent, runs, told }
+  }
+
+  it('runs the sub-dispatch the operator allows and leaves its approval consumed', async () => {
+    const { ctx, agent, runs, told } = await dispatched('kept')
+
+    expect(runs).toEqual(['one'])
+    expect(told).toEqual([])
+    expect(ctx.get('approvalStore')?.listPending(approvalViewerOf(agent.session), Date.now())).toEqual([])
+  })
+
+  it('does not run a sub-dispatch whose approval was revoked before the dispatch could consume it', async () => {
+    const { agent, runs, told } = await dispatched('revoked')
+
+    expect(runs).toEqual([])
+    expect(told.map(String)).toEqual([
+      'Error: The approval for "writer" could not be used (invalid-transition), so it was not performed. '
+      + 'An approval runs its action at most once and never after it expired or was revoked; ask again.',
+    ])
+    expect(agent.session.snapshotEvents().filter(event => event.type === 'tool/ptc-dispatch-start')).toEqual([])
   })
 })
 

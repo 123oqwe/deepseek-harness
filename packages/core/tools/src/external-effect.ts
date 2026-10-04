@@ -51,7 +51,7 @@ import { dispatchDecisionWithoutKernel, enforceManifestedAction, POLICY_ROW_CHAN
 import type { Principal, RunId } from '@deepseek-ai/dsh-principal'
 import { sideEffectClassOf } from '@deepseek-ai/dsh-risk-taxonomy'
 import type { RiskClass, RiskGroundKind } from '@deepseek-ai/dsh-risk-taxonomy'
-import { verifyApprovalBinding } from '@deepseek-ai/dsh-user-approval'
+import { ApprovalRequestId, consumeApprovalAtDispatch, verifyApprovalBinding, type ApprovalConflict } from '@deepseek-ai/dsh-user-approval'
 import type { ApprovalBinding, ApprovalBindingInputs, ApprovalDisplay, ApprovalVerification } from '@deepseek-ai/dsh-user-approval/types'
 import { assertNever, type JsonValue } from '@deepseek-ai/dsh-util-values'
 import { attachedIdentity, SessionSeq, TOOL_OUTCOME_UNKNOWN } from '@deepseek-ai/dsh-session'
@@ -689,42 +689,12 @@ export function verifyRecordedApproval(
   nowMs: number,
   actionId?: string,
 ): Exclude<ApprovalVerification, { valid: true }> | undefined {
-  const { session } = agent
-  // Which RECORD is this dispatch's decision (acceptance[2]). `actionId` is the
-  // field that answers it: `action` is a tool NAME, so two calls to one tool in
-  // a session are otherwise the same line. Both production paths supply one.
-  //
-  // A record that names a DIFFERENT dispatch is not this dispatch's decision
-  // and is skipped rather than compared — comparing it would refuse a call for
-  // a substitution that happened in someone else's ask.
-  const named: BoundRecord[] = []
-  const unnamed: BoundRecord[] = []
-  for (let index = session.seq - 1; index >= 0; index -= 1) {
-    // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
-    const event = session.eventAt(SessionSeq(index))
-    if (event?.type !== 'approval/bound') continue
-    const data = event.data as BoundRecord
-    if (data.action !== present.action) continue
-    if (data.actionId === undefined) unnamed.push(data)
-    else if (actionId !== undefined && data.actionId === actionId) named.push(data)
-  }
-  // A record naming THIS dispatch wins outright. Otherwise fall back to the
-  // records that name no dispatch at all — and only while that fallback is
-  // unambiguous: two unnamed decisions about one tool cannot be told apart, and
-  // picking either would decide acceptance[2]'s question by position. It fails
-  // closed instead. Reachable only from actionId-less records, which no
-  // production path writes; a caller that supplies no `actionId` of its own
-  // keeps the older most-recent-wins reading, because it is not a dispatch this
-  // epic gave an identity to.
-  const chosen = named.length > 0 ? named[0]
-    : actionId !== undefined && unnamed.length > 1
-      ? 'ambiguous' as const
-      : unnamed[0]
-  if (chosen === 'ambiguous') {
-    return { valid: false, reason: 'ambiguous', action: present.action, candidates: unnamed.length }
+  const chosen = chosenBoundRecord(agent, present.action, actionId)
+  if (chosen?.kind === 'ambiguous') {
+    return { valid: false, reason: 'ambiguous', action: present.action, candidates: chosen.candidates }
   }
   if (chosen !== undefined) {
-    const data = chosen
+    const data = chosen.record
     const recorded: ApprovalBinding = {
       inputs: {
         action: data.action,
@@ -749,6 +719,7 @@ export function verifyRecordedApproval(
 
 /** One `approval/bound` payload, as the verifier reads it back off the log. */
 interface BoundRecord {
+  readonly id: string
   readonly action: string
   readonly actionId?: string
   readonly digest: string
@@ -757,6 +728,90 @@ interface BoundRecord {
   readonly capabilityToken?: string
   readonly policyVersion?: string
   readonly expiresAtMs: number
+}
+
+/** The record that decided about a dispatch, or the count of records that cannot be told apart. */
+type ChosenBoundRecord =
+  | { readonly kind: 'record'; readonly record: BoundRecord }
+  | { readonly kind: 'ambiguous'; readonly candidates: number }
+
+/**
+ * Which `approval/bound` record decided about one dispatch (P2-06
+ * acceptance[2]); the verifier and the consumption read the same one.
+ *
+ * `actionId` is the field that answers it: `action` is a tool NAME, so two
+ * calls to one tool in a session are otherwise the same line, and both
+ * production paths supply one. A record naming a DIFFERENT dispatch is not
+ * this dispatch's decision and is skipped. A record naming THIS dispatch wins
+ * outright; otherwise the records naming no dispatch are the fallback, only
+ * while it is unambiguous — two unnamed decisions about one tool cannot be
+ * told apart, and picking either would decide by position, so it fails
+ * closed. Reachable only from actionId-less records, which no production path
+ * writes; a caller supplying no `actionId` keeps the most-recent-wins reading.
+ * @param agent - the dispatching agent, whose session holds the records.
+ * @param action - the tool name being dispatched.
+ * @param actionId - this dispatch's own id.
+ * @returns the deciding record, `ambiguous` with the candidate count, or `undefined` when none was bound.
+ */
+function chosenBoundRecord(agent: Agent, action: string, actionId: string | undefined): ChosenBoundRecord | undefined {
+  const { session } = agent
+  const named: BoundRecord[] = []
+  const unnamed: BoundRecord[] = []
+  for (let index = session.seq - 1; index >= 0; index -= 1) {
+    // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
+    const event = session.eventAt(SessionSeq(index))
+    if (event?.type !== 'approval/bound') continue
+    const data = event.data as BoundRecord
+    if (data.action !== action) continue
+    if (data.actionId === undefined) unnamed.push(data)
+    else if (actionId !== undefined && data.actionId === actionId) named.push(data)
+  }
+  const record = named[0] ?? (actionId !== undefined && unnamed.length > 1 ? undefined : unnamed[0])
+  if (record !== undefined) return { kind: 'record', record }
+  return unnamed.length > 1 ? { kind: 'ambiguous', candidates: unnamed.length } : undefined
+}
+
+/**
+ * Consume the approval one dispatch rests on, after its verification passed
+ * and before its external effect is reserved (Epic P2-07 acceptance[1],
+ * acceptance[2]): the action runs only when this returns `undefined`. A
+ * dispatch that rests on no bound approval consumes nothing.
+ * @param ctx - the dispatching context, whose `approvalStore` holds the approval when one is mounted.
+ * @param agent - the dispatching agent.
+ * @param action - the tool name being dispatched.
+ * @param actionId - this dispatch's own id.
+ * @param nowMs - the dispatch time.
+ * @returns why the approval could not be consumed, or `undefined` when the dispatch may proceed.
+ */
+export function consumeDispatchApproval(
+  ctx: Context,
+  agent: Agent,
+  action: string,
+  actionId: string | undefined,
+  nowMs: number,
+): ApprovalConflict | undefined {
+  const chosen = chosenBoundRecord(agent, action, actionId)
+  if (chosen?.kind !== 'record') return undefined
+  return consumeApprovalAtDispatch(ctx, agent.session, ApprovalRequestId(chosen.record.id), nowMs)
+}
+
+/**
+ * The tool result recorded when the approval a dispatch rests on cannot be
+ * consumed (Epic P2-07): it was already used, or was revoked, denied or
+ * lapsed, or this tenant holds no such approval, or another writer moved it
+ * since it was read. The action did not run.
+ * @param conflict - why the store refused the consumption.
+ * @param toolName - the action refused.
+ * @returns the tool result to record in place of an execution.
+ */
+export function refusedConsumedApprovalResult(conflict: ApprovalConflict, toolName: string): ToolExecutionResult {
+  const text = `The approval for "${toolName}" could not be used (${conflict}), so it was not performed. `
+    + 'An approval runs its action at most once and never after it expired or was revoked; ask again.'
+  return {
+    content: [{ type: 'text', text: `Error: ${text}` }],
+    isError: true,
+    error: { message: text, info: { name: 'ApprovalConsumedError', code: ABORTED_BEFORE_DISPATCH } },
+  }
 }
 
 /**
