@@ -658,7 +658,10 @@ jobs:
         # The two tests/first100/fixtures files launch the built product (the
         # Desktop Host with its client bundles, P0-02.U.4; the `dsh` bin in
         # `lib` mode, P4-09.U.9), so they run here, after Build, and not in the
-        # full suite above it (B-724).
+        # full suite above it (B-724). apps/cli/tests/plugin-provenance-patch-mounted.e2e.ts
+        # launches the source CLI over profiles whose patch layer mounts plugins
+        # by path (A-590, A-590b, P1-02 must[4]); the default config excludes
+        # *.e2e.ts, so it runs here.
         # Its exit record goes beside its report, as in the suite step (BLOCKED-326).
         env:
           FIRST100_UNHANDLED_ERRORS_OUT: .artifacts/first100/observations/vitest-e2e-workflow.unhandled.json
@@ -674,6 +677,7 @@ jobs:
             apps/cli/tests/profiles/headless/tests/workflow-chain.e2e.ts \
             tests/first100/fixtures/P0-02.desktop-host.composition.e2e.ts \
             tests/first100/fixtures/P4-09.saved-workflow-signing.composition.e2e.ts \
+            apps/cli/tests/plugin-provenance-patch-mounted.e2e.ts \
             --reporter=json --outputFile=.artifacts/first100/observations/vitest-e2e-workflow.json --reporter=./scripts/first100/unhandled-errors-reporter.ts --reporter=default
           code=$?
           set -e
