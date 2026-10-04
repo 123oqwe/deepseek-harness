@@ -53,7 +53,7 @@ afterEach(async () => {
 async function setup(
   script: ConstructorParameters<typeof MockAdapter>[0],
   directory?: string,
-): Promise<{ ctx: Context; busDirectory: string }> {
+): Promise<{ ctx: Context; busDirectory: string; adapter: MockAdapter }> {
   const busDirectory = directory ?? mkdtempSync(join(tmpdir(), 'dsh-xtenant-settle-'))
   if (directory === undefined) roots.push(busDirectory)
   const ctx = new Context()
@@ -66,12 +66,22 @@ async function setup(
   await ctx.plugin(MessageBusPlugin, { directory: busDirectory })
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(SubagentSpawn, { providerName: 'spawn' })
-  ctx.llm.registerAdapter(['mock'], new MockAdapter(script))
-  return { ctx, busDirectory }
+  const adapter = new MockAdapter(script)
+  ctx.llm.registerAdapter(['mock'], adapter)
+  return { ctx, busDirectory, adapter }
 }
 
 /** Enough generic responses for two children to run and two parents to drain. */
 const responses = (): ReturnType<typeof textResponse>[] => Array.from({ length: 8 }, () => textResponse('done'))
+
+/**
+ * The first-process script for the restart case: each child's turn parks at the
+ * model call ('hang' streams a partial chunk then waits until aborted), so no
+ * child completes, settles, and signals its same-process parent to drain before
+ * dispose. The shutdown drain prologue (`commitSettlementsForShutdown`) then
+ * commits every still-resident child's settlement as owed.
+ */
+const hangs = (): 'hang'[] => Array.from({ length: 8 }, () => 'hang' as const)
 
 /** The delegation spec a continuable child is started from. */
 function startSpec(parent: Agent) {
@@ -125,11 +135,20 @@ describe('P4-06 acceptance[2]: a settlement is consumed only by its own parent, 
   })
 
   it('② the isolation survives a restart: settlements owed at shutdown reach only their own parent on resume', async () => {
-    const first = await setup(responses())
+    const first = await setup(hangs())
     const parent1 = await first.ctx.agentLoop.create(SessionId('tenant-a'), { provider: 'mock', model: 'mock' })
     const parent2 = await first.ctx.agentLoop.create(SessionId('tenant-b'), { provider: 'mock', model: 'mock' })
     const childA = await first.ctx.subagents.startContinuable(startSpec(parent1))
     const childB = await first.ctx.subagents.startContinuable(startSpec(parent2))
+    // Hold both children mid-turn and NOT yet settled when dispose runs. The
+    // `hangs()` script parks each child's turn at the model call, so neither
+    // completes, settles, and signals its same-process idle parent to drain
+    // before teardown — the race that otherwise lets one row reach `acked` and
+    // reds the restart's precondition with `['acked', 'pending']`. Waiting for
+    // both model calls to arrive proves each child's run has started (its epoch
+    // is set and it is announced), which is exactly what
+    // `commitSettlementsForShutdown` requires to commit its owed row.
+    await vi.waitFor(() => { expect(first.adapter.requests.length).toBeGreaterThanOrEqual(2) }, { timeout: 10_000 })
     // Dispose with the children still resident: the manager commits every live
     // child's settlement in its drain prologue and delivers none (the tree is
     // tearing down), so both rows are committed and left owed.
