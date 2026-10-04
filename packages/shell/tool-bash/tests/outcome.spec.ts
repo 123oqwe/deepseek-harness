@@ -60,7 +60,13 @@ describe('P3-03 U1: a bash command records its outcome from its exit facts', () 
 /** A foreground executor whose run reports the out-of-memory killer, as subprocess-local reads it from a stopped scope. */
 class OutOfMemoryShell extends ShellExecutor {
   resolve(request: ShellExecRequest): ShellExecSpec {
-    return { command: request.command, workdir: process.cwd(), stdoutMaxBytes: 64_000, timeoutMs: 1000 }
+    return {
+      command: request.command,
+      workdir: process.cwd(),
+      stdoutMaxBytes: 64_000,
+      timeoutMs: 1000,
+      sandboxPolicy: request.sandboxPolicy,
+    }
   }
 
   run(spec: ShellExecSpec): Promise<ShellRunResult> {
