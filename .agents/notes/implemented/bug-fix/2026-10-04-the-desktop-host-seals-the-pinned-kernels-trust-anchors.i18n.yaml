@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-10-04-the-desktop-host-seals-the-pinned-kernels-trust-anchors.md
+2026-10-04-the-desktop-host-seals-the-pinned-kernels-trust-anchors.md: 8a71b8b92adb155c62f4700031483c580ab2e320
+2026-10-04-the-desktop-host-seals-the-pinned-kernels-trust-anchors.zh.md: e298c8f477dfe20e03e55775d6be408204fa6910
