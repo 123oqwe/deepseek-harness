@@ -24,6 +24,10 @@ import { KERNEL_SRC_DIR, readRuntimeModuleExports, readRuntimeModuleSyntax } fro
 const EXPECTED_LITERALS = [
   // The service key pinTrustKernel provides, reads back and seals, 6 uses.
   ...Array<string>(6).fill('trustKernel'),
+  // The service keys pinTrustKernel seals at their first provide (KERNEL_SEALED_SERVICES).
+  'policy',
+  'policySet',
+  'permissionPresets',
   // The algorithm id of the per-kernel signing keypair.
   'ed25519',
   // The verdict of a kernel constructed without a decider.
@@ -38,6 +42,7 @@ const EXPECTED_LITERALS = [
 
 /** The runtime entrypoints the module exports as values. */
 const EXPECTED_VALUE_EXPORTS = [
+  'KERNEL_SEALED_SERVICES',
   'configuredTrustAnchors',
   'createTrustKernel',
   'pinTrustKernel',
