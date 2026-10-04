@@ -410,20 +410,26 @@ interface UserPatchRowPackage {
 /**
  * The package a user patch row's module is imported from, resolved from the
  * profile directory as the Loader resolves the row. A module proxy carries
- * no manifest of its own, so its package is resolved from the installation
- * it forwards to. A module that no package directory holds declares nothing.
+ * no manifest of its own, so a proxy the installation wrote at its shared
+ * fallback location ({@link isInstallationPackage}) is judged by the
+ * installation's package it forwards to. Any other package claiming to be a
+ * proxy, such as one in the profile's own `node_modules`, is judged by its
+ * own declaration (BLOCKED-358). A module that no package directory holds
+ * declares nothing.
  * @param moduleName - the row's module specifier.
  * @param profileDir - the profile directory.
  * @returns the directory the row resolves to and the package's `package.json` name, when resolvable, and its classified declaration.
  */
 function userPatchRowPackage(moduleName: string, profileDir: string): UserPatchRowPackage {
   const resolved = resolveEntryPackageDir(moduleName, pathToFileURL(join(profileDir, PROFILE_ROOT_FILENAME)).href)
-  const packageDir = resolved !== undefined && isModuleProxy(resolved)
+  if (resolved === undefined) return { declaration: { kind: 'missing' } }
+  const manifest = JSON.parse(readFileSync(join(resolved, 'package.json'), 'utf8')) as { name?: unknown }
+  const name = typeof manifest.name === 'string' ? manifest.name : undefined
+  const packageDir = name !== undefined && isModuleProxy(resolved) && isInstallationPackage(name, resolved, INSTALL_ANCHOR)
     ? resolveEntryPackageDir(moduleName, pathToFileURL(INSTALL_ANCHOR).href)
     : resolved
-  if (resolved === undefined || packageDir === undefined) return { declaration: { kind: 'missing' } }
-  const { name } = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf8')) as { name?: unknown }
-  return { dir: resolved, ...typeof name === 'string' ? { name } : {}, declaration: readPluginDeclaration(packageDir) }
+  if (packageDir === undefined) return { declaration: { kind: 'missing' } }
+  return { dir: resolved, ...name === undefined ? {} : { name }, declaration: readPluginDeclaration(packageDir) }
 }
 
 /**

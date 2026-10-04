@@ -350,13 +350,28 @@ describe('plugin-manifest-enforcement gate: the rows user patch layers mount (B-
     expect(stderr).not.toContain('plain-row')
   })
 
-  it('judges a module proxy by the installed package it forwards to, not by the proxy\'s own package.json', async () => {
+  it('judges a profile-local package claiming to be a module proxy by its own package.json, not by the installed package of the same name (BLOCKED-358)', async () => {
     const dir = stagePatchedProfile()
-    // A packaged install's proxy: its `dsh` field holds only `moduleFallback`.
+    // Shaped like a packaged install's proxy, but in the profile's own node_modules, where the installation writes none.
     stagePluginPackage(dir, '@deepseek-ai/dsh-headless', { moduleFallback: { targets: {} } })
     writeFileSync(join(dir, 'cordis.patch.yml'), '- insert:\n    - id: proxied-row\n      name: "@deepseek-ai/dsh-headless"\n')
-    // Staged in the profile's own node_modules, the proxy is a profile-local package to the lock gate (P1-03 must[2]).
+    // Staged in the profile's own node_modules, the package is a profile-local package to the lock gate (P1-03 must[2]).
     await lockStagedPackages(dir, ['@deepseek-ai/dsh-headless'])
+
+    const composed = await composeProfile('patched', [], 'shadow')
+
+    expect(patchAdmissionRecords()[0]).toMatchObject({
+      differs: true,
+      shadowSummary: {
+        admitted: [],
+        denied: [{ patch: composed.profile.patchPath, row: 'proxied-row', module: '@deepseek-ai/dsh-headless', reason: 'missing-manifest', wildcardPaths: [] }],
+      },
+    })
+  })
+
+  it('admits a row naming an installation package the profile reaches through the shared module fallback', async () => {
+    stagePatchedProfile()
+    writeFileSync(join(resolveProfileDir('patched'), 'cordis.patch.yml'), '- insert:\n    - id: installed-row\n      name: "@deepseek-ai/dsh-headless"\n')
 
     await composeProfile('patched', [], 'shadow')
 
