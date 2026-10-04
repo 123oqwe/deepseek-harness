@@ -22,7 +22,7 @@
 
 import { spawnSync } from 'node:child_process'
 import { mkdtemp, rm } from 'node:fs/promises'
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -219,5 +219,84 @@ describe('P1-10 (A-596, B-711a red first): a health-check-failed upgrade rolls b
     expect(result.dataIntact, context).toBe(true)
     // The following run recovers cleanly. RED today: it reports unrecoverable.
     expect(result.rerunUnrecoverable, context).toBe(false)
+  })
+})
+
+/** The approved-permission store sentinel, seeded before the failed upgrade; a rolled-back upgrade must not touch it. */
+const TOKEN_SENTINEL = '{"a605":"sentinel — a rolled-back upgrade must not touch this","tokens":[]}\n'
+
+/** What the A-605 scenario left in the capability-token store after the failed upgrade. */
+interface TokenOutcome {
+  readonly upgradeHealthCheckFailed: boolean
+  readonly tokenBytesAfter: string | null
+  readonly tokenDirEntries: readonly string[]
+  readonly upgradeStderr: string
+}
+
+describe('P1-10 1-6 (A-605, green evidence): a health-check-failed upgrade leaves the approved-permission store byte-unchanged', () => {
+  let tokenOutcome: TokenOutcome | undefined
+  let tokenSetupError: string | undefined
+
+  beforeAll(async () => {
+    try {
+      const packRoot = await mkdtemp(join(tmpdir(), 'p1-10-tok-pack-'))
+      roots.push(packRoot)
+      const v1 = pack(packRoot, '1.0.0', false)
+      const v2 = pack(packRoot, '2.0.0', true)
+      const home = await mkdtemp(join(tmpdir(), 'p1-10-tok-home-'))
+      roots.push(home)
+      initProfile(resolveProfileDir(PROFILE, home), [])
+
+      const installed = await addCommand(home, v1)
+      if (installed.exitCode !== 0) throw new Error(`installing version 1 failed: ${installed.stderr.slice(-800)}`)
+      await withJsonBackend(home, async (kv) => {
+        const unit = await kv.open(notesAtV1())
+        try {
+          await unit.putRecord('notes', 'a', { body: 'original' })
+        } finally {
+          await unit.close()
+        }
+      })
+
+      // The capability-token store (P2-02) is the approved-permission record.
+      // The base profile derives its directory as `dshHomePath('capability-tokens')`
+      // === `$DSH_HOME/capability-tokens`, a SIBLING of the JSON backend's
+      // `storages/` root and of the profile directory. Seed a sentinel there
+      // before the failed upgrade.
+      const tokenDir = join(home, 'capability-tokens')
+      mkdirSync(tokenDir, { recursive: true })
+      const tokenFile = join(tokenDir, 'capability-tokens.json')
+      writeFileSync(tokenFile, TOKEN_SENTINEL)
+
+      const upgrade = await addCommand(home, v2)
+      tokenOutcome = {
+        upgradeHealthCheckFailed: /failed at health-check/iu.test(`${upgrade.stderr}\n${upgrade.stdout}`),
+        tokenBytesAfter: existsSync(tokenFile) ? readFileSync(tokenFile, 'utf8') : null,
+        tokenDirEntries: existsSync(tokenDir) ? readdirSync(tokenDir).sort() : [],
+        upgradeStderr: upgrade.stderr.slice(-800),
+      }
+    } catch (error: unknown) {
+      tokenSetupError = error instanceof Error ? error.message : String(error)
+    }
+  }, 4 * COMMAND_TIMEOUT_MS)
+
+  it('the approved-permission store is byte-unchanged, and the failed upgrade wrote nothing under its directory', () => {
+    if (tokenOutcome === undefined) throw new Error(tokenSetupError ?? 'no token outcome')
+    const result = tokenOutcome
+    const context = JSON.stringify(result)
+    // Guard: the upgrade actually failed AT THE HEALTH CHECK, so the data and
+    // code rollback under observation ran; a false means the recipe did not
+    // reach that phase and the case must be adjusted, not a silent pass.
+    expect(result.upgradeHealthCheckFailed, context).toBe(true)
+    // acceptance[2] (behavioural, observed on the factory `dsh plugin` upgrade):
+    // the approved-permission store survives a rolled-back upgrade byte for byte.
+    expect(result.tokenBytesAfter, context).toBe(TOKEN_SENTINEL)
+    // Structural: the upgrade's write surface — the snapshot handle (copied under
+    // `storages/`, storage-json index.ts:114-117) and `rollbackCode` (the
+    // profile's package.json + pnpm-lock.yaml, plugin-migration.ts:725) — is a
+    // SIBLING of `capability-tokens/`, so the failed upgrade adds nothing there.
+    // Holds by construction; the probe mutation M-a605-1 (a rollback that reaches
+    // into `capability-tokens/`) reds both this and the byte assertion above.
+    expect(result.tokenDirEntries, context).toEqual(['capability-tokens.json'])
   })
 })
