@@ -71,7 +71,7 @@ kind: "package-reference"
 <a id="known-limitations-and-deferred-work"></a>
 ## 已知限制与后续工作
 
-- **存储接线是单独的分片。** 本包交付 `AttachmentScanner` provider；把扫描接入 `AttachmentStore.saveImages`/`saveFile`（使任何 provider 覆盖都无法绕过）是后续分片，它把这些方法重构为先扫描后提交的模板。
+- **流式逐字文件不做内容扫描。** 扫描在 `AttachmentStore.saveImages` 与 `saveFile` 中强制，故任何 provider 覆盖都无法带着未扫描的载荷抵达提交；`saveFileStream` 无法缓冲整个载荷来扫描，故流式文件绕过扫描（未来分片对其增量扫描）。
 - **WebP 在此没有像素炸弹检查。** 嗅探器识别 WebP，但不解析其尺寸；WebP 像素炸弹尚未被拒绝。
 - **嵌套仅通过对嵌套归档成员的有界解压来测量。** 深度通过递归进入名字为归档的成员来测量，且在每层先过比例检查；以非归档名字伪装的嵌套归档不会被递归进入。
 
@@ -83,6 +83,6 @@ kind: "package-reference"
 
 本开发备注是维护者的工作上下文：尚未决定的探索方向与开放问题。它明确不具权威性——已交付的行为与限制以上文和包代码为准。
 
-store 侧强制接线（slice 2，把扫描接入 AttachmentStore 的 save 模板）、WebP 像素炸弹检测、以及以非归档名字伪装的递归嵌套检测，是开放工作；见上文「已知限制与后续工作」。
+WebP 像素炸弹检测、以非归档名字伪装的递归嵌套检测、以及对流式文件的增量扫描，是开放工作；见上文「已知限制与后续工作」。
 
 </details>

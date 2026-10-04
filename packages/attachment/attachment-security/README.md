@@ -71,7 +71,7 @@ Every threshold is a deployment-resolved field; none is hardcoded in the detecto
 <a id="known-limitations-and-deferred-work"></a>
 ## Known Limitations and Deferred Work
 
-- **The store wiring is a separate slice.** This package ships the `AttachmentScanner` provider; wiring the scan into `AttachmentStore.saveImages`/`saveFile` (so no provider override bypasses it) is the follow-on slice that refactors those into scan-then-commit templates.
+- **Streamed verbatim files are not content-scanned.** The scan is enforced in `AttachmentStore.saveImages` and `saveFile`, so no provider override reaches a commit with an unscanned payload; `saveFileStream` cannot buffer the whole payload to scan it, so a streamed file bypasses the scan (a future slice scans it incrementally).
 - **WebP carries no pixel-bomb check here.** The sniffer recognizes WebP, but its dimensions are not parsed; a WebP pixel bomb is not yet refused.
 - **Nesting is read through bounded decompression of nested-archive members only.** Depth is measured by recursing into members whose name is an archive, after the ratio check clears each level; a nested archive disguised under a non-archive name is not recursed into.
 
@@ -83,6 +83,6 @@ Every threshold is a deployment-resolved field; none is hardcoded in the detecto
 
 This Dev Note is working context for maintainers: undecided directions and open questions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and the package code.
 
-The store-side enforcement (slice 2, wiring the scan into `AttachmentStore`'s save templates) and the WebP pixel-bomb and name-disguised recursive-nesting detectors are the open work; see Known Limitations and Deferred Work above.
+The WebP pixel-bomb detector, the name-disguised recursive-nesting detector, and incremental scanning of streamed files are the open work; see Known Limitations and Deferred Work above.
 
 </details>
