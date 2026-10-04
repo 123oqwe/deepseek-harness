@@ -22,6 +22,7 @@ import {
   computeMigrationPathDigest,
   findAmbiguousEdge,
   findMigrationCycle,
+  planConfirmedUpgrade,
   planUpgrade,
   reconcileSnapshot,
   refuseOutsidePluginStorage,
@@ -179,6 +180,44 @@ describe('P1-10: a workspace path is refused, not unsupported (P3-11’s boundar
     // storage as its own backup target.
     expect(refuseOutsidePluginStorage(`${root}-backup/snapshots/2`, root))
       .toEqual({ kind: 'outside-plugin-storage', path: `${root}-backup/snapshots/2` })
+  })
+})
+
+describe('B-711b: an operator decides a path\'s preconditions by confirming its digest', () => {
+  const gated = manifest('2', [step('1', '2', {
+    preconditions: [{ id: 'disk-space', requirement: 'at least twice the data size is free' }],
+  })])
+  const gatedDigest = computeMigrationPathDigest('dsh-notes', gated.migrations)
+
+  it('REFUSES an unconfirmed path, listing its preconditions and naming the digest that admits it', () => {
+    expect(planConfirmedUpgrade('dsh-notes', gated, v('1'), undefined)).toEqual({
+      admitted: false,
+      refusal: { kind: 'preconditions-undecided', preconditions: gated.migrations[0]?.preconditions, digest: gatedDigest },
+    })
+  })
+
+  it('REFUSES a confirmation obtained for another path', () => {
+    const other = computeMigrationPathDigest('dsh-notes', [step('1', '2')])
+    expect(planConfirmedUpgrade('dsh-notes', gated, v('1'), other))
+      .toMatchObject({ admitted: false, refusal: { kind: 'preconditions-undecided', digest: gatedDigest } })
+  })
+
+  it('ADMITS the path once its digest is confirmed', () => {
+    expect(planConfirmedUpgrade('dsh-notes', gated, v('1'), gatedDigest))
+      .toEqual({ admitted: true, steps: gated.migrations, reversible: true })
+  })
+
+  it('encodes the preconditions in the digest, so a changed requirement needs a new confirmation', () => {
+    const relaxed = [step('1', '2', { preconditions: [{ id: 'disk-space', requirement: 'some space is free' }] })]
+    expect(computeMigrationPathDigest('dsh-notes', relaxed)).not.toBe(gatedDigest)
+    expect(computeMigrationPathDigest('dsh-notes', [step('1', '2')])).not.toBe(gatedDigest)
+  })
+
+  it('asks nothing of a path without preconditions, and passes a structural refusal through', () => {
+    expect(planConfirmedUpgrade('dsh-notes', manifest('2', [step('1', '2')]), v('1'), undefined))
+      .toEqual({ admitted: true, steps: [step('1', '2')], reversible: true })
+    expect(planConfirmedUpgrade('dsh-notes', manifest('4', [step('1', '2')]), v('1'), undefined))
+      .toEqual({ admitted: false, refusal: { kind: 'unreachable', from: v('1'), to: v('4') } })
   })
 })
 

@@ -29,7 +29,7 @@ export type PluginDataDigest = Branded<'PluginDataDigest'>
  *
  * An operator confirming an irreversible upgrade confirms a specific
  * conversion, not "whatever this command decides to run". The digest is what a
- * `--confirm-irreversible` flag names, so a confirmation obtained for one path
+ * `--confirm` flag names, so a confirmation obtained for one path
  * cannot admit another: a manifest edited between the operator reading it and
  * the upgrade running produces a different digest and the confirmation stops
  * matching.
@@ -133,8 +133,13 @@ export type MigrationRefusal =
   | { readonly kind: 'ambiguous-edge'; readonly from: PluginSchemaVersion }
   /** No declared chain reaches the requested version. */
   | { readonly kind: 'unreachable'; readonly from: PluginSchemaVersion; readonly to: PluginSchemaVersion }
-  /** A migration on the path declares a precondition, which only a caller can check. */
-  | { readonly kind: 'preconditions-undecided'; readonly preconditions: readonly MigrationPrecondition[] }
+  /**
+   * A migration on the path declares a precondition, which only a caller can
+   * check. `digest` names the path, preconditions included, that an operator's
+   * `--confirm` admits; absent where no plugin is named to compute it
+   * (`planUpgrade`).
+   */
+  | { readonly kind: 'preconditions-undecided'; readonly preconditions: readonly MigrationPrecondition[]; readonly digest?: MigrationPathDigest }
   /** The snapshot belongs to another plugin or another version. */
   | { readonly kind: 'snapshot-mismatch'; readonly expected: string; readonly actual: string }
   /** The path is not under the plugin's own storage root (P3-11's boundary). */

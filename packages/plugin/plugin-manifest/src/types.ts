@@ -315,6 +315,15 @@ export interface MigrationDeclaration {
    * makes `reversible` and `backup` required.
    */
   readonly module?: string
+  /**
+   * What must hold before this step may run, each with a stable id and a
+   * requirement an operator can act on (B-711b).
+   *
+   * Nothing checks them automatically: an upgrade whose path declares any is
+   * refused, listing them, until the operator confirms the path digest, which
+   * encodes them, with `--confirm`.
+   */
+  readonly preconditions?: readonly { readonly id: string; readonly requirement: string }[]
 }
 
 /**

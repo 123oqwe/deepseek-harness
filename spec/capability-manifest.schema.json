@@ -613,6 +613,27 @@
             "additive",
             "none"
           ]
+        },
+        "preconditions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "requirement"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "requirement": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
         }
       },
       "dependentRequired": {

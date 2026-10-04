@@ -318,6 +318,10 @@ function validateMigration(value: unknown, path: string, errors: ManifestValidat
   if (value.module !== undefined && typeof value.module !== 'string') {
     pushError(errors, `${path}.module`, 'must be a string when present')
   }
+  if (value.preconditions !== undefined) {
+    if (!Array.isArray(value.preconditions)) pushError(errors, `${path}.preconditions`, 'must be an array when present')
+    else value.preconditions.forEach((item, index) => { validatePrecondition(item, `${path}.preconditions[${index}]`, errors) })
+  }
   // A step that ships code actually runs, so it must say whether it can be
   // undone and what it preserves. Defaulting either would decide an operator's
   // approval for them; a missing one is a misconfiguration and fails loud here,
@@ -330,6 +334,12 @@ function validateMigration(value: unknown, path: string, errors: ManifestValidat
       pushError(errors, `${path}.backup`, `must be one of ${BACKUP_STRATEGIES.join(', ')} when the step declares a module`)
     }
   }
+}
+
+function validatePrecondition(value: unknown, path: string, errors: ManifestValidationError[]): void {
+  if (!isRecord(value)) { pushError(errors, path, 'must be an object'); return }
+  if (typeof value.id !== 'string' || value.id === '') pushError(errors, `${path}.id`, 'must be a non-empty string')
+  if (typeof value.requirement !== 'string' || value.requirement === '') pushError(errors, `${path}.requirement`, 'must be a non-empty string')
 }
 
 /** The backup strategies a migration step may declare. */

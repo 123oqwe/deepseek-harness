@@ -18,7 +18,7 @@
 import type { KvUnitDescriptor, MigrationFacet, UnitContent, UnitSnapshot } from '@deepseek-ai/dsh-storage'
 import type { RunLease } from '@deepseek-ai/dsh-lease-contract'
 
-import { admitIrreversibleUpgrade, computeMigrationPathDigest, planUpgrade } from './index.ts'
+import { admitIrreversibleUpgrade, computeMigrationPathDigest, planConfirmedUpgrade } from './index.ts'
 import type {
   MigrationPathDigest,
   MigrationRefusal,
@@ -106,8 +106,8 @@ export interface UpgradeRequest {
   /** Reads the clock; injected so a case can drive expiry deterministically. */
   readonly now: () => number
   /**
-   * What the operator supplied for an irreversible path (must[2]), absent when
-   * they supplied nothing.
+   * What the operator supplied for an irreversible path (must[2]) or for a path
+   * whose preconditions they decided (B-711b), absent when they supplied nothing.
    *
    * Weighed HERE rather than by the caller, because this is the operation that
    * makes the change: a caller that checked and then called would leave every
@@ -157,7 +157,7 @@ export type UpgradeOutcome =
  * @returns the outcome, naming the phase that failed when one did.
  */
 export async function runUpgrade(request: UpgradeRequest): Promise<UpgradeOutcome> {
-  const plan = planUpgrade(request.manifest, request.installed)
+  const plan = planConfirmedUpgrade(request.plugin, request.manifest, request.installed, request.confirmation?.digest)
   if (!plan.admitted) return { upgraded: false, failedAt: 'freeze', refusal: plan.refusal }
   const facet = request.migration
   if (facet === undefined) {

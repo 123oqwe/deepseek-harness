@@ -736,6 +736,24 @@ describe('P1-10 must[0]: a migration step that ships code must declare its risk'
     expect(validateAgainstSchema({ ...base, migrations: [invalid] })).toBe(false)
   })
 
+  it('accepts a step declaring preconditions, each with an id and a requirement (B-711b)', () => {
+    const gated = { ...step, preconditions: [{ id: 'disk-space', requirement: 'at least twice the data size is free' }] }
+    expect(validatePluginManifestV2({ ...base, migrations: [gated] }).valid).toBe(true)
+    expect(validateAgainstSchema({ ...base, migrations: [gated] })).toBe(true)
+  })
+
+  it.each([
+    ['preconditions that are not a list', { id: 'disk-space' }, 'migrations[0].preconditions'],
+    ['a precondition that is not an object', ['disk-space'], 'migrations[0].preconditions[0]'],
+    ['a precondition with an empty id', [{ id: '', requirement: 'free space' }], 'migrations[0].preconditions[0].id'],
+    ['a precondition with no requirement', [{ id: 'disk-space' }], 'migrations[0].preconditions[0].requirement'],
+  ])('rejects %s (B-711b)', (_label, preconditions, expectedPath) => {
+    const result = validatePluginManifestV2({ ...base, migrations: [{ ...step, preconditions }] })
+    expect(result.valid).toBe(false)
+    if (!result.valid) expect(result.errors.some(error => error.path === expectedPath)).toBe(true)
+    expect(validateAgainstSchema({ ...base, migrations: [{ ...step, preconditions }] })).toBe(false)
+  })
+
   it('still accepts a step that ships NO module and declares neither', () => {
     // A plugin may record that its data changed shape without shipping code to
     // convert it; the upgrade refuses that plugin by name rather than the

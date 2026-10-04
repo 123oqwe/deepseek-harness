@@ -27,13 +27,13 @@ Every export is a pure function. There is no I/O here and no service.
 
 **It does not perform an upgrade.** Epic P1-10's must[1] names six phases — freeze, snapshot, migrate in quarantine, validate, atomic switch, health check — and that is an ordering over real effects. A module that could perform one of them would be a second place the upgrade happens; the transaction is the Provider stage's.
 
-**It does not decide preconditions.** A migration's preconditions are reported back to the caller, because this package cannot know whether a disk is writable or an external system is reachable. A precondition silently treated as satisfied would be an upgrade admitted on an assumption nobody made.
+**It does not decide preconditions.** A migration's preconditions are reported back to the caller, because this package cannot know whether a disk is writable or an external system is reachable. A precondition silently treated as satisfied would be an upgrade admitted on an assumption nobody made. The operator decides them instead: `planConfirmedUpgrade` admits a path once the operator confirms its digest, which encodes its preconditions, with `--confirm`, and otherwise refuses `preconditions-undecided`, listing them and naming that digest (B-711b).
 
 **It does not touch workspace files.** `PluginDataSnapshot` covers a plugin's own durable data, config and schema. A workspace path is a REFUSED input rather than an unsupported one: P3-11 owns workspace checkpointing, and the manifest's backup strategy is exactly where the two would blur.
 
 ## must[2]: an operator confirms at the CLI, and the export comes first
 
-An irreversible upgrade proceeds only on an operator's explicit confirmation — a TTY prompt, or `--confirm-irreversible <path digest>` when there is no TTY. A non-interactive run with no flag is refused with nothing changed: an upgrade that proceeded on silence would make the approval a formality in the one case it exists for.
+An irreversible upgrade proceeds only on an operator's explicit confirmation — a TTY prompt, or `--confirm <path digest>` when there is no TTY. A non-interactive run with no flag is refused with nothing changed: an upgrade that proceeded on silence would make the approval a formality in the one case it exists for.
 
 The confirmation names a DIGEST of the ordered steps, so it admits one specific conversion rather than "whatever this command decides to run". A manifest edited between the operator reading it and the upgrade running produces a different digest, and the confirmation stops matching instead of silently covering the new path.
 
@@ -60,5 +60,5 @@ Nothing here enters a model request; an upgrade happens between sessions, not in
 ## Known Limitations and Deferred Work
 
 - **Nothing consults these decisions yet.** This is the Contract stage: the vocabulary and the judgements exist, and the transaction that would run them is the Provider stage's. A reader must not take these tests as evidence that any upgrade is transactional.
-- **must[2]'s confirmation is decided here and prompted at the Provider stage.** This package decides whether a confirmation admits a path; the TTY prompt, the `--confirm-irreversible` flag, the export and the append-only transaction record are the Provider stage's. A migration triggered from inside a session belongs to `@deepseek-ai/dsh-user-approval` instead, and is P1-11's.
+- **must[2]'s confirmation is decided here and prompted at the Provider stage.** This package decides whether a confirmation admits a path; the TTY prompt, the `--confirm` flag, the export and the append-only transaction record are the Provider stage's. A migration triggered from inside a session belongs to `@deepseek-ai/dsh-user-approval` instead, and is P1-11's.
 - **`refuseOutsidePluginStorage` compares already-resolved paths.** It resolves nothing itself, because resolution reads a filesystem. A caller passing an unresolved `../` path would be comparing strings that do not mean what they look like; resolving before the call is the caller's obligation and the Provider stage's to honour.

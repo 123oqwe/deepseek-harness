@@ -41,7 +41,7 @@ import * as storageJson from '@deepseek-ai/dsh-storage-json'
 
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
-import { planUpgrade, requiresApprovalAndExport } from '@deepseek-ai/dsh-plugin-migrations'
+import { planConfirmedUpgrade, requiresApprovalAndExport } from '@deepseek-ai/dsh-plugin-migrations'
 import { recoverUpgrade, runUpgrade } from '@deepseek-ai/dsh-plugin-migrations/transaction'
 import type { UpgradeRecord } from '@deepseek-ai/dsh-plugin-migrations/transaction'
 import type {
@@ -359,7 +359,7 @@ export async function migrateChangedPlugins(
     // weighed, because what an operator confirms is that they can still get
     // their data out. The export is a file that outlives the upgrade, not the
     // transaction's own snapshot handle.
-    const plan = planUpgrade(manifest, brandString<PluginSchemaVersion>(String(stamped)))
+    const plan = planConfirmedUpgrade(change.plugin, manifest, brandString<PluginSchemaVersion>(String(stamped)), confirmation)
     let exportPath: string | undefined
     if (requiresApprovalAndExport(plan)) {
       exportPath = environment.exportPathFor(change.plugin, stamped)
@@ -375,9 +375,9 @@ export async function migrateChangedPlugins(
       lease: environment.lease,
       now: environment.now,
       migrate: content => resolution.migrate(content, stamped),
-      ...(confirmation === undefined || exportPath === undefined
+      ...(confirmation === undefined
         ? {}
-        : { confirmation: { digest: confirmation, exportPath } }),
+        : { confirmation: { digest: confirmation, ...exportPath === undefined ? {} : { exportPath } } }),
       validate: async (copy) => {
         const digest = await facet.digestUnit(copy)
         const read = await facet.readSnapshot(copy)
@@ -452,6 +452,12 @@ export interface UpgradeOutcomes {
 function describeRefusal(refusal: MigrationRefusal): string {
   if (refusal.kind === 'confirmation-required') {
     return `${refusal.kind}: this upgrade cannot be undone — re-run with --confirm ${refusal.digest}`
+  }
+  if (refusal.kind === 'preconditions-undecided') {
+    const listed = refusal.preconditions.map(({ id, requirement }) => `${id} (${requirement})`).join('; ')
+    return refusal.digest === undefined
+      ? `${refusal.kind}: ${listed}`
+      : `${refusal.kind}: ${listed} — once they hold, re-run with --confirm ${refusal.digest}`
   }
   if (refusal.kind === 'confirmation-mismatch') {
     return `${refusal.kind}: --confirm named ${refusal.supplied}, but this path is ${refusal.expected}`
@@ -859,6 +865,9 @@ export function declaredMigrationManifests(
         // reaches here has said which it is.
         backup: { kind: step.backup ?? 'snapshot' },
         reversible: step.reversible ?? true,
+        ...step.preconditions === undefined
+          ? {}
+          : { preconditions: step.preconditions.map(({ id, requirement }) => ({ id, requirement })) },
       })),
     })
   }

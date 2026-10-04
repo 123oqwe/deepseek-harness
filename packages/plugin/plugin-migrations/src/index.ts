@@ -97,10 +97,65 @@ export function planUpgrade(
   manifest: PluginMigrationManifest,
   installed: PluginSchemaVersion,
 ): UpgradePlan {
+  const path = upgradePath(manifest, installed)
+  if (!path.found) return { admitted: false, refusal: path.refusal }
+  const pending = path.steps.flatMap(step => step.preconditions ?? [])
+  if (pending.length > 0) {
+    return { admitted: false, refusal: { kind: 'preconditions-undecided', preconditions: pending } }
+  }
+  return { admitted: true, steps: path.steps, reversible: path.steps.every(step => step.reversible) }
+}
+
+/**
+ * The steps that carry `installed` up to the manifest's current version when
+ * the operator has confirmed the path's preconditions (must[0]; B-711b).
+ *
+ * {@link planUpgrade} with one difference: a path that declares preconditions
+ * is admitted when `confirmation` is its digest, which encodes every
+ * precondition on it, so confirming the path decides them. Without that
+ * confirmation the refusal is `preconditions-undecided`, listing them and
+ * carrying the digest that would admit the path. One confirmation also serves
+ * an irreversible path's approval ({@link admitIrreversibleUpgrade}), since
+ * both name the same digest.
+ * @param plugin - the plugin being upgraded.
+ * @param manifest - the plugin's declared migrations.
+ * @param installed - the schema version currently on disk.
+ * @param confirmation - the path digest the operator confirmed, absent when they confirmed none.
+ * @returns the admitted plan with its steps, or the refusal.
+ */
+export function planConfirmedUpgrade(
+  plugin: string,
+  manifest: PluginMigrationManifest,
+  installed: PluginSchemaVersion,
+  confirmation: MigrationPathDigest | undefined,
+): UpgradePlan {
+  const path = upgradePath(manifest, installed)
+  if (!path.found) return { admitted: false, refusal: path.refusal }
+  const pending = path.steps.flatMap(step => step.preconditions ?? [])
+  if (pending.length > 0) {
+    const digest = computeMigrationPathDigest(plugin, path.steps)
+    if (confirmation !== digest) {
+      return { admitted: false, refusal: { kind: 'preconditions-undecided', preconditions: pending, digest } }
+    }
+  }
+  return { admitted: true, steps: path.steps, reversible: path.steps.every(step => step.reversible) }
+}
+
+/**
+ * Walk the declared migrations from `installed` to the manifest's current
+ * version.
+ * @param manifest - the plugin's declared migrations.
+ * @param installed - the schema version currently on disk.
+ * @returns the ordered steps, or why no single path exists.
+ */
+function upgradePath(
+  manifest: PluginMigrationManifest,
+  installed: PluginSchemaVersion,
+): { readonly found: true; readonly steps: readonly PluginMigration[] } | { readonly found: false; readonly refusal: MigrationRefusal } {
   const cyclic = findMigrationCycle(manifest)
-  if (cyclic !== undefined) return { admitted: false, refusal: cyclic }
+  if (cyclic !== undefined) return { found: false, refusal: cyclic }
   const ambiguous = findAmbiguousEdge(manifest)
-  if (ambiguous !== undefined) return { admitted: false, refusal: ambiguous }
+  if (ambiguous !== undefined) return { found: false, refusal: ambiguous }
 
   const byFrom = new Map<PluginSchemaVersion, PluginMigration>()
   for (const migration of manifest.migrations) byFrom.set(migration.from, migration)
@@ -110,17 +165,12 @@ export function planUpgrade(
   while (at !== manifest.current) {
     const step = byFrom.get(at)
     if (step === undefined) {
-      return { admitted: false, refusal: { kind: 'unreachable', from: installed, to: manifest.current } }
+      return { found: false, refusal: { kind: 'unreachable', from: installed, to: manifest.current } }
     }
     steps.push(step)
     at = step.to
   }
-
-  const pending = steps.flatMap(step => step.preconditions ?? [])
-  if (pending.length > 0) {
-    return { admitted: false, refusal: { kind: 'preconditions-undecided', preconditions: pending } }
-  }
-  return { admitted: true, steps, reversible: steps.every(step => step.reversible) }
+  return { found: true, steps }
 }
 
 /**
@@ -207,6 +257,21 @@ function lengthPrefixed(value: string): string {
 }
 
 /**
+ * One step's preconditions in a path digest: a `preconditions` marker, their
+ * count, then each id and requirement, every field length-prefixed. Empty for a
+ * step that declares none. The marker cannot be read as the next step's
+ * version, which is a schema version number.
+ * @param step - the conversion whose preconditions to encode.
+ * @returns the encoded preconditions, or the empty string.
+ */
+function encodePreconditions(step: PluginMigration): string {
+  const preconditions = step.preconditions ?? []
+  if (preconditions.length === 0) return ''
+  return `${lengthPrefixed('preconditions')}${lengthPrefixed(String(preconditions.length))}`
+    + preconditions.map(precondition => `${lengthPrefixed(precondition.id)}${lengthPrefixed(precondition.requirement)}`).join('')
+}
+
+/**
  * The digest of one upgrade path, which an operator's confirmation names
  * (must[2]).
  *
@@ -217,7 +282,10 @@ function lengthPrefixed(value: string): string {
  *
  * `reversible` is not encoded: a path whose steps are identical is the same
  * path, and folding a derived field into the identity would make a digest
- * change that no declaration explains.
+ * change that no declaration explains. A step that declares preconditions
+ * encodes each one's id and requirement after its versions, so confirming the
+ * path confirms them too (B-711b); a step that declares none encodes only its
+ * versions.
  * @param plugin - the plugin being upgraded.
  * @param steps - the ordered conversions the upgrade would run.
  * @returns the path digest.
@@ -227,7 +295,7 @@ export function computeMigrationPathDigest(
   steps: readonly PluginMigration[],
 ): MigrationPathDigest {
   const encoded = steps
-    .map(step => `${lengthPrefixed(step.from)}${lengthPrefixed(step.to)}`)
+    .map(step => `${lengthPrefixed(step.from)}${lengthPrefixed(step.to)}${encodePreconditions(step)}`)
     .join('')
   return brandString<MigrationPathDigest>(
     `sha256-${createHash('sha256').update(`${lengthPrefixed(plugin)}${encoded}`, 'utf8').digest('hex')}`,
@@ -240,7 +308,7 @@ export function computeMigrationPathDigest(
  *
  * The delegate's ruling: for a CLI-driven upgrade, "human approval" is an
  * operator's explicit confirmation at the CLI — a TTY prompt, or
- * `--confirm-irreversible <digest>` when there is no TTY. This decides whether
+ * `--confirm <digest>` when there is no TTY. This decides whether
  * what was supplied admits THIS path; recording it in the transaction log and
  * producing the export are the Provider stage's.
  *
