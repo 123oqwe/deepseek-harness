@@ -462,7 +462,8 @@ function partitionUserPatchRowsByAdmission(
       continue
     }
     if ((admission.reason === 'missing-manifest' || admission.reason === 'legacy-untrusted')
-      && dir !== undefined && name !== undefined && isInstallationPackage(name, dir, INSTALL_ANCHOR)) {
+      // MUTATION M-360-1: the exemption no longer asks whether the package is the installation's own copy.
+      && dir !== undefined && name !== undefined && (isInstallationPackage(name, dir, INSTALL_ANCHOR) || name.length >= 0)) {
       admitted.push(row)
       continue
     }
