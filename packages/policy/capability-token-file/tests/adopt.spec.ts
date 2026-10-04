@@ -3,7 +3,9 @@
  * process ended (a waiting workflow run woken once its approval is decided)
  * holds the token delegated to it before, the same token, so its authority
  * cannot widen; it is never issued a root, and when that token lapsed or was
- * revoked it holds nothing and its calls are refused.
+ * revoked it holds nothing and its calls are refused. A child's token growth
+ * never widens a delegated or resumed ancestor past what its filter admits or
+ * what it holds (BLOCKED-363).
  *
  * Only `Date` is faked; the store's file I/O and the Trust Kernel's signing
  * run for real. A restart is a second mount over the same store directory.
@@ -191,5 +193,70 @@ describe('P2-07 D8: a delegated session resumed after a restart holds the token 
     expect(ctx.capabilityTokens.adoptDelegatedToken(SessionId('never-delegated'))).toBe(false)
     const resumed = await ctx.agents.create({ sessionId: SessionId('never-delegated') })
     expect(await ctx.capabilityTokens.whenSessionToken(resumed.agent.id)).toBeUndefined()
+  })
+})
+
+describe('P2-07 D8, BLOCKED-363: a delegated child\'s growth never widens a delegated ancestor past its filter', () => {
+  it('keeps a filtered launcher and the run it delegated to within the filter when the run sees a tool the filter excludes', async () => {
+    const { ctx } = await mount()
+    const root = await ctx.agents.create({ sessionId: SessionId('growth-root') })
+    expect(held(await ctx.capabilityTokens.whenSessionToken(root.agent.id)).token.resources).toContain('write_file')
+    const launcher = await ctx.agents.create({ sessionId: SessionId('filtered-launcher') })
+    ctx.capabilityTokens.deriveChild(root.agent.id, launcher.agent.id, { allow: ['read_file'] })
+    const run = await ctx.agents.create({ sessionId: SessionId('launched-run') })
+    ctx.capabilityTokens.deriveChild(launcher.agent.id, run.agent.id)
+    const first = held(await ctx.capabilityTokens.whenSessionToken(run.agent.id))
+
+    // The run's scope sees `write_file`, which the launcher's filter excludes;
+    // the next request is the one that grows a child's token.
+    const again = held(await ctx.capabilityTokens.whenSessionToken(run.agent.id))
+    expect(digestToken(again.token)).toBe(digestToken(first.token))
+    expect(again.token.resources).toEqual(['read_file'])
+    expect(held(ctx.capabilityTokens.sessionToken(launcher.agent.id)).token.resources).toEqual(['read_file'])
+    expect(await call(ctx, run.agent, 'write_file', again)).not.toBe('ran')
+  })
+
+  it('grows a tool composed into a child\'s scope through a filtered parent that admits it, and nothing the filter excludes', async () => {
+    const { ctx } = await mount()
+    const root = await ctx.agents.create({ sessionId: SessionId('composing-root') })
+    held(await ctx.capabilityTokens.whenSessionToken(root.agent.id))
+    const parent = await ctx.agents.create({ sessionId: SessionId('admitting-parent') })
+    ctx.capabilityTokens.deriveChild(root.agent.id, parent.agent.id, { allow: ['read_file', 'structured_output'] })
+    const child = await ctx.agents.create({ sessionId: SessionId('composed-child') })
+    ctx.capabilityTokens.deriveChild(parent.agent.id, child.agent.id)
+    held(await ctx.capabilityTokens.whenSessionToken(child.agent.id))
+    // Into the child's scope only, as `attachStructuredRuntime` registers it:
+    // neither the root nor the parent can see it.
+    child.agent.ctx.tools.register(defineContentToolFixture({
+      name: 'structured_output',
+      description: 'composed into the child',
+      parameters: {},
+      async execute() { return [{ type: 'text', text: 'ok' }] },
+    }))
+
+    const grown = held(await ctx.capabilityTokens.whenSessionToken(child.agent.id))
+    expect([...grown.token.resources].sort()).toEqual(['read_file', 'structured_output'])
+    expect([...held(ctx.capabilityTokens.sessionToken(parent.agent.id)).token.resources].sort()).toEqual(['read_file', 'structured_output'])
+    expect(await call(ctx, child.agent, 'structured_output', grown)).toBe('ran')
+    expect(await call(ctx, child.agent, 'write_file', grown)).not.toBe('ran')
+  })
+
+  it('never issues a resumed run a root because a child it delegated to sees more than the run holds', async () => {
+    const first = await mount()
+    const { delegated } = await delegate(first.ctx)
+    await end(first.ctx)
+
+    const { ctx } = await mount(first.directory)
+    expect(ctx.capabilityTokens.adoptDelegatedToken(SessionId('run-session'))).toBe(true)
+    const resumed = await ctx.agents.create({ sessionId: SessionId('run-session') })
+    const child = await ctx.agents.create({ sessionId: SessionId('resumed-run-child') })
+    ctx.capabilityTokens.deriveChild(resumed.agent.id, child.agent.id)
+    held(await ctx.capabilityTokens.whenSessionToken(child.agent.id))
+
+    // The child's scope sees `write_file`, which the run never held.
+    const again = held(await ctx.capabilityTokens.whenSessionToken(child.agent.id))
+    expect(again.token.resources).toEqual(['read_file'])
+    expect(digestToken(held(await ctx.capabilityTokens.whenSessionToken(resumed.agent.id)).token)).toBe(digestToken(delegated.token))
+    expect(await call(ctx, child.agent, 'write_file', again)).not.toBe('ran')
   })
 })
