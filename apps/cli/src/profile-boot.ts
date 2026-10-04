@@ -688,7 +688,7 @@ export async function composeProfile(
     if (typeof row.id === 'string') rows.set(row.id, row)
   }
   // P1-03 must[2]: composition evaluates no plugin module, so a refusal here stops the boot before any runs.
-  await enforceProfileLock(name, profile.dir, negotiation.admitted.map(entry => entry.layer), rowModuleNames(composed))
+  await enforceProfileLock(name, profile.dir, negotiation.admitted.map(entry => entry.layer), rowModuleNames(composed), 'boot')
   const composedOverlays = [...overlays]
   const telemetryPatch = resolveTelemetryPatch(process.env.DSH_TELEMETRY_DISABLED, rows.has(TELEMETRY_ROW_ID))
   if (telemetryPatch !== undefined) composedOverlays.push(telemetryPatch)
@@ -1336,20 +1336,21 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
   // objects in place. Reusing one parsed patch object across applications
   // would bake a user override into the bundle's in-memory insert row, so
   // removing the override could never revert the row to the bundle default.
-  // Each generation's user rows pass the boot's own patch-row admission, so a
-  // live edit cannot mount a package the boot would have refused.
-  const composeLive = (): PatchOptions[] => {
+  // Each generation's user rows pass the boot's own patch-row admission and
+  // its plugin lock gate, so a live edit cannot mount a package the boot would
+  // have refused. A lock mismatch refuses the whole generation (BLOCKED-359):
+  // the throw reaches HMR, which keeps the mounted tree on the previous one.
+  const composeLive = async (): Promise<PatchOptions[]> => {
     const homeFile = homePatchPath()
     const layers: UserPatchLayer[] = [
       { file: composed.profile.patchPath, patches: loadOptionalPatches(NAME, composed.profile.patchPath) ?? [] },
       { file: homeFile, patches: loadOptionalPatches(NAME, homeFile) ?? [] },
     ]
     const refused = refuseUserPatchRows(options.profile, composed.profile.dir, composed.bundlePatches, layers, pluginEnforcement)
-    return structuredClone([
-      ...composed.bundlePatches,
-      ...layers.flatMap(layer => withoutRefusedRows(layer.patches, refused)),
-      ...composed.overlays,
-    ])
+    const userPatches = layers.map(layer => withoutRefusedRows(layer.patches, refused))
+    const generation = composeEntries([composed.bundlePatches, ...userPatches, composed.overlays])
+    await enforceProfileLock(options.profile, composed.profile.dir, composed.bundleLayers, rowModuleNames(generation), 'reload')
+    return structuredClone([...composed.bundlePatches, ...userPatches.flat(), ...composed.overlays])
   }
   // Cloned for the same insert-aliasing reason as composeLive: the boot
   // application must not mutate the objects later reloads recompose from.
@@ -1634,21 +1635,22 @@ function profileResolvedPackageDirs(profileDir: string, layers: readonly LockGat
 }
 
 /**
- * Refuse a boot whose profile-resolved packages do not match the profile's
- * lock (P1-03 must[2]). The gate runs only when the profile resolves a package
- * from its own directory or holds a lock: a profile composed only of the
- * installation's bundles has nothing a lock covers (C17 option 2′). The
- * unlocked-profile policy is the admitted bundles' declaration, most
- * restrictive first; a `warn-and-proceed` boot over an unlocked profile is
- * reported on stderr.
+ * Refuse a boot, or a live reload generation, whose profile-resolved packages
+ * do not match the profile's lock (P1-03 must[2]; BLOCKED-359). The gate runs
+ * only when the profile resolves a package from its own directory or holds a
+ * lock: a profile composed only of the installation's bundles has nothing a
+ * lock covers (C17 option 2′). The unlocked-profile policy is the admitted
+ * bundles' declaration, most restrictive first; a `warn-and-proceed`
+ * composition over an unlocked profile is reported on stderr.
  * @param name - the profile name, for the refusal.
  * @param profileDir - the profile directory.
  * @param layers - the admitted bundle layers.
  * @param rowModules - the module each composed row names.
+ * @param refusing - what a refusal stops: the boot, or one live reload generation.
  * @throws Error naming why when the gate refuses, before any plugin module is evaluated.
  */
 async function enforceProfileLock(
-  name: string, profileDir: string, layers: readonly LockGateLayer[], rowModules: readonly string[],
+  name: string, profileDir: string, layers: readonly LockGateLayer[], rowModules: readonly string[], refusing: 'boot' | 'reload',
 ): Promise<void> {
   const packageDirs = profileResolvedPackageDirs(profileDir, layers, rowModules)
   const locked = existsSync(join(profileDir, PROFILE_LOCK_FILENAME))
@@ -1668,5 +1670,5 @@ async function enforceProfileLock(
     : outcome.admission.admitted
       ? 'the lock admitted the boot but the gate did not'
       : outcome.admission.denials.map(denial => `${String(denial.name)} (${denial.reason})`).join(', ')
-  throw new Error(`${NAME}: plugin lock: profile ${JSON.stringify(name)} does not match its lock -- refusing to boot: ${reason}`)
+  throw new Error(`${NAME}: plugin lock: profile ${JSON.stringify(name)} does not match its lock -- refusing to ${refusing}: ${reason}`)
 }
