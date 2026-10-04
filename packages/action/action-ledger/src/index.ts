@@ -48,7 +48,19 @@ import type { LedgerEntry, ProviderIdempotency, ReserveDecision, ReserveRequest 
  */
 export function decideReservation(request: ReserveRequest, existing: LedgerEntry | undefined): ReserveDecision {
   if (existing === undefined) {
-    return { action: 'reserved', fenced: request.epoch !== 'unfenced', entry: { scope: request.scope, key: request.key, argumentsHash: request.argumentsHash, state: 'prepared', epoch: request.epoch } }
+    return {
+      action: 'reserved',
+      fenced: request.epoch !== 'unfenced',
+      entry: {
+        scope: request.scope,
+        key: request.key,
+        argumentsHash: request.argumentsHash,
+        state: 'prepared',
+        epoch: request.epoch,
+        ...request.capability === undefined ? {} : { capability: request.capability },
+        ...request.leaseRun === undefined ? {} : { leaseRun: request.leaseRun },
+      },
+    }
   }
   if (existing.argumentsHash !== request.argumentsHash) {
     return { action: 'refused', reason: 'arguments-differ', firstArgumentsHash: existing.argumentsHash }
@@ -83,21 +95,62 @@ export function decideReservation(request: ReserveRequest, existing: LedgerEntry
     return {
       action: 'reserved',
       fenced: comparable,
-      // The entry carries the NEW holder's generation, `'unfenced'` included:
-      // `markSent` and the other transitions match on it, so an entry left at
-      // the previous holder's generation would refuse every write by the caller
-      // just told it holds the reservation.
-      entry: { ...existing, epoch: request.epoch },
+      // The entry carries the NEW holder's generation, `'unfenced'` included,
+      // and the run that issued it: `markSent` and the other transitions match
+      // on the generation, so an entry left at the previous holder's would
+      // refuse every write by the caller just told it holds the reservation.
+      entry: {
+        scope: existing.scope,
+        key: existing.key,
+        argumentsHash: existing.argumentsHash,
+        state: existing.state,
+        epoch: request.epoch,
+        ...existing.capability === undefined ? {} : { capability: existing.capability },
+        ...request.leaseRun === undefined ? {} : { leaseRun: request.leaseRun },
+      },
     }
   }
   // Question 33 (a): a `sent` entry an OLDER generation holds was left by a
-  // holder the fence proves gone, so nobody can say whether the effect landed.
-  // Answering `duplicate` would assert that it did, and sending again could do
-  // it twice; the entry goes to reconciliation instead.
+  // holder whose lease the fence proves lapsed, so nobody can say whether the
+  // effect landed. Answering `duplicate` would assert that it did, and sending
+  // again could do it twice; the entry goes to reconciliation instead. The
+  // lapsed holder may still be running: it cannot confirm afterwards because
+  // the entry is `ambiguous`, and only a host resolution moves it from there.
   if (existing.state === 'sent' && comparable && request.epoch > existing.epoch) {
     return { action: 'refused', reason: 'ambiguous-needs-reconciliation' }
   }
   return { action: 'duplicate', state: existing.state }
+}
+
+/**
+ * The entries under OTHER keys that stop a new reservation of the same action
+ * (B-726, P4-12 acceptance[1]).
+ *
+ * A key is derived from the call id, so a model that retries an action whose
+ * outcome is unknown under a new call id presents a new key, and
+ * {@link decideReservation} alone would let it send again. An entry recording
+ * the same scope, tool and arguments under another key stops it when that
+ * entry is unsettled: an `ambiguous` one, from any run; and a `sent` one held
+ * by an OLDER generation of the SAME run, whose holder's lease has lapsed.
+ * Lease epochs are counted per run, so a `sent` entry of another run, or of
+ * this generation, may be live in flight and does not stop it. A settled
+ * entry (`confirmed`, `compensated`) does not either: repeating a finished
+ * action on purpose is an ordinary request.
+ * @param request - the reservation being decided; without a capability nothing is matched.
+ * @param sameAction - entries of the request's scope recording its capability and arguments.
+ * @returns the entries that stop the reservation, in the order given.
+ */
+export function sameActionBlockers(request: ReserveRequest, sameAction: readonly LedgerEntry[]): readonly LedgerEntry[] {
+  if (request.capability === undefined) return []
+  return sameAction.filter(entry => entry.key !== request.key
+    && entry.scope === request.scope
+    && entry.capability === request.capability
+    && entry.argumentsHash === request.argumentsHash
+    && (entry.state === 'ambiguous'
+      || (entry.state === 'sent'
+        && request.leaseRun !== undefined && entry.leaseRun === request.leaseRun
+        && request.epoch !== 'unfenced' && entry.epoch !== 'unfenced'
+        && entry.epoch < request.epoch)))
 }
 
 /**

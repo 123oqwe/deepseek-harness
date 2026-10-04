@@ -13,8 +13,8 @@
  */
 
 import type { Branded, BrandedNumber } from '@deepseek-ai/dsh-brand'
-import type { ArgumentsHash, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
-import type { PrincipalId } from '@deepseek-ai/dsh-principal'
+import type { ArgumentsHash, CapabilityRef, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
+import type { PrincipalId, RunId } from '@deepseek-ai/dsh-principal'
 
 /**
  * The fencing generation of the worker holding a reservation.
@@ -94,6 +94,10 @@ export interface LedgerEntry {
   readonly state: LedgerState
   /** The generation that holds the reservation, or `'unfenced'` when its holder had none. */
   readonly epoch: LedgerGeneration
+  /** The tool the effect runs, when the reservation named it; an entry without one is matched by its key alone. */
+  readonly capability?: CapabilityRef
+  /** The run whose lease issued `epoch`, when the holder had one; epochs compare only within one run. */
+  readonly leaseRun?: RunId
   /** Present once a receipt has been seen; absent in every other state. */
   readonly receiptDigest?: ReceiptDigest
   /** Present once the host user has resolved the entry out of `ambiguous`; absent otherwise. */
@@ -124,6 +128,14 @@ export interface ReserveRequest {
   readonly argumentsHash: ArgumentsHash
   /** The caller's generation, or `'unfenced'` when no lease issued it one. */
   readonly epoch: LedgerGeneration
+  /**
+   * The tool the effect runs. With it, another key's unsettled entry for the
+   * same tool and arguments in this scope refuses the reservation (B-726);
+   * without it, the key alone is matched.
+   */
+  readonly capability?: CapabilityRef
+  /** The run whose lease issued `epoch`; absent when the caller has no lease. */
+  readonly leaseRun?: RunId
 }
 
 /**
@@ -172,7 +184,11 @@ export type ReserveDecision =
    * cannot tell a peer from this same worker restarting.
    */
   | { readonly action: 'refused'; readonly reason: 'held-at-same-epoch'; readonly heldEpoch: LedgerEpoch }
-  /** The outcome is unknown; retrying cannot resolve it (acceptance[1]). */
+  /**
+   * The outcome is unknown; retrying cannot resolve it (acceptance[1]). Given
+   * for this key's own unsettled entry, and for another key's entry recording
+   * the same tool and arguments in this scope (B-726).
+   */
   | { readonly action: 'refused'; readonly reason: 'ambiguous-needs-reconciliation' }
 
 /**

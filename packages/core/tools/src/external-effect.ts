@@ -41,20 +41,21 @@ import type {
   ManifestAttribution,
   SideEffectClassification,
 } from '@deepseek-ai/dsh-action-manifest'
-import type { LedgerEpoch, LedgerGeneration, LedgerScope, ReceiptDigest, ReserveDecision } from '@deepseek-ai/dsh-action-ledger'
+import type { LedgerEntry, LedgerEpoch, LedgerGeneration, LedgerScope, ReceiptDigest, ReserveDecision } from '@deepseek-ai/dsh-action-ledger'
 import type {} from '@deepseek-ai/dsh-action-ledger'
 import { brandNumber, brandString } from '@deepseek-ai/dsh-brand'
 import { redactTokenForLog } from '@deepseek-ai/dsh-capability-token'
 import type { SignedCapabilityToken } from '@deepseek-ai/dsh-capability-token'
 import type { ClosedDecision, ExecutionWorldFact, PolicyContextFacts } from '@deepseek-ai/dsh-policy-engine'
 import { dispatchDecisionWithoutKernel, enforceManifestedAction } from '@deepseek-ai/dsh-policy-enforcement'
-import type { Principal } from '@deepseek-ai/dsh-principal'
+import type { Principal, RunId } from '@deepseek-ai/dsh-principal'
 import { sideEffectClassOf } from '@deepseek-ai/dsh-risk-taxonomy'
 import type { RiskClass, RiskGroundKind } from '@deepseek-ai/dsh-risk-taxonomy'
 import { verifyApprovalBinding } from '@deepseek-ai/dsh-user-approval'
 import type { ApprovalBinding, ApprovalBindingInputs, ApprovalDisplay, ApprovalVerification } from '@deepseek-ai/dsh-user-approval/types'
 import { assertNever, type JsonValue } from '@deepseek-ai/dsh-util-values'
-import { attachedIdentity, SessionSeq } from '@deepseek-ai/dsh-session'
+import { attachedIdentity, SessionSeq, TOOL_OUTCOME_UNKNOWN } from '@deepseek-ai/dsh-session'
+import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-user-approval'
 import type { WorldBindingRefusal } from '@deepseek-ai/dsh-execution-world/lifecycle'
 import type { WorldId, WorldProviderId, WorldSpecDigest } from '@deepseek-ai/dsh-execution-world/types'
@@ -81,6 +82,8 @@ export interface ExternalEffectRecord {
   readonly key: IdempotencyKey
   /** The canonical hash of the arguments the reservation was taken for. */
   readonly argumentsHash: ArgumentsHash
+  /** The manifest's capability: the tool the effect runs, which the ledger matches a retry under a new call id by (B-726). */
+  readonly capability: CapabilityRef
 }
 
 /**
@@ -260,6 +263,7 @@ export function appendManifestAndDecide(
       scope: attribution.actor.id,
       key: manifestRequest.idempotencyKey,
       argumentsHash: appended.manifest.argumentsHash,
+      capability: appended.manifest.capability,
     },
     decision: decideManifest(ledgerContext, appended.manifest, presented, request, world, facts),
     manifest: appended.manifest,
@@ -331,15 +335,66 @@ export function reserveExternalEffect(
 ): Exclude<ReserveDecision, { action: 'reserved' }> | undefined {
   const ledger = ctx.get('actionLedger')
   if (ledger === undefined) return undefined
+  const leaseRun = agent.lifecycle?.runId
   const decision = ledger.reserve({
     scope: record.scope,
     key: record.key,
     argumentsHash: record.argumentsHash,
     epoch: generationOf(agent),
+    capability: record.capability,
+    // The run whose lease issued the generation: epochs are counted per run,
+    // so the ledger compares two only when they share it (B-726).
+    ...leaseRun === undefined ? {} : { leaseRun: brandString<RunId>(String(leaseRun)) },
   })
   if (decision.action !== 'reserved') return decision
   ledger.markSent(record.scope, record.key, generationOf(agent))
   return undefined
+}
+
+/**
+ * Send the external effects of the calls a resume closes as interrupted to
+ * reconciliation (B-726, P4-12 acceptance[1]).
+ *
+ * A call the resume closes with `TOOL_OUTCOME_UNKNOWN` was recorded as started
+ * and has no result, so its effect may or may not have landed. Its `sent`
+ * entry is moved to `ambiguous` at once, whether or not the model retries: the
+ * entry is listed for `/resolve-effect`, and a retry under a new call id is
+ * refused by the ledger's same-action check instead of being performed again.
+ * A `run_code` call's entries include those of its code-mode sub-calls, whose
+ * action ids are `<callId>:ptc:<n>`.
+ *
+ * No generation is compared. The resume holds the session's write ownership
+ * before it repairs the log, so whoever recorded the call no longer writes this
+ * session. If that holder is still running, its later `confirm` is refused
+ * because the entry is `ambiguous`, and the entry waits for the host user:
+ * nothing is sent twice.
+ * @param ctx - the mounting context, consulted for an optional ledger.
+ * @param persisted - the session log as read back from storage, before the closers.
+ * @param closers - the synthetic events the resume appends for the interrupted turn.
+ * @returns the entries moved to `ambiguous`; empty with no ledger mounted or no `sent` entry.
+ */
+export function settleInterruptedEffects(
+  ctx: Context,
+  persisted: readonly SessionEvent[],
+  closers: readonly SessionEvent[],
+): readonly LedgerEntry[] {
+  const ledger = ctx.get('actionLedger')
+  if (ledger === undefined) return []
+  const interrupted = new Set<string>()
+  for (const event of closers) {
+    if (event.type === 'tool/result' && event.data.error?.code === TOOL_OUTCOME_UNKNOWN) {
+      interrupted.add(String(event.data.message.source.callId))
+    }
+  }
+  if (interrupted.size === 0) return []
+  const keys: { readonly scope: LedgerScope; readonly key: string }[] = []
+  for (const event of persisted) {
+    if (event.type !== 'action/manifest-appended') continue
+    const sub = event.data.actionId.indexOf(':ptc:')
+    if (!interrupted.has(sub === -1 ? event.data.actionId : event.data.actionId.slice(0, sub))) continue
+    keys.push({ scope: brandString<LedgerScope>(event.data.actor), key: event.data.idempotencyKey })
+  }
+  return keys.length === 0 ? [] : ledger.markInterrupted(keys)
 }
 
 /**
@@ -1211,7 +1266,8 @@ export function refusedReservationResult(decision: Exclude<ReserveDecision, { ac
         ? 'A newer generation owns this action; this run has been fenced out and did not perform it.'
         : decision.reason === 'held-at-same-epoch'
           ? 'Another worker in this same generation holds this action and has not sent it; it was not performed twice.'
-          : 'This action\'s outcome is unknown and cannot be settled by retrying; it awaits reconciliation.'
+          : 'This action\'s outcome is unknown and cannot be settled by retrying; it awaits reconciliation. '
+            + 'The host user settles it with /resolve-effect; do not perform it again under a new call.'
   return {
     content: [{ type: 'text', text: `Error: ${text}` }],
     isError: true,

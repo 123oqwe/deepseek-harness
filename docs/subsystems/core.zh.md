@@ -579,6 +579,14 @@ confirm(scope: LedgerScope, key: string, epoch: LedgerGeneration, receiptDigest:
 markAmbiguous(scope: LedgerScope, key: string, epoch: LedgerGeneration): void
 
 /**
+ * Send the `sent` entries of calls a resumed session closed as interrupted to
+ * reconciliation, in one transaction (B-726).
+ * @param keys - the scoped keys of the interrupted calls' manifests.
+ * @returns the entries moved to `ambiguous`.
+ */
+markInterrupted(keys: readonly { readonly scope: LedgerScope; readonly key: string }[]): readonly LedgerEntry[]
+
+/**
  * The entry for one scoped key.
  * @param scope - the reservation's owning principal.
  * @param key - the idempotency key.

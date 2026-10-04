@@ -30,6 +30,7 @@ import { interruptedTurnClosers, SessionLogOffset, SessionPreparation, SessionSe
 import type { Session, SessionHeader, SessionId } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-system-prompt'
 import type {} from '@deepseek-ai/dsh-tools'
+import { settleInterruptedEffects } from '@deepseek-ai/dsh-tools/external-effect'
 import type {} from '@deepseek-ai/dsh-session-projection'
 import type { ProjectionDefinition } from '@deepseek-ai/dsh-session-projection'
 import { SessionPersistenceNotFoundError } from '@deepseek-ai/dsh-session-persistence'
@@ -967,6 +968,12 @@ export class AgentLoop extends Service implements AgentFactory {
           fused.throwIfAborted()
           const persisted = coldRead.events
           const closers = closeUnansweredApprovals(persisted, interruptedTurnClosers(persisted))
+          // The interrupted calls' external effects go to reconciliation
+          // BEFORE the closers are durable (B-726): a crash in between leaves the
+          // log unbalanced, so the next resume computes the same closers and
+          // repeats this idempotent move. Done after the append, a crash there
+          // would leave the effects `sent` with no closer left to find them by.
+          settleInterruptedEffects(this.runtime.ctx, persisted, closers)
           if (closers.length > 0) await handle.append(closers)
           preparation = SessionPreparation.create(this.runtime.ctx.sessions.prepare(id, {
             seed: [...persisted, ...closers],

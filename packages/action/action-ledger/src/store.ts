@@ -23,7 +23,7 @@
 import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
-import { decideReservation } from './index.ts'
+import { decideReservation, sameActionBlockers } from './index.ts'
 import type { LedgerEntry, LedgerEpoch, LedgerGeneration, LedgerResolution, LedgerScope, LedgerState, ReceiptDigest, ReserveDecision, ReserveRequest } from './types.ts'
 
 /** The store's handle. */
@@ -35,7 +35,10 @@ export interface LedgerStore {
    * key concurrently cannot both be told they hold it. A `sent` entry that an
    * older generation holds is moved to `ambiguous` in that transaction, under
    * the holder's own generation as `markAmbiguous` would, so reconciliation
-   * lists it (question 33 (a)).
+   * lists it (question 33 (a)). A request that names its capability is also
+   * refused when another key's entry records the same action unsettled
+   * (`sameActionBlockers`); each such `sent` entry moves to `ambiguous` in the
+   * same transaction (B-726).
    */
   reserve: (request: ReserveRequest) => ReserveDecision
   /**
@@ -62,6 +65,13 @@ export interface LedgerStore {
    * longer `ambiguous` is refused.
    */
   markCompensated: (scope: LedgerScope, key: string, epoch: LedgerGeneration, resolution: LedgerResolution) => void
+  /**
+   * Move the `sent` entries of calls a resumed session closed as interrupted to
+   * `ambiguous`, in one transaction, under each entry's own generation (B-726).
+   * An entry in any other state, or absent, is left as it is. Returns the
+   * entries it moved.
+   */
+  markInterrupted: (keys: readonly { readonly scope: LedgerScope; readonly key: string }[]) => readonly LedgerEntry[]
   /** The entry for one scoped key, or undefined when it has never been reserved. */
   entry: (scope: LedgerScope, key: string) => LedgerEntry | undefined
   /** The `ambiguous` entries of one scope, by key: what is waiting for reconciliation. */
@@ -81,8 +91,12 @@ export interface LedgerStore {
  * unfenced reservation against one fails on a constraint deep inside a
  * transaction; the version check refuses the file up front instead, which is
  * the pre-release stance — reject an old format rather than migrate it.
+ *
+ * Version 3 records each entry's capability and the run that issued its
+ * epoch, so a reservation can find another key's unsettled entry for the same
+ * action (B-726). A version 2 file has neither column and is refused the same way.
  */
-const SCHEMA_VERSION = 2
+const SCHEMA_VERSION = 3
 
 /** The schema this module owns; `action-ledger.sqlite` carries its own version. */
 const SCHEMA = [
@@ -100,7 +114,11 @@ const SCHEMA = [
   // `epoch` is NULLABLE, and NULL is not zero: it records a holder that had no
   // lease generation at all. Every comparison against it uses `IS` rather than
   // `=` so the absent generation matches itself and nothing else.
-  'CREATE TABLE IF NOT EXISTS ledger (scope TEXT NOT NULL, key TEXT NOT NULL, arguments_hash TEXT NOT NULL, state TEXT NOT NULL, epoch INTEGER, receipt_digest TEXT, PRIMARY KEY (scope, key))',
+  //
+  // `capability` and `lease_run` are NULL for a reservation that named neither: such
+  // an entry is matched by its key alone.
+  'CREATE TABLE IF NOT EXISTS ledger (scope TEXT NOT NULL, key TEXT NOT NULL, arguments_hash TEXT NOT NULL, state TEXT NOT NULL, epoch INTEGER,'
+    + ' receipt_digest TEXT, capability TEXT, lease_run TEXT, PRIMARY KEY (scope, key))',
   // The host user's resolutions of ambiguous entries (BLOCKED-311). A table of
   // its own rather than new ledger columns, so a version 2 file gains it here
   // without a migration, and a build that predates it reads the ledger as before.
@@ -108,7 +126,7 @@ const SCHEMA = [
 ]
 
 /** The columns an entry is read from: its ledger row and, once resolved, its resolution. */
-const ENTRY_SELECT = 'SELECT l.scope, l.key, l.arguments_hash, l.state, l.epoch, l.receipt_digest, r.outcome, r.resolved_by, r.resolved_at'
+const ENTRY_SELECT = 'SELECT l.scope, l.key, l.arguments_hash, l.state, l.epoch, l.receipt_digest, l.capability, l.lease_run, r.outcome, r.resolved_by, r.resolved_at'
   + ' FROM ledger l LEFT JOIN resolution r ON r.scope = l.scope AND r.key = l.key'
 
 /** One row of {@link ENTRY_SELECT}. */
@@ -119,6 +137,8 @@ interface EntryRow {
   state: string
   epoch: number | null
   receipt_digest: string | null
+  capability: string | null
+  lease_run: string | null
   outcome: string | null
   resolved_by: string | null
   resolved_at: number | null
@@ -136,6 +156,8 @@ function entryOf(row: EntryRow): LedgerEntry {
     argumentsHash: row.arguments_hash as LedgerEntry['argumentsHash'],
     state: row.state as LedgerState,
     epoch: row.epoch === null ? 'unfenced' : row.epoch as LedgerEpoch,
+    ...(row.capability === null ? {} : { capability: row.capability as NonNullable<LedgerEntry['capability']> }),
+    ...(row.lease_run === null ? {} : { leaseRun: row.lease_run as NonNullable<LedgerEntry['leaseRun']> }),
     ...(row.receipt_digest === null ? {} : { receiptDigest: row.receipt_digest as ReceiptDigest }),
     ...(row.outcome === null ? {} : {
       resolution: {
@@ -278,6 +300,9 @@ export function openLedgerStore(directory: string): LedgerStore {
     db.close()
     throw new Error(`action ledger: ${join(directory, 'action-ledger.sqlite')} is schema version ${String(version)}, not ${String(SCHEMA_VERSION)}; delete it to start a new ledger`)
   }
+  // After the version check: an older file has no `capability` column, and
+  // indexing it would fail with a SQLite error instead of the refusal above.
+  db.exec('CREATE INDEX IF NOT EXISTS ledger_same_action ON ledger (scope, capability, arguments_hash)')
   // The connection is a closure variable, not a property and not a WeakMap
   // entry keyed by the handle. A first draft copied `dsh-message-bus`'s
   // WeakMap-plus-guard, and the case written to prove the guard fires showed
@@ -303,17 +328,35 @@ export function openLedgerStore(directory: string): LedgerStore {
         if (existing?.state === 'sent' && decision.action === 'refused' && decision.reason === 'ambiguous-needs-reconciliation') {
           move(db, request.scope, request.key, existing.epoch, 'ambiguous', null, false)
         }
-        if (decision.action === 'reserved') {
-          db.prepare('INSERT INTO ledger (scope, key, arguments_hash, state, epoch) VALUES (?, ?, ?, ?, ?)'
-            + ' ON CONFLICT (scope, key) DO UPDATE SET epoch = excluded.epoch')
-            .run(
-              decision.entry.scope,
-              decision.entry.key,
-              decision.entry.argumentsHash,
-              decision.entry.state,
-              columnEpoch(decision.entry.epoch),
-            )
+        if (decision.action !== 'reserved') {
+          db.exec('COMMIT')
+          return decision
         }
+        // B-726: the same action under another key. Read in this transaction,
+        // so a peer cannot settle or add one between the read and the write.
+        const blockers = request.capability === undefined
+          ? []
+          : sameActionBlockers(request, (db.prepare(`${ENTRY_SELECT} WHERE l.scope = ? AND l.capability = ? AND l.arguments_hash = ?`
+            + ' AND l.key <> ? AND l.state IN (\'ambiguous\', \'sent\') ORDER BY l.key')
+            .all(request.scope, request.capability, request.argumentsHash, request.key) as unknown as EntryRow[]).map(entryOf))
+        if (blockers.length > 0) {
+          for (const blocker of blockers) {
+            if (blocker.state === 'sent') move(db, blocker.scope, blocker.key, blocker.epoch, 'ambiguous', null, false)
+          }
+          db.exec('COMMIT')
+          return { action: 'refused', reason: 'ambiguous-needs-reconciliation' }
+        }
+        db.prepare('INSERT INTO ledger (scope, key, arguments_hash, state, epoch, capability, lease_run) VALUES (?, ?, ?, ?, ?, ?, ?)'
+          + ' ON CONFLICT (scope, key) DO UPDATE SET epoch = excluded.epoch, lease_run = excluded.lease_run')
+          .run(
+            decision.entry.scope,
+            decision.entry.key,
+            decision.entry.argumentsHash,
+            decision.entry.state,
+            columnEpoch(decision.entry.epoch),
+            decision.entry.capability ?? null,
+            decision.entry.leaseRun ?? null,
+          )
         db.exec('COMMIT')
         return decision
       } catch (error) {
@@ -325,6 +368,22 @@ export function openLedgerStore(directory: string): LedgerStore {
     confirm: (scope, key, epoch, receiptDigest, resolution) => { transition(db, scope, key, epoch, 'confirmed', receiptDigest, resolution) },
     markAmbiguous: (scope, key, epoch) => { transition(db, scope, key, epoch, 'ambiguous') },
     markCompensated: (scope, key, epoch, resolution) => { transition(db, scope, key, epoch, 'compensated', undefined, resolution) },
+    markInterrupted: (keys) => {
+      db.exec('BEGIN IMMEDIATE')
+      try {
+        const moved: LedgerEntry[] = []
+        for (const { scope, key } of keys) {
+          const changed = db.prepare('UPDATE ledger SET state = \'ambiguous\' WHERE scope = ? AND key = ? AND state = \'sent\'').run(scope, key).changes
+          const entry = changed === 0 ? undefined : readEntry(db, scope, key)
+          if (entry !== undefined) moved.push(entry)
+        }
+        db.exec('COMMIT')
+        return moved
+      } catch (error) {
+        db.exec('ROLLBACK')
+        throw error
+      }
+    },
     entry: (scope, key) => readEntry(db, scope, key),
     listAmbiguous: scope => (db.prepare(`${ENTRY_SELECT} WHERE l.scope = ? AND l.state = 'ambiguous' ORDER BY l.key`).all(scope) as unknown as EntryRow[])
       .map(entryOf),
