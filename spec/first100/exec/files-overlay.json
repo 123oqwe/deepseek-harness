@@ -56,6 +56,14 @@
     },
     {
       "epic": "P0-01",
+      "path": "tests/release/baseline-fingerprint-exports-order.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F.8"
+      ]
+    },
+    {
+      "epic": "P0-01",
       "path": "tests/release/baseline-fingerprint-normalized.spec.ts",
       "kind": "test",
       "stages": [
@@ -951,7 +959,8 @@
       "kind": "source",
       "stages": [
         "U.1",
-        "U.2"
+        "U.2",
+        "U.4"
       ],
       "reason": "The provenance decisions of an install and of a boot. B-686 adds `verifyBootProvenance` (`git show 18a3daa4f1 -- apps/cli/src/install-provenance.ts`, +108/-25), which verifies each locked package's claim again, offline; refuses a lock entry recorded trusted whose claim file or tarball is gone, instead of demoting it to unverified (`git show 92f479c8b2 -- apps/cli/src/install-provenance.ts`, +23/-14); and adds `appendProvenanceAudit`, which writes every decision to the kernel's audit chain with the stage install or boot (`git show c4bec0c213 -- apps/cli/src/install-provenance.ts`, +61/-7). U.1 and U.2 observe these on the shipped boot and install paths; M-686-2a and M-686-5 change this file."
     },
@@ -986,7 +995,8 @@
       "path": "apps/cli/tests/plugin-provenance-install.spec.ts",
       "kind": "test",
       "stages": [
-        "U.2"
+        "U.2",
+        "U.4"
       ]
     },
     {
@@ -1188,6 +1198,24 @@
     },
     {
       "epic": "P1-07",
+      "path": "benchmarks/harness-capability/product.ts",
+      "kind": "source",
+      "stages": [
+        "U.5"
+      ],
+      "reason": "Launches the shipped headless product from source for each A-597 ①② case (`launchShippedHeadless`), with `DSH_HOME` at `<cwd>/.dsh`, so the workspace contains the harness home. A benchmark helper is neither test nor product source."
+    },
+    {
+      "epic": "P1-07",
+      "path": "benchmarks/harness-capability/stub-model.ts",
+      "kind": "source",
+      "stages": [
+        "U.5"
+      ],
+      "reason": "The loopback OpenAI-compatible stub the A-597 ①② cases script: it asks for the one `write` or `bash` call each case attacks with, reached by the shipped DeepSeek client through `DEEPSEEK_BASE_URL`."
+    },
+    {
+      "epic": "P1-07",
       "path": "packages/boot/app-boot/src/profile.ts",
       "kind": "source",
       "stages": [
@@ -1247,6 +1275,15 @@
     },
     {
       "epic": "P1-07",
+      "path": "packages/fs/fs-sandbox/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.5"
+      ],
+      "reason": "The fs fence whose workspace-write refusal of a target under the harness home case ① observes (B-715, `cadf8faeba`); M-715-1 removes that refusal."
+    },
+    {
+      "epic": "P1-07",
       "path": "packages/identity/host-user-id/src/index.ts",
       "kind": "source",
       "stages": [
@@ -1262,6 +1299,33 @@
         "U"
       ],
       "reason": "The approval request gained an optional `subject` so a decision that is not about a tool call can say what it IS about — for a trust question, which workspace and which state. P1-07 is the consuming epic and made the addition; P2-11 owns this surface and is NOT_RUN, so the change is recorded in evidence-P2-11.md as purely additive: `toolName` stays required, the published runtime invariant that holds it non-empty is unchanged, the outcome vocabulary is unchanged, and 268 passing cases across every live P2-04 frozen command were compared by NAME before and after. The registry could not have named this file: in the plan, must[2] had no interaction and therefore no request to carry."
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/sandbox/sandbox-local/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.5"
+      ],
+      "reason": "HOT ZONE by ownership: the file is P3's (P3-02, P3-03, P3-04, P3-05, P3-07, P3-10). Written from `git show cadf8faeba -- packages/sandbox/sandbox-local/src/index.ts` (+16/-3): B-715 makes the Landlock and Windows ACL runners refuse a command when the harness home lies under a writable root, since they can only grant writable roots. Case ② runs bash under bwrap on the Linux CI, so it observes the bwrap profile, not this refusal; the file is cited because it is the shipped local sandbox provider that confines the case's bash."
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/sandbox/sandbox-local/src/profiles.ts",
+      "kind": "source",
+      "stages": [
+        "U.5"
+      ],
+      "reason": "HOT ZONE by ownership: the file is P3's (P3-02, P3-05, P3-07). Written from `git show cadf8faeba -- packages/sandbox/sandbox-local/src/profiles.ts` (+39/-4): B-715 binds a harness home inside the workspace read-only after the workspace bind in the bwrap profile and denies writes under it in the Seatbelt profile. Case ② observes the bwrap bind on the Linux CI; M-715-2 removes it."
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/sandbox/sandbox/src/roots.ts",
+      "kind": "source",
+      "stages": [
+        "U.5"
+      ],
+      "reason": "HOT ZONE by ownership: the file is P3's (P3-01, P3-02, P3-12). Written from `git show cadf8faeba -- packages/sandbox/sandbox/src/roots.ts` (+21/-2): B-715 adds `protectedRoots`, the harness home under workspace-write, which both the fs fence and the OS backends read to keep it read-only."
     },
     {
       "epic": "P1-07",
@@ -1378,6 +1442,14 @@
       "kind": "test",
       "stages": [
         "U.2"
+      ]
+    },
+    {
+      "epic": "P1-07",
+      "path": "tests/first100/fixtures/P4-09.dsh-home-write-boundary.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.5"
       ]
     },
     {
@@ -4068,10 +4140,72 @@
     },
     {
       "epic": "P3-06",
+      "path": "benchmarks/harness-capability/product.ts",
+      "kind": "source",
+      "stages": [
+        "C.1"
+      ],
+      "reason": "Launches the shipped headless product from source for each A-598 case (`launchShippedHeadless`), with `DSH_HOME` at `<cwd>/.dsh`, so the workspace contains the credential store. A benchmark helper is neither test nor product source."
+    },
+    {
+      "epic": "P3-06",
+      "path": "benchmarks/harness-capability/stub-model.ts",
+      "kind": "source",
+      "stages": [
+        "C.1"
+      ],
+      "reason": "The loopback OpenAI-compatible stub the A-598 cases script: it asks for the one `read`, `grep` or `bash` call each case reads the credential file with, reached by the shipped DeepSeek client through `DEEPSEEK_BASE_URL`."
+    },
+    {
+      "epic": "P3-06",
       "path": "packages/credentials/secrets-broker/tests/lease.spec.ts",
       "kind": "test",
       "stages": [
         "C"
+      ]
+    },
+    {
+      "epic": "P3-06",
+      "path": "packages/fs/fs-sandbox/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "C.1"
+      ],
+      "reason": "The fs fence whose refusal of every read of the credential store under a confining mode the read case observes (B-717, `712635cad8`); M-717-1 removes that refusal."
+    },
+    {
+      "epic": "P3-06",
+      "path": "packages/fs/tool-fs-search/src/search-core.ts",
+      "kind": "source",
+      "stages": [
+        "C.1"
+      ],
+      "reason": "`credentialStoreFilter` drops the credential file from grep and glob results, matched by identity under any name or spelling (B-717, `712635cad8` and `8e562fa3e7`); the grep case observes it; M-717-2 removes it."
+    },
+    {
+      "epic": "P3-06",
+      "path": "packages/sandbox/sandbox-local/src/profiles.ts",
+      "kind": "source",
+      "stages": [
+        "C.1"
+      ],
+      "reason": "HOT ZONE by ownership: the file is P3's (P3-02, P3-05, P3-07). Written from `git show 712635cad8 -- packages/sandbox/sandbox-local/src/profiles.ts` (+11/-4): B-717 binds /dev/null over each existing credential file in both bwrap modes, after every other mount, and denies its reads in the Seatbelt profile. The bash case observes the bwrap bind on the Linux CI; M-717-3 removes it."
+    },
+    {
+      "epic": "P3-06",
+      "path": "packages/sandbox/sandbox/src/roots.ts",
+      "kind": "source",
+      "stages": [
+        "C.1"
+      ],
+      "reason": "HOT ZONE by ownership: the file is P3's (P3-01, P3-02, P3-12). Written from `git show 712635cad8 -- packages/sandbox/sandbox/src/roots.ts` (+17): B-717 adds `unreadableFiles`, the credential store and the home `.env` under the harness home, which the fs fence, the search filter and the OS backends read."
+    },
+    {
+      "epic": "P3-06",
+      "path": "tests/first100/fixtures/P4-09.dsh-home-credential-read.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C.1"
       ]
     },
     {
@@ -4620,6 +4754,14 @@
     },
     {
       "epic": "P4-06",
+      "path": "packages/core/agent-loop/tests/mock-adapter.ts",
+      "kind": "test",
+      "stages": [
+        "U.7"
+      ]
+    },
+    {
+      "epic": "P4-06",
       "path": "packages/core/agent/src/arrival.ts",
       "kind": "source",
       "stages": [
@@ -4748,7 +4890,9 @@
       "path": "packages/subagent/subagent/src/continuation-activation.ts",
       "kind": "source",
       "stages": [
-        "U.5"
+        "U.5",
+        "U.7",
+        "U.8"
       ],
       "reason": "Where a starting parent redelivers the settlements it acked and never recorded (B-676, BLOCKED-350): each acked settlement's arrival key is compared with the parent's record, and the ones missing wake the parent. U.5 (A-566) observes it on the shipped headless composition, and M-676-1′ changes it. NOT labelled HOT ZONE: P4-06 reads this file here, and the change is B-676's own."
     },
@@ -4776,7 +4920,9 @@
       "path": "packages/subagent/subagent/src/settlement-outbox.ts",
       "kind": "source",
       "stages": [
-        "U.4"
+        "U.4",
+        "U.7",
+        "U.8"
       ],
       "reason": "The send side's producer. The outbox decisions ran over records nothing created — `dispatchOnce`'s only caller shipped in no bundle — while the one real handoff between agents was delivered by hand and dropped whenever the parent could not receive it. This commits the settlement before anyone tries to deliver it."
     },
@@ -4790,10 +4936,50 @@
     },
     {
       "epic": "P4-06",
+      "path": "packages/subagent/subagent/tests/cross-tenant-settlement-isolation.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.7"
+      ]
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/subagent/subagent/tests/persistence-helpers.ts",
+      "kind": "test",
+      "stages": [
+        "U.7"
+      ]
+    },
+    {
+      "epic": "P4-06",
       "path": "packages/subagent/subagent/tests/settlement-outbox.spec.ts",
       "kind": "test",
       "stages": [
         "U.4"
+      ]
+    },
+    {
+      "epic": "P4-06",
+      "path": "tests/first100/fixtures/loader/p4-06-settlement-crash/base.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.8"
+      ]
+    },
+    {
+      "epic": "P4-06",
+      "path": "tests/first100/fixtures/loader/p4-06-settlement-crash/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.8"
+      ]
+    },
+    {
+      "epic": "P4-06",
+      "path": "tests/first100/fixtures/loader/p4-06-settlement-crash/mock-llm.ts",
+      "kind": "test",
+      "stages": [
+        "U.8"
       ]
     },
     {
@@ -4809,7 +4995,8 @@
       "path": "tests/first100/fixtures/P4-06.settlement-crash.composition.spec.ts",
       "kind": "test",
       "stages": [
-        "U.5"
+        "U.5",
+        "U.8"
       ]
     },
     {
@@ -5908,7 +6095,8 @@
       "path": "packages/core/tools/src/external-effect.ts",
       "kind": "source",
       "stages": [
-        "U.1"
+        "U.1",
+        "F.5"
       ],
       "reason": "The reserve/confirm pair and the refusal text, moved out of the agent loop so BOTH dispatch paths reach one implementation. The plan named the ledger and the native loop; it named no home for a rule the code-mode path also has to obey, and writing it twice is the shape BLOCKED-136 records."
     },
@@ -5969,6 +6157,30 @@
     },
     {
       "epic": "P4-12",
+      "path": "tests/first100/fixtures/loader/p4-12-replay-crash/base.patch.yml",
+      "kind": "test",
+      "stages": [
+        "F.5"
+      ]
+    },
+    {
+      "epic": "P4-12",
+      "path": "tests/first100/fixtures/loader/p4-12-replay-crash/driver.ts",
+      "kind": "test",
+      "stages": [
+        "F.5"
+      ]
+    },
+    {
+      "epic": "P4-12",
+      "path": "tests/first100/fixtures/loader/p4-12-replay-crash/shared.ts",
+      "kind": "test",
+      "stages": [
+        "F.5"
+      ]
+    },
+    {
+      "epic": "P4-12",
       "path": "tests/first100/fixtures/p4-12-reconciliation/base-mount.patch.yml",
       "kind": "test",
       "stages": [
@@ -6001,6 +6213,14 @@
       "stages": [
         "F.3",
         "F.4"
+      ]
+    },
+    {
+      "epic": "P4-12",
+      "path": "tests/first100/fixtures/P4-12.replay-crash.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F.5"
       ]
     },
     {

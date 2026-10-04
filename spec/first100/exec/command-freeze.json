@@ -22741,6 +22741,283 @@
         "failureSummary": "Read from each round's own narrow report under the e2e config; every round carried build. M-698-4 `e885e468bf75edc0fcc1dc61c6e43eed76a94fb1` run 37148237522: 0 passed, 1 failed in tests/first100/fixtures/P4-09.saved-workflow-signing.composition.e2e.ts: «P4-09 acceptance[0]: a shipped profile runs a saved workflow only when it is signed by an admitted key (red first, paired with B-698) loads the signed definition and refuses the tampered, unsigned, unanchored, and badly-signed ones with their reasons»."
       },
       "note": "P4-09 U-stage supplement 9: acceptance[0] and must[0] (question 31 (a)) on the shipped launcher. A shipped profile loads a saved workflow from $DSH_HOME/workflows only when it is signed by a key one of the profile's offline-signed trust anchors admits, and refuses the tampered, unsigned, unanchored and badly signed ones with their reasons. Observed through the built dsh bin in a child process: an in-process boot reads the anchors through a second trust-kernel module instance (gate3 2026-10-03T09:15:11Z). Lane A's A-581, red first for B-698's loader. The spec launches the built product, so it runs under vitest.e2e.config.ts after Build (B-724)."
+    },
+    {
+      "epic": "P1-02",
+      "stage": "U",
+      "supplements": {
+        "epic": "P1-02",
+        "stage": "U"
+      },
+      "supplementSeq": 4,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/cli/tests/plugin-provenance-install.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-02 on the shipped install path: dsh plugin add verifies the claim beside a local tarball P1-02 acceptance[0]: a package changed by one byte after signing is refused as a digest mismatch",
+        "P1-02 on the shipped install path: dsh plugin add verifies the claim beside a local tarball P1-02 acceptance[0]: a claim whose source repo was replaced is refused",
+        "P1-02 on the shipped install path: dsh plugin add verifies the claim beside a local tarball P1-02 acceptance[0]: a claim whose builder identity was forged is refused"
+      ],
+      "files": [
+        "apps/cli/tests/plugin-provenance-install.spec.ts",
+        "apps/cli/src/plugin.ts",
+        "apps/cli/src/install-provenance.ts",
+        "packages/plugin/plugin-provenance/src/index.ts",
+        "packages/plugin/plugin-provenance/src/signature.ts",
+        "packages/plugin/plugin-provenance/src/sbom.ts"
+      ],
+      "frozenAtUtc": "2026-10-04T02:15:13.000Z",
+      "dryRunProof": {
+        "treeSha": "5d9e8a54c065dee72b761392635ac08d9b974914",
+        "testsDiscovered": 9
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-P1-02-a0 makes verifyInstallProvenance keep a claim its verification rejected, so a tampered package installs. A-416: each mutated file and this entry's files are byte-identical at the rounds' parent aa7dbb02db91841ae50e638706c346fed862cd4d, which is the code tip of batch 28, and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report; every round carried build. M-P1-02-a0 `355c3b6e2a7acbcd533106c2a2e992aa9d0535ba` run 37169616468 (makes verifyInstallProvenance keep a claim its verification rejected, so a tampered package installs): 4 passed, 5 failed in apps/cli/tests/plugin-provenance-install.spec.ts: «P1-02 on the shipped install path: dsh plugin add verifies the claim beside a local tarball P1-02 acceptance[0]: a package changed by one byte after signing is refused as a digest mismatch», «P1-02 on the shipped install path: dsh plugin add verifies the claim beside a local tarball P1-02 acceptance[0]: a claim whose source repo was replaced is refused», «P1-02 on the shipped install path: dsh plugin add verifies the claim beside a local tarball P1-02 acceptance[0]: a claim whose builder identity was forged is refused», «P1-02 on the shipped install path: dsh plugin add verifies the claim beside a local tarball P1-02 must[2]: a claim signed by a key no configured anchor admits is refused», «P1-02 on the shipped install path: dsh plugin add verifies the claim beside a local tarball P1-02 must[1] (A-573 A0): a claim whose SBOM was swapped after signing is refused as a digest mismatch (red first for B-686)»."
+      },
+      "note": "P1-02 U-stage supplement 4: acceptance[0] on the shipped install path. dsh plugin add refuses a package changed by one byte after signing, a claim whose source repo was replaced and one whose builder identity was forged. The control that a genuine claim installs is frozen in P1-02 U-stage supplement 2 and is not frozen twice. The 2026-09-19 lock row names these three cases. dryRunProof: batch 28's full run 37158956685 on aa7dbb02db91841ae50e638706c346fed862cd4d."
+    },
+    {
+      "epic": "P4-06",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-06",
+        "stage": "U"
+      },
+      "supplementSeq": 7,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/subagent/subagent/tests/cross-tenant-settlement-isolation.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-06 acceptance[2]: a settlement is consumed only by its own parent, never cross-tenant ② the isolation survives a restart: settlements owed at shutdown reach only their own parent on resume"
+      ],
+      "files": [
+        "packages/subagent/subagent/tests/cross-tenant-settlement-isolation.spec.ts",
+        "packages/subagent/subagent/tests/persistence-helpers.ts",
+        "packages/core/agent-loop/tests/mock-adapter.ts",
+        "packages/subagent/subagent/src/settlement-outbox.ts",
+        "packages/subagent/subagent/src/continuation-activation.ts"
+      ],
+      "frozenAtUtc": "2026-10-04T02:15:13.000Z",
+      "dryRunProof": {
+        "treeSha": "5d9e8a54c065dee72b761392635ac08d9b974914",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-a585-1 drops the target filter from settlementsInState, so a parent that drains takes every owed settlement, its own and another parent's. A-416: each mutated file and this entry's files are byte-identical at the rounds' parent aa7dbb02db91841ae50e638706c346fed862cd4d, which is the code tip of batch 28, and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report; every round carried build. M-a585-1 `dbef98fed32e5610f17e05ac5d14b88448841d26` run 37159030854 (drops the target filter from settlementsInState, so a parent that drains takes every owed settlement, its own and another parent's): 1 passed, 1 failed in packages/subagent/subagent/tests/cross-tenant-settlement-isolation.spec.ts: «P4-06 acceptance[2]: a settlement is consumed only by its own parent, never cross-tenant ② the isolation survives a restart: settlements owed at shutdown reach only their own parent on resume»."
+      },
+      "note": "P4-06 U-stage supplement 7: acceptance[2] (a cross-tenant message cannot be consumed) on shipped plugins assembled in-process (agent loop, message bus, JSONL session persistence, subagent runtime and in-process spawn), not started through the headless launcher. Two parents each start a child, the host stops with both settlements owed, and on resume each parent's durable log carries only its own child's settlement. Case ① of the same file (both parents live) runs under this argv but is not frozen: each live settlement is committed and drained synchronously, so no drain sees two owed rows and no mutation of the target filter reddens it (gate3 2026-10-04T02:08:28Z). Lane A's A-585 with its timing fix c1fb0ad6e1. dryRunProof: batch 28's full run 37158956685 on aa7dbb02db91841ae50e638706c346fed862cd4d."
+    },
+    {
+      "epic": "P1-07",
+      "stage": "U",
+      "supplements": {
+        "epic": "P1-07",
+        "stage": "U"
+      },
+      "supplementSeq": 5,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-09.dsh-home-write-boundary.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "A-597 ①②: the model cannot create or change files under $DSH_HOME when the workspace contains it (red first for B-715) ① write creating a new file under $DSH_HOME does not create it (today it does — RED)",
+        "A-597 ①②: the model cannot create or change files under $DSH_HOME when the workspace contains it (red first for B-715) ② bash writing a $DSH_HOME file leaves it unchanged (today bash writes it — RED)"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-09.dsh-home-write-boundary.spec.ts",
+        "benchmarks/harness-capability/product.ts",
+        "benchmarks/harness-capability/stub-model.ts",
+        "packages/fs/fs-sandbox/src/index.ts",
+        "packages/sandbox/sandbox/src/roots.ts",
+        "packages/sandbox/sandbox-local/src/profiles.ts",
+        "packages/sandbox/sandbox-local/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-10-04T02:15:13.000Z",
+      "dryRunProof": {
+        "treeSha": "5d9e8a54c065dee72b761392635ac08d9b974914",
+        "testsDiscovered": 5
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-715-1 makes the fs fence stop refusing a write target under the harness home; M-715-2 makes bwrap stop binding a harness home inside the workspace read-only. A-416: each mutated file and this entry's files are byte-identical at the rounds' parent aa7dbb02db91841ae50e638706c346fed862cd4d, which is the code tip of batch 28, and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report; every round carried build. M-715-1 `f8c151fce129e22473696df9b8dab79415f63f00` run 37159154128 (makes the fs fence stop refusing a write target under the harness home): 4 passed, 1 failed in tests/first100/fixtures/P4-09.dsh-home-write-boundary.spec.ts: «A-597 ①②: the model cannot create or change files under $DSH_HOME when the workspace contains it (red first for B-715) ① write creating a new file under $DSH_HOME does not create it (today it does — RED)». M-715-2 `36a9f0cafd3cc1d77cc2c1b7e0613990383a0ff3` run 37159173448 (makes bwrap stop binding a harness home inside the workspace read-only): 4 passed, 1 failed in tests/first100/fixtures/P4-09.dsh-home-write-boundary.spec.ts: «A-597 ①②: the model cannot create or change files under $DSH_HOME when the workspace contains it (red first for B-715) ② bash writing a $DSH_HOME file leaves it unchanged (today bash writes it — RED)»."
+      },
+      "note": "P1-07 U-stage supplement 5: BLOCKED-353 condition 1, the mechanism behind must[2] (a trust upgrade must be a host-user act) when the workspace contains $DSH_HOME. On the shipped headless launch under workspace-write with $DSH_HOME at <cwd>/.dsh, the model's write tool cannot create a file under $DSH_HOME and its bash cannot change one. The file's guards and its $DSH_HOME-outside-the-workspace control run under this argv and are not frozen. The file name carries P4-09 and is kept. Lane A's A-597 ①② for B-715. dryRunProof: batch 28's full run 37158956685 on aa7dbb02db91841ae50e638706c346fed862cd4d."
+    },
+    {
+      "epic": "P3-06",
+      "stage": "C",
+      "supplements": {
+        "epic": "P3-06",
+        "stage": "C"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-09.dsh-home-credential-read.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "A-598: the model cannot read dsh's own credential store when the workspace contains $DSH_HOME (red first for B-717) read: the credential file's contents must not reach the model (today they do — RED)",
+        "A-598: the model cannot read dsh's own credential store when the workspace contains $DSH_HOME (red first for B-717) grep: a grep whose path points at the credential file must not return its secret (today it does — RED)",
+        "A-598: the model cannot read dsh's own credential store when the workspace contains $DSH_HOME (red first for B-717) bash: cat of the credential file must not return its secret (today it does — RED)"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-09.dsh-home-credential-read.spec.ts",
+        "benchmarks/harness-capability/product.ts",
+        "benchmarks/harness-capability/stub-model.ts",
+        "packages/fs/fs-sandbox/src/index.ts",
+        "packages/fs/tool-fs-search/src/search-core.ts",
+        "packages/sandbox/sandbox/src/roots.ts",
+        "packages/sandbox/sandbox-local/src/profiles.ts"
+      ],
+      "frozenAtUtc": "2026-10-04T02:15:13.000Z",
+      "dryRunProof": {
+        "treeSha": "5d9e8a54c065dee72b761392635ac08d9b974914",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-717-1 makes the fs fence read the credential store again; M-717-2 makes grep and glob stop dropping credential-store results; M-717-3 makes bwrap stop binding /dev/null over the credential store. A-416: each mutated file and this entry's files are byte-identical at the rounds' parent aa7dbb02db91841ae50e638706c346fed862cd4d, which is the code tip of batch 28, and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report; every round carried build. M-717-1 `1342c82856f5ae60d0ff8870ad0280b4c974eb36` run 37159233828 (makes the fs fence read the credential store again): 2 passed, 1 failed in tests/first100/fixtures/P4-09.dsh-home-credential-read.spec.ts: «A-598: the model cannot read dsh's own credential store when the workspace contains $DSH_HOME (red first for B-717) read: the credential file's contents must not reach the model (today they do — RED)». M-717-2 `a38ab1c889f6f67f53d6a2fb537a864cb66a0f7f` run 37159252639 (makes grep and glob stop dropping credential-store results): 2 passed, 1 failed in tests/first100/fixtures/P4-09.dsh-home-credential-read.spec.ts: «A-598: the model cannot read dsh's own credential store when the workspace contains $DSH_HOME (red first for B-717) grep: a grep whose path points at the credential file must not return its secret (today it does — RED)». M-717-3 `19579d4cfad011266c979565ff5b2d9f05b4e108` run 37159271430 (makes bwrap stop binding /dev/null over the credential store): 2 passed, 1 failed in tests/first100/fixtures/P4-09.dsh-home-credential-read.spec.ts: «A-598: the model cannot read dsh's own credential store when the workspace contains $DSH_HOME (red first for B-717) bash: cat of the credential file must not return its secret (today it does — RED)»."
+      },
+      "note": "P3-06 C-stage supplement 1: the model cannot read dsh's own credential store (P3-06, a credential that is never echoed back) when the workspace contains $DSH_HOME. On the shipped headless launch, the credential file's secret reaches the model through neither read, grep nor bash. The file name carries P4-09 and is kept. Lane A's A-598 for B-717. dryRunProof: batch 28's full run 37158956685 on aa7dbb02db91841ae50e638706c346fed862cd4d."
+    },
+    {
+      "epic": "P4-12",
+      "stage": "F",
+      "supplements": {
+        "epic": "P4-12",
+        "stage": "F"
+      },
+      "supplementSeq": 5,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-12.replay-crash.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-12 acceptance[1]: a sent-but-unconfirmed effect replayed after a crash is ambiguous, not a plain duplicate the replay turns the entry ambiguous and routes it to reconciliation (today it is answered as a duplicate — RED)"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-12.replay-crash.composition.spec.ts",
+        "tests/first100/fixtures/loader/p4-12-replay-crash/driver.ts",
+        "tests/first100/fixtures/loader/p4-12-replay-crash/shared.ts",
+        "tests/first100/fixtures/loader/p4-12-replay-crash/base.patch.yml",
+        "packages/action/action-ledger/src/index.ts",
+        "packages/action/action-ledger/src/store.ts",
+        "packages/core/tools/src/external-effect.ts",
+        "packages/core/agent-loop/src/tool-calls.ts"
+      ],
+      "frozenAtUtc": "2026-10-04T02:15:13.000Z",
+      "dryRunProof": {
+        "treeSha": "5d9e8a54c065dee72b761392635ac08d9b974914",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-720-1 removes decideReservation's branch for a sent entry an older generation holds, so it is answered as a duplicate again. A-416: each mutated file and this entry's files are byte-identical at the rounds' parent aa7dbb02db91841ae50e638706c346fed862cd4d, which is the code tip of batch 28, and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report; every round carried build. M-720-1 `9bd84a1a14e8e95b7365b126eb31a2d086814e2c` run 37169581972 (removes decideReservation's branch for a sent entry an older generation holds, so it is answered as a duplicate again): 1 passed, 1 failed in tests/first100/fixtures/P4-12.replay-crash.composition.spec.ts: «P4-12 acceptance[1]: a sent-but-unconfirmed effect replayed after a crash is ambiguous, not a plain duplicate the replay turns the entry ambiguous and routes it to reconciliation (today it is answered as a duplicate — RED)»."
+      },
+      "note": "P4-12 F-stage supplement 5: acceptance[1] for a send a crashed holder left. On the shipped headless launch the host is killed after the effect is marked sent; the resumed session replays the same call under a newer generation, the entry moves to ambiguous and is listed for reconciliation, and the tool is not run again. Its guard case (the crash left the entry sent and the replay did not re-run the tool body) runs under this argv and is not frozen. Lane A's A-600 for B-720 (question 33 (a)); it holds whether or not P4-12 is withdrawn over B-726. dryRunProof: batch 28's full run 37158956685 on aa7dbb02db91841ae50e638706c346fed862cd4d."
+    },
+    {
+      "epic": "P0-01",
+      "stage": "F",
+      "supplements": {
+        "epic": "P0-01",
+        "stage": "F"
+      },
+      "supplementSeq": 8,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/release/baseline-fingerprint-exports-order.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "release/baseline-fingerprint: an exports-condition reorder is a drift (P0-01 blind 1-2, red first for B-710) verify fails and names the manifest exports after its exports conditions are reordered (today it reports no drift — RED)"
+      ],
+      "files": [
+        "tests/release/baseline-fingerprint-exports-order.spec.ts",
+        "scripts/release/baseline-fingerprint.mjs"
+      ],
+      "frozenAtUtc": "2026-10-04T02:15:13.000Z",
+      "dryRunProof": {
+        "treeSha": "5d9e8a54c065dee72b761392635ac08d9b974914",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-710-1 takes exports out of the fields hashed in written order, so a reorder of its conditions hashes the same. A-416: each mutated file and this entry's files are byte-identical at the rounds' parent aa7dbb02db91841ae50e638706c346fed862cd4d, which is the code tip of batch 28, and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report; every round carried build. M-710-1 `b0a3d417aca82b66346ee7ca321f9445a3676f01` run 37169597240 (takes exports out of the fields hashed in written order, so a reorder of its conditions hashes the same): 1 passed, 1 failed in tests/release/baseline-fingerprint-exports-order.spec.ts: «release/baseline-fingerprint: an exports-condition reorder is a drift (P0-01 blind 1-2, red first for B-710) verify fails and names the manifest exports after its exports conditions are reordered (today it reports no drift — RED)»."
+      },
+      "note": "P0-01 F-stage supplement 8: the baseline detects a reordered exports map (P0-01 blind review 1-2). Exports conditions match in written order, so swapping two changes which file a consumer resolves; verify against the captured baseline fails and names the manifest's exports. Its control (verify exits 0 against the unmodified baseline) runs under this argv and is not frozen. Lane A's A-594 for B-710 (baseline format 4). dryRunProof: batch 28's full run 37158956685 on aa7dbb02db91841ae50e638706c346fed862cd4d."
+    },
+    {
+      "epic": "P4-06",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-06",
+        "stage": "U"
+      },
+      "supplementSeq": 8,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P4-06.settlement-crash.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-06 acceptance[0]: a settlement acked around a host crash still takes effect exactly once evidence (BLOCKED-350 condition 3): a settlement killed BEFORE its ack is redelivered on restart and takes effect exactly once"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-06.settlement-crash.composition.spec.ts",
+        "tests/first100/fixtures/loader/p4-06-settlement-crash/driver.ts",
+        "tests/first100/fixtures/loader/p4-06-settlement-crash/mock-llm.ts",
+        "tests/first100/fixtures/loader/p4-06-settlement-crash/base.patch.yml",
+        "packages/subagent/subagent/src/continuation-activation.ts",
+        "packages/subagent/subagent/src/settlement-outbox.ts"
+      ],
+      "frozenAtUtc": "2026-10-04T02:15:13.000Z",
+      "dryRunProof": {
+        "treeSha": "5d9e8a54c065dee72b761392635ac08d9b974914",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-603-1 stops a restarted parent from draining owed settlements at session start and before a step, keeping the commit-signal drain and B-676's redelivery. A-416: each mutated file and this entry's files are byte-identical at the rounds' parent aa7dbb02db91841ae50e638706c346fed862cd4d, which is the code tip of batch 28, and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report; every round carried build. M-603-1 `b0ef8e37031835dba02c3bee1a720b78da5ade03` run 37169632124 (stops a restarted parent from draining owed settlements at session start and before a step, keeping the commit-signal drain and B-676's redelivery): 2 passed, 1 failed in tests/first100/fixtures/P4-06.settlement-crash.composition.spec.ts: «P4-06 acceptance[0]: a settlement acked around a host crash still takes effect exactly once evidence (BLOCKED-350 condition 3): a settlement killed BEFORE its ack is redelivered on restart and takes effect exactly once»."
+      },
+      "note": "P4-06 U-stage supplement 8: BLOCKED-350 condition 3 on the shipped headless composition. A settlement killed before its ack persisted stays pending in the durable bus; after the restart the ordinary drain redelivers it and the parent's inbox keeps it to one effect. The file's other two cases are frozen in P4-06 U-stage supplements 5 and 6. Lane A's A-603. dryRunProof: batch 28's full run 37158956685 on aa7dbb02db91841ae50e638706c346fed862cd4d."
     }
   ]
 }
