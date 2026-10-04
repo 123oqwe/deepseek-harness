@@ -46,7 +46,7 @@ const repoTsconfig = fileURLToPath(new URL('../../../tsconfig.json', import.meta
  * @param mode - the driver mode to orchestrate.
  * @returns the report JSON the driver printed.
  */
-async function runMode(mode: string): Promise<Record<string, unknown>> {
+async function runMode<R>(mode: string): Promise<R> {
   const { stdout, stderr } = await runLoaderSmoke({
     label: `P4-12 duplicate ${mode}`,
     tempDirPrefix: `p4-12-dup-${mode}-`,
@@ -59,12 +59,12 @@ async function runMode(mode: string): Promise<Record<string, unknown>> {
   })
   const json = new RegExp(`${REPORT_PREFIX} (?<json>.+)`, 'u').exec(stdout)?.groups?.json
   if (json === undefined) throw new Error(`the ${mode} driver reported nothing usable; stderr tail:\n${stderr.slice(-1200)}`)
-  return JSON.parse(json) as Record<string, unknown>
+  return JSON.parse(json) as R
 }
 
 describe('P4-12 acceptance[0]/[1] (A-610, B-726 red first): a crashed sent-but-unconfirmed effect does not duplicate on a new-id re-send, and waits for reconciliation', () => {
   it('resend-newid (①+②): the stuck effect waits for reconciliation, and a new-id re-send of the same action runs no second effect', async () => {
-    const report = await runMode('resend-newid') as unknown as ResendReport
+    const report = await runMode<ResendReport>('resend-newid')
     const detail = JSON.stringify(report)
     // Guard: the kill landed on a `sent` entry and the body ran once before it.
     expect({
@@ -83,7 +83,7 @@ describe('P4-12 acceptance[0]/[1] (A-610, B-726 red first): a crashed sent-but-u
   }, CASE_TIMEOUT_MS)
 
   it('settle + ③-a: /resolve-effect settles the ambiguous entry, after which the same action re-executes as a new action', async () => {
-    const report = await runMode('settle') as unknown as SettleReport
+    const report = await runMode<SettleReport>('settle')
     const detail = JSON.stringify(report)
     expect({
       killed: report.before.signal,
@@ -100,7 +100,7 @@ describe('P4-12 acceptance[0]/[1] (A-610, B-726 red first): a crashed sent-but-u
   }, CASE_TIMEOUT_MS)
 
   it('different-params (③-b): an unrelated, different-arguments call executes normally', async () => {
-    const report = await runMode('different-params') as unknown as ControlReport
+    const report = await runMode<ControlReport>('different-params')
     const detail = JSON.stringify(report)
     // A liveness control: the ledger does not over-block unrelated calls. Green
     // on both bases.
