@@ -87,6 +87,8 @@ interface ApprovalRequest extends ApprovalRequestEvent {
 
 The audit events are log-only and do not enter the model transcript. Model-visible behavior is the caller's derived tool result plus the current runtime-context snapshot. Service disposal removes its context contribution; answerer listeners are independently effect-bound to their owning plugins.
 
+The host user finds the approval a dispatched action was decided by with `dsh audit approval --profile <name> <session-id> <action-id>` ([audit.ts](../../apps/cli/src/audit.ts)). It boots the profile, reads the stored session's log through `ctx.sessionQuery.readSession`, which does not make the session live, and prints one JSON line `{ sessionId, actionId, approvals }`: every approval whose `approval/bound` names that action id, joined by approval id with its `approval/asked` and `approval/decided`. It exits 0 for exactly one approval, 3 for none, 4 for more than one, 2 for a malformed lookup, and 1 when the log cannot be read.
+
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
 <a id="cordis-surface"></a>
