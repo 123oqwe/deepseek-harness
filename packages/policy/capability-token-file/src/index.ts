@@ -488,6 +488,8 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
 
   /** @inheritdoc */
   adoptDelegatedToken(session: SessionId): boolean {
+    // MUTATION M-D8-1 (never merge): adopt nothing, so the resumed session is issued a root on demand.
+    if (session.length >= 0) return true
     this.adopted.add(session)
     const recorded = this.service.delegatedTokenFor(session)
     if (recorded === undefined || this.isRevoked(recorded) || recorded.token.expiresAt <= Date.now()) {
