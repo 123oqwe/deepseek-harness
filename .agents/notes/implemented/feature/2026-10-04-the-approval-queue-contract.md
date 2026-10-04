@@ -14,6 +14,7 @@ Epic P2-07 asks for an approval queue that survives turns and processes: six sta
 - **Six states and a table.** `requested` → `approved` | `denied` | `expired` | `revoked`; `approved` → `consumed` | `expired` | `revoked`; the other four are terminal. From its deadline on, a pending approval reads as `expired` and can only be marked so.
 - **One revision per move.** Every write names the revision it read; the pure `applyApprovalTransition` checks tenant, revision, deadline, then the table, so racing clients leave one terminal state and a consumption happens at most once. Providers apply this function rather than re-deciding.
 - **Two scopes.** A `turn` approval belongs to one tool call and is revoked when a crash ends its turn; a `run` approval belongs to a durable Run that waits for it across processes (the delegate's ruling on the build plan, 2026-10-04).
+- **A SQLite provider beside it.** `./sqlite` keeps every approval in one file; each move is one `BEGIN IMMEDIATE` transaction around the read, the pure decision and the write, so two processes deciding one approval are serialized, and a file at another schema version is refused. A test-only fault hook inside each write lets a case kill the process before COMMIT and reopen.
 - **Ids are the owners' brands, redeclared.** `ApprovalRequestId`, `SessionId`, `RunId`, `TenantId` and `PrincipalId` are the same brands their packages declare, so the contract depends on none of them.
 
 ## Alternatives considered
@@ -23,4 +24,4 @@ Epic P2-07 asks for an approval queue that survives turns and processes: six sta
 
 ## Consequences
 
-- The contract and its decisions are in place; no provider is mounted and nothing writes through yet. The SQLite provider, the Run's `waiting_for_approval` with its wake path, the write-through from user-approval and the SDK requests follow in later slices.
+- The contract, its decisions and the SQLite provider are in place; no profile mounts the provider and nothing writes through yet. The mount, the Run's `waiting_for_approval` with its wake path, the write-through from user-approval and the SDK requests follow in the Use slice.

@@ -14,6 +14,7 @@ Epic P2-07 要一个跨回合、跨进程存活的审批队列：六种状态，
 - **六种状态与一张表。** `requested` → `approved` | `denied` | `expired` | `revoked`；`approved` → `consumed` | `expired` | `revoked`；其余四种是终态。从截止时间起，待定的审批读作 `expired`，只能被标记为过期。
 - **每次转移一个修订号。** 每次写入都写明它读到的修订号；纯函数 `applyApprovalTransition` 依次检查租户、修订号、截止时间与转移表，所以竞争的客户端只留下一个终态，消费至多发生一次。各 provider 执行这个函数，而不是各自重新判定。
 - **两种范围。** `turn` 审批属于一次工具调用，崩溃结束其回合时被撤销；`run` 审批属于一个持久 Run，Run 跨进程等待它（delegate 对建造方案的裁定，2026-10-04）。
+- **旁边有 SQLite provider。** `./sqlite` 把每个审批存在一个文件里；每次转移是一个 `BEGIN IMMEDIATE` 事务，包住读取、纯判定与写入，所以两个进程判定同一个审批会被串行化，别的 schema 版本的文件一律拒绝。每次写入里有一个仅供测试的故障钩子，让用例在 COMMIT 之前杀掉进程再重开。
 - **id 是所有者的品牌，重新声明。** `ApprovalRequestId`、`SessionId`、`RunId`、`TenantId` 与 `PrincipalId` 与各自包声明的品牌相同，所以契约不依赖其中任何一个包。
 
 ## 考虑过的替代方案
@@ -23,4 +24,4 @@ Epic P2-07 要一个跨回合、跨进程存活的审批队列：六种状态，
 
 ## 后果
 
-- 契约与其判定已就位；尚未挂载任何 provider，也还没有东西写穿到它。SQLite provider、Run 的 `waiting_for_approval` 及其唤醒路径、user-approval 的写穿与 SDK 请求在后续各片到来。
+- 契约、其判定与 SQLite provider 已就位；还没有 profile 挂载这个 provider，也还没有东西写穿到它。挂载、Run 的 `waiting_for_approval` 及其唤醒路径、user-approval 的写穿与 SDK 请求随 Use 片到来。

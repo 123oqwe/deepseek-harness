@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-approval-store",
-  "description": "The durable approval queue's contract for Epic P2-07: an approval's six states (requested, approved, denied, expired, revoked, consumed) and the moves between them, the record a store keeps (request digest, policy version, actor, deadline, tenant), the compare-and-swap store operations every provider implements, and the pure transition decisions each provider applies",
+  "description": "The durable approval queue for Epic P2-07: an approval's six states (requested, approved, denied, expired, revoked, consumed) and the moves between them, the record a store keeps (request digest, policy version, actor, deadline, tenant), the compare-and-swap store operations every provider implements, the pure transition decisions each provider applies, and the SQLite provider published as ctx.approvalStore",
   "version": "0.1.5-rc.2",
   "publishConfig": {
     "access": "public",
@@ -12,6 +12,10 @@
       "./types": {
         "types": "./lib/types/types.d.ts",
         "default": "./lib/types/types.js"
+      },
+      "./sqlite": {
+        "types": "./lib/types/sqlite.d.ts",
+        "default": "./lib/types/sqlite.js"
       },
       "./package.json": "./package.json"
     }
@@ -33,6 +37,10 @@
       "types": "./lib/types/types.d.ts",
       "default": "./lib/types/types.js"
     },
+    "./sqlite": {
+      "types": "./lib/types/sqlite.d.ts",
+      "default": "./lib/types/sqlite.js"
+    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
@@ -42,6 +50,9 @@
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
+  "dependencies": {
+    "@deepseek-ai/schemastery": "workspace:^"
+  },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^"
