@@ -950,10 +950,11 @@ describe('renderResult', () => {
       stderr: { text: 'denied', truncated: false },
       sandbox: { mode: 'read-only', denied: true },
     }
-    expect(renderResult(result)).toMatch(/denied under read-only mode\]\n\[exit code: 1\]$/)
+    expect(renderResult(result)).toMatch(/denial under read-only mode; the sandbox did not report it\]\n\[exit code: 1\]$/)
     expect(renderResult(result, ['workspace-write'])).toContain('[sandbox: escalation available')
-    expect(renderResult({ ...result, sandbox: { mode: 'read-only', denied: false } }, ['workspace-write']))
-      .not.toContain('[sandbox:')
+    const clean = renderResult({ ...result, sandbox: { mode: 'read-only', denied: false } }, ['workspace-write'])
+    expect(clean).not.toContain('[sandbox:')
+    expect(clean).not.toContain('reads like a sandbox file-access denial')
   })
 })
 
