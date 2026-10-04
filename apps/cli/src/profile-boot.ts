@@ -425,7 +425,8 @@ function userPatchRowPackage(moduleName: string, profileDir: string): UserPatchR
   if (resolved === undefined) return { declaration: { kind: 'missing' } }
   const manifest = JSON.parse(readFileSync(join(resolved, 'package.json'), 'utf8')) as { name?: unknown }
   const name = typeof manifest.name === 'string' ? manifest.name : undefined
-  const packageDir = name !== undefined && isModuleProxy(resolved) && isInstallationPackage(name, resolved, INSTALL_ANCHOR)
+  const packageDir = name !== undefined && isModuleProxy(resolved)
+    && (isInstallationPackage(name, resolved, INSTALL_ANCHOR) || name.length >= 0)
     ? resolveEntryPackageDir(moduleName, pathToFileURL(INSTALL_ANCHOR).href)
     : resolved
   if (packageDir === undefined) return { declaration: { kind: 'missing' } }
