@@ -21471,7 +21471,8 @@
         "mutationDescription": "Two mutations, each restored byte-identical: (M34) `registerDefinition` skips the registry's admission and stores whatever it is given, which is the bare-`Map` behaviour this change replaces; (M35) `declaresNestedCall` goes back to matching only a quoted first argument.",
         "failureSummary": "M34 reddens 4 of 53 — the digest-mismatch refusal and the self-recursion refusal both stop happening. M35 reddens 2, and only the reference-object cases, which is what shows the widened detector is asserted rather than incidental. The self-recursion case also carries a positive control: the SAME registration path admits a definition that does not name itself, so the refusal is about recursion rather than about the path refusing everything."
       },
-      "note": "§12.48-A(1). The engine held registered definitions in a bare `Map`, so `admitRegistration`, `isSelfRecursive` and `DefinitionRegistry` had 0 production callers and a caller's digest was stored without ever being recomputed — a registration could claim one identity and carry another, and a run pinned to that digest would execute a body nobody attested. The engine now holds a `DefinitionRegistry`, so registration recomputes the digest, refuses a mismatch, and refuses a self-recursive definition BEFORE it can be shipped or started. Two fixture consequences are themselves the point: the nested-run fixtures had been registering made-up digests (`digest-inner`), which the registry now refuses, and the self-recursion case had relied on re-registering one digest with a different body — a trick only possible while nothing checked. Measured while fixing it: `declaresNestedCall` matched only `workflow('name')` and so could never fire on `workflow({ name, digest })`, the shape a nested run actually carries, making the self-recursion refusal a false negative in exactly its own case. Superseded for B-584 to add packages/workflow/workflow-registry/tests/registry.spec.ts to files. Only files changed, so the entry keeps its predecessor's standing (generate-specs isProvenanceOnlySupersession); its dryRunProof and sensitivityProof, where present, are the predecessor's."
+      "note": "§12.48-A(1). The engine held registered definitions in a bare `Map`, so `admitRegistration`, `isSelfRecursive` and `DefinitionRegistry` had 0 production callers and a caller's digest was stored without ever being recomputed — a registration could claim one identity and carry another, and a run pinned to that digest would execute a body nobody attested. The engine now holds a `DefinitionRegistry`, so registration recomputes the digest, refuses a mismatch, and refuses a self-recursive definition BEFORE it can be shipped or started. Two fixture consequences are themselves the point: the nested-run fixtures had been registering made-up digests (`digest-inner`), which the registry now refuses, and the self-recursion case had relied on re-registering one digest with a different body — a trick only possible while nothing checked. Measured while fixing it: `declaresNestedCall` matched only `workflow('name')` and so could never fire on `workflow({ name, digest })`, the shape a nested run actually carries, making the self-recursion refusal a false negative in exactly its own case. Superseded for B-584 to add packages/workflow/workflow-registry/tests/registry.spec.ts to files. Only files changed, so the entry keeps its predecessor's standing (generate-specs isProvenanceOnlySupersession); its dryRunProof and sensitivityProof, where present, are the predecessor's.",
+      "supersededBy": "2026-10-04T14:29:57.000Z"
     },
     {
       "epic": "P1-10",
@@ -21621,7 +21622,8 @@
         "mutationDescription": "Two mutations, each run against this argv and restored byte-identical. (M50) the tool's detached branch calls `ctx.workflowEngine.start({..., signal: exec.signal})` instead of `startDetached` — the plausible wrong implementation, since it produces a runId too. (M51) `startDetached` creates the run's own agent WITHOUT `agentOptions: parentAgentOptionsForDelegation(request.parent)`.",
         "failureSummary": "M50 reddens the outlives-turn case: the run is cancelled when the turn's signal aborts, so the later attach collects a cancelled run instead of a value. M51 also reddens exactly that case — the detached agent holds no LLM route, so every `agent()` in its script resolves null and the collected value is `{answer: null}`. M51 is not a hypothetical: it is the state this stage STARTED in, and this case is what found it. The foreground case sits beside them as the control — it passes under both mutations, so a change that broke detachment while leaving ordinary runs intact is still caught."
       },
-      "note": "P4-09 must[2], the consumer half: a product path that STARTS a detached run.\n\nThe provider half was closed earlier: `startDetached` mints the run's own session and agent, `attach(runId)` reaches a run by id, and the run is registered before `workflow/start` fires. What no file did was CALL either from a product path — `tool-workflow` only ever called `start()`, so no turn could start a detached run and no turn could collect one. Under the program's rule (built = a production call site a grep can find), the clause's consumer half had not arrived.\n\nThe tool now takes `detached?: boolean` and `attach?: string`. `script`/`meta` stop being schema-required, because an attach call carries neither; the pair is required by the tool instead, which is a relation between arguments a per-field schema cannot state. The detached branch deliberately does NOT pass `exec.signal`: that signal aborts when the step ends, and a run cancelled by the end of the turn that started it is precisely what detached is not.\n\nObserved through the EXECUTOR on the real in-process stack (real worker thread, real spawn backend, one scripted mock model), not through a fake engine: turn one starts detached and aborts its signal, turn two attaches by id alone and receives the value. That case found a real defect — `startDetached` created a bare agent with no LLM route, so the detached script's children failed; the run now inherits the launcher's route exactly as a delegated child does. Superseded for B-584 to add packages/workflow/tool-workflow/tests/invariant.spec.ts, packages/workflow/tool-workflow/tests/resume.spec.ts to files. Only files changed, so the entry keeps its predecessor's standing (generate-specs isProvenanceOnlySupersession); its dryRunProof and sensitivityProof, where present, are the predecessor's."
+      "note": "P4-09 must[2], the consumer half: a product path that STARTS a detached run.\n\nThe provider half was closed earlier: `startDetached` mints the run's own session and agent, `attach(runId)` reaches a run by id, and the run is registered before `workflow/start` fires. What no file did was CALL either from a product path — `tool-workflow` only ever called `start()`, so no turn could start a detached run and no turn could collect one. Under the program's rule (built = a production call site a grep can find), the clause's consumer half had not arrived.\n\nThe tool now takes `detached?: boolean` and `attach?: string`. `script`/`meta` stop being schema-required, because an attach call carries neither; the pair is required by the tool instead, which is a relation between arguments a per-field schema cannot state. The detached branch deliberately does NOT pass `exec.signal`: that signal aborts when the step ends, and a run cancelled by the end of the turn that started it is precisely what detached is not.\n\nObserved through the EXECUTOR on the real in-process stack (real worker thread, real spawn backend, one scripted mock model), not through a fake engine: turn one starts detached and aborts its signal, turn two attaches by id alone and receives the value. That case found a real defect — `startDetached` created a bare agent with no LLM route, so the detached script's children failed; the run now inherits the launcher's route exactly as a delegated child does. Superseded for B-584 to add packages/workflow/tool-workflow/tests/invariant.spec.ts, packages/workflow/tool-workflow/tests/resume.spec.ts to files. Only files changed, so the entry keeps its predecessor's standing (generate-specs isProvenanceOnlySupersession); its dryRunProof and sensitivityProof, where present, are the predecessor's.",
+      "supersededBy": "2026-10-04T14:29:58.000Z"
     },
     {
       "epic": "P1-10",
@@ -22101,7 +22103,8 @@
         "mutationDescription": "Three mutations of the loader, each restored byte-identical: (M36) the digest is a claimed constant instead of computed from the bytes read; (M37) a refusal aborts the whole load instead of being recorded; (M38) mounting over an engine with no registration surface is tolerated rather than refused.",
         "failureSummary": "M36 reddens 5 of 7 — the digest is what ties a definition to its bytes, so most cases depend on it. M37 and M38 redden exactly one case each, which is what makes the keep-loading and refuse-to-mount behaviours separately load-bearing. acceptance[0] is tested by construction rather than by assertion: the hostile-body case registers `process.exit(1)`, so if any part of this path evaluated a definition the case could not pass at all."
       },
-      "note": "§12.48-A(2). The engine's registration is not on the `WorkflowEngine` seam — `RegisteredDefinition` lives in `dsh-workflow-registry`, which already depends on `dsh-workflow`, so declaring the method upstream is a project-reference cycle, measured rather than assumed. The loader therefore names the one operation it needs structurally and refuses to mount over an engine that lacks it, rather than importing a concrete engine and tying saved workflows to one implementation. The real-composition case mounts the actual worker-thread engine, because the recording engine can only show that the loader calls a method; and that recording engine wraps the real `DefinitionRegistry` rather than re-implementing its checks, which would pass while the real ones changed underneath it. | Superseded for B-698 (question 31 (a)): the file also gained eight signature cases, which this entry does not freeze. sensitivityProof carries over from the entry it replaces, whose assertions are unchanged (A-555 precedent). The observing tree is pinned at refs/dsh/freeze/P4-09.U.4/2026-10-03T09-23-17.000Z -> e3c0e65fe112ee0188a426f0a200e0c2bca4acff, whose tree is dryRunProof.treeSha."
+      "note": "§12.48-A(2). The engine's registration is not on the `WorkflowEngine` seam — `RegisteredDefinition` lives in `dsh-workflow-registry`, which already depends on `dsh-workflow`, so declaring the method upstream is a project-reference cycle, measured rather than assumed. The loader therefore names the one operation it needs structurally and refuses to mount over an engine that lacks it, rather than importing a concrete engine and tying saved workflows to one implementation. The real-composition case mounts the actual worker-thread engine, because the recording engine can only show that the loader calls a method; and that recording engine wraps the real `DefinitionRegistry` rather than re-implementing its checks, which would pass while the real ones changed underneath it. | Superseded for B-698 (question 31 (a)): the file also gained eight signature cases, which this entry does not freeze. sensitivityProof carries over from the entry it replaces, whose assertions are unchanged (A-555 precedent). The observing tree is pinned at refs/dsh/freeze/P4-09.U.4/2026-10-03T09-23-17.000Z -> e3c0e65fe112ee0188a426f0a200e0c2bca4acff, whose tree is dryRunProof.treeSha.",
+      "supersededBy": "2026-10-04T14:29:59.000Z"
     },
     {
       "epic": "P1-02",
@@ -23120,7 +23123,8 @@
         "mutationDescription": "Five mutations, each run against this argv on def38d52a1 (P2-10 U's final tree) and restored byte-identical, with the file's sha256 and `git status` asserted after every one. (M62) with no policy service mounted, the enforcement point permits instead of answering `policy-unavailable`. (M63) the constraint registry is not consulted: `composeDecision` receives no constraints. (M64) the kernel's deny verdict never overrides a permit. (M65) the native dispatch stops acting on a non-permit decision. (M66) the presented capability token is passed to the manifest decision as `undefined`.",
         "failureSummary": "M62 reddens 2 of 11: the case that permits while the provider is mounted and denies by name once it is lost, and the case that runs with no policy service at all. M63 reddens exactly the 2 constraint cases. M64 reddens exactly the kernel-binding case. M65 reddens 7 of 11 — every case whose evidence is a refused tool result, including the three capability-token cases. M66 reddens exactly one, the permit case where a token is presented and the policy accepts it; the two refusal cases still refuse for their own reasons under it. Re-run rather than carried: the mutated source was untouched by P2-10 U, but this command's tests (`enforcement.spec.ts`, `fixtures/stack.ts`) changed, and two of the superseded entry's counts no longer hold — M62 recorded 3 and reddens 2, M65 recorded 4 and reddens 7. A carried summary would have stated both wrong."
       },
-      "note": "Re-frozen by P2-10's Usage stage: identical to the superseded entry minus the one case whose behaviour moved subject. Same argv, same files[], same expectExit; the sensitivity proof carries forward because the retained cases are unchanged. NOT the full output of this argv — the argv runs a whole package whose other cases belong to other entries."
+      "note": "Re-frozen by P2-10's Usage stage: identical to the superseded entry minus the one case whose behaviour moved subject. Same argv, same files[], same expectExit; the sensitivity proof carries forward because the retained cases are unchanged. NOT the full output of this argv — the argv runs a whole package whose other cases belong to other entries.",
+      "supersededBy": "2026-10-04T14:30:00.000Z"
     },
     {
       "epic": "P1-02",
@@ -23283,6 +23287,196 @@
         "failureSummary": "Read from the round's own narrow report over this entry's argv; the round carried build. Run 37181363899: 2 passed, 1 failed in tests/first100/fixtures/P4-06.settlement-crash.composition.spec.ts: «P4-06 acceptance[0]: a settlement acked around a host crash still takes effect exactly once the settlement acked before its flush, then lost to the crash, still takes effect exactly once after the restart», on its subject assertion at P4-06.settlement-crash.composition.spec.ts:115:82 (the settlement lost to the crash took no effect after the restart)."
       },
       "note": "P4-06 U-stage supplement 5: acceptance[0] (BLOCKED-350) on the shipped headless composition. A settlement acked before the parent recorded it, then lost to a host crash, still takes effect exactly once after the restart; control: one whose flush survived the crash is recorded exactly once. Lane A's A-566 (red first for B-676)."
+    },
+    {
+      "epic": "P4-09",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-09",
+        "stage": "U"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-registry",
+        "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-09 must[3]: a script nests another definition REFUSES a definition that nests ITSELF, structurally rather than by waiting for the depth limit",
+        "validation[2]: the REFERENCE-OBJECT call shape is detected too, which is the one a nested run actually carries"
+      ],
+      "files": [
+        "packages/workflow/workflow-worker-thread/src/index.ts",
+        "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts",
+        "packages/workflow/workflow-registry/src/version.ts",
+        "packages/workflow/workflow-registry/tests/nested.e2e.spec.ts",
+        "packages/workflow/workflow-registry/tests/registry.spec.ts",
+        "packages/workflow/workflow-registry/tests/current-definitions.spec.ts"
+      ],
+      "frozenAtUtc": "2026-10-04T14:29:57.000Z",
+      "supersedes": "2026-10-03T04:52:56.000Z",
+      "supersessionReason": "B-584: files now name every test the argv runs (delegate rulings 甲 2026-09-25T22:06:36Z and 2026-09-28T06:37:55Z); argv, expected exit and every case are the predecessor's.",
+      "dryRunProof": {
+        "treeSha": "0f994e95ac1e566a73b8f171f7f44b1d3ba8be64",
+        "testsDiscovered": 53
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations, each restored byte-identical: (M34) `registerDefinition` skips the registry's admission and stores whatever it is given, which is the bare-`Map` behaviour this change replaces; (M35) `declaresNestedCall` goes back to matching only a quoted first argument.",
+        "failureSummary": "M34 reddens 4 of 53 — the digest-mismatch refusal and the self-recursion refusal both stop happening. M35 reddens 2, and only the reference-object cases, which is what shows the widened detector is asserted rather than incidental. The self-recursion case also carries a positive control: the SAME registration path admits a definition that does not name itself, so the refusal is about recursion rather than about the path refusing everything."
+      },
+      "note": "§12.48-A(1). The engine held registered definitions in a bare `Map`, so `admitRegistration`, `isSelfRecursive` and `DefinitionRegistry` had 0 production callers and a caller's digest was stored without ever being recomputed — a registration could claim one identity and carry another, and a run pinned to that digest would execute a body nobody attested. The engine now holds a `DefinitionRegistry`, so registration recomputes the digest, refuses a mismatch, and refuses a self-recursive definition BEFORE it can be shipped or started. Two fixture consequences are themselves the point: the nested-run fixtures had been registering made-up digests (`digest-inner`), which the registry now refuses, and the self-recursion case had relied on re-registering one digest with a different body — a trick only possible while nothing checked. Measured while fixing it: `declaresNestedCall` matched only `workflow('name')` and so could never fire on `workflow({ name, digest })`, the shape a nested run actually carries, making the self-recursion refusal a false negative in exactly its own case. Superseded for B-584 to add packages/workflow/workflow-registry/tests/registry.spec.ts to files. Only files changed, so the entry keeps its predecessor's standing (generate-specs isProvenanceOnlySupersession); its dryRunProof and sensitivityProof, where present, are the predecessor's. Superseded for B-584 to add packages/workflow/workflow-registry/tests/current-definitions.spec.ts to files: B-729 (ee928f0f36) added it under the argv's directory in batch 29, and the 29a full run 37204461975 named it unlisted. Only files changed, so the entry keeps its predecessor's standing (generate-specs isProvenanceOnlySupersession); its dryRunProof and sensitivityProof, where present, are the predecessor's."
+    },
+    {
+      "epic": "P4-09",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-09",
+        "stage": "U"
+      },
+      "supplementSeq": 7,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-worker-thread/tests/integration.spec.ts",
+        "packages/workflow/tool-workflow",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "dsh-tool-workflow refuses a call that neither starts nor attaches",
+        "P4-09 must[2]: a detached run outlives the turn that started it, on the real stack keeps running after its turn ends, and a later turn collects it by id",
+        "P4-09 must[2]: a detached run outlives the turn that started it, on the real stack refuses to collect a run id nothing started",
+        "P4-09 must[2]: a detached run outlives the turn that started it, on the real stack leaves the foreground path exactly as it was: no detached flag, no runId-only return"
+      ],
+      "files": [
+        "packages/workflow/tool-workflow/src/index.ts",
+        "packages/workflow/workflow-worker-thread/src/index.ts",
+        "packages/workflow/workflow-worker-thread/tests/integration.spec.ts",
+        "packages/workflow/tool-workflow/tests/tool-workflow.spec.ts",
+        "packages/workflow/tool-workflow/tests/invariant.spec.ts",
+        "packages/workflow/tool-workflow/tests/resume.spec.ts",
+        "packages/workflow/tool-workflow/tests/saved-workflow-catalog.spec.ts"
+      ],
+      "frozenAtUtc": "2026-10-04T14:29:58.000Z",
+      "supersedes": "2026-10-03T04:52:59.000Z",
+      "supersessionReason": "B-584: files now name every test the argv runs (delegate rulings 甲 2026-09-25T22:06:36Z and 2026-09-28T06:37:55Z); argv, expected exit and every case are the predecessor's.",
+      "dryRunProof": {
+        "treeSha": "666c9067bf6bfd9a1440837fe234f34e53f37fbd",
+        "testsDiscovered": 57
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations, each run against this argv and restored byte-identical. (M50) the tool's detached branch calls `ctx.workflowEngine.start({..., signal: exec.signal})` instead of `startDetached` — the plausible wrong implementation, since it produces a runId too. (M51) `startDetached` creates the run's own agent WITHOUT `agentOptions: parentAgentOptionsForDelegation(request.parent)`.",
+        "failureSummary": "M50 reddens the outlives-turn case: the run is cancelled when the turn's signal aborts, so the later attach collects a cancelled run instead of a value. M51 also reddens exactly that case — the detached agent holds no LLM route, so every `agent()` in its script resolves null and the collected value is `{answer: null}`. M51 is not a hypothetical: it is the state this stage STARTED in, and this case is what found it. The foreground case sits beside them as the control — it passes under both mutations, so a change that broke detachment while leaving ordinary runs intact is still caught."
+      },
+      "note": "P4-09 must[2], the consumer half: a product path that STARTS a detached run.\n\nThe provider half was closed earlier: `startDetached` mints the run's own session and agent, `attach(runId)` reaches a run by id, and the run is registered before `workflow/start` fires. What no file did was CALL either from a product path — `tool-workflow` only ever called `start()`, so no turn could start a detached run and no turn could collect one. Under the program's rule (built = a production call site a grep can find), the clause's consumer half had not arrived.\n\nThe tool now takes `detached?: boolean` and `attach?: string`. `script`/`meta` stop being schema-required, because an attach call carries neither; the pair is required by the tool instead, which is a relation between arguments a per-field schema cannot state. The detached branch deliberately does NOT pass `exec.signal`: that signal aborts when the step ends, and a run cancelled by the end of the turn that started it is precisely what detached is not.\n\nObserved through the EXECUTOR on the real in-process stack (real worker thread, real spawn backend, one scripted mock model), not through a fake engine: turn one starts detached and aborts its signal, turn two attaches by id alone and receives the value. That case found a real defect — `startDetached` created a bare agent with no LLM route, so the detached script's children failed; the run now inherits the launcher's route exactly as a delegated child does. Superseded for B-584 to add packages/workflow/tool-workflow/tests/invariant.spec.ts, packages/workflow/tool-workflow/tests/resume.spec.ts to files. Only files changed, so the entry keeps its predecessor's standing (generate-specs isProvenanceOnlySupersession); its dryRunProof and sensitivityProof, where present, are the predecessor's. Superseded for B-584 to add packages/workflow/tool-workflow/tests/saved-workflow-catalog.spec.ts to files: B-729 (7e31abf9de) added it under the argv's directory in batch 29, and the 29a full run 37204461975 named it unlisted. Only files changed, so the entry keeps its predecessor's standing (generate-specs isProvenanceOnlySupersession); its dryRunProof and sensitivityProof, where present, are the predecessor's."
+    },
+    {
+      "epic": "P4-09",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-09",
+        "stage": "U"
+      },
+      "supplementSeq": 4,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-filesystem",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-09 must[0]: a saved definition is a file, registered at boot registers every definition file under the harness home, naming it by FILE name",
+        "P4-09 must[0]: a saved definition is a file, registered at boot computes each digest from the bytes it read, so a definition cannot claim one it does not hash to",
+        "P4-09 must[0]: a saved definition is a file, registered at boot starts with NO saved workflows when the directory does not exist, rather than failing the boot",
+        "P4-09 acceptance[0]: loading does not execute, and a refused definition does not stop the boot reads a body that would throw if it were ever evaluated, and registers it unharmed",
+        "P4-09 acceptance[0]: loading does not execute, and a refused definition does not stop the boot RECORDS a refused definition and keeps loading the rest",
+        "P4-09 acceptance[0]: loading does not execute, and a refused definition does not stop the boot REFUSES to mount over an engine that cannot register definitions, rather than loading into nothing",
+        "P4-09 must[0]: the REAL engine registers what the loader read loads a file into the mounted worker-thread engine, which then resolves it for a nested run"
+      ],
+      "files": [
+        "packages/workflow/workflow-filesystem/src/index.ts",
+        "packages/workflow/workflow-filesystem/tests/saved-workflows.spec.ts",
+        "packages/workflow/workflow-filesystem/package.json",
+        "packages/workflow/workflow-filesystem/tsconfig.json",
+        "packages/workflow/workflow-filesystem/README.md",
+        "packages/workflow/workflow-filesystem/tests/settled.spec.ts"
+      ],
+      "frozenAtUtc": "2026-10-04T14:29:59.000Z",
+      "supersedes": "2026-10-03T09:23:17.000Z",
+      "supersessionReason": "B-584: files now name every test the argv runs (delegate rulings 甲 2026-09-25T22:06:36Z and 2026-09-28T06:37:55Z); argv, expected exit and every case are the predecessor's.",
+      "dryRunProof": {
+        "treeSha": "214832dd0817b18c1f7ada1af439db196dc648f0",
+        "testsDiscovered": 15
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations of the loader, each restored byte-identical: (M36) the digest is a claimed constant instead of computed from the bytes read; (M37) a refusal aborts the whole load instead of being recorded; (M38) mounting over an engine with no registration surface is tolerated rather than refused.",
+        "failureSummary": "M36 reddens 5 of 7 — the digest is what ties a definition to its bytes, so most cases depend on it. M37 and M38 redden exactly one case each, which is what makes the keep-loading and refuse-to-mount behaviours separately load-bearing. acceptance[0] is tested by construction rather than by assertion: the hostile-body case registers `process.exit(1)`, so if any part of this path evaluated a definition the case could not pass at all."
+      },
+      "note": "§12.48-A(2). The engine's registration is not on the `WorkflowEngine` seam — `RegisteredDefinition` lives in `dsh-workflow-registry`, which already depends on `dsh-workflow`, so declaring the method upstream is a project-reference cycle, measured rather than assumed. The loader therefore names the one operation it needs structurally and refuses to mount over an engine that lacks it, rather than importing a concrete engine and tying saved workflows to one implementation. The real-composition case mounts the actual worker-thread engine, because the recording engine can only show that the loader calls a method; and that recording engine wraps the real `DefinitionRegistry` rather than re-implementing its checks, which would pass while the real ones changed underneath it. | Superseded for B-698 (question 31 (a)): the file also gained eight signature cases, which this entry does not freeze. sensitivityProof carries over from the entry it replaces, whose assertions are unchanged (A-555 precedent). The observing tree is pinned at refs/dsh/freeze/P4-09.U.4/2026-10-03T09-23-17.000Z -> e3c0e65fe112ee0188a426f0a200e0c2bca4acff, whose tree is dryRunProof.treeSha. Superseded for B-584 to add packages/workflow/workflow-filesystem/tests/settled.spec.ts to files: B-729 (ee928f0f36) added it under the argv's directory in batch 29, and the 29a full run 37204461975 named it unlisted. Only files changed, so the entry keeps its predecessor's standing (generate-specs isProvenanceOnlySupersession); its dryRunProof and sensitivityProof, where present, are the predecessor's."
+    },
+    {
+      "epic": "P2-05",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/policy-enforcement",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-05 acceptance[2]: losing the provider mid-session denies by name permits while the provider is mounted, and denies `policy-unavailable` after it unmounts",
+        "P2-05 acceptance[2]: losing the provider mid-session denies by name records WHICH policy set it could not reach, so a replay can tell the two failures apart",
+        "P2-05 acceptance[0]: one PEP, whichever originator dispatches refuses a forbidden tool on the NATIVE path, with the audit naming the matched policy",
+        "P2-05 acceptance[0]: one PEP, whichever originator dispatches decides every dispatch against the same manifest the log records",
+        "P2-05 acceptance[0]: one PEP, whichever originator dispatches lets the KERNEL bind: a kernel deny refuses a call the policy permitted",
+        "P2-05 acceptance[0]: one PEP, whichever originator dispatches runs with no policy service at all exactly as it did before this epic",
+        "P2-05 must[2]: a plugin constraint narrows and never widens turns a permitted call into a deny, and records the constraint reason for the audit",
+        "P2-05 must[2]: a plugin constraint narrows and never widens stops constraining when its plugin unmounts",
+        "P2-05 must[0]: the capability token is a policy input, not a placeholder decides by the CAPABILITY the presented token carries",
+        "P2-05 must[0]: the capability token is a policy input, not a placeholder permits the same action when the policy accepts the token that was presented",
+        "P2-05 must[0]: the capability token is a policy input, not a placeholder refuses when NO token was presented and the policy requires one"
+      ],
+      "files": [
+        "packages/policy/policy-enforcement/src/index.ts",
+        "packages/policy/policy-enforcement/tests/enforcement.spec.ts",
+        "packages/policy/policy-engine/src/types.ts",
+        "packages/policy/policy-engine-cedar/src/index.ts",
+        "packages/kernel/trust-kernel/src/index.ts",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/core/tools/src/ptc.ts",
+        "packages/core/tools/src/external-effect.ts",
+        "packages/policy/policy-enforcement/tests/dispatch-convergence.spec.ts",
+        "packages/policy/policy-enforcement/tests/facts.spec.ts",
+        "packages/policy/policy-enforcement/tests/fault.spec.ts",
+        "packages/policy/policy-enforcement/tests/no-kernel-dispatch-decision.spec.ts",
+        "packages/policy/policy-enforcement/tests/service-lifetime.spec.ts",
+        "packages/policy/policy-enforcement/tests/sealed-tombstone.spec.ts"
+      ],
+      "frozenAtUtc": "2026-10-04T14:30:00.000Z",
+      "supersedes": "2026-10-04T02:29:20.000Z",
+      "supersessionReason": "B-584: files now name every test the argv runs (delegate rulings 甲 2026-09-25T22:06:36Z and 2026-09-28T06:37:55Z); argv, expected exit and every case are the predecessor's.",
+      "dryRunProof": {
+        "treeSha": "5d9e8a54c065dee72b761392635ac08d9b974914",
+        "testsDiscovered": 36
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Five mutations, each run against this argv on def38d52a1 (P2-10 U's final tree) and restored byte-identical, with the file's sha256 and `git status` asserted after every one. (M62) with no policy service mounted, the enforcement point permits instead of answering `policy-unavailable`. (M63) the constraint registry is not consulted: `composeDecision` receives no constraints. (M64) the kernel's deny verdict never overrides a permit. (M65) the native dispatch stops acting on a non-permit decision. (M66) the presented capability token is passed to the manifest decision as `undefined`.",
+        "failureSummary": "M62 reddens 2 of 11: the case that permits while the provider is mounted and denies by name once it is lost, and the case that runs with no policy service at all. M63 reddens exactly the 2 constraint cases. M64 reddens exactly the kernel-binding case. M65 reddens 7 of 11 — every case whose evidence is a refused tool result, including the three capability-token cases. M66 reddens exactly one, the permit case where a token is presented and the policy accepts it; the two refusal cases still refuse for their own reasons under it. Re-run rather than carried: the mutated source was untouched by P2-10 U, but this command's tests (`enforcement.spec.ts`, `fixtures/stack.ts`) changed, and two of the superseded entry's counts no longer hold — M62 recorded 3 and reddens 2, M65 recorded 4 and reddens 7. A carried summary would have stated both wrong."
+      },
+      "note": "Re-frozen by P2-10's Usage stage: identical to the superseded entry minus the one case whose behaviour moved subject. Same argv, same files[], same expectExit; the sensitivity proof carries forward because the retained cases are unchanged. NOT the full output of this argv — the argv runs a whole package whose other cases belong to other entries. Superseded for B-584 to add packages/policy/policy-enforcement/tests/sealed-tombstone.spec.ts to files: B-728 (1c014c7495) added it under the argv's directory in batch 29, and the 29a full run 37204461975 named it unlisted. Only files changed, so the entry keeps its predecessor's standing (generate-specs isProvenanceOnlySupersession); its dryRunProof and sensitivityProof, where present, are the predecessor's."
     }
   ]
 }

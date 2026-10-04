@@ -3256,6 +3256,14 @@
     },
     {
       "epic": "P2-05",
+      "path": "packages/policy/policy-enforcement/tests/sealed-tombstone.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P2-05",
       "path": "packages/policy/policy-enforcement/tests/service-lifetime.spec.ts",
       "kind": "test",
       "stages": [
@@ -5557,6 +5565,14 @@
     },
     {
       "epic": "P4-09",
+      "path": "packages/workflow/tool-workflow/tests/saved-workflow-catalog.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.7"
+      ]
+    },
+    {
+      "epic": "P4-09",
       "path": "packages/workflow/tool-workflow/tests/tool-workflow.spec.ts",
       "kind": "test",
       "stages": [
@@ -5585,8 +5601,8 @@
       "path": "packages/workflow/workflow-filesystem/src/index.ts",
       "kind": "source",
       "stages": [
-        "U.4",
-        "U.9"
+        "U.9",
+        "U.4"
       ],
       "reason": "§12.48-A(2). The producer P4-09 never had: a saved workflow is a file under the harness home, read at boot and registered through the engine's own admission. `registerDefinition` had 0 production callers before this, so nesting was reachable only from a test. New package, so it is outside the registry's file lists by construction."
     },
@@ -5598,6 +5614,14 @@
         "U.4"
       ],
       "reason": "The loader's cases, including the real-composition one that mounts the actual worker-thread engine rather than a stub sink."
+    },
+    {
+      "epic": "P4-09",
+      "path": "packages/workflow/workflow-filesystem/tests/settled.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.4"
+      ]
     },
     {
       "epic": "P4-09",
@@ -5628,6 +5652,14 @@
     },
     {
       "epic": "P4-09",
+      "path": "packages/workflow/workflow-registry/tests/current-definitions.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P4-09",
       "path": "packages/workflow/workflow-registry/tests/registry.spec.ts",
       "kind": "test",
       "stages": [
@@ -5654,9 +5686,9 @@
         "U.2",
         "U.5",
         "U.6",
+        "U.8",
         "U.3",
-        "U.7",
-        "U.8"
+        "U.7"
       ],
       "reason": "§12.48-A. The engine held its registered definitions in a bare `Map`, so `admitRegistration`, `isSelfRecursive` and the whole `DefinitionRegistry` had zero production callers and the digest a caller supplied was stored without ever being recomputed. The registry now holds them, which is where must[0]'s version pinning and acceptance[0]'s real meaning acquire their consumer. The registry's U-stage list named `runtime.ts`/`session.ts`, not this file."
     },
