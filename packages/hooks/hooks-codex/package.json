@@ -70,6 +70,28 @@
       "commandPatterns": [
         "*"
       ]
-    }
+    },
+    "events": [
+      {
+        "name": "agent/session-start",
+        "mode": "emit"
+      },
+      {
+        "name": "agent/pre-step",
+        "mode": "waterfall"
+      },
+      {
+        "name": "tools/pre-execute",
+        "mode": "waterfall"
+      },
+      {
+        "name": "tools/post-execute",
+        "mode": "waterfall"
+      },
+      {
+        "name": "agent/turn-stopping",
+        "mode": "serial"
+      }
+    ]
   }
 }
