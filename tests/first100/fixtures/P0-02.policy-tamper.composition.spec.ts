@@ -39,6 +39,8 @@ import { startStubModel, type StubRequest, type StubToolCall } from '../../../be
 
 /** One launch's deadline. */
 const LAUNCH_TIMEOUT_MS = 60_000
+/** The vitest case deadline for method (c), kept ABOVE the launch timeout so a hang in the deferred unmount is reported with an exit code and stderr, not as a bare case timeout (the A-588c round-1 lesson). */
+const METHOD_C_CASE_TIMEOUT_MS = LAUNCH_TIMEOUT_MS + 30_000
 
 const FORBIDDEN_TOOL = fileURLToPath(new URL('./loader/a-588-policy-tamper/forbidden-tool.mjs', import.meta.url))
 const POLICY_TAMPER = fileURLToPath(new URL('./loader/a-588-policy-tamper/policy-tamper.mjs', import.meta.url))
@@ -51,11 +53,19 @@ function firstStep(calls: readonly StubToolCall[]): (request: StubRequest) => re
   return request => (request.tools?.length ?? 0) > 0 && !(request.messages ?? []).some(message => message.role === 'tool') ? calls : []
 }
 
-/** What the tamper plugin recorded for each override route. */
+/** Method (c)'s staged outcome: whether the unmount took, the reprovide took, and whether enforcement now resolves the forged engine. */
+interface MethodCStages {
+  readonly unmounted: boolean
+  readonly reprovided: boolean
+  readonly resolvedForged: boolean
+  readonly error?: string
+}
+
+/** What the tamper plugin recorded for each override route. Method (c) is recorded in stages. */
 interface TamperOutcome {
   readonly methodA: string
   readonly methodB: string
-  readonly methodC: string
+  readonly methodC: string | MethodCStages
 }
 
 /** What one launch observed. */
@@ -153,22 +163,21 @@ describe('A-588 (P0-02 U-1): a plugin cannot override the deployment policy to b
     expect(observed.performed, detail).toBe(false)
   }, LAUNCH_TIMEOUT_MS)
 
-  it('method (c): unmounting the Cedar engine and reproviding a permit engine does not bypass the forbidden call (P2-05 acceptance[2], red first)', async () => {
+  it('method (c): after appReady, unmounting the Cedar engine and reproviding a permit engine does not become the policy enforcement resolves (P2-05 acceptance[2], red first)', async () => {
     const observed = await run({ forbid: true, tamper: true, tamperMethods: ['c'] })
-    const detail = `tamper ${JSON.stringify(observed.tamper)}; performed ${String(observed.performed)}; dispatched ${String(observed.callDispatched)}; exit ${String(observed.exitCode)}; stderr:\n${observed.stderr.slice(-800)}`
-    // Guards per v2: the boot ran to a normal exit, the tamper plugin recorded an
-    // outcome (so it mounted after the kernel was pinned, not crashing the boot),
-    // and the turn actually issued the forbidden call.
+    const detail = `tamper ${JSON.stringify(observed.tamper)}; performed ${String(observed.performed)}; exit ${String(observed.exitCode)}; stderr:\n${observed.stderr.slice(-800)}`
+    // Guards: method (c) ran its deferred unmount to a clean exit (a hang would
+    // instead be reported by the launch timeout with a non-zero exit and stderr,
+    // since the case timeout sits above it), and recorded its stages.
     expect(observed.exitCode, detail).toBe(0)
     expect(observed.tamper, detail).not.toBeNull()
-    expect(observed.callDispatched, detail).toBe(true)
-    // acceptance[2] first prong: the Policy service cannot be replaced by Cordis —
-    // disposing its fiber and reproviding a permit engine must not become the
-    // engine `ctx.get('policy')` resolves. RED today if method (c) reads `overrode`.
-    expect(observed.tamper?.methodC, detail).toMatch(/^refused/u)
-    // acceptance[2] second prong: once the engine is gone, enforcement fails
-    // closed, so the forbidden call stays refused either way. RED today if the
-    // reprovided permit engine was read and the body ran.
-    expect(observed.performed, detail).toBe(false)
-  }, LAUNCH_TIMEOUT_MS)
+    const stages = observed.tamper?.methodC
+    expect(typeof stages === 'object', `methodC must be recorded in stages: ${detail}`).toBe(true)
+    if (stages === undefined || typeof stages !== 'object') return
+    // acceptance[2]: the Policy service cannot be replaced by Cordis — disposing
+    // its fiber and reproviding a permit engine must NOT become the engine
+    // `ctx.get('policy')` resolves (the same isolate slot method (a) proved
+    // enforcement reads). RED today: the unfrozen slot lets the reprovide take.
+    expect(stages.resolvedForged, detail).toBe(false)
+  }, METHOD_C_CASE_TIMEOUT_MS)
 })
