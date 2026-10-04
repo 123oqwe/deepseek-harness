@@ -8228,7 +8228,8 @@
       "sensitivityProof": {
         "mutationDescription": "Locally (never committed) replaced the seen-set the call site reads — `decideDelivery(message, recipient, store.consumedKeys())` became `decideDelivery(message, recipient, new Set<string>())` in packages/run/message-bus/src/mailbox-delivery.ts — which is exactly the caller-supplied-set implementation this call site exists to replace, then re-ran the frozen command.",
         "failureSummary": "3 of 6 failed: `drops a REDELIVERY ...` and `still drops the redelivery after a RESTART ...` both AssertionError: expected 'deliver' to be 'drop'; `reads the seen-set at DECISION time ...` AssertionError: expected [ 'deliver', 'deliver' ] to deeply equal [ 'deliver', 'drop' ]. The 3 that still passed are the ones that do not depend on the durable set (first delivery, later epoch, wrong addressee), which is the expected split rather than a gap. Mutation reverted immediately; `git diff --stat` on the file was empty and the command returned 6 passed (6) before continuing."
-      }
+      },
+      "supersededBy": "2026-10-04T06:01:20.000Z"
     },
     {
       "epic": "P4-06",
@@ -23158,6 +23159,50 @@
         "failureSummary": "Read from each round's own narrow report; every round carried build. M-707-1 `75a4381144896a1c29c4df8b60b4fbd6a537d611` run 37159118103 (names no plugin a patch mounts by path, at boot or as it mounts): 0 passed, 3 failed in apps/cli/tests/plugin-provenance-patch-mounted.e2e.ts: «P1-02 must[4] (Q30(b)), review 1-2/2 (A-590, A-590b): a path-mounted plugin runs unverified and must be named in the provenance banner, however the patch mounts it (red first for B-707) names a plugin mounted by a top-level insert row, and never the factory bundle», «P1-02 must[4] (Q30(b)), review 1-2/2 (A-590, A-590b): a path-mounted plugin runs unverified and must be named in the provenance banner, however the patch mounts it (red first for B-707) names a plugin mounted as a cordis:group child added by a config-replace row (not in the insert list)», «P1-02 must[4] (Q30(b)), review 1-2/2 (A-590, A-590b): a path-mounted plugin runs unverified and must be named in the provenance banner, however the patch mounts it (red first for B-707) names a plugin mounted through a cordis-plugin-include target file (not in the insert list)». M-707b-1 `81fc95f3da99bd5d02e5240816777117feb5653b` run 37159050077 (names no path row as it mounts): 2 passed, 1 failed in apps/cli/tests/plugin-provenance-patch-mounted.e2e.ts: «P1-02 must[4] (Q30(b)), review 1-2/2 (A-590, A-590b): a path-mounted plugin runs unverified and must be named in the provenance banner, however the patch mounts it (red first for B-707) names a plugin mounted through a cordis-plugin-include target file (not in the insert list)». M-707b-2 `bc9cf6f2847ecae4af0664dd73319ed630ab52de` run 37159085285 (skips group children in the composed walk and names no path row as it mounts): 1 passed, 2 failed in apps/cli/tests/plugin-provenance-patch-mounted.e2e.ts: «P1-02 must[4] (Q30(b)), review 1-2/2 (A-590, A-590b): a path-mounted plugin runs unverified and must be named in the provenance banner, however the patch mounts it (red first for B-707) names a plugin mounted as a cordis:group child added by a config-replace row (not in the insert list)», «P1-02 must[4] (Q30(b)), review 1-2/2 (A-590, A-590b): a path-mounted plugin runs unverified and must be named in the provenance banner, however the patch mounts it (red first for B-707) names a plugin mounted through a cordis-plugin-include target file (not in the insert list)»."
       },
       "note": "P1-02 U-stage supplement 5: must[4] (question 30 (b)) on the factory launcher. The built dsh bin, under a non-development base-bundle profile, names in its provenance banner a plugin a user patch mounts by path, whether the patch inserts it as a top-level row, adds it as a cordis:group child by replacing a row's config, or reaches it through a cordis-plugin-include target file, and never names the factory bundle. Lane A's A-590 and A-590b, for B-707 and B-707b. The 28r push gate is the first full run that ran this file (28r added it to the e2e-workflow list); this entry's cell comes from the first gate after the freeze. dryRunProof: the 28r push gate 37171496513 on 7b008b27ba1eae2d7bf2de0e91cc2028d9f76f2f, e2e-workflow report."
+    },
+    {
+      "epic": "P4-06",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-06",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/message-bus/tests/mailbox-delivery.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set delivers a message this bus has never consumed",
+        "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set drops a REDELIVERY of a message this bus already consumed, which is the effect must[2] names",
+        "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set treats the same id at a LATER epoch as a new message, so a restarted sender is not silenced",
+        "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set refuses a message addressed elsewhere BEFORE consulting the seen-set",
+        "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set reads the seen-set at DECISION time, so a message consumed after the handle was taken still drops",
+        "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set still drops the redelivery after a RESTART, because the seen-set is the durable rows"
+      ],
+      "files": [
+        "packages/run/message-bus/src/mailbox-delivery.ts",
+        "packages/run/message-bus/tests/mailbox-delivery.spec.ts",
+        "packages/collaboration/intake-dedup/src/index.ts",
+        "packages/collaboration/intake-dedup/src/dedup.ts"
+      ],
+      "frozenAtUtc": "2026-10-04T06:01:20.000Z",
+      "supersedes": "2026-09-07T08:12:00.000Z",
+      "supersessionReason": "A-584 (lane A's read-only census, artifacts/laneA/a-584-census.md) measured that the predecessor's note is wrong: it calls decideMailboxDelivery must[2]'s production call site, but outside its own tests the function is referenced only by its definition (packages/run/message-bus/src/mailbox-delivery.ts:121) and its package's re-export (packages/run/message-bus/src/index.ts:38), so no shipped path delivers a mailbox message through it. Only the note changes; argv, files, expected exit and every case are the predecessor's (gate3 2026-10-03T07:21:04Z; delegate 2026-10-04 28r2 materials).",
+      "dryRunProof": {
+        "treeSha": "a6dbc5778de9f51249f0dd8d10ef1ead1d1113fd",
+        "testsDiscovered": 6
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed) replaced the seen-set the call site reads — `decideDelivery(message, recipient, store.consumedKeys())` became `decideDelivery(message, recipient, new Set<string>())` in packages/run/message-bus/src/mailbox-delivery.ts — which is exactly the caller-supplied-set implementation this call site exists to replace, then re-ran the frozen command.",
+        "failureSummary": "3 of 6 failed: `drops a REDELIVERY ...` and `still drops the redelivery after a RESTART ...` both AssertionError: expected 'deliver' to be 'drop'; `reads the seen-set at DECISION time ...` AssertionError: expected [ 'deliver', 'deliver' ] to deeply equal [ 'deliver', 'drop' ]. The 3 that still passed are the ones that do not depend on the durable set (first delivery, later epoch, wrong addressee), which is the expected split rather than a gap. Mutation reverted immediately; `git diff --stat` on the file was empty and the command returned 6 passed (6) before continuing."
+      },
+      "note": "P4-06 U-stage supplement 2, replaced for its note alone (A-584). must[2]'s dedup is observed on the shipped path by the agent inbox's consumer fold, which consumes a message only when it is recorded, keyed by (source, messageId, epoch): packages/core/agent-loop/src/inbox.ts:94-102 moves the key from claimed to consumed when the message's user/message is recorded, and :396 refuses an already-consumed key. classifyIntake and decideMailboxDelivery have no caller on the shipped product (A-584), so they are NOT must[2]'s production call site; the mailbox-classification cases this entry runs exercise them as a library-level observation only (Known Limitation). sensitivityProof carries over from the entry it replaces: the change is to the note alone. The observing tree is pinned at refs/dsh/freeze/P4-06.U.2/2026-10-04T06-01-20.000Z -> 7b008b27ba1eae2d7bf2de0e91cc2028d9f76f2f, whose tree is dryRunProof.treeSha."
     }
   ]
 }
