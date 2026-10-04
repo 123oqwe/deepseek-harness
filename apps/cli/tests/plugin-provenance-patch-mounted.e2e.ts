@@ -101,6 +101,8 @@ async function bootWithPathForm(profileName: string, writePatch: (profileDir: st
     binArgs: ['--profile', profileName],
     tsconfigPath: TSCONFIG,
     mode: 'lib',
+    // The path plugin is a test fixture with no Manifest v2, which plugin-manifest enforcement would refuse to mount.
+    env: { DSH_FEATURE_GATE_PLUGIN_MANIFEST_ENFORCEMENT: 'shadow' },
     prepare: (cwd) => {
       // runLoaderSmoke points DSH_HOME at <cwd>/.dsh.
       const profileDir = join(cwd, '.dsh', 'profiles', profileName)
