@@ -51,6 +51,10 @@ kind: "package-reference"
 
 `request(req)` 指名 agent、工具、原因、可选的调用 id，以及一个中止信号。它要求当前处于尚未结束的轮次中：空闲或在轮次之间调用会在审计前抛出异常。中止会撤回问题——请求以 `cancelled` 结算，迟到的回答被丢弃。若任一审计事件在提交前失败，请求会被拒绝，而不会返回一项未记录的决定。
 
+### 持久审批队列
+
+组合挂载了 `ctx.approvalStore`（Epic P2-07）时，每个请求在追加 `approval/asked` 之前也会记录到其中，成为一条轮次作用域的审批，归属于该会话的动作 manifest 所归属的租户与主体。结果会推动它的状态：`allowed-once` 批准它，`rejected` 拒绝它，`cancelled` 或 `unavailable` 撤销它。依赖某项已绑定审批的分派会在重新核验之后消耗它，只有消耗成功才运行，因此一项审批至多运行一次它的动作，过期之后或被其他客户端撤销之后都不会运行；存储中没有该会话租户名下这项审批时，分派会被拒绝。没有绑定的请求之后没有分派来消耗它，因此它的授权在决定时即被消耗，此时无法消耗的授权以 `cancelled` 结算。为某个会话发布 agent 时，该会话各轮次留下的、处于 requested 或 approved 状态的轮次审批会被撤销。没有存储时，请求的行为如上文所述。
+
 ### 模型与用户看到什么
 
 模型只会看到发起请求的消费方最终给出的工具结果——允许、拒绝、取消或不可用——以及运行时上下文快照中的当前策略；审计事件与面向人类的权限 UI 不属于模型上下文。`never` 切换会以一条带来源的用户消息告知模型，两种策略都会把各自的完整当前含义贡献给快照。
@@ -71,6 +75,7 @@ kind: "package-reference"
 |---|---|
 | [`src/index.ts`](src/index.ts) | `ApprovalService`：请求分发、策略折叠与写入路径、运行时上下文贡献 |
 | [`src/types.ts`](src/types.ts) | `ApprovalRequestId` brand 与结果类型 |
+| [`src/store-bridge.ts`](src/store-bridge.ts) | 在 `ctx.approvalStore` 中记录、消耗与撤销审批，以及会话据以行事的查看者 |
 | [`src/invariant.ts`](src/invariant.ts) | 不变式伴生插件：在未结束的轮次内配对 `approval/asked` 与 `approval/decided` |
 
 ### 分发
@@ -154,7 +159,8 @@ Approval prompts are disabled in this session: actions that require approval are
 这些限制说明该 seam 不适用的场景，以及组合时需要特别注意的场景。它们是当前包约束，不是通用权限对比。
 
 - **请求只在尚未结束的轮次内有效**：在空闲时或轮次之间发起调用，会在审计前抛出异常；持久化的轮次外审批工作流仍属延期工作。
-- **仅存在一次性授权**：结果词汇包含 `allowed-once`，但不含 `allow-always`、已记住的规则、撤销或授权存储；会话策略只有 `ask`／`never`。
+- **仅存在一次性授权**：结果词汇包含 `allowed-once`，但不含 `allow-always` 或已记住的规则；会话策略只有 `ask`／`never`。
+- **出厂 profile 尚未挂载审批存储**：持久审批队列只作用于挂载了 `@deepseek-ai/dsh-approval-store/sqlite` 的组合。
 - **请求不携带工具参数**：应答者会看到工具名称、原因和可选调用 id；ACP（Agent Client Protocol）机器通道要求调用 id，并会委托不含 id 的请求。
 - **没有内置应答者**：无头或组合不完整的部署会返回 `unavailable` 并以拒绝方式关闭；服务自身绝不会提示人类。
 

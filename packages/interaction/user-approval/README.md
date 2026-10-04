@@ -51,6 +51,10 @@ The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-a
 
 `request(req)` names the agent, tool, optional call id and reason, and an abort signal. It requires an open turn: an idle or between-turn caller throws before auditing anything. Aborting withdraws the question — the request settles `cancelled` and a late answer is discarded. A failure that prevents either audit append from committing rejects instead of returning an unlogged decision.
 
+### The durable approval queue
+
+When a composition mounts `ctx.approvalStore` (Epic P2-07), every request is also recorded there before `approval/asked` is appended, as a turn-scoped approval owned by the tenant and principal the session's action manifests are attributed to. The outcome moves it: `allowed-once` approves it, `rejected` denies it, and `cancelled` or `unavailable` revokes it. The dispatch that rests on a bound approval consumes it after re-verifying it and runs only if the consumption succeeds, so an approval runs its action at most once and never after it lapsed or another client revoked it; a dispatch whose approval the store does not hold for the session's tenant is refused. A request with no binding has no later dispatch to consume it, so its grant is consumed at the decision, and a grant that cannot be consumed then settles `cancelled`. When an agent is published for a session, the turn approvals that session left requested or approved are revoked. Without a store, requests behave as described above.
+
 ### What the model and user see
 
 The model sees only the asking consumer's eventual tool outcome — allowed, rejected, cancelled, or unavailable — plus the current policy in the runtime-context snapshot; the audit events and the human permission UI are not model context. A `never` switch is announced to the model by a sourced user message, and both policies contribute their complete current meaning to the snapshot.
@@ -71,6 +75,7 @@ The observable behavior is covered in [Use this package](#use-this-package); thi
 |---|---|
 | [`src/index.ts`](src/index.ts) | `ApprovalService`: request dispatch, policy fold and write path, runtime-context contribution |
 | [`src/types.ts`](src/types.ts) | `ApprovalRequestId` brand and outcome types |
+| [`src/store-bridge.ts`](src/store-bridge.ts) | Recording, consuming, and revoking approvals in `ctx.approvalStore`, and the viewer a session acts as |
 | [`src/invariant.ts`](src/invariant.ts) | Invariant companion pairing `approval/asked` with `approval/decided` inside an open turn |
 
 ### Dispatch
@@ -154,7 +159,8 @@ Append-only; newly visible content follows the reusable request prefix and does 
 These limits define when the seam is a poor fit or needs special composition care. They are current package constraints, not a general permission comparison.
 
 - **Requests are valid only inside an open turn** — an idle or between-turn caller throws before auditing; a durable out-of-turn approval workflow is deferred.
-- **Only one-shot grants exist** — the outcome vocabulary has `allowed-once` but no `allow-always`, remembered rule, revocation, or grant store; session policy is only `ask` / `never`.
+- **Only one-shot grants exist** — the outcome vocabulary has `allowed-once` but no `allow-always` or remembered rule; session policy is only `ask` / `never`.
+- **No shipped profile mounts the approval store yet** — the durable queue applies only to a composition that mounts `@deepseek-ai/dsh-approval-store/sqlite`.
 - **The request carries no tool arguments** — an answerer sees the tool name, reason, and optional call id; the ACP machine channel requires a call id and delegates requests without one.
 - **No built-in answerer** — headless or incompletely composed deployments resolve `unavailable` and fail closed; the service itself never prompts a human.
 

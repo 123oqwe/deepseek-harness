@@ -9,11 +9,15 @@
  * result is computed and then ignored passes every case that only asserts the
  * verifier was reached.
  */
-import { describe, expect, it } from 'vitest'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { afterEach, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import AgentRegistry from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { ApprovalRequestId } from '@deepseek-ai/dsh-user-approval'
+import ApprovalStoreSqlitePlugin from '@deepseek-ai/dsh-approval-store/sqlite'
+import { ApprovalRequestId, approvalViewerOf } from '@deepseek-ai/dsh-user-approval'
 import LlmRuntime, { createUserMessage, StreamChunk, ToolCallId } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
@@ -172,5 +176,88 @@ describe('P2-06 must[1]: a recorded approval is re-verified on the real dispatch
     await agent.whenIdle()
 
     expect(runs).toEqual(['one'])
+  })
+})
+
+const storeDirs: string[] = []
+afterEach(() => {
+  for (const dir of storeDirs.splice(0)) rmSync(dir, { recursive: true, force: true })
+})
+
+/**
+ * The harness with the SQLite approval store mounted.
+ * @param adapter - the model script.
+ * @returns the composition.
+ */
+async function harnessWithStore(adapter: MockAdapter): Promise<Context> {
+  const ctx = await harness(adapter)
+  const dir = mkdtempSync(join(tmpdir(), 'dsh-approval-dispatch-'))
+  storeDirs.push(dir)
+  await ctx.plugin(ApprovalStoreSqlitePlugin, { directory: dir, busyTimeoutMs: 1000 })
+  return ctx
+}
+
+/**
+ * Record in the store the approval the seeded `approval/bound` names, approved, and then revoked when asked to.
+ * @param ctx - the composition holding the session and the store.
+ * @param id - the session.
+ * @param revoked - whether another client revoked it after the approval.
+ */
+function seedStoreApproval(ctx: Context, id: SessionId, revoked: boolean): void {
+  const store = ctx.get('approvalStore')
+  if (store === undefined) throw new Error('ctx.approvalStore is not published')
+  const viewer = approvalViewerOf(ctx.sessions.get(id)!)
+  const approval = ApprovalRequestId('approval-1')
+  store.request({
+    id: approval, tenant: viewer.tenant, actor: viewer.principal, scope: { kind: 'turn', sessionId: id },
+    toolName: 'write', requestDigest: 'sha256:approval-1', deadlineMs: Date.now() + 600_000,
+  }, Date.now())
+  store.decide(approval, 0, 'approved', viewer, Date.now())
+  if (revoked) store.revoke(approval, 1, viewer, Date.now())
+}
+
+describe('P2-07 acceptance[1]: the dispatch consumes the approval it rests on, at most once', () => {
+  it('RUNS the tool on an approved approval and leaves it consumed', async () => {
+    const runs: string[] = []
+    const ctx = await harnessWithStore(new MockAdapter([call('c1', 'write', { contents: 'one' }), textResponse('done')]))
+    ctx.tools.register(countingTool(runs))
+    const id = SessionId('approval-consumed')
+    const agent = await ctx.agentLoop.create(id, { provider: 'mock', model: 'mock' })
+    seedApproval(ctx, id, decidedFor('one'), Date.now() + 600_000)
+    seedStoreApproval(ctx, id, false)
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    expect(runs).toEqual(['one'])
+    expect(ctx.get('approvalStore')?.get(ApprovalRequestId('approval-1'), approvalViewerOf(agent.session), Date.now())?.state).toBe('consumed')
+  })
+
+  it('does NOT run the tool on an approval another client revoked, and says it could not be used', async () => {
+    const runs: string[] = []
+    const ctx = await harnessWithStore(new MockAdapter([call('c1', 'write', { contents: 'one' }), textResponse('done')]))
+    ctx.tools.register(countingTool(runs))
+    const id = SessionId('approval-revoked')
+    const agent = await ctx.agentLoop.create(id, { provider: 'mock', model: 'mock' })
+    seedApproval(ctx, id, decidedFor('one'), Date.now() + 600_000)
+    seedStoreApproval(ctx, id, true)
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    expect(runs).toEqual([])
+    expect(resultTexts(ctx, id).join('\n')).toContain('could not be used (invalid-transition)')
+  })
+
+  it('does NOT run the tool when the mounted store holds no such approval', async () => {
+    const runs: string[] = []
+    const ctx = await harnessWithStore(new MockAdapter([call('c1', 'write', { contents: 'one' }), textResponse('done')]))
+    ctx.tools.register(countingTool(runs))
+    const id = SessionId('approval-unrecorded')
+    const agent = await ctx.agentLoop.create(id, { provider: 'mock', model: 'mock' })
+    seedApproval(ctx, id, decidedFor('one'), Date.now() + 600_000)
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    expect(runs).toEqual([])
+    expect(resultTexts(ctx, id).join('\n')).toContain('could not be used (not-found)')
   })
 })

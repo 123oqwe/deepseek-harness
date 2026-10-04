@@ -30,7 +30,9 @@ import {
   readPolicyContextFacts,
   redactArgumentsValueForDisplay,
   refuseNewAction,
+  consumeDispatchApproval,
   refusedApprovalResult,
+  refusedConsumedApprovalResult,
   refusedDispatchResult,
   refusedPolicyResult,
   refusedReservationResult,
@@ -802,6 +804,16 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
                 reservation = undefined
                 this.settled = true
                 settle(refusedApprovalResult(staleApproval, name))
+                return
+              }
+              // Epic P2-07: consumed at most once, before the effect is reserved.
+              const unusable = exec.agent === undefined || binding === undefined
+                ? undefined
+                : consumeDispatchApproval(options.ledgerContext(), exec.agent, binding.inputs.action, binding.actionId, Date.now())
+              if (unusable !== undefined) {
+                reservation = undefined
+                this.settled = true
+                settle(refusedConsumedApprovalResult(unusable, name))
                 return
               }
               const refused = exec.agent === undefined || reservation === undefined

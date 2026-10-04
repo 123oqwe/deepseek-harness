@@ -250,7 +250,7 @@ Program-only SDK bindings:
 - **PTC mode 的 SDK 语言由当前加载的运行时决定，且呈现方式按 agent 而非按工具**：`mode: ptc`/`both` 会拒绝组装提示词，除非 `ctx.codeRuntime.language` 有已注册的 SDK 渲染器；同一个 agent 内不能让一个工具仅使用 Native，而另一个仅使用 PTC。
 - **PTC mode 中间值只存在于执行局部，且没有字节上限**：它们无法从会话回放重建，并可能耗尽进程或 worker 内存；只有外层 `run_code` 输出受 worker 可配置的硬上限约束。
 - **每次运行都会获得全新的 `run_code` 状态**：MVP 不采用持久 REPL 风格内核，因为跨调用状态不会出现在日志中。
-- **直接调用只在钉了 Trust Kernel 的组合里被记录与决定**：出厂 profile 都钉了内核（`apps/cli` 的 `enforceTrustKernelPosture` 在没有内核时拒绝启动，除非用 `DSH_TRUST_KERNEL_INSECURE` 选择开发模式启动）。没有内核的组合没有执行点，它的直接调用也不追加 manifest，这一点与 agent loop 自己的调用不同。这条接缝不在工具运行之前重新核验已记录的审批，也不做幂等预留，这两件事 agent loop 自己的调用都会做。
+- **直接调用只在钉了 Trust Kernel 的组合里被记录与决定**：出厂 profile 都钉了内核（`apps/cli` 的 `enforceTrustKernelPosture` 在没有内核时拒绝启动，除非用 `DSH_TRUST_KERNEL_INSECURE` 选择开发模式启动）。没有内核的组合没有执行点，它的直接调用也不追加 manifest，这一点与 agent loop 自己的调用不同。这条接缝在工具运行之前重新核验已记录的审批，挂了 `ctx.approvalStore` 时还会消耗它，与 agent loop 自己的调用一样；它不做幂等预留，这一点 agent loop 自己的调用会做。
 
 <a id="dev-note"></a>
 ### 开发备注
