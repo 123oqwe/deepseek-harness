@@ -3,7 +3,7 @@
 import { Context, Service } from '@deepseek-ai/cordis'
 import { admitEncodedFile as admitFileInput, admitEncodedImages } from './admission.ts'
 import { AttachmentError, isAttachmentError as matchesAttachmentError } from './error.ts'
-import type { AttachmentScanInput } from './scan.ts'
+import type { AttachmentScanInput, AttachmentScanner } from './scan.ts'
 import type {
   AdmittedPromptContentPart,
   AttachmentAdmissionPart,
@@ -103,7 +103,7 @@ export abstract class AttachmentStore extends Service {
    * @throws AttachmentError with code `MALICIOUS_ATTACHMENT` when the scanner refuses.
    */
   protected async scanInput(input: AttachmentScanInput): Promise<void> {
-    const scanner = this.ctx.get('attachmentScanner')
+    const scanner: AttachmentScanner | undefined = this.ctx.get('attachmentScanner')
     if (scanner === undefined) return
     const verdict = await scanner.scan(input)
     if (!verdict.admit) {

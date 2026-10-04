@@ -183,7 +183,10 @@ Immutable binary attachment service. Implementations validate bytes before publi
 abstract validateImage(input: SaveImageAttachment): Promise<void>
 
 /**
- * Validate and durably commit one ordered image batch.
+ * Validate, scan, and durably commit one ordered image batch. This template
+ * is the enforcement point: it validates, scans every member, then delegates
+ * the commit to {@link AttachmentStore.commitImages}, so a provider that
+ * overrides the commit cannot skip the scan.
  * @param inputs - encoded images in owning-message order.
  * @returns durable normalized attachment references in the same order after every member succeeds.
  */
@@ -248,7 +251,7 @@ imageHostPath(ref: ImageAttachmentRef): string | undefined
  * @param input - exact bytes and optional display name.
  * @returns the durable content-addressed file reference.
  */
-saveFile(input: SaveFileAttachment): Promise<FileAttachmentRef>
+async saveFile(input: SaveFileAttachment): Promise<FileAttachmentRef>
 
 /**
  * Durably commit one file byte-for-byte from bounded chunks. Providers must
@@ -288,6 +291,25 @@ readImageRequest( ref: ImageAttachmentRef, policy: ImageRequestPolicy, signal?: 
 ```
 
 Source: [`packages/attachment/attachment/src/index.ts`](../../packages/attachment/attachment/src/index.ts)
+
+<a id="ctxattachmentscanner--attachmentscanner-abstract-seam"></a>
+
+### `ctx.attachmentScanner` — `AttachmentScanner` (abstract seam)
+
+Scan one decoded attachment payload for malicious content before it reaches a parser or the model (P3-12 must[1]). A deployment mounts one provider; its absence admits every payload, which is capability absence, not a silent pass.
+
+The scanner is the decision this seam owns; a store's save path invokes it so no caller reaches a parser with an unscanned payload (the enforcement point is the store save operation, not the narrower admission entry a direct store caller bypasses).
+
+```ts cordis-catalog
+/**
+ * Classify one decoded payload against the deployment's threat policy.
+ * @param input - decoded bytes, declared media type, and optional name.
+ * @returns a verdict: admit, or refuse with the threat class and detail.
+ */
+abstract scan(input: AttachmentScanInput): Promise<AttachmentScanVerdict>
+```
+
+Source: [`packages/attachment/attachment/src/scan.ts`](../../packages/attachment/attachment/src/scan.ts)
 
 <a id="ctxfileuploads--fileuploads"></a>
 

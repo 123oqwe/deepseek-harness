@@ -114,7 +114,7 @@ describe('AttachmentSecurityScanner service', () => {
   it('publishes ctx.attachmentScanner that refuses a threat', async () => {
     const ctx = new Context()
     await ctx.plugin(AttachmentSecurityScanner, {})
-    expect(refusalKind(await ctx.attachmentScanner!.scan(input(Uint8Array.from([0x7f, 0x45, 0x4c, 0x46]), 'x')))).toBe('executable')
+    expect(refusalKind(await ctx.attachmentScanner.scan(input(Uint8Array.from([0x7f, 0x45, 0x4c, 0x46]), 'x')))).toBe('executable')
   })
 
   it('removes ctx.attachmentScanner when the providing fiber disposes (HMR safety)', async () => {

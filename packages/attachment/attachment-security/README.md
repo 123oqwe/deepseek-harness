@@ -61,6 +61,7 @@ Every threshold is a deployment-resolved field; none is hardcoded in the detecto
 
 - **The decision belongs to the store's save path, not to this provider.** This package returns a verdict; a later slice invokes it inside the attachment store's save operation, so a direct store caller cannot reach a parser with an unscanned payload (the admission entry alone is a narrower, bypassable check).
 - **No decompression.** Archive checks read declared sizes and entry names from the ZIP central directory through `fflate`'s extraction filter, which never inflates a member. The ratio check clears a level before any nested archive is read.
+- No runtime invariant companion is published: the scanner holds no state and observes nothing over time; each verdict is a pure function of one payload and the policy, so there is no owned relation two observers could disagree about.
 
 <a id="further-exploration"></a>
 ## Further Exploration

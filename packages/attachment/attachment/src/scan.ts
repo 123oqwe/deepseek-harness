@@ -45,7 +45,7 @@ export interface AttachmentScanInput {
 
 declare module '@deepseek-ai/cordis' {
   interface Context {
-    attachmentScanner?: AttachmentScanner
+    attachmentScanner: AttachmentScanner
   }
 }
 

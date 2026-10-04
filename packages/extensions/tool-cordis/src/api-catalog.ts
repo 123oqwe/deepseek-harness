@@ -513,7 +513,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
       {
         signature: 'async saveImages(inputs: readonly SaveImageAttachment[]): Promise<readonly ImageAttachmentRef[]>',
-        description: 'Validate and durably commit one ordered image batch.',
+        description: 'Validate, scan, and durably commit one ordered image batch. This template is the enforcement point: it validates, scans every member, then delegates the commit to AttachmentStore.commitImages, so a provider that overrides the commit cannot skip the scan.',
         parameters: [{ name: 'inputs', description: 'encoded images in owning-message order.' }],
         returns: 'durable normalized attachment references in the same order after every member succeeds.',
       },
@@ -558,7 +558,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         throws: ['an AttachmentError when the durable reference is invalid.'],
       },
       {
-        signature: 'saveFile(input: SaveFileAttachment): Promise<FileAttachmentRef>',
+        signature: 'async saveFile(input: SaveFileAttachment): Promise<FileAttachmentRef>',
         description: 'Durably commit one file byte-for-byte before its owning session event is appended. Files carry no admission limits: any byte content and length is accepted, and the stored object is the exact submitted bytes. Backends without verbatim file storage keep this default rejection.',
         parameters: [{ name: 'input', description: 'exact bytes and optional display name.' }],
         returns: 'the durable content-addressed file reference.',
@@ -587,6 +587,19 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         description: 'Generate or read one deterministic model-request version from the stored normalized image.',
         parameters: [{ name: 'ref', description: 'durable provider-independent normalized attachment reference.' }, { name: 'policy', description: 'exact route pixel budget and encoded-byte target; a target no ladder quality meets yields the smallest ladder output.' }, { name: 'signal', description: 'optional cancellation.' }],
         returns: 'request bytes and the cache/upload identity covering every transform input.',
+      },
+    ],
+  },
+  {
+    key: 'attachmentScanner',
+    summary: 'Scan one decoded attachment payload for malicious content before it reaches a parser or the model (P3-12 must[1]).',
+    description: 'Scan one decoded attachment payload for malicious content before it reaches a parser or the model (P3-12 must[1]). A deployment mounts one provider; its absence admits every payload, which is capability absence, not a silent pass.\n\nThe scanner is the decision this seam owns; a store\'s save path invokes it so no caller reaches a parser with an unscanned payload (the enforcement point is the store save operation, not the narrower admission entry a direct store caller bypasses).',
+    methods: [
+      {
+        signature: 'abstract scan(input: AttachmentScanInput): Promise<AttachmentScanVerdict>',
+        description: 'Classify one decoded payload against the deployment\'s threat policy.',
+        parameters: [{ name: 'input', description: 'decoded bytes, declared media type, and optional name.' }],
+        returns: 'a verdict: admit, or refuse with the threat class and detail.',
       },
     ],
   },
@@ -4473,6 +4486,22 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'AttachmentId',
     declaration: 'export type AttachmentId = Branded<\'AttachmentId\'>;',
+  },
+  {
+    name: 'AttachmentScanInput',
+    declaration: 'export interface AttachmentScanInput {\n    readonly bytes: Uint8Array;\n    readonly declaredMediaType: string;\n    readonly name?: string;\n}',
+  },
+  {
+    name: 'AttachmentScanRefusal',
+    declaration: 'export interface AttachmentScanRefusal {\n    readonly kind: AttachmentThreatKind;\n    readonly detail: string;\n}',
+  },
+  {
+    name: 'AttachmentScanVerdict',
+    declaration: 'export type AttachmentScanVerdict = {\n    readonly admit: true;\n} | {\n    readonly admit: false;\n    readonly refusal: AttachmentScanRefusal;\n};',
+  },
+  {
+    name: 'AttachmentThreatKind',
+    declaration: 'export type AttachmentThreatKind = \'mime-mismatch\' | \'decompression-ratio\' | \'polyglot\' | \'pixel-bomb\' | \'nesting-depth\' | \'macro\' | \'executable\';',
   },
   {
     name: 'Attempt',

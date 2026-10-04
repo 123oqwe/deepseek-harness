@@ -294,6 +294,24 @@ export interface Config {
 
 Source: [`packages/attachment/attachment-local/src/index.ts:61`](../packages/attachment/attachment-local/src/index.ts)
 
+<a id="deepseek-aidsh-attachment-security"></a>
+
+## `@deepseek-ai/dsh-attachment-security`
+
+```ts config-catalog
+/** Malicious-content scanner configuration. */
+export interface Config {
+  /** Largest total-uncompressed to compressed ratio an archive may declare. Default: 100. */
+  maxDecompressionRatio?: number
+  /** Deepest archive-within-archive nesting admitted; 0 forbids any nested archive. Default: 1. */
+  maxNestingDepth?: number
+  /** Largest intrinsic width times height admitted for a raster image. Default: 64,000,000. */
+  maxPixels?: number
+}
+```
+
+Source: [`packages/attachment/attachment-security/src/index.ts:21`](../packages/attachment/attachment-security/src/index.ts)
+
 <a id="deepseek-aidsh-baseline-preflight"></a>
 
 ## `@deepseek-ai/dsh-baseline-preflight`

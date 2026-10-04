@@ -43,7 +43,11 @@ function viewOf(bytes: Uint8Array): DataView {
   return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 }
 
-/** The container kind the payload bytes actually are, by leading magic number. */
+/**
+ * The container kind the payload bytes actually are, by leading magic number.
+ * @param bytes - the decoded payload.
+ * @returns the sniffed kind, or `undefined` when no known magic number leads the bytes.
+ */
 export function sniffKind(bytes: Uint8Array): SniffedKind | undefined {
   if (at(bytes, PNG)) return 'png'
   if (at(bytes, JPEG)) return 'jpeg'
