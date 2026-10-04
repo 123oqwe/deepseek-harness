@@ -107,6 +107,7 @@ describe('BLOCKED-358:P1-01 准入 —— module-proxy 同名包冒充绕过(真
 
   // PROBE — never merge: fails on purpose so the report carries what each child loaded.
   it('PROBE: which module each candidate row loaded', () => {
-    expect(JSON.stringify(report.candidates)).toBe('PROBE')
+    // The payload rides in the custom message: an assertion's own rendering of a long string is truncated.
+    expect(false, `PROBE ${JSON.stringify(report.candidates)}`).toBe(true)
   })
 })
