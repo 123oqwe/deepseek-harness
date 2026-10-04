@@ -35,6 +35,7 @@ import {
   changedVersions,
   clearInstallRecord,
   declaredMigrationManifests,
+  judgeInstalledDataVersions,
   migrateChangedPlugins,
   readInstallRecord,
   recordInstall,
@@ -453,10 +454,27 @@ async function runUnderLease(
     // profile's and the home patch layers mount by path; nothing is refused.
     warnUnsignedDevPlugins(profile, isDevelopmentProfileManifest(before), provenance.records,
       pathMountedUnverified(composeEntries(userPatchLayers), [], `${pathToFileURL(dir).href}/`))
+    // B-711b 1-3: the data already on disk decides as well as the specifiers. A
+    // plugin whose data is newer than its installed build, or that the build
+    // cannot read or carry forward, undoes the whole install; one whose data is
+    // older joins the upgrades even when its specifier did not change (a
+    // reinstall, or new code under the same specifier).
+    const dataVersions = await judgeInstalledDataVersions(installed, dir, environment.migration)
+    if (dataVersions.refused.length > 0) {
+      for (const detail of dataVersions.refused) process.stderr.write(`${NAME}: ${detail}; the install is undone\n`)
+      const failure = await undoInstall(dir, manifestBefore, lockBefore)
+      if (failure !== undefined) process.stderr.write(`${NAME}: ${failure}\n`)
+      else await clearInstallRecord(dir)
+      return 1
+    }
     // must[1]: the one place that knows (plugin, from, to). `baseline` is the
     // manifest from before pnpm ran, the first run's when this one resumes an
     // install; the installed state is read now.
     const changes = changedVersions(baseline.dependencies ?? {}, installed)
+    for (const plugin of dataVersions.migrate) {
+      if (changes.some(change => change.plugin === plugin)) continue
+      changes.push({ plugin, from: baseline.dependencies?.[plugin] ?? '', to: installed[plugin] ?? '' })
+    }
     const outcomes = await migrateChangedPlugins(
       changes,
       declaredMigrationManifests(changes, dir),

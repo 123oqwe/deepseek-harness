@@ -87,6 +87,10 @@
         "$ref": "#/$defs/migrationDeclaration"
       }
     },
+    "dataSchemaVersion": {
+      "type": "integer",
+      "minimum": 0
+    },
     "executionMode": {
       "$ref": "#/$defs/executionMode"
     },

@@ -13,7 +13,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-import { declaredMigrationManifests, resolvePluginUpgrade } from '../src/plugin-migration.ts'
+import type { MigrationFacet } from '@deepseek-ai/dsh-storage'
+import { declaredMigrationManifests, judgeInstalledDataVersions, resolvePluginUpgrade } from '../src/plugin-migration.ts'
 
 /** Materialize a profile holding one installed package with the given `dsh` field. */
 async function installPackage(dshField: unknown, files: Record<string, string> = {}): Promise<string> {
@@ -56,6 +57,64 @@ const STEP_MODULES = {
 }
 
 const SEED = { global: null, tables: { notes: { a: { body: 'original' } } } }
+
+describe('B-711b 1-3: an install judges the data on disk against the version its build expects', () => {
+  /**
+   * A facet that only answers the stamp it was given and records which unit it was asked about.
+   * @param stamp - the version stamped on the data, absent for no data.
+   * @param named - receives each unit name asked about.
+   * @returns the facet.
+   */
+  const stamping = (stamp: number | undefined, named: string[] = []): MigrationFacet => ({
+    stampedVersion: (unit: { readonly name: string }) => { named.push(unit.name); return Promise.resolve(stamp) },
+  }) as unknown as MigrationFacet
+  const INSTALLED = { 'notes-plugin': '2.0.0' }
+
+  it('migrates older data its build carries forward, reading the store its domain names', async () => {
+    const profileDir = await installPackage(MANIFEST)
+    const named: string[] = []
+    expect(await judgeInstalledDataVersions(INSTALLED, profileDir, stamping(1, named)))
+      .toEqual({ migrate: ['notes-plugin'], refused: [] })
+    expect(named).toEqual(['notes'])
+  })
+
+  it('refuses data newer than its build, a downgrade', async () => {
+    const profileDir = await installPackage(MANIFEST)
+    expect(await judgeInstalledDataVersions(INSTALLED, profileDir, stamping(4))).toEqual({
+      migrate: [],
+      refused: ["notes-plugin: its data store 'notes' is at version 4, newer than the version 3 this build expects"],
+    })
+  })
+
+  it('refuses data in a store whose build declares no data version', async () => {
+    const { migrations: _none, ...undeclared } = MANIFEST
+    const profileDir = await installPackage(undeclared)
+    expect((await judgeInstalledDataVersions(INSTALLED, profileDir, stamping(1))).refused)
+      .toEqual(["notes-plugin: its data store 'notes' holds data at version 1, and it declares no dataSchemaVersion"])
+  })
+
+  it('refuses older data its build declares no migration for', async () => {
+    const { migrations: _none, ...versionOnly } = { ...MANIFEST, dataSchemaVersion: 3 }
+    const profileDir = await installPackage(versionOnly)
+    expect((await judgeInstalledDataVersions(INSTALLED, profileDir, stamping(1))).refused)
+      .toEqual(["notes-plugin: its data store 'notes' is at version 1, and it declares no migration to 3"])
+  })
+
+  it('leaves data at the expected version, no data, and a backend that cannot migrate alone', async () => {
+    const profileDir = await installPackage({ ...MANIFEST, dataSchemaVersion: 3 })
+    const untouched = { migrate: [], refused: [] }
+    expect(await judgeInstalledDataVersions(INSTALLED, profileDir, stamping(3))).toEqual(untouched)
+    expect(await judgeInstalledDataVersions(INSTALLED, profileDir, stamping(undefined))).toEqual(untouched)
+    expect(await judgeInstalledDataVersions(INSTALLED, profileDir, undefined)).toEqual(untouched)
+  })
+
+  it('refuses a data store it cannot read, naming the plugin', async () => {
+    const profileDir = await installPackage(MANIFEST)
+    const unreadable = { stampedVersion: () => Promise.reject(new Error('Unexpected token')) } as unknown as MigrationFacet
+    expect((await judgeInstalledDataVersions(INSTALLED, profileDir, unreadable)).refused)
+      .toEqual(["notes-plugin: its data store 'notes' could not be read: Unexpected token"])
+  })
+})
 
 describe('P1-10 must[0]: reading a plugin\'s declared migrations from its installed package', () => {
   it('takes the schema version from the declarations, never from the package version', async () => {

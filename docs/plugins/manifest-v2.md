@@ -36,7 +36,8 @@ Plugin Manifest v2 (Epic P1-01) is a static capability declaration a plugin pack
 | `secrets` | Credentials this plugin requests, by key and justification |
 | `uiSurfaces` | Host-rendered UI surfaces this plugin contributes to |
 | `dataStores` | Named storage domains this plugin owns |
-| `migrations` | Schema migration steps this plugin's data stores require |
+| `migrations` | Schema migration steps this plugin's data stores require; a step may declare `preconditions`, which an operator confirms with the path digest through `--confirm` |
+| `dataSchemaVersion` | The schema version this build expects its one data store to be at; an install undoes itself when the data on disk is newer, or older with no declared migration to carry it forward |
 | `executionMode` | How this plugin's own code executes: `'in-process'`, `'worker-thread'`, `'process'`, or `'container'` |
 | `compatibility` | The harness version range this manifest is valid for |
 

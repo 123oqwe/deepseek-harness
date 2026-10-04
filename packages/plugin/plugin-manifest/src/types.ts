@@ -370,6 +370,17 @@ export interface PluginManifestV2 {
   readonly uiSurfaces?: readonly UiSurfaceCapabilityDeclaration[]
   readonly dataStores?: readonly DataStoreCapabilityDeclaration[]
   readonly migrations?: readonly MigrationDeclaration[]
+  /**
+   * The schema version this build expects its one data store to be at (B-711b).
+   *
+   * An install compares it with the version stamped on the data already on
+   * disk: older data is migrated through `migrations`, and data newer than this
+   * build (a downgrade) refuses the install and puts the previous code back. A
+   * plugin that declares migrations expects the highest version they reach, so
+   * a declared value must equal it. A plugin whose data store holds data and
+   * that declares neither this nor migrations is refused at install.
+   */
+  readonly dataSchemaVersion?: number
   readonly executionMode: ExecutionMode
   readonly compatibility: CompatibilityDeclaration
 }

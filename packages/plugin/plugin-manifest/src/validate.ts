@@ -342,6 +342,23 @@ function validatePrecondition(value: unknown, path: string, errors: ManifestVali
   if (typeof value.requirement !== 'string' || value.requirement === '') pushError(errors, `${path}.requirement`, 'must be a non-empty string')
 }
 
+/**
+ * A declared data schema version is a non-negative integer, and equals the
+ * highest version the declared migrations reach when there are any: two
+ * answers to which version this build expects would leave an install to guess.
+ */
+function validateDataSchemaVersion(value: unknown, migrations: unknown, errors: ManifestValidationError[]): void {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+    pushError(errors, 'dataSchemaVersion', 'must be a non-negative integer when present')
+    return
+  }
+  const reached = (Array.isArray(migrations) ? migrations : [])
+    .flatMap(step => isRecord(step) && typeof step.toVersion === 'number' ? [step.toVersion] : [])
+  if (reached.length > 0 && Math.max(...reached) !== value) {
+    pushError(errors, 'dataSchemaVersion', `must equal ${String(Math.max(...reached))}, the highest version the migrations reach`)
+  }
+}
+
 /** The backup strategies a migration step may declare. */
 const BACKUP_STRATEGIES = ['snapshot', 'additive', 'none'] as const
 
@@ -417,6 +434,7 @@ export function validatePluginManifestV2(value: unknown): ManifestValidationResu
     if (!Array.isArray(value.migrations)) pushError(errors, 'migrations', 'must be an array when present')
     else value.migrations.forEach((item, index) => { validateMigration(item, `migrations[${index}]`, errors) })
   }
+  if (value.dataSchemaVersion !== undefined) validateDataSchemaVersion(value.dataSchemaVersion, value.migrations, errors)
   validateEnum(value.executionMode, 'executionMode', EXECUTION_MODES, errors)
   if (!isRecord(value.compatibility) || typeof value.compatibility.dshVersionRange !== 'string') {
     pushError(errors, 'compatibility.dshVersionRange', 'must be a string')

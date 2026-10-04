@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/plugins/manifest-v2.md
-manifest-v2.md: 494c0c105567005f87269cdd76b728b99ff63466
-manifest-v2.zh.md: f193289c6877395aa24108f670bf7d15fbccde9d
+manifest-v2.md: bf7bed31675f9eff39604891a707efdfae753d8e
+manifest-v2.zh.md: 636b5a524a68a946aad52ad189b608490e16ad31

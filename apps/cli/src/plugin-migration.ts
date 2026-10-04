@@ -804,6 +804,94 @@ async function digestOfUnit(facet: MigrationFacet, unit: KvUnitDescriptor): Prom
   }
 }
 
+/** What an install does about one plugin's data already on disk (B-711b 1-3). */
+export type DataVersionJudgement =
+  /** No data, or data already at the version this build expects. */
+  | { readonly kind: 'none' }
+  /** Older data that this build's declared migrations carry forward. */
+  | { readonly kind: 'migrate' }
+  /** Data this build cannot run on; the install is undone. */
+  | { readonly kind: 'refused'; readonly detail: string }
+
+/**
+ * Compare the version stamped on a plugin's data with the version its
+ * installed build expects (P1-10 must[0], acceptance[0]; B-711b 1-3).
+ *
+ * Decided from the data rather than from which package specifiers changed, so
+ * a reinstall after an uninstall, and new code under an unchanged specifier,
+ * are judged like an upgrade. Data newer than the build (a downgrade) is
+ * refused, because no declaration converts data backwards. Older data with no
+ * declared migration is refused too, because running the build on it is the
+ * mixed state acceptance[0] forbids.
+ * @param plugin - the package name.
+ * @param domain - the data store's domain, which names its storage unit.
+ * @param stamped - the version stamped on the data, absent when there is none.
+ * @param expected - the version the build expects, absent when it declares none.
+ * @param migrates - whether the build declares migrations.
+ * @returns what the install does about this plugin's data.
+ */
+export function judgeDataVersion(
+  plugin: string,
+  domain: string,
+  stamped: number | undefined,
+  expected: number | undefined,
+  migrates: boolean,
+): DataVersionJudgement {
+  if (stamped === undefined || stamped === expected) return { kind: 'none' }
+  if (expected === undefined) {
+    return { kind: 'refused', detail: `${plugin}: its data store '${domain}' holds data at version ${String(stamped)}, and it declares no dataSchemaVersion` }
+  }
+  if (stamped > expected) {
+    return { kind: 'refused', detail: `${plugin}: its data store '${domain}' is at version ${String(stamped)}, newer than the version ${String(expected)} this build expects` }
+  }
+  if (!migrates) {
+    return { kind: 'refused', detail: `${plugin}: its data store '${domain}' is at version ${String(stamped)}, and it declares no migration to ${String(expected)}` }
+  }
+  return { kind: 'migrate' }
+}
+
+/**
+ * Judge every installed plugin's one data store against the version its
+ * installed build expects (B-711b 1-3).
+ *
+ * A plugin with no data store, or with more than one, is not judged here; an
+ * upgrade of one with several is refused by name when it declares migrations.
+ * A unit the JSON backend keeps record by record carries no unit-level stamp
+ * and is left alone, as an upgrade leaves it. A data store that cannot be read
+ * refuses the install, naming the plugin.
+ * @param installed - the profile's dependencies after the package manager ran.
+ * @param profileDir - the profile directory the packages are installed under.
+ * @param facet - the storage backend's migration facet, absent when it has none.
+ * @returns the plugins whose data must migrate, and one refusal per plugin whose data this install must not run on.
+ */
+export async function judgeInstalledDataVersions(
+  installed: Readonly<Record<string, string>>,
+  profileDir: string,
+  facet: MigrationFacet | undefined,
+): Promise<{ readonly migrate: readonly string[]; readonly refused: readonly string[] }> {
+  const migrate: string[] = []
+  const refused: string[] = []
+  if (facet === undefined) return { migrate, refused }
+  for (const plugin of Object.keys(installed)) {
+    const manifest = installedManifestV2(plugin, profileDir)
+    const [store, ...more] = manifest?.dataStores ?? []
+    if (manifest === undefined || store === undefined || more.length > 0) continue
+    let stamped: number | undefined
+    try {
+      stamped = await facet.stampedVersion({ name: store.domainName, version: 0, tables: [], hasGlobal: false })
+    } catch (error: unknown) {
+      refused.push(`${plugin}: its data store '${store.domainName}' could not be read: ${error instanceof Error ? error.message : String(error)}`)
+      continue
+    }
+    const reached = (manifest.migrations ?? []).map(step => step.toVersion)
+    const expected = manifest.dataSchemaVersion ?? (reached.length === 0 ? undefined : Math.max(...reached))
+    const judgement = judgeDataVersion(plugin, store.domainName, stamped, expected, reached.length > 0)
+    if (judgement.kind === 'migrate') migrate.push(plugin)
+    else if (judgement.kind === 'refused') refused.push(judgement.detail)
+  }
+  return { migrate, refused }
+}
+
 /**
  * The Plugin Manifest v2 an installed package declares, or undefined when it
  * declares none, declares an invalid one, or is unresolvable.

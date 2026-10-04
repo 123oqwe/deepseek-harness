@@ -754,6 +754,22 @@ describe('P1-10 must[0]: a migration step that ships code must declare its risk'
     expect(validateAgainstSchema({ ...base, migrations: [{ ...step, preconditions }] })).toBe(false)
   })
 
+  it('accepts a dataSchemaVersion alone, or equal to the highest version the migrations reach (B-711b)', () => {
+    expect(validatePluginManifestV2({ ...base, dataSchemaVersion: 4 }).valid).toBe(true)
+    expect(validateAgainstSchema({ ...base, dataSchemaVersion: 4 })).toBe(true)
+    expect(validatePluginManifestV2({ ...base, dataSchemaVersion: 2, migrations: [step] }).valid).toBe(true)
+  })
+
+  it.each([
+    ['a negative dataSchemaVersion', { dataSchemaVersion: -1 }],
+    ['a fractional dataSchemaVersion', { dataSchemaVersion: 1.5 }],
+    ['a dataSchemaVersion other than the highest version the migrations reach', { dataSchemaVersion: 1, migrations: [step] }],
+  ])('rejects %s (B-711b)', (_label, override) => {
+    const result = validatePluginManifestV2({ ...base, ...override })
+    expect(result.valid).toBe(false)
+    if (!result.valid) expect(result.errors.some(error => error.path === 'dataSchemaVersion')).toBe(true)
+  })
+
   it('still accepts a step that ships NO module and declares neither', () => {
     // A plugin may record that its data changed shape without shipping code to
     // convert it; the upgrade refuses that plugin by name rather than the

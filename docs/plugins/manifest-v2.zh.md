@@ -36,7 +36,8 @@ Plugin Manifest v2(Epic P1-01)是插件包在 `package.json` 的 `dsh` 字段下
 | `secrets` | 本插件申请的凭据,含 key 与申请理由 |
 | `uiSurfaces` | 本插件贡献的宿主渲染 UI 界面 |
 | `dataStores` | 本插件拥有的具名存储域 |
-| `migrations` | 本插件数据存储所需的 schema 迁移步骤 |
+| `migrations` | 本插件数据存储所需的 schema 迁移步骤；步骤可声明 `preconditions`，由操作者通过 `--confirm` 用路径 digest 确认 |
+| `dataSchemaVersion` | 本版本期望其唯一数据存储所处的 schema 版本；盘上数据比它新，或比它旧而没有声明的迁移可以前移时，安装会自行撤销 |
 | `executionMode` | 本插件自身代码的执行方式:`'in-process'`、`'worker-thread'`、`'process'` 或 `'container'` |
 | `compatibility` | 本 manifest 适用的 harness 版本范围 |
 
