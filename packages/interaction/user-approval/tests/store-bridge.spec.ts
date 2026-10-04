@@ -174,18 +174,99 @@ describe('P2-07 U1a: the bridge functions', () => {
       id: ApprovalRequestId('a-1'), tenant: viewer.tenant, actor: viewer.principal, scope: { kind: 'turn', sessionId: session.id },
       toolName: 'fs.write', requestDigest: 'sha256:x', deadlineMs: Date.now() + 60_000,
     }, Date.now())
-    recordApprovalOutcome(store, ApprovalRequestId('a-1'), 'allowed-once', session, Date.now())
+    recordApprovalOutcome(store, ApprovalRequestId('a-1'), 0, 'allowed-once', session, Date.now())
     expect(consumeRecordedApproval(store, session, ApprovalRequestId('a-1'), Date.now())).toBeUndefined()
     expect(consumeRecordedApproval(store, session, ApprovalRequestId('a-1'), Date.now())).toBe('invalid-transition')
     expect(consumeRecordedApproval(store, session, ApprovalRequestId('missing'), Date.now())).toBe('not-found')
     expect(consumeRecordedApproval(undefined, session, ApprovalRequestId('a-1'), Date.now())).toBeUndefined()
   })
 
-  it('leaves an outcome for an approval the store does not hold, and counts only the revocations it made', async () => {
+  it('settles an outcome for an approval the store does not hold as cancelled, and counts only the revocations it made', async () => {
     const { store } = await mounted(undefined)
     const { agent } = fakeAgent()
-    recordApprovalOutcome(store, ApprovalRequestId('missing'), 'rejected', agent.session, Date.now())
+    expect(recordApprovalOutcome(store, ApprovalRequestId('missing'), 0, 'rejected', agent.session, Date.now())).toBe('cancelled')
     expect(store.listPending(approvalViewerOf(agent.session), Date.now())).toEqual([])
     expect(revokeTurnApprovals(store, agent.session, Date.now())).toBe(0)
+  })
+
+  it('settles on the approval the store holds when its own move is refused', async () => {
+    const { store } = await mounted(undefined)
+    const { agent } = fakeAgent()
+    const viewer = approvalViewerOf(agent.session)
+    const moves = [['approved', 'allowed-once'], ['denied', 'rejected'], ['revoked', 'cancelled']] as const
+    for (const [move, settled] of moves) {
+      const id = ApprovalRequestId(`elsewhere-${move}`)
+      store.request({
+        id, tenant: viewer.tenant, actor: viewer.principal, scope: { kind: 'turn', sessionId: agent.session.id },
+        toolName: 'fs.write', requestDigest: 'sha256:x', deadlineMs: Date.now() + 60_000,
+      }, Date.now())
+      if (move === 'revoked') store.revoke(id, 0, viewer, Date.now())
+      else store.decide(id, 0, move, viewer, Date.now())
+      expect([move, recordApprovalOutcome(store, id, 0, 'unavailable', agent.session, Date.now())]).toEqual([move, settled])
+    }
+  })
+})
+
+describe('P2-07 U1c validation[1]: a decision another client makes through the store settles a waiting ask', () => {
+  /**
+   * An answerer that answers only when withdrawn, so another client's move is the only thing that settles the ask.
+   * @param ctx - the composition.
+   * @returns resolves once the answerer was asked, and whether its request was withdrawn.
+   */
+  function waitingAnswerer(ctx: Context): { asked: Promise<void>; withdrawn: () => boolean } {
+    let markAsked!: () => void
+    const asked = new Promise<void>((resolve) => { markAsked = resolve })
+    let withdrawn = false
+    ctx.on('approval/request', request => new Promise<ApprovalOutcome>((resolve) => {
+      request.signal?.addEventListener('abort', () => {
+        withdrawn = true
+        resolve('cancelled')
+      }, { once: true })
+      markAsked()
+    }))
+    return { asked, withdrawn: () => withdrawn }
+  }
+
+  it('returns and logs the outcome the other client\'s move implies, and withdraws the answerers', async () => {
+    const moves = [['approved', 'allowed-once'], ['denied', 'rejected'], ['revoked', 'cancelled']] as const
+    for (const [move, outcome] of moves) {
+      const { ctx, store } = await mounted(undefined)
+      const answerer = waitingAnswerer(ctx)
+      const { agent, appended } = fakeAgent()
+      const asking = ctx.approval.request({ agent, toolName: 'fs.write', callId: ToolCallId('call-r'), binding: { inputs: inputs(), askedAtMs: Date.now() } })
+      await answerer.asked
+      const row = rowOf(store, agent, appended)!
+      const viewer = approvalViewerOf(agent.session)
+      if (move === 'revoked') store.revoke(row.id, row.revision, viewer, Date.now())
+      else store.decide(row.id, row.revision, move, viewer, Date.now())
+      expect([move, await asking, answerer.withdrawn()]).toEqual([move, outcome, true])
+      expect([move, appended.find(event => event.type === 'approval/decided')?.data.outcome]).toEqual([move, outcome])
+      expect([move, rowOf(store, agent, appended)?.state]).toEqual([move, move])
+    }
+  })
+
+  it('lets the first accepted move win when the other client decides while the answerer is answering', async () => {
+    const { ctx, store } = await mounted(undefined)
+    const { agent, appended } = fakeAgent()
+    ctx.on('approval/request', (request) => {
+      const row = rowOf(store, request.agent, appended)!
+      store.decide(row.id, row.revision, 'denied', approvalViewerOf(request.agent.session), Date.now())
+      return Promise.resolve<ApprovalOutcome>('allowed-once')
+    })
+    const signal = new AbortController().signal
+    expect(await ctx.approval.request({ agent, toolName: 'fs.write', signal, binding: { inputs: inputs(), askedAtMs: Date.now() } })).toBe('rejected')
+    expect(rowOf(store, agent, appended)?.state).toBe('denied')
+  })
+
+  it('consumes an unbound grant another client made, as it would one the answerers made', async () => {
+    const { ctx, store } = await mounted(undefined)
+    const answerer = waitingAnswerer(ctx)
+    const { agent, appended } = fakeAgent()
+    const asking = ctx.approval.request({ agent, toolName: 'workspace-trust', callId: ToolCallId('call-u') })
+    await answerer.asked
+    const row = rowOf(store, agent, appended)!
+    store.decide(row.id, row.revision, 'approved', approvalViewerOf(agent.session), Date.now())
+    expect(await asking).toBe('allowed-once')
+    expect(rowOf(store, agent, appended)?.state).toBe('consumed')
   })
 })

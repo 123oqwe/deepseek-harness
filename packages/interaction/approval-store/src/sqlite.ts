@@ -19,6 +19,8 @@ import { Service } from '@deepseek-ai/cordis'
 import type { Context } from '@deepseek-ai/cordis'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import z from '@deepseek-ai/schemastery'
+// Declaration merging only: `approval-store/changed` and the `ctx.approvalStore` slot.
+import type {} from './index.ts'
 import { applyApprovalTransition, effectiveApprovalState, newApprovalRecord, viewerMayAccess } from './transitions.ts'
 import type {
   ApprovalDecision,
@@ -240,7 +242,8 @@ export interface Config {
 /**
  * The mounted durable approval store, published as `ctx.approvalStore`.
  * Implements the contract and forwards, so a consumer holds exactly what the
- * contract describes and never learns that SQLite is behind it.
+ * contract describes and never learns that SQLite is behind it. Each recorded
+ * or accepted move is announced as `approval-store/changed`.
  */
 export default class ApprovalStoreSqlitePlugin extends Service implements ApprovalStoreContract {
   /** Runtime configuration schema, validated at mount from the profile's `cordis.yml` row. */
@@ -285,7 +288,9 @@ export default class ApprovalStoreSqlitePlugin extends Service implements Approv
 
   /** @inheritdoc */
   request(input: ApprovalRequestInput, nowMs: number): ApprovalRecord {
-    return this.store.request(input, nowMs)
+    const record = this.store.request(input, nowMs)
+    this.ctx.emit('approval-store/changed', record)
+    return record
   }
 
   /** @inheritdoc */
@@ -296,17 +301,17 @@ export default class ApprovalStoreSqlitePlugin extends Service implements Approv
     viewer: ApprovalViewer,
     nowMs: number,
   ): ApprovalWriteResult {
-    return this.store.decide(id, expectedRevision, decision, viewer, nowMs)
+    return this.announced(this.store.decide(id, expectedRevision, decision, viewer, nowMs))
   }
 
   /** @inheritdoc */
   revoke(id: ApprovalRequestId, expectedRevision: number, viewer: ApprovalViewer, nowMs: number): ApprovalWriteResult {
-    return this.store.revoke(id, expectedRevision, viewer, nowMs)
+    return this.announced(this.store.revoke(id, expectedRevision, viewer, nowMs))
   }
 
   /** @inheritdoc */
   consume(id: ApprovalRequestId, expectedRevision: number, viewer: ApprovalViewer, nowMs: number): ApprovalWriteResult {
-    return this.store.consume(id, expectedRevision, viewer, nowMs)
+    return this.announced(this.store.consume(id, expectedRevision, viewer, nowMs))
   }
 
   /** @inheritdoc */
@@ -317,5 +322,15 @@ export default class ApprovalStoreSqlitePlugin extends Service implements Approv
   /** @inheritdoc */
   listPending(viewer: ApprovalViewer, nowMs: number): readonly ApprovalRecord[] {
     return this.store.listPending(viewer, nowMs)
+  }
+
+  /**
+   * Announce an accepted move; a refused one changed nothing and is not announced.
+   * @param result - the store's answer to one move.
+   * @returns `result`, unchanged.
+   */
+  private announced(result: ApprovalWriteResult): ApprovalWriteResult {
+    if (result.ok) this.ctx.emit('approval-store/changed', result.record)
+    return result
   }
 }

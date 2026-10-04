@@ -182,4 +182,23 @@ describe('ApprovalStoreSqlitePlugin', () => {
     await ctx.fiber.dispose()
     expect(() => store.listPending(user, 500)).toThrow('approval store: the mount is not active')
   })
+
+  it('announces each recorded approval and each accepted move, and no refused one (U1c)', async () => {
+    const ctx = new Context()
+    await ctx.plugin(ApprovalStoreSqlitePlugin, { directory: directory(), busyTimeoutMs: 1000 })
+    const announced: string[] = []
+    ctx.on('approval-store/changed', (record) => { announced.push(`${record.id}:${record.state}:${record.revision}`) })
+    const store = ctx.get('approvalStore')
+    if (store === undefined) throw new Error('ctx.approvalStore is not published')
+    store.request(input('a-1'), 100)
+    store.request(input('a-2'), 100)
+    store.decide(id('a-1'), 0, 'approved', user, 200)
+    store.decide(id('a-1'), 0, 'denied', otherUser, 200)
+    store.consume(id('a-1'), 1, user, 300)
+    store.consume(id('a-1'), 2, user, 300)
+    store.revoke(id('a-2'), 0, user, 300)
+    store.revoke(id('a-2'), 0, otherTenant, 300)
+    expect(announced).toEqual(['a-1:requested:0', 'a-2:requested:0', 'a-1:approved:1', 'a-1:consumed:2', 'a-2:revoked:1'])
+    await ctx.fiber.dispose()
+  })
 })

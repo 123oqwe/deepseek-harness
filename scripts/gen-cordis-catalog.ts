@@ -222,6 +222,7 @@ export const EVENT_SCOPE_PAGE: Record<string, string> = {
   'agent-preset': 'core.md',
   'api-session': 'session.md',
   'approval': 'approval.md',
+  'approval-store': 'approval.md',
   'commands': 'commands.md',
   // `ctx.controlPlane` and its state-change event: `docs/subsystems/core.md`
   // documents the service (`### ctx.controlPlane`) and links its source, so

@@ -216,6 +216,9 @@ export class ApprovalService extends Service {
     return this.config.approvalValidityMs ?? 300_000
   }
 
+  /** Per waiting ask, by approval id: withdraws its answerers once its approval was moved elsewhere. */
+  private readonly withdrawals = new Map<string, () => void>()
+
   constructor(ctx: Context, public config: Config) {
     super(ctx, 'approval')
 
@@ -224,6 +227,12 @@ export class ApprovalService extends Service {
     // turn that ended — after a crash, the interrupted one. It is revoked here,
     // and a retry asks again.
     ctx.on('agent/created', ({ agent }) => { revokeTurnApprovalsAfterCrash(ctx, agent.session, Date.now()) })
+    // Epic P2-07 validation[1]: another client (an SDK client deciding through
+    // the store) moved an approval this service is still waiting on, so its
+    // answerers are withdrawn and the store's state settles the ask.
+    ctx.on('approval-store/changed', (record) => {
+      if (record.state !== 'requested') this.withdrawals.get(record.id)?.()
+    })
 
     const effective = (agent: Agent): ApprovalPolicy => this.effectivePolicy(agent.session)
 
@@ -298,11 +307,13 @@ export class ApprovalService extends Service {
     // reading, which is the window acceptance[0] exists to close.
     const binding = req.binding === undefined ? undefined : bindApproval(req.binding.inputs, req.binding.askedAtMs + this.validityMs)
     // Epic P2-07: the durable queue records the approval before the ask is
-    // logged, so no logged ask lacks its row.
+    // logged, so no logged ask lacks its row. The ask's own move names the
+    // revision recorded here, so a move another client made since refuses it.
     const store = this.ctx.get('approvalStore')
+    let queued: { readonly store: ApprovalStoreContract; readonly revision: number } | undefined
     if (store !== undefined) {
       const askedAtMs = Date.now()
-      recordApprovalRequest(store, {
+      const recorded = recordApprovalRequest(store, {
         id,
         session,
         toolName: req.toolName,
@@ -311,6 +322,7 @@ export class ApprovalService extends Service {
         ...binding?.inputs.policyVersion === undefined ? {} : { policyVersion: binding.inputs.policyVersion },
         deadlineMs: binding?.expiresAtMs ?? askedAtMs + this.validityMs,
       }, askedAtMs)
+      queued = { store, revision: recorded.revision }
     }
     session.append('approval/asked', {
       id,
@@ -335,21 +347,46 @@ export class ApprovalService extends Service {
         expiresAtMs: binding.expiresAtMs,
       })
     }
-    const decided = await this.decide(req, session)
-    const outcome = store === undefined ? decided : this.settleInStore(store, id, decided, binding === undefined, session)
+    const decided = queued === undefined ? await this.decide(req, session) : await this.decideOrWithdraw(req, id, session)
+    const outcome = queued === undefined
+      ? decided
+      : this.settleInStore(queued.store, id, queued.revision, decided, binding === undefined, session)
     session.append('approval/decided', { id, outcome })
     return outcome
   }
 
   /**
-   * Record an outcome as its approval's move, and consume an unbound grant at
-   * once: an ask that bound no action tuple has no dispatch-time verification
-   * to consume it later, so its `allowed-once` is used here or not at all. A
-   * consumption the store refuses (the approval lapsed, or another client
-   * moved it first) turns the grant into `'cancelled'`, which is what the
-   * session logs.
+   * {@link decide}, withdrawn once the approval is moved elsewhere: the
+   * answerers see the request's signal abort, so a prompt still on screen is
+   * taken down when an SDK client decided first.
+   * @param req - the request.
+   * @param id - its approval.
+   * @param session - the asking session.
+   * @returns the answerers' outcome, or `'cancelled'` when withdrawn.
+   */
+  private async decideOrWithdraw(req: ApprovalRequest, id: ApprovalRequestId, session: Session): Promise<ApprovalOutcome> {
+    const withdraw = new AbortController()
+    this.withdrawals.set(id, () => { withdraw.abort() })
+    try {
+      const signal = req.signal === undefined ? withdraw.signal : AbortSignal.any([req.signal, withdraw.signal])
+      return await this.decide({ ...req, signal }, session)
+    } finally {
+      this.withdrawals.delete(id)
+    }
+  }
+
+  /**
+   * Record an outcome as its approval's move and settle on what the store
+   * holds (Epic P2-07 validation[1]): the store's compare-and-swap decides
+   * between these answerers and another client, so when another client's move
+   * landed first the ask returns the outcome that move implies. Then consume
+   * an unbound grant at once: an ask that bound no action tuple has no
+   * dispatch-time verification to consume it later, so its `allowed-once` is
+   * used here or not at all, and a consumption the store refuses turns it into
+   * `'cancelled'`, which is what the session logs.
    * @param store - the mounted approval store.
    * @param id - the approval.
+   * @param revision - the revision the approval was recorded at.
    * @param decided - the answerers' outcome.
    * @param unbound - whether the ask bound no action tuple.
    * @param session - the asking session.
@@ -358,13 +395,14 @@ export class ApprovalService extends Service {
   private settleInStore(
     store: ApprovalStoreContract,
     id: ApprovalRequestId,
+    revision: number,
     decided: ApprovalOutcome,
     unbound: boolean,
     session: Session,
   ): ApprovalOutcome {
     const decidedAtMs = Date.now()
-    recordApprovalOutcome(store, id, decided, session, decidedAtMs)
-    if (decided !== 'allowed-once' || !unbound) return decided
+    const settled = recordApprovalOutcome(store, id, revision, decided, session, decidedAtMs)
+    if (settled !== 'allowed-once' || !unbound) return settled
     return consumeRecordedApproval(store, session, id, decidedAtMs) === undefined ? 'allowed-once' : 'cancelled'
   }
 
