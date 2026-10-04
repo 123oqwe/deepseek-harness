@@ -35,7 +35,7 @@ An installed DSH uses the same overlay through an absolute path:
 dsh web --patch /absolute/path/to/github-review/cordis.yml
 ```
 
-For a permanent profile, copy this example directory to `$DSH_HOME/profiles/web/github-review/`, append the rows from `cordis.yml` to `$DSH_HOME/profiles/web/cordis.patch.yml` with the rule row's `name` set to `./github-review/github-ready-review-rule.mjs`, and start with `dsh web`. The directory's `package.json` declares the rule's Manifest v2, which plugin-manifest enforcement requires of every patch row's module; keep it beside the rule, because the profile's own `package.json` declares none. The shipped CLI already contains both webhook packages; the overlay alone activates them.
+For a permanent profile, copy this example directory to `$DSH_HOME/profiles/web/github-review/`, append the rows from `cordis.yml` to `$DSH_HOME/profiles/web/cordis.patch.yml` with the rule row's `name` set to `./github-review/github-ready-review-rule.mjs`, and start with `dsh web`. The directory's `package.json` declares the rule's Manifest v2, which plugin-manifest enforcement requires of every patch row's module, and a name and version, which DeepSeek model requests list for every mounted plugin package; keep it beside the rule, because the profile's own `package.json` declares none. The shipped CLI already contains both webhook packages; the overlay alone activates them.
 
 ## Expose the dedicated endpoint
 

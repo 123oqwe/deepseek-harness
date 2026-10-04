@@ -1,5 +1,6 @@
 {
   "name": "dsh-example-github-review",
+  "version": "0.0.0",
   "private": true,
   "dsh": {
     "manifestVersion": 2,
