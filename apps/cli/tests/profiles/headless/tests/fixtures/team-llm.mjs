@@ -173,15 +173,24 @@ function lead(messages) {
 }
 
 class TeamFixtureAdapter extends LlmAdapter {
+  /** A context window, so step compaction can size its budget instead of warning on every boot. */
+  resolveModel(provider, model) {
+    return Promise.resolve({ provider, id: model, name: model, context: { contextWindow: 200_000 } })
+  }
+
   async * stream(options) {
     const userText = options.messages.flatMap(message => message.role === 'user'
       ? message.content.filter(block => block.type === 'text').map(block => block.text)
       : []).join('\n')
-    const chunks = userText.includes('RESEARCHER_MARK')
-      ? researcher(options.messages)
-      : userText.includes('IMPLEMENTER_MARK')
-        ? implementer(options.messages)
-        : lead(options.messages)
+    // A request that offers no tools, such as the session title, gets text: a
+    // team script would answer it with a tool call the caller cannot use.
+    const chunks = (options.tools ?? []).length === 0
+      ? textChunks('Agent team workflow')
+      : userText.includes('RESEARCHER_MARK')
+        ? researcher(options.messages)
+        : userText.includes('IMPLEMENTER_MARK')
+          ? implementer(options.messages)
+          : lead(options.messages)
     for (const chunk of chunks) {
       options.signal?.throwIfAborted()
       yield chunk
