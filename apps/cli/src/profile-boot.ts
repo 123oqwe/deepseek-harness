@@ -626,10 +626,13 @@ export async function composeProfile(
   const profilePatches = withoutRefusedRows(profile.patches, refused)
   const homePatches = withoutRefusedRows(homeLayer.patches, refused)
   const overlays = overlayLayers.flatMap(layer => withoutRefusedRows(layer.patches, refused))
+  const composed = composeEntries([bundlePatches, profilePatches, homePatches, overlays])
   const rows = new Map<string, EntryOptions>()
-  for (const row of composeEntries([bundlePatches, profilePatches, homePatches, overlays])) {
+  for (const row of composed) {
     if (typeof row.id === 'string') rows.set(row.id, row)
   }
+  // P1-03 must[2]: composition evaluates no plugin module, so a refusal here stops the boot before any runs.
+  await enforceProfileLock(name, profile.dir, negotiation.admitted.map(entry => entry.layer), rowModuleNames(composed))
   const composedOverlays = [...overlays]
   const telemetryPatch = resolveTelemetryPatch(process.env.DSH_TELEMETRY_DISABLED, rows.has(TELEMETRY_ROW_ID))
   if (telemetryPatch !== undefined) composedOverlays.push(telemetryPatch)
@@ -1514,4 +1517,93 @@ export async function gateProfileAgainstLock(
     } as InstalledPlugin)
   }
   return gateProductionBoot(lock, installed, policy)
+}
+
+/**
+ * Every module a composed tree names, inside groups too, in tree order.
+ * @param entries - the composed entries.
+ * @returns the module specifiers.
+ */
+function rowModuleNames(entries: readonly EntryOptions[]): string[] {
+  const names: string[] = []
+  const visit = (entry: EntryOptions): void => {
+    if (typeof entry.name === 'string') names.push(entry.name)
+    if (entry.group && Array.isArray(entry.config)) entry.config.forEach(visit)
+  }
+  entries.forEach(visit)
+  return names
+}
+
+/** A composed bundle layer, as the lock gate reads it. */
+interface LockGateLayer {
+  readonly packageName: string
+  readonly packageDir: string
+}
+
+/**
+ * The packages a profile resolves from its own directory (P1-03 must[2], C17
+ * option 2′), whichever way the boot reaches them: its declared dependencies,
+ * its admitted bundle layers, and the modules its composed rows name. Each is
+ * kept only when the installation does not resolve the same name to the same
+ * directory, because a package the installation ships is never locked.
+ * @param profileDir - the profile directory.
+ * @param layers - the admitted bundle layers.
+ * @param rowModules - the module each composed row names.
+ * @returns the package directories, each once.
+ * @throws Error when the profile's `dependencies` is not an object.
+ */
+function profileResolvedPackageDirs(profileDir: string, layers: readonly LockGateLayer[], rowModules: readonly string[]): string[] {
+  const anchor = pathToFileURL(join(profileDir, PROFILE_ROOT_FILENAME)).href
+  const installAnchor = pathToFileURL(INSTALL_ANCHOR).href
+  const { dependencies } = JSON.parse(readFileSync(join(profileDir, 'package.json'), 'utf8')) as { dependencies?: unknown }
+  if (dependencies !== undefined && (typeof dependencies !== 'object' || dependencies === null || Array.isArray(dependencies))) {
+    throw new Error(`${NAME}: plugin lock: ${join(profileDir, 'package.json')} declares dependencies that are not an object`)
+  }
+  const dirs = new Set<string>()
+  for (const name of [...Object.keys(dependencies ?? {}), ...rowModules]) {
+    const dir = resolveEntryPackageDir(name, anchor)
+    if (dir !== undefined && resolveEntryPackageDir(name, installAnchor) !== dir) dirs.add(dir)
+  }
+  for (const layer of layers) {
+    if (resolveEntryPackageDir(layer.packageName, installAnchor) !== layer.packageDir) dirs.add(layer.packageDir)
+  }
+  return [...dirs]
+}
+
+/**
+ * Refuse a boot whose profile-resolved packages do not match the profile's
+ * lock (P1-03 must[2]). The gate runs only when the profile resolves a package
+ * from its own directory or holds a lock: a profile composed only of the
+ * installation's bundles has nothing a lock covers (C17 option 2′). The
+ * unlocked-profile policy is the admitted bundles' declaration, most
+ * restrictive first; a `warn-and-proceed` boot over an unlocked profile is
+ * reported on stderr.
+ * @param name - the profile name, for the refusal.
+ * @param profileDir - the profile directory.
+ * @param layers - the admitted bundle layers.
+ * @param rowModules - the module each composed row names.
+ * @throws Error naming why when the gate refuses, before any plugin module is evaluated.
+ */
+async function enforceProfileLock(
+  name: string, profileDir: string, layers: readonly LockGateLayer[], rowModules: readonly string[],
+): Promise<void> {
+  const packageDirs = profileResolvedPackageDirs(profileDir, layers, rowModules)
+  const locked = existsSync(join(profileDir, PROFILE_LOCK_FILENAME))
+  if (packageDirs.length === 0 && !locked) return
+  // A profile with a lock is judged against it whatever the policy says, so
+  // the bundles' declaration is read, and required, only for an unlocked one.
+  const policy: UnlockedProfilePolicy = locked ? 'refuse' : resolveUnlockedProfilePolicy(layers.map(layer => layer.packageDir))
+  const outcome = await gateProfileAgainstLock(profileDir, packageDirs, policy)
+  if (outcome.admitted) {
+    if (!outcome.verified) {
+      process.stderr.write(`${NAME}: plugin lock: profile ${JSON.stringify(name)} has no ${PROFILE_LOCK_FILENAME}; its plugins were loaded unverified (${UNLOCKED_POLICY_KEY} is "warn-and-proceed")\n`)
+    }
+    return
+  }
+  const reason = 'gateReason' in outcome
+    ? `no ${PROFILE_LOCK_FILENAME}, and the composed bundles declare ${UNLOCKED_POLICY_KEY} "refuse"`
+    : outcome.admission.admitted
+      ? 'the lock admitted the boot but the gate did not'
+      : outcome.admission.denials.map(denial => `${String(denial.name)} (${denial.reason})`).join(', ')
+  throw new Error(`${NAME}: plugin lock: profile ${JSON.stringify(name)} does not match its lock -- refusing to boot: ${reason}`)
 }

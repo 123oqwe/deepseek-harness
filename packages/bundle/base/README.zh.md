@@ -43,7 +43,7 @@ kind: "package-bundle"
 }
 ```
 
-运行 `dsh --profile my-profile "your task"`，你就得到一个可用的 agent（智能体），带模型访问、工具、持久化与默认权限策略。随发行版交付的 `web`、`headless`、`sdk` 与 `acp` profile 会在首次使用时为你创建。要添加更多组合包，运行 `dsh plugin --profile <name> add <package>`；内置组合包从 dsh 安装目录解析。profile 约定见 [app-boot 的 profile 章节](../../boot/app-boot/README.zh.md)。
+运行 `dsh --profile my-profile "your task"`，你就得到一个可用的 agent（智能体），带模型访问、工具、持久化与默认权限策略。随发行版交付的 `web`、`headless`、`sdk` 与 `acp` profile 会在首次使用时为你创建。要添加更多组合包，运行 `dsh plugin --profile <name> add <package>`；内置组合包从 dsh 安装目录解析。装进 profile 自己目录的组合包，只有在 `dsh plugin` 把它记进 profile 的 `plugins.lock.json` 之后才会加载：本核心声明了 `dsh.pluginLock.unlockedProfilePolicy: "refuse"`，所以启动会拒绝锁未批准的 profile 本地插件。profile 约定见 [app-boot 的 profile 章节](../../boot/app-boot/README.zh.md)。
 
 ### 你得到什么
 
