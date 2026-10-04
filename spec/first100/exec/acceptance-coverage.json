@@ -4391,9 +4391,29 @@
         {
           "stage": "F",
           "title": "fault boundary 14 a duplicate arrival is dropped without a second effect"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 5,
+          "title": "P4-06 acceptance[0]: a settlement acked around a host crash still takes effect exactly once the settlement acked before its flush, then lost to the crash, still takes effect exactly once after the restart"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 5,
+          "title": "P4-06 acceptance[0]: a settlement acked around a host crash still takes effect exactly once control: the settlement whose flush survived the crash is in the parent's record exactly once after the restart"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 6,
+          "title": "P4-06 lock (a): an inbox message claimed then refused before the record still takes effect exactly once a message claimed then refused between the claim and the record still reaches the record exactly once"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 6,
+          "title": "P4-06 lock (a): an inbox message claimed then refused before the record still takes effect exactly once control: a message the pre-step does not refuse is recorded exactly once"
         }
       ],
-      "note": "acceptance[0]: killing before and after commit, send and ack still yields exactly one business effect, guaranteed by the consumer's (messageId, epoch) idempotence rather than by transport exactly-once. The four kill points are cited directly, and the two P.3 torn-write cases are what make them mean something durable: a failure after the domain event and a failure AFTER the outbox rows both leave NOTHING, so replay never finds an event whose outgoing message no record explains. The U.2 citations are the arrival side of the same guarantee on a real path — a redelivery dropped against the durable consumed set, and dropped again after a restart, which a caller-supplied seen-set could not show."
+      "note": "acceptance[0]: killing before and after commit, send and ack still yields exactly one business effect, guaranteed by the consumer's (messageId, epoch) idempotence rather than by transport exactly-once. The four kill points are cited directly, and the two P.3 torn-write cases are what make them mean something durable: a failure after the domain event and a failure AFTER the outbox rows both leave NOTHING, so replay never finds an event whose outgoing message no record explains. The U.2 citations show the arrival side of the same guarantee at package level, in the message bus's mailbox decision, which has no shipped caller (A-584): a redelivery dropped against the durable consumed set, and dropped again after a restart. The U.5 and U.6 citations show it on the shipped headless composition: a subagent settlement acked before the parent's flush and lost to a host crash still takes effect exactly once after the restart, and one whose flush survived is in the parent's record exactly once (BLOCKED-350, fix B-676); an inbox message a turn claimed and then lost before the record, because the turn was refused in pre-step, still reaches the record exactly once, and a control message the pre-step does not refuse is recorded exactly once (lock (a), BLOCKED-088, fix B-677)."
     },
     {
       "epic": "P4-06",
@@ -4422,9 +4442,19 @@
         {
           "stage": "U",
           "title": "returns a failed send to pending with its attempt spent, not dead-lettered"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 5,
+          "title": "P4-06 acceptance[0]: a settlement acked around a host crash still takes effect exactly once the settlement acked before its flush, then lost to the crash, still takes effect exactly once after the restart"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 5,
+          "title": "P4-06 acceptance[0]: a settlement acked around a host crash still takes effect exactly once control: the settlement whose flush survived the crash is in the parent's record exactly once after the restart"
         }
       ],
-      "note": "acceptance[1]: an undelivered message stays queryable and replayable. The load-bearing pair is the alerting order — a buried record is reported only AFTER its dead-letter state is persisted, and a merely-failed send does not alert at all — because an alert that precedes persistence describes a state a reader cannot then find. The U citation is the retry path: a failed send returns to pending with its attempt spent rather than being dead-lettered, which is what keeps it replayable."
+      "note": "acceptance[1]: an undelivered message stays queryable and replayable. The load-bearing pair is the alerting order — a buried record is reported only AFTER its dead-letter state is persisted, and a merely-failed send does not alert at all — because an alert that precedes persistence describes a state a reader cannot then find. The U citation is the retry path: a failed send returns to pending with its attempt spent rather than being dead-lettered, which is what keeps it replayable. The U.5 citations show replay on the shipped headless composition: a subagent settlement acked before the parent's flush and lost to a host crash is delivered again when the parent starts and takes effect exactly once, and one whose flush survived is in the parent's record exactly once after the restart (BLOCKED-350, fix B-676)."
     },
     {
       "epic": "P4-06",
