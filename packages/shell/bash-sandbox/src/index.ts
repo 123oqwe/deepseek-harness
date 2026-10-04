@@ -117,6 +117,10 @@ export class SandboxBashExecutor extends LocalBashExecutor {
       if (!marker.started() && result.exitCode !== null && !result.aborted && !result.timedOut) {
         throw new SandboxUnavailableError(mode, runnerFailureDetail(result.exitCode, result.stderr.text))
       }
+      // MUTATION M-U2-1: a runner's printed failure prefix decides runner failure again.
+      if (result.exitCode !== 0 && /^(?:bwrap|landlock-run|sandbox-exec|passthrough-runner): /mu.test(result.stderr.text)) {
+        throw new SandboxUnavailableError(mode, result.stderr.text)
+      }
       return {
         ...result,
         sandbox: {
