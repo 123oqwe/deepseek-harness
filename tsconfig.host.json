@@ -378,6 +378,7 @@
     { "path": "./packages/webhook/webhook-github" },
     { "path": "./packages/todo/tool-todo" },
     { "path": "./packages/plan/plan-mode" },
+    { "path": "./packages/plugin/plugin-installer" },
     { "path": "./packages/plugin/plugin-lock" },
     { "path": "./packages/plugin/plugin-manifest" },
     { "path": "./packages/plugin/plugin-migrations" },

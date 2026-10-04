@@ -8253,6 +8253,12 @@ importers:
         specifier: workspace:^
         version: link:../../schema/schema-registry
 
+  packages/plugin/plugin-installer:
+    dependencies:
+      tar:
+        specifier: ^7.5.0
+        version: 7.5.22
+
   packages/plugin/plugin-lock:
     dependencies:
       '@deepseek-ai/dsh-atomic-write':
