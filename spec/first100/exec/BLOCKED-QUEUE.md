@@ -10535,7 +10535,7 @@ P1-10 is not ACCEPTED, so nothing is withdrawn. This entry blocks P1-10 acceptan
 
 **What this does NOT claim.** It does not claim the bus's own outbox transaction is wrong: must[0]'s `BEGIN IMMEDIATE` is evidenced (lock (b) LIFTED). Nothing was run for this entry.
 
-**Closure note (2026-10-04, the delegate first100-delegate-1a).** Conditions 1 and 2 are met by a red case on the shipped composition and an in-place fix. Condition 3 is shown on the shipped composition by A-603, and the construction in item 3 is why it holds. Condition 4 is P4-06's own sign-off.
+**Closure note (2026-10-04, the delegate first100-delegate-52).** Conditions 1 and 2 are met by a red case on the shipped composition and an in-place fix. Condition 3 is shown on the shipped composition by A-603, and the construction in item 3 is why it holds. Condition 4 is P4-06's own sign-off.
 
 1. **The red case on a shipped composition (A-566).**
    - The spec is `tests/first100/fixtures/P4-06.settlement-crash.composition.spec.ts`, on the shipped headless composition.
