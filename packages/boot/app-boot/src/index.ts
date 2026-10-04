@@ -40,6 +40,7 @@ export {
   INSTALL_WILDCARD_GRANTS,
   installationPackageWildcardGrants,
   installationWildcardGrants,
+  isInstallationPackage,
   loadProfile,
   loadProfileDirectory,
   negotiateProfileLayerCompatibility,

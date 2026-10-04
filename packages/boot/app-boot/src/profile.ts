@@ -217,38 +217,143 @@ export const INSTALL_WILDCARD_GRANTS: Readonly<Record<string, readonly WildcardG
 }
 
 /**
- * The real path of the installation's own copy of `packageName`: the first
- * `node_modules` directory on Node's lookup path from `installAnchor` that
- * holds it, searching only inside the installation. The installation ends at
- * the outermost `node_modules` directory above its real path, or, when no such
- * directory exists (a source checkout), at its own `node_modules`. An ancestor
- * directory outside that bound, such as a `node_modules` in the user's home,
- * is never searched, so a name the installation does not carry has no copy.
- * @param installAnchor - absolute package.json path of the running dsh installation.
- * @param packageName - the package name.
- * @returns the real package directory, or `undefined` when the installation does not carry it.
+ * Whether `path` is `bound` or lies inside it.
+ * @param path - an absolute path.
+ * @param bound - an absolute directory.
+ * @returns `true` when `path` is within `bound`.
  */
-function installationPackageDir(installAnchor: string, packageName: string): string | undefined {
-  const appDir = realpathSync.native(dirname(installAnchor))
-  const segments = appDir.split(sep)
-  const outermost = segments.indexOf('node_modules')
-  const bound = outermost === -1 ? join(appDir, 'node_modules') : segments.slice(0, outermost + 1).join(sep)
-  // resolve.paths returns null only for builtins, which no bundle name is.
+function isWithin(path: string, bound: string): boolean {
+  return path === bound || path.startsWith(join(bound, sep))
+}
+
+/**
+ * The real directory of the first `node_modules` entry named `packageName` on
+ * Node's lookup path from `fromDir`, accepting only a `node_modules` directory
+ * inside `bound`.
+ * @param fromDir - the real directory of the package whose dependency is looked up.
+ * @param packageName - the dependency name.
+ * @param bound - the directory every accepted `node_modules` lies in.
+ * @returns the dependency's real directory, or `undefined` when no `node_modules` inside `bound` holds it.
+ */
+function packageDirWithin(fromDir: string, packageName: string, bound: string): string | undefined {
+  // resolve.paths returns null only for builtins, which no package name is.
   /* v8 ignore next */
-  for (const searchPath of createRequire(join(appDir, 'package.json')).resolve.paths(packageName) ?? []) {
-    if (searchPath !== bound && !searchPath.startsWith(bound + sep)) continue
+  for (const searchPath of createRequire(join(fromDir, 'package.json')).resolve.paths(packageName) ?? []) {
+    if (!isWithin(searchPath, bound)) continue
     const candidate = join(searchPath, packageName)
-    if (existsSync(join(candidate, 'package.json'))) return realpathSync.native(candidate)
+    if (existsSync(join(candidate, 'package.json'))) return realpathSync(candidate)
   }
   return undefined
 }
 
 /**
+ * The installation root: the deepest directory holding the installation and
+ * every one of its direct dependencies.
+ * @param appDir - the installation's real directory.
+ * @param dependencyDirs - the real directories of its direct dependencies.
+ * @returns the root directory.
+ */
+function installationRoot(appDir: string, dependencyDirs: readonly string[]): string {
+  let root = appDir
+  while (!dependencyDirs.every(dir => isWithin(dir, root))) {
+    const parent = dirname(root)
+    /* v8 ignore next -- only a dependency on another volume (a Windows drive) climbs to a filesystem root unmatched */
+    if (parent === root) return root
+    root = parent
+  }
+  return root
+}
+
+/**
+ * Every package the running installation carries, by name, with its real
+ * directory: the installation and its dependency closure, dependencies and
+ * peers, the first resolution of a name winning as in Node's nearest-wins
+ * lookup. The installation's direct dependencies are looked up inside its own
+ * bound: the outermost `node_modules` directory above its real path, or its
+ * own `node_modules` in a source checkout. Every further dependency is looked
+ * up from its parent's real directory and accepted only from a `node_modules`
+ * inside the installation root, the deepest directory holding the
+ * installation and its direct dependencies (a source checkout's workspace, an
+ * npm or pnpm install's outermost `node_modules`). A name the installation
+ * does not carry therefore has no entry, whatever a `node_modules` above the
+ * installation, such as one in the user's home, holds. Real paths come from
+ * `fs.realpathSync`, which a packaged executable's virtual file system
+ * answers; `fs.realpathSync.native` does not.
+ * @param installAnchor - absolute package.json path of the running dsh installation.
+ * @returns the real directory of each package the installation carries.
+ */
+function collectInstallationPackages(installAnchor: string): ReadonlyMap<string, string> {
+  const appDir = realpathSync(dirname(installAnchor))
+  const appManifest = readModuleFallbackManifest(join(appDir, 'package.json'))
+  const segments = appDir.split(sep)
+  const outermost = segments.indexOf('node_modules')
+  const ownBound = outermost === -1 ? join(appDir, 'node_modules') : segments.slice(0, outermost + 1).join(sep)
+  const packages = new Map<string, string>()
+  /* v8 ignore next -- a real app manifest always declares its name */
+  if (appManifest.name !== undefined) packages.set(appManifest.name, appDir)
+  const queue: string[] = []
+  for (const dep of profileDependencyNames(appManifest)) {
+    const dir = packageDirWithin(appDir, dep, ownBound)
+    if (dir === undefined) continue
+    packages.set(dep, dir)
+    queue.push(dir)
+  }
+  const root = installationRoot(appDir, queue)
+  for (let next = queue.shift(); next !== undefined; next = queue.shift()) {
+    for (const dep of profileDependencyNames(readModuleFallbackManifest(join(next, 'package.json')))) {
+      if (packages.has(dep)) continue
+      // A declared dependency found nowhere inside the root is not one the installation carries.
+      const dir = packageDirWithin(next, dep, root)
+      if (dir === undefined) continue
+      packages.set(dep, dir)
+      queue.push(dir)
+    }
+  }
+  return packages
+}
+
+/** {@link collectInstallationPackages} per installation anchor: an installation does not change under a running process. */
+const installationPackagesByAnchor = new Map<string, ReadonlyMap<string, string>>()
+
+/**
+ * Whether the package resolved to `packageDir` is this installation's own copy
+ * of `packageName` (gate3 2026-10-04T06:09:59Z, BLOCKED-360): the installation
+ * carries the name ({@link collectInstallationPackages}) and `packageDir` has
+ * that copy's real path. A packaged installation reaches its packages through
+ * the module proxies {@link healProfilesModuleFallback} writes, so a module
+ * proxy counts only at the shared fallback location for its name. A package
+ * of the same name anywhere else, such as a profile's own install or a
+ * `node_modules` above the installation, is not the installation's copy.
+ * @param packageName - the package name.
+ * @param packageDir - the directory the package was resolved to; it must exist.
+ * @param installAnchor - absolute package.json path of the running dsh installation.
+ * @param home - Harness home holding the shared fallback; defaults to {@link resolveDshHome}.
+ * @returns `true` when the package is the installation's own copy.
+ */
+export function isInstallationPackage(
+  packageName: string,
+  packageDir: string,
+  installAnchor: string,
+  home: string = resolveDshHome(),
+): boolean {
+  let packages = installationPackagesByAnchor.get(installAnchor)
+  if (packages === undefined) {
+    packages = collectInstallationPackages(installAnchor)
+    installationPackagesByAnchor.set(installAnchor, packages)
+  }
+  const own = packages.get(packageName)
+  if (own === undefined) return false
+  const real = realpathSync(packageDir)
+  if (real === own) return true
+  const fallback = join(home, PROFILES_DIR, 'node_modules', packageName)
+  return readModuleProxyRecord(packageDir)?.dsh?.moduleFallback !== undefined
+    && existsSync(fallback) && real === realpathSync(fallback)
+}
+
+/**
  * The grants {@link INSTALL_WILDCARD_GRANTS} gives one resolved package: its
- * entry, but only when the package is this installation's own copy, its
- * directory having the real path of {@link installationPackageDir}. A package
- * of the same name resolved anywhere else, such as a profile's own install or
- * a `node_modules` above the installation, gets none.
+ * entry, but only when {@link isInstallationPackage} finds the package is this
+ * installation's own copy.
  * @param packageName - the package name.
  * @param packageDir - the directory the package was resolved to; it must exist.
  * @param installAnchor - absolute package.json path of the running dsh installation.
@@ -261,8 +366,7 @@ export function installationPackageWildcardGrants(
 ): readonly WildcardGrant[] {
   const grants = INSTALL_WILDCARD_GRANTS[packageName]
   if (grants === undefined) return []
-  const own = installationPackageDir(installAnchor, packageName)
-  return own !== undefined && own === realpathSync.native(packageDir) ? grants : []
+  return isInstallationPackage(packageName, packageDir, installAnchor) ? grants : []
 }
 
 /**

@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-04-the-installations-own-packages-need-no-manifest-to-be-patch-mounted.md
+2026-10-04-the-installations-own-packages-need-no-manifest-to-be-patch-mounted.md: 2e33bf281021ee6c2ba298a64653a688b8c0ac29
+2026-10-04-the-installations-own-packages-need-no-manifest-to-be-patch-mounted.zh.md: b72582b351021b19c482b024af64d4fa1aabb7cc

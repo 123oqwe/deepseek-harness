@@ -10,7 +10,7 @@ Status: implemented
 
 ## 决定
 
-- 安装自己的副本只在安装之内查找：上限是安装真实路径之上最外层的 `node_modules` 目录；安装不在任何 `node_modules` 之内时（源码检出），上限是它自己的 `node_modules`。安装不带的名字没有副本，也没有授予。
+- 安装自己的副本只在安装之内查找：上限是安装真实路径之上最外层的 `node_modules` 目录；安装不在任何 `node_modules` 之内时（源码检出），上限是它自己的 `node_modules`。安装不带的名字没有副本，也没有授予。这一查找现已覆盖安装的整个依赖闭包，只经传递依赖带进来的包也能找到（[安装自带的包经补丁挂载不需要 manifest](../feature/2026-10-04-the-installations-own-packages-need-no-manifest-to-be-patch-mounted.zh.md)）。
 - 层的目录与安装的副本按真实路径比较。上限约束的是包被找到的位置，不是它的真实路径：工作区链接包的真实路径在所有 `node_modules` 之外，而安装是信任根，安装内的链接是安装自己的选择。
 
 ## 考虑过的替代方案

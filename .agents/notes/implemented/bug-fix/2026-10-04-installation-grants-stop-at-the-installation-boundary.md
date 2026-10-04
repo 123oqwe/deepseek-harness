@@ -10,7 +10,7 @@ English | [中文](2026-10-04-installation-grants-stop-at-the-installation-bound
 
 ## Decision
 
-- The installation's own copy is looked up only inside the installation: up to the outermost `node_modules` directory above the installation's real path, or its own `node_modules` when it sits in no `node_modules` (a source checkout). A name the installation does not carry has no copy and no grants.
+- The installation's own copy is looked up only inside the installation: up to the outermost `node_modules` directory above the installation's real path, or its own `node_modules` when it sits in no `node_modules` (a source checkout). A name the installation does not carry has no copy and no grants. The lookup now covers the installation's whole dependency closure, so a package it carries only transitively is found too ([the installation's own packages need no manifest to be patch-mounted](../feature/2026-10-04-the-installations-own-packages-need-no-manifest-to-be-patch-mounted.md)).
 - The layer's directory and the installation's copy are compared by real path. The bound applies to where the package is found, not to its real path: a workspace-linked package's real path lies outside every `node_modules`, and the installation is the trust root, so a link inside it is its own choice.
 
 ## Alternatives considered

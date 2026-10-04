@@ -18,6 +18,7 @@ import {
   initProfile,
   INSTALL_WILDCARD_GRANTS,
   installationWildcardGrants,
+  isInstallationPackage,
   loadProfile,
   loadProfileDirectory,
   partitionProfileLayersByAdmission,
@@ -464,6 +465,7 @@ describe('installationWildcardGrants (question 27 (a))', () => {
       mkdirSync(dir, { recursive: true })
       writeFileSync(join(dir, 'package.json'), JSON.stringify({ name, version: '0.0.0' }))
     }
+    writeFileSync(join(app, 'package.json'), JSON.stringify({ name: 'dsh-app', version: '0.0.0', dependencies: { '@deepseek-ai/dsh-base': '0.0.0' } }))
     const anchor = join(app, 'package.json')
     expect(installationWildcardGrants(layerFor(base, '@deepseek-ai/dsh-base'), anchor))
       .toBe(INSTALL_WILDCARD_GRANTS['@deepseek-ai/dsh-base'])
@@ -479,6 +481,67 @@ describe('installationWildcardGrants (question 27 (a))', () => {
     ])
     expect(shown('@deepseek-ai/dsh-sdk-minimal')).toEqual(['run_code process *'])
     expect(Object.values(INSTALL_WILDCARD_GRANTS).flat().every(grant => grant.purpose !== '')).toBe(true)
+  })
+})
+
+describe('isInstallationPackage (BLOCKED-360)', () => {
+  /**
+   * An npm-style install: the app, a dependency it declares and that
+   * dependency's own dependency, all hoisted into one `node_modules`. The app
+   * also declares a dependency that is not installed, and the dependency
+   * declares `ghost`, found only in a `node_modules` above the install.
+   */
+  function stageHoistedInstallation(): { readonly root: string; readonly modules: string; readonly anchor: string } {
+    const root = tmp()
+    const modules = join(root, 'install', 'node_modules')
+    const packages: Record<string, Record<string, string>> = {
+      'dsh-app': { 'bundle-x': '0.0.0', 'never-installed': '0.0.0' },
+      'bundle-x': { 'dep-y': '0.0.0', 'dsh-app': '0.0.0', 'ghost': '0.0.0' },
+      'dep-y': {},
+    }
+    for (const [name, dependencies] of Object.entries(packages)) {
+      mkdirSync(join(modules, name), { recursive: true })
+      writeFileSync(join(modules, name, 'package.json'), JSON.stringify({ name, version: '0.0.0', dependencies }))
+    }
+    mkdirSync(join(root, 'node_modules', 'ghost'), { recursive: true })
+    writeFileSync(join(root, 'node_modules', 'ghost', 'package.json'), JSON.stringify({ name: 'ghost', version: '0.0.0' }))
+    return { root, modules, anchor: join(modules, 'dsh-app', 'package.json') }
+  }
+
+  /**
+   * Write a package directory holding only a `package.json` named `dep-y`.
+   * @param dir - the package directory.
+   * @param dsh - the `dsh` field, if any.
+   */
+  function writeDepY(dir: string, dsh?: Record<string, unknown>): void {
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'dep-y', version: '0.0.0', ...dsh === undefined ? {} : { dsh } }))
+  }
+
+  it('counts a dependency of a dependency hoisted beside the installation, and not a declared dependency found only above it', () => {
+    const { root, modules, anchor } = stageHoistedInstallation()
+    expect(isInstallationPackage('dep-y', join(modules, 'dep-y'), anchor, tmp())).toBe(true)
+    expect(isInstallationPackage('ghost', join(root, 'node_modules', 'ghost'), anchor, tmp())).toBe(false)
+  })
+
+  it('counts a module proxy only at the shared fallback location for its name', () => {
+    const { root, anchor } = stageHoistedInstallation()
+    const home = tmp()
+    const fallback = join(home, 'profiles', 'node_modules', 'dep-y')
+    const profileCopy = join(root, 'profile', 'node_modules', 'dep-y')
+    writeDepY(fallback, { moduleFallback: { targets: {} } })
+    writeDepY(profileCopy, { moduleFallback: { targets: {} } })
+    expect(isInstallationPackage('dep-y', fallback, anchor, home)).toBe(true)
+    expect(isInstallationPackage('dep-y', profileCopy, anchor, home)).toBe(false)
+    expect(isInstallationPackage('dep-y', profileCopy, anchor, tmp())).toBe(false)
+  })
+
+  it('does not count a same-named copy that is not a module proxy', () => {
+    const { root, anchor } = stageHoistedInstallation()
+    writeDepY(join(root, 'plain', 'dep-y'))
+    writeDepY(join(root, 'legacy', 'dep-y'), { bundle: { patch: './cordis.patch.yml' } })
+    expect(isInstallationPackage('dep-y', join(root, 'plain', 'dep-y'), anchor, tmp())).toBe(false)
+    expect(isInstallationPackage('dep-y', join(root, 'legacy', 'dep-y'), anchor, tmp())).toBe(false)
   })
 })
 

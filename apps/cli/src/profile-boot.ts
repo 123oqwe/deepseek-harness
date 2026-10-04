@@ -25,6 +25,7 @@ import {
   initProfile,
   installationPackageWildcardGrants,
   installationWildcardGrants,
+  isInstallationPackage,
   installFailLoud,
   loadOptionalPatches,
   loadOverlayPatches,
@@ -395,8 +396,12 @@ function isModuleProxy(packageDir: string): boolean {
   return manifest.dsh?.moduleFallback !== undefined
 }
 
-/** The package a user patch row's module is imported from: its directory and name when resolvable, and its declaration. */
+/**
+ * The package a user patch row's module is imported from: the directory the
+ * row resolves to and the package's name when resolvable, and its declaration.
+ */
 interface UserPatchRowPackage {
+  /** The directory the row resolves to from the profile; a module proxy stays the proxy. */
   readonly dir?: string
   readonly name?: string
   readonly declaration: PluginDeclaration
@@ -409,16 +414,16 @@ interface UserPatchRowPackage {
  * it forwards to. A module that no package directory holds declares nothing.
  * @param moduleName - the row's module specifier.
  * @param profileDir - the profile directory.
- * @returns the package's directory and `package.json` name, when resolvable, and its classified declaration.
+ * @returns the directory the row resolves to and the package's `package.json` name, when resolvable, and its classified declaration.
  */
 function userPatchRowPackage(moduleName: string, profileDir: string): UserPatchRowPackage {
   const resolved = resolveEntryPackageDir(moduleName, pathToFileURL(join(profileDir, PROFILE_ROOT_FILENAME)).href)
   const packageDir = resolved !== undefined && isModuleProxy(resolved)
     ? resolveEntryPackageDir(moduleName, pathToFileURL(INSTALL_ANCHOR).href)
     : resolved
-  if (packageDir === undefined) return { declaration: { kind: 'missing' } }
+  if (resolved === undefined || packageDir === undefined) return { declaration: { kind: 'missing' } }
   const { name } = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf8')) as { name?: unknown }
-  return { dir: packageDir, ...typeof name === 'string' ? { name } : {}, declaration: readPluginDeclaration(packageDir) }
+  return { dir: resolved, ...typeof name === 'string' ? { name } : {}, declaration: readPluginDeclaration(packageDir) }
 }
 
 /**
@@ -426,7 +431,10 @@ function userPatchRowPackage(moduleName: string, profileDir: string): UserPatchR
  * {@link partitionProfileLayersByAdmission} partitions bundle layers with
  * the installation's grants: a row denied only for wildcard permissions is
  * admitted when {@link installationPackageWildcardGrants} grants its package
- * every one of them, and is listed in `granted` with them. Without
+ * every one of them, and is listed in `granted` with them. A row whose
+ * package declares no Manifest v2 is admitted when it is the installation's
+ * own copy of a package the installation ships ({@link isInstallationPackage},
+ * BLOCKED-360): the installation is the product, not a plugin to vet. Without
  * `production` every row is admitted and no package is read.
  * @param rows - the user patch rows.
  * @param profileDir - the profile directory the rows resolve from.
@@ -450,6 +458,11 @@ function partitionUserPatchRowsByAdmission(
     const { dir, name, declaration } = userPatchRowPackage(row.entry.name, profileDir)
     const admission = evaluatePreMountAdmission(declaration, true)
     if (admission.admitted) {
+      admitted.push(row)
+      continue
+    }
+    if ((admission.reason === 'missing-manifest' || admission.reason === 'legacy-untrusted')
+      && dir !== undefined && name !== undefined && isInstallationPackage(name, dir, INSTALL_ANCHOR)) {
       admitted.push(row)
       continue
     }
