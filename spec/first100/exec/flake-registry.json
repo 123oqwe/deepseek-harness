@@ -394,6 +394,36 @@
       "unrelatedNote": "Same-SHA divergence, BLOCKED-023 standard (b): both occurrences are on candidate 0c709797890f2d5e0fd080bb90a6bb8e7c5e56e0, batch 14's push gate, one failed (attempt 1) and one passed (attempt 2), so the outcome is not determined by the tree. Batch 14 changed only spec/first100/exec/, and its product tree is byte-identical to 5d886b87cf, whose full run 36229132720 passed this case. The failure read `expected 0 to be greater than 0`. The case starts the agent with `void ctx.agentLoop.create(...)` and removes the directory without waiting, so a write that lands before the removal, or an agent not yet listed, leaves no failure to announce within its 1 s waitFor: a race in the case, read from the code and not confirmed. B-655 fixes the case; a failure after that fix is a regression and must not be absorbed as this flake.",
       "registeredAtUtc": "2026-09-26T11:25:57Z",
       "registeredBy": "delegate (C7 flake classification, gate3 log 2026-09-26T10:22:31Z), session first100-delegate-1a; committed by lane B"
+    },
+    {
+      "testFile": "packages/client/ui-primitives/tests/code-block.client.spec.tsx",
+      "testFullName": "highlightToHtml lazily loads every read-card grammar: plain first, highlighted after load",
+      "occurrences": [
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37226284341",
+          "candidateSha": "7fe0f1b345d74f143381c0c6351892c62ddb3177",
+          "observedAtUtc": "2026-10-04T20:25:16Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json of the F3 probe lists this case failed with STACK_TRACE_ERROR; the run failed 16 cases, the other 15 the A-550 lock gate before its fixtures"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37232309679",
+          "candidateSha": "7fe0f1b345d74f143381c0c6351892c62ddb3177",
+          "observedAtUtc": "2026-10-04T20:33:44Z",
+          "outcome": "passed",
+          "verifiedBy": "narrow run of packages/client/ui-primitives/tests/code-block.client.spec.tsx on the same SHA: 19 of 19 passed"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37232579448",
+          "candidateSha": "7fe0f1b345d74f143381c0c6351892c62ddb3177",
+          "observedAtUtc": "2026-10-04T20:37:56Z",
+          "outcome": "passed",
+          "verifiedBy": "second independent narrow run of the same file on the same SHA: 19 of 19 passed"
+        }
+      ],
+      "unrelatedNote": "Same-SHA divergence (§21.8): one failure in the F3 probe and two independent passes on the same candidate. The case is a client-side grammar test that boots no profile; the candidate changed only the plugin lock gate and its documentation. It passed in CENSUS-4 (37218426287) and 28r2 (37181848952).",
+      "registeredAtUtc": "2026-10-04T21:03:58Z",
+      "registeredBy": "delegate (§21.8 flake classification, two same-SHA reproductions), session first100-delegate-52; committed by lane B"
     }
   ],
   "candidates": [
