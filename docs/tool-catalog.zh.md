@@ -2145,6 +2145,7 @@ todo_write 是会话所有的状态；UI 将最新的 todo/write 事件渲染为
 - `pipeline(items, ...stages): Promise<any[]>`：让每个条目分别经过各阶段，阶段之间**没有**屏障；多阶段工作优先使用它。每个阶段接收 `(prev, item, index)`。普通的阶段异常会将该**条目**变为 `null`，并跳过它的剩余阶段。
 - `parallel(thunks): Promise<any[]>`：并发运行零参数函数并等待**全部**完成。它会形成屏障，仅当某个阶段确实需要汇总全部先前结果时使用。抛出异常的 thunk 解析为 `null`。
 - `phase(title)`：开始一个进度阶段；`log(message)`：说明进度；`args`：工具调用的 `args` 输入，原样提供。
+- `workflow({ name, digest, onFailure? }, args?): Promise<any>`：把一个已保存的工作流作为嵌套运行执行，并解析为它的返回值。`name` 与 `digest` 都必须与本会话已保存工作流目录中的某个条目相符，目录会列出它们；只给名字会被拒绝。嵌套运行占用本运行的 agent 与 token 预算以及深度上限；同一定义已在它上方运行时，会被拒绝。失败时调用会 reject，除非设了 `onFailure: 'continue-parent'`，此时解析为 `null` 并记录这次失败。
 
 如果误用钩子（参数错误、未知选项、不受支持的 schema、触发上限），抛出的错误**总会**终止脚本，绝不会退化为单个条目的 `null`。
 
