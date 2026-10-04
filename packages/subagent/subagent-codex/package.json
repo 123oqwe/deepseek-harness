@@ -37,7 +37,15 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
-    }
+    },
+    "manifestVersion": 2,
+    "executionMode": "in-process",
+    "compatibility": {
+      "dshVersionRange": ">=0.1.0 <0.2.0"
+    },
+    "tools": [],
+    "services": [],
+    "events": []
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^",

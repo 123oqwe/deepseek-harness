@@ -76,5 +76,15 @@
     "@deepseek-ai/dsh-session-projection": "workspace:^",
     "@deepseek-ai/dsh-subagent": "workspace:^",
     "@deepseek-ai/dsh-user-questions": "workspace:^"
+  },
+  "dsh": {
+    "manifestVersion": 2,
+    "executionMode": "in-process",
+    "compatibility": {
+      "dshVersionRange": ">=0.1.0 <0.2.0"
+    },
+    "tools": [],
+    "services": [],
+    "events": []
   }
 }
