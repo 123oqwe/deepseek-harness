@@ -14,10 +14,11 @@ import { spawn } from 'node:child_process'
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { Context, LoggerLevel } from '@deepseek-ai/cordis'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease'
-import { openLeaseStore } from '../src/index.ts'
+import LeaseStorePlugin, { openLeaseStore } from '../src/index.ts'
 
 const roots: string[] = []
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }) })
@@ -160,5 +161,79 @@ describe('P4-07 acceptance[2]: an unavailable store stops work in both direction
     store.setAvailable(false)
     store.setAvailable(true)
     expect(store.acquire(ITEM, A, 1_000, 30_000)).toMatchObject({ acquired: true })
+  })
+})
+
+describe('B-711b 1-4: shared holds live in the database, so another handle and another process see them', () => {
+  const UPGRADE = brandString<WorkItemId>('dsh-plugin-upgrade')
+
+  it('keeps another handle\'s exclusive acquire out while a shared hold is live, and the other way round', () => {
+    const dir = directory()
+    const host = openLeaseStore(dir)
+    const cli = openLeaseStore(dir)
+    expect(host.acquireShared(ITEM, A, 0, 1_000)).toEqual({ acquired: true, hold: { workItem: ITEM, holder: A, expiresAtMs: 1_000 } })
+    expect(cli.acquire(ITEM, B, 1_000, 1_000)).toEqual({ acquired: false, reason: 'held-shared', holder: A })
+    // Lapsed at 1 001, judged as a lease is.
+    expect(cli.acquire(ITEM, B, 1_001, 1_000).acquired).toBe(true)
+    expect(host.acquireShared(ITEM, A, 1_500, 1_000)).toEqual({ acquired: false, reason: 'held-exclusive', holder: B })
+  })
+
+  it('lets the exclusive acquire in once the holder gives its hold back, and refuses holds while unavailable', () => {
+    const dir = directory()
+    const host = openLeaseStore(dir)
+    const cli = openLeaseStore(dir)
+    host.acquireShared(ITEM, A, 0, 30_000)
+    host.setAvailable(false)
+    expect(host.acquireShared(ITEM, B, 0, 30_000)).toEqual({ acquired: false, reason: 'store-unavailable' })
+    host.releaseShared(ITEM, A)
+    expect(cli.acquire(ITEM, B, 0, 30_000).acquired).toBe(false)
+    host.setAvailable(true)
+    host.releaseShared(ITEM, A)
+    expect(cli.acquire(ITEM, B, 0, 30_000).acquired).toBe(true)
+  })
+
+  it('holds its configured items shared while mounted, and gives them back when unloaded', async () => {
+    const dir = directory()
+    const ctx = new Context()
+    const fiber = await ctx.plugin(LeaseStorePlugin, { directory: dir, sharedHolds: ['dsh-plugin-upgrade'] })
+    const cli = openLeaseStore(dir)
+    expect(cli.acquire(UPGRADE, B, Date.now(), 30_000))
+      .toEqual({ acquired: false, reason: 'held-shared', holder: `host-${String(process.pid)}` })
+    await fiber.dispose()
+    expect(cli.acquire(UPGRADE, B, Date.now(), 30_000).acquired).toBe(true)
+    await ctx.fiber.dispose()
+  })
+
+  it('refuses to mount while an exclusive holder has a configured item', async () => {
+    const dir = directory()
+    openLeaseStore(dir).acquire(UPGRADE, B, Date.now(), 60_000)
+    const ctx = new Context()
+    await expect(ctx.plugin(LeaseStorePlugin, { directory: dir, sharedHolds: ['dsh-plugin-upgrade'] }))
+      .rejects.toThrow(/cannot hold "dsh-plugin-upgrade" shared \(held-exclusive\)/u)
+    await ctx.fiber.dispose()
+  })
+
+  it('takes its holds again before they lapse, and logs when one can no longer be taken', async () => {
+    vi.useFakeTimers({ now: 0, toFake: ['setInterval', 'clearInterval', 'Date'] })
+    const ctx = new Context()
+    try {
+      const dir = directory()
+      const errors: unknown[] = []
+      ctx.logger.exporter({ levels: { default: LoggerLevel.ERROR }, export: (message) => { errors.push(message.args[0]) } })
+      await ctx.plugin(LeaseStorePlugin, { directory: dir, sharedHolds: ['dsh-plugin-upgrade'], sharedHoldMs: 1_000 })
+      const cli = openLeaseStore(dir)
+      vi.advanceTimersByTime(600)
+      // Taken again at 500, so it now runs to 1 500 rather than lapsing at 1 000.
+      expect(cli.acquire(UPGRADE, B, 1_200, 60_000).acquired).toBe(false)
+      // A host suspended past its hold: the clock jumps, an upgrade takes the item, and the next renewal is refused.
+      vi.setSystemTime(5_000)
+      expect(cli.acquire(UPGRADE, B, 5_000, 60_000).acquired).toBe(true)
+      vi.advanceTimersByTime(500)
+      expect(errors.map(error => String(error)))
+        .toEqual([expect.stringMatching(/cannot hold "dsh-plugin-upgrade" shared \(held-exclusive\)/u)])
+    } finally {
+      await ctx.fiber.dispose()
+      vi.useRealTimers()
+    }
   })
 })

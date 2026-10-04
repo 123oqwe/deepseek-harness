@@ -37,6 +37,8 @@ import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-a
 import WorkerThreadWorkflowEngine from '../src/index.ts'
 import type { WorkerRun } from '../src/host.ts'
 import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import type { LeaseStoreContract, WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
 
 const persistenceRoots: string[] = []
 afterEach(() => { for (const root of persistenceRoots.splice(0)) rmSync(root, { recursive: true, force: true }) })
@@ -208,6 +210,18 @@ describe('P4-09 §12.66: a LIVE run may not be resumed, and the guard runs befor
 
     await live.result
     await live.dispose()
+  })
+
+  it('refuses a resume while a shared hold keeps the run\'s work item, naming the holder (B-711b 1-4)', async () => {
+    const { ctx, parent } = await setup(2, { persistence: true })
+    const run = ctx.workflowEngine.start({ script: "return 'done'", meta: META, parent }) as WorkerRun
+    await run.result
+    await run.dispose()
+    const { leases } = ctx.workflowEngine as unknown as { leases: LeaseStoreContract }
+    leases.acquireShared(brandString<WorkItemId>(run.id), brandString<WorkerId>('reader'), Date.now(), 30_000)
+
+    await expect(ctx.workflowEngine.resume(run.id, { script: "return 'x'", meta: META, parent }))
+      .rejects.toThrow(/is held shared by reader; resume refused/u)
   })
 
   it('refuses BEFORE reconciling, so a live run\'s journal is never read', async () => {

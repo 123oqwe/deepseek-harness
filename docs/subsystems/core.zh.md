@@ -1392,6 +1392,35 @@ release(token: FencingToken): void
  * @returns the reclaimable work items.
  */
 reclaimable(nowMs: number): readonly WorkItemId[]
+
+/**
+ * Take, or take again, `holder`'s shared hold on an item (B-711b 1-4).
+ *
+ * Any number of holders may share an item. While a live shared hold exists,
+ * `acquire` of that item refuses with `held-shared`; while a live exclusive
+ * lease holds it, this refuses with `held-exclusive`. Taking the hold again
+ * with the same holder extends it, which is how a holder keeps it alive. A
+ * shared hold that lapses stops counting, as an expired lease does.
+ *
+ * **An emergency stop does not gate this.** A shared hold authorizes no work;
+ * it only keeps an exclusive holder from changing what the holder is reading.
+ * @param workItem - the item to hold.
+ * @param holder - who holds it.
+ * @param nowMs - the instant to judge the exclusive lease's expiry against.
+ * @param leaseMs - how long the hold runs from `nowMs`.
+ * @returns the hold, or why it was refused.
+ */
+acquireShared(workItem: WorkItemId, holder: WorkerId, nowMs: number, leaseMs: number): AcquireSharedResult
+
+/**
+ * Give `holder`'s shared hold on an item back (B-711b 1-4).
+ *
+ * Idempotent and silent when the holder holds none, like `release`; an
+ * emergency stop never gates it.
+ * @param workItem - the item held.
+ * @param holder - who held it.
+ */
+releaseShared(workItem: WorkItemId, holder: WorkerId): void
 ```
 
 Source: [`packages/collaboration/lease-contract/src/types.ts`](../../packages/collaboration/lease-contract/src/types.ts)

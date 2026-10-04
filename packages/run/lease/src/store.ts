@@ -20,6 +20,7 @@ import { brandNumber } from '@deepseek-ai/dsh-brand'
 import { isReclaimable } from '@deepseek-ai/dsh-lease-contract'
 import type {
   AcquireResult,
+  AcquireSharedResult,
   FencingDenialReason,
   FencingToken,
   Lease,
@@ -47,6 +48,8 @@ export type {
 export class LeaseStore implements LeaseStoreContract {
   private readonly leases = new Map<WorkItemId, Lease>()
   private readonly nextEpoch = new Map<WorkItemId, number>()
+  /** Shared holds per item: each holder and when its hold lapses (B-711b 1-4). */
+  private readonly shared = new Map<WorkItemId, Map<WorkerId, number>>()
   private available = true
 
   /**
@@ -90,6 +93,8 @@ export class LeaseStore implements LeaseStoreContract {
     if (incumbent !== undefined && !isReclaimable(incumbent, nowMs)) {
       return { acquired: false, reason: 'held-by-another', holder: incumbent.holder }
     }
+    const reader = this.liveSharedHolder(workItem, nowMs)
+    if (reader !== undefined) return { acquired: false, reason: 'held-shared', holder: reader }
     const epoch = brandNumber<LeaseEpoch>(this.nextEpoch.get(workItem) ?? 0)
     this.nextEpoch.set(workItem, epoch + 1)
     const lease: Lease = { workItem, holder: worker, epoch, expiresAtMs: nowMs + leaseMs }
@@ -149,6 +154,49 @@ export class LeaseStore implements LeaseStoreContract {
   reclaimable(nowMs: number): readonly WorkItemId[] {
     if (!this.available) return []
     return [...this.leases.values()].filter(lease => isReclaimable(lease, nowMs)).map(lease => lease.workItem)
+  }
+
+  /**
+   * Take, or take again, `holder`'s shared hold on an item (B-711b 1-4).
+   * @param workItem - the item to hold.
+   * @param holder - who holds it.
+   * @param nowMs - the instant to judge the exclusive lease's expiry against.
+   * @param leaseMs - how long the hold runs from `nowMs`.
+   * @returns the hold, or why it was refused.
+   */
+  acquireShared(workItem: WorkItemId, holder: WorkerId, nowMs: number, leaseMs: number): AcquireSharedResult {
+    if (!this.available) return { acquired: false, reason: 'store-unavailable' }
+    const incumbent = this.leases.get(workItem)
+    if (incumbent !== undefined && !isReclaimable(incumbent, nowMs)) {
+      return { acquired: false, reason: 'held-exclusive', holder: incumbent.holder }
+    }
+    const holders = this.shared.get(workItem) ?? new Map<WorkerId, number>()
+    holders.set(holder, nowMs + leaseMs)
+    this.shared.set(workItem, holders)
+    return { acquired: true, hold: { workItem, holder, expiresAtMs: nowMs + leaseMs } }
+  }
+
+  /**
+   * Give `holder`'s shared hold on an item back (B-711b 1-4).
+   * @param workItem - the item held.
+   * @param holder - who held it.
+   */
+  releaseShared(workItem: WorkItemId, holder: WorkerId): void {
+    if (!this.available) return
+    this.shared.get(workItem)?.delete(holder)
+  }
+
+  /**
+   * One holder whose shared hold on the item has not lapsed at `nowMs`.
+   * @param workItem - the item.
+   * @param nowMs - the instant to judge each hold against.
+   * @returns a live shared holder, or `undefined` when none is live.
+   */
+  private liveSharedHolder(workItem: WorkItemId, nowMs: number): WorkerId | undefined {
+    for (const [holder, expiresAtMs] of this.shared.get(workItem) ?? []) {
+      if (nowMs <= expiresAtMs) return holder
+    }
+    return undefined
   }
 }
 

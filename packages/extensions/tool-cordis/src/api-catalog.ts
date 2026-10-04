@@ -1398,6 +1398,17 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         parameters: [{ name: 'nowMs', description: 'the instant to judge expiry against.' }],
         returns: 'the reclaimable work items.',
       },
+      {
+        signature: 'acquireShared(workItem: WorkItemId, holder: WorkerId, nowMs: number, leaseMs: number): AcquireSharedResult',
+        description: 'Take, or take again, `holder`\'s shared hold on an item (B-711b 1-4).\n\nAny number of holders may share an item. While a live shared hold exists, `acquire` of that item refuses with `held-shared`; while a live exclusive lease holds it, this refuses with `held-exclusive`. Taking the hold again with the same holder extends it, which is how a holder keeps it alive. A shared hold that lapses stops counting, as an expired lease does.\n\n**An emergency stop does not gate this.** A shared hold authorizes no work; it only keeps an exclusive holder from changing what the holder is reading.',
+        parameters: [{ name: 'workItem', description: 'the item to hold.' }, { name: 'holder', description: 'who holds it.' }, { name: 'nowMs', description: 'the instant to judge the exclusive lease\'s expiry against.' }, { name: 'leaseMs', description: 'how long the hold runs from `nowMs`.' }],
+        returns: 'the hold, or why it was refused.',
+      },
+      {
+        signature: 'releaseShared(workItem: WorkItemId, holder: WorkerId): void',
+        description: 'Give `holder`\'s shared hold on an item back (B-711b 1-4).\n\nIdempotent and silent when the holder holds none, like `release`; an emergency stop never gates it.',
+        parameters: [{ name: 'workItem', description: 'the item held.' }, { name: 'holder', description: 'who held it.' }],
+      },
     ],
   },
   {
@@ -4220,11 +4231,15 @@ export const EVENT_API: readonly EventApiEntry[] = [
 export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'AcquireDenialReason',
-    declaration: 'export type AcquireDenialReason = \'held-by-another\' | \'store-unavailable\' | \'stopped\';',
+    declaration: 'export type AcquireDenialReason = \'held-by-another\' | \'store-unavailable\' | \'stopped\' | \'held-shared\';',
   },
   {
     name: 'AcquireResult',
     declaration: 'export type AcquireResult = {\n    readonly acquired: true;\n    readonly lease: Lease;\n    readonly token: FencingToken;\n} | {\n    readonly acquired: false;\n    readonly reason: AcquireDenialReason;\n    readonly holder?: WorkerId;\n};',
+  },
+  {
+    name: 'AcquireSharedResult',
+    declaration: 'export type AcquireSharedResult = {\n    readonly acquired: true;\n    readonly hold: SharedHold;\n} | {\n    readonly acquired: false;\n    readonly reason: \'held-exclusive\' | \'store-unavailable\';\n    readonly holder?: WorkerId;\n};',
   },
   {
     name: 'ActionId',
@@ -6212,7 +6227,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'RunLeaseDenial',
-    declaration: 'export type RunLeaseDenial = {\n    readonly reason: \'store-unavailable\';\n} | {\n    readonly reason: \'held-by-another\';\n    readonly holder: WorkerId | undefined;\n} | {\n    readonly reason: \'fenced-out\';\n    readonly currentEpoch: number;\n} | {\n    readonly reason: \'stopped\';\n};',
+    declaration: 'export type RunLeaseDenial = {\n    readonly reason: \'store-unavailable\';\n} | {\n    readonly reason: \'held-by-another\';\n    readonly holder: WorkerId | undefined;\n} | {\n    readonly reason: \'fenced-out\';\n    readonly currentEpoch: number;\n} | {\n    readonly reason: \'stopped\';\n} | {\n    readonly reason: \'held-shared\';\n    readonly holder: WorkerId | undefined;\n};',
   },
   {
     name: 'RunNegotiation',
@@ -6865,6 +6880,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SettingsUpdateSource',
     declaration: 'export type SettingsUpdateSource = \'update\' | \'provider\';',
+  },
+  {
+    name: 'SharedHold',
+    declaration: 'export interface SharedHold {\n    readonly workItem: WorkItemId;\n    readonly holder: WorkerId;\n    readonly expiresAtMs: number;\n}',
   },
   {
     name: 'ShellExecRequest',

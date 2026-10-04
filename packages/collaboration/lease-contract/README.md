@@ -18,6 +18,7 @@ It contains no store. The providers are `@deepseek-ai/dsh-lease` (in-memory, sin
 - [Why the definition is separate](#why-the-definition-is-separate)
 - [Authority is an epoch, not a timestamp](#authority-is-an-epoch-not-a-timestamp)
 - [An emergency stop gates acquisition, and only acquisition](#an-emergency-stop-gates-acquisition-and-only-acquisition)
+- [Shared holds keep an exclusive holder out](#shared-holds-keep-an-exclusive-holder-out)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 - [Dev Note](#dev-note)
@@ -41,6 +42,10 @@ The staleness test consults no clock. Two workers whose clocks disagree still ag
 `renew` and `release` are deliberately not gated. A heartbeat keeps work already under way rather than starting any, and refusing heartbeats during a stop would let in-flight leases lapse — after which a second worker could take the item as soon as work resumed, while the first was still running. Releasing is the one thing a stopped deployment wants most. What an in-flight run may still DO under a stop is decided on the dispatch path, not here.
 
 `acquireRunLease` maps each store refusal to its own run-side denial through an exhaustive switch. It used to be a ternary whose `else` said "held by another" — which would have announced this stop as a phantom second host, with nothing red — so a reason added later now fails the typecheck instead.
+
+## Shared holds keep an exclusive holder out
+
+`acquireShared` lets any number of holders share an item, each with its own deadline. While one is live, `acquire` of that item refuses with `'held-shared'`, naming one holder; while a live exclusive lease holds the item, `acquireShared` refuses with `'held-exclusive'`. A holder keeps its hold by taking it again before it lapses, and `releaseShared` gives it back. A shared hold authorizes no work, so an emergency stop gates neither call. The shipped use is `dsh plugin`: every running host holds `dsh-plugin-upgrade` shared, so an upgrade, which takes that item exclusively, is refused until no host has plugin data open (B-711b 1-4). The hold is only as wide as the store: the in-memory provider shares it within one process, and the durable provider across every process that opens the same directory.
 
 ## Model Experience
 

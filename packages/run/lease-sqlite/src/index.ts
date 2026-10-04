@@ -22,6 +22,7 @@ import { mayStartNewWork } from '@deepseek-ai/dsh-control-plane'
 import type {} from '@deepseek-ai/dsh-control-plane/plugin'
 import type {
   AcquireResult,
+  AcquireSharedResult,
   FencingToken,
   Lease,
   LeaseStoreContract,
@@ -44,6 +45,17 @@ export interface Config {
    * only the profile knows which arrangement it is in.
    */
   directory: string
+  /**
+   * Work items this mount holds shared for as long as it is mounted (B-711b 1-4).
+   *
+   * A host names the items whose exclusive holder must not act while it runs:
+   * the base bundle names `dsh-plugin-upgrade`, so `dsh plugin` cannot upgrade
+   * a plugin's data under a running host whose loaded code would write the old
+   * shape back. Defaults to none.
+   */
+  sharedHolds?: readonly string[]
+  /** How long each shared hold runs, in milliseconds; this mount takes it again at half that. Defaults to 60 000. */
+  sharedHoldMs?: number
 }
 
 /**
@@ -57,6 +69,8 @@ export default class LeaseStorePlugin extends Service implements LeaseStoreContr
   /** Runtime configuration schema, validated at mount from the profile's `cordis.yml` row. */
   static Config = z.object({
     directory: z.string().required(),
+    sharedHolds: z.array(z.string()).default([]),
+    sharedHoldMs: z.natural().min(1).default(60_000),
   }) as z<Config>
 
   private opened: LeaseStoreContract | undefined
@@ -96,8 +110,36 @@ export default class LeaseStorePlugin extends Service implements LeaseStoreContr
    * @yields the teardown that closes the store handle.
    */
   * [Service.init](): Generator<() => void, void, void> {
-    this.opened = openLeaseStore(this.config.directory)
+    // The schema filled the defaulted fields at mount.
+    const { sharedHolds, sharedHoldMs } = this.config as Required<Config>
+    const opened = openLeaseStore(this.config.directory)
+    this.opened = opened
+    // B-711b 1-4: refused only while an exclusive holder has the item, which
+    // for `dsh-plugin-upgrade` is a plugin upgrade under way; this host must
+    // not load plugin code on data that is being migrated.
+    const holder = `host-${String(process.pid)}` as WorkerId
+    const holdShared = (): void => {
+      for (const item of sharedHolds) {
+        const taken = opened.acquireShared(item as WorkItemId, holder, Date.now(), sharedHoldMs)
+        if (!taken.acquired) {
+          throw new Error(`lease-sqlite: cannot hold "${item}" shared (${taken.reason}); a plugin upgrade may be under way — retry once it finishes`)
+        }
+      }
+    }
+    holdShared()
+    const renewal = setInterval(() => {
+      try {
+        holdShared()
+      } catch (error: unknown) {
+        // A hold that lapsed while this host was suspended may have let an
+        // exclusive holder in; nothing here can undo that, so it is logged.
+        this.ctx.logger.error(error)
+      }
+    }, sharedHoldMs / 2)
+    renewal.unref()
     yield () => {
+      clearInterval(renewal)
+      for (const item of sharedHolds) opened.releaseShared(item as WorkItemId, holder)
       this.closing = true
       if (this.held.size === 0) this.opened = undefined
     }
@@ -211,6 +253,29 @@ export default class LeaseStorePlugin extends Service implements LeaseStoreContr
    */
   reclaimable(nowMs: number): readonly WorkItemId[] {
     return this.store.reclaimable(nowMs)
+  }
+
+  /**
+   * Take, or take again, `holder`'s shared hold on an item (B-711b 1-4); an
+   * emergency stop does not gate this — `LeaseStoreContract.acquireShared`
+   * carries the reasoning.
+   * @param workItem - the item to hold.
+   * @param holder - who holds it.
+   * @param nowMs - the instant to judge the exclusive lease's expiry against.
+   * @param leaseMs - how long the hold runs from `nowMs`.
+   * @returns the hold, or why it was refused.
+   */
+  acquireShared(workItem: WorkItemId, holder: WorkerId, nowMs: number, leaseMs: number): AcquireSharedResult {
+    return this.store.acquireShared(workItem, holder, nowMs, leaseMs)
+  }
+
+  /**
+   * Give `holder`'s shared hold on an item back (B-711b 1-4).
+   * @param workItem - the item held.
+   * @param holder - who held it.
+   */
+  releaseShared(workItem: WorkItemId, holder: WorkerId): void {
+    this.store.releaseShared(workItem, holder)
   }
 }
 

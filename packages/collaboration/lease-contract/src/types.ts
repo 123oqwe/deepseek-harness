@@ -92,6 +92,14 @@ export type AcquireDenialReason =
    * exist, and one told "store unavailable" goes looking for an outage.
    */
   | 'stopped'
+  /**
+   * Live shared holds keep the item from an exclusive holder (B-711b 1-4).
+   *
+   * Distinct from `'held-by-another'`: no worker owns the item; one or more
+   * holders are reading what an exclusive holder would change, and each must
+   * give its hold back first.
+   */
+  | 'held-shared'
 
 /** The outcome of an acquisition attempt. */
 export type AcquireResult =
@@ -100,12 +108,39 @@ export type AcquireResult =
     readonly acquired: false
     readonly reason: AcquireDenialReason
     /**
-     * The worker that holds the item, present only for `'held-by-another'`.
+     * The worker that holds the item for `'held-by-another'`, or one of the
+     * shared holders for `'held-shared'`; absent for every other reason.
      *
      * Reported because a refusal that cannot name the holder sends an operator
      * looking for a second host that may not exist: the commonest case is a
      * process asking for an item it already holds itself.
      */
+    readonly holder?: WorkerId
+  }
+
+/**
+ * One holder's shared hold on a work item (B-711b 1-4).
+ *
+ * Many holders may share one item at a time. A live shared hold keeps an
+ * exclusive `acquire` of the same item out; it authorizes no work of its own.
+ */
+export interface SharedHold {
+  /** The item held. */
+  readonly workItem: WorkItemId
+  /** Who holds it. */
+  readonly holder: WorkerId
+  /** When the hold lapses unless its holder takes it again. */
+  readonly expiresAtMs: number
+}
+
+/** The outcome of taking a shared hold. */
+export type AcquireSharedResult =
+  | { readonly acquired: true; readonly hold: SharedHold }
+  | {
+    readonly acquired: false
+    /** `held-exclusive` while a live exclusive lease holds the item; `store-unavailable` when the store cannot be reached. */
+    readonly reason: 'held-exclusive' | 'store-unavailable'
+    /** The exclusive holder, present only for `held-exclusive`. */
     readonly holder?: WorkerId
   }
 
@@ -221,4 +256,31 @@ export interface LeaseStoreContract {
    * @returns the reclaimable work items.
    */
   reclaimable(nowMs: number): readonly WorkItemId[]
+  /**
+   * Take, or take again, `holder`'s shared hold on an item (B-711b 1-4).
+   *
+   * Any number of holders may share an item. While a live shared hold exists,
+   * `acquire` of that item refuses with `held-shared`; while a live exclusive
+   * lease holds it, this refuses with `held-exclusive`. Taking the hold again
+   * with the same holder extends it, which is how a holder keeps it alive. A
+   * shared hold that lapses stops counting, as an expired lease does.
+   *
+   * **An emergency stop does not gate this.** A shared hold authorizes no work;
+   * it only keeps an exclusive holder from changing what the holder is reading.
+   * @param workItem - the item to hold.
+   * @param holder - who holds it.
+   * @param nowMs - the instant to judge the exclusive lease's expiry against.
+   * @param leaseMs - how long the hold runs from `nowMs`.
+   * @returns the hold, or why it was refused.
+   */
+  acquireShared(workItem: WorkItemId, holder: WorkerId, nowMs: number, leaseMs: number): AcquireSharedResult
+  /**
+   * Give `holder`'s shared hold on an item back (B-711b 1-4).
+   *
+   * Idempotent and silent when the holder holds none, like `release`; an
+   * emergency stop never gates it.
+   * @param workItem - the item held.
+   * @param holder - who held it.
+   */
+  releaseShared(workItem: WorkItemId, holder: WorkerId): void
 }

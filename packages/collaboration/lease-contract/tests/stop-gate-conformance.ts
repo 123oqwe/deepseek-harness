@@ -100,6 +100,22 @@ export function runStopGateConformance(subject: StopGateSubject): void {
       }
     })
 
+    it('takes and gives back a shared hold while a stop is in force, since a hold authorizes no work (B-711b 1-4)', async () => {
+      const mounted = await subject.withPlane()
+      const exclusive = brandString<WorkerId>('exclusive-under-stop')
+      try {
+        mounted.stop()
+        expect(mounted.store.acquireShared(ITEM, WORKER, 1_000, LEASE_MS))
+          .toEqual({ acquired: true, hold: { workItem: ITEM, holder: WORKER, expiresAtMs: 1_000 + LEASE_MS } })
+        mounted.release()
+        expect(mounted.store.acquire(ITEM, exclusive, 1_000, LEASE_MS)).toEqual({ acquired: false, reason: 'held-shared', holder: WORKER })
+        mounted.store.releaseShared(ITEM, WORKER)
+        expect(mounted.store.acquire(ITEM, exclusive, 1_000, LEASE_MS).acquired).toBe(true)
+      } finally {
+        await mounted.dispose()
+      }
+    })
+
     it('does not consult the store, which would have answered `store-unavailable` first', async () => {
       const mounted = await subject.withPlane()
       try {

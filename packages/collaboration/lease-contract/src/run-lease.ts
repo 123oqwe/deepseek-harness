@@ -35,6 +35,8 @@ export type RunLeaseDenial =
   | { readonly reason: 'fenced-out'; readonly currentEpoch: number }
   /** An emergency stop is in force, so no new run may take an item (P2-12 must[2]). */
   | { readonly reason: 'stopped' }
+  /** Live shared holds keep the item from an exclusive holder; `holder` is one of them (B-711b 1-4). */
+  | { readonly reason: 'held-shared'; readonly holder: WorkerId | undefined }
 
 /** What a run does with a lease while it is alive. */
 export interface RunLease {
@@ -140,6 +142,7 @@ function denialFor(reason: AcquireDenialReason, holder: WorkerId | undefined): R
     case 'store-unavailable': return { reason: 'store-unavailable' }
     case 'held-by-another': return { reason: 'held-by-another', holder }
     case 'stopped': return { reason: 'stopped' }
+    case 'held-shared': return { reason: 'held-shared', holder }
     default: return assertNever(reason, 'AcquireDenialReason')
   }
 }

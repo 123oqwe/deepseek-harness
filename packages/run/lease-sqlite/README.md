@@ -15,6 +15,7 @@ kind: "package-reference"
 - [What the transaction covers](#what-the-transaction-covers)
 - [Epochs outlive leases](#epochs-outlive-leases)
 - [The emergency stop is read at every acquisition](#the-emergency-stop-is-read-at-every-acquisition)
+- [A mount holds its configured items shared](#a-mount-holds-its-configured-items-shared)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 - [Dev Note](#dev-note)
@@ -41,6 +42,12 @@ A composition that mounts no control plane is admitted: capability absence is no
 
 `renew` and `release` stay open under a stop, for the reasons the contract's own documentation gives.
 
+## A mount holds its configured items shared
+
+Shared holds live in their own table, `shared_holds`, one row per item and holder. `acquire` checks it inside its `BEGIN IMMEDIATE` transaction, and `acquireShared` checks `leases` inside one of its own, so an exclusive and a shared holder racing for one item in two processes cannot both be told they hold it (B-711b 1-4).
+
+The `sharedHolds` config names items this mount holds shared for as long as it is mounted, as `host-<pid>`. It takes each hold again at half of `sharedHoldMs` and gives them back when it unloads. A mount refuses to start while an exclusive holder has one of them. The `dsh-base` bundle names `dsh-plugin-upgrade`, the item `dsh plugin` takes exclusively before it upgrades any plugin's data, so an upgrade waits until running hosts close, and a host does not start on data an upgrade is migrating.
+
 ## Model Experience
 
 None, as this package stores leases and registers nothing model-facing.
@@ -53,7 +60,8 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 - **One database, one machine.** SQLite serializes writers through a file lock, so hosts contend correctly only where they share a filesystem. Two machines need a store this package does not provide.
 - **`setAvailable` is a switch, not a health check.** A caller must tell the store it is unreachable; a database that has genuinely gone away throws from the underlying driver instead.
-- **No schema migration path.** `schema_version` is written and never read. The first change to these tables has to add the read as well as the migration.
+- **No schema migration path.** `schema_version` is written and never read. A new table is created with `IF NOT EXISTS` when the store opens, so an older database gains `shared_holds` without a migration; a change to an existing table still has to add the read as well as the migration.
+- **A suspended host can lose its shared hold.** A host stopped for longer than `sharedHoldMs` lets its hold lapse, and an upgrade may then take the item; the host's next renewal is refused and logged, and nothing here stops the host.
 - No runtime invariant companion is published: the store's own relation — one holder per unexpired item — is enforced inside a single `BEGIN IMMEDIATE` transaction and observable only by reading the same rows the store just wrote, so a checker would compare a value against itself rather than reconcile two independent observations.
 
 ### Dev Note

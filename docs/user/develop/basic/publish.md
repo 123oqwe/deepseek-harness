@@ -109,6 +109,8 @@ dsh --profile demo
 
 `dsh plugin --profile demo remove dsh-hello-plugin` removes both the dependency and the layer.
 
+While any `dsh` host is running, `dsh plugin` refuses to install: the host has plugin data open, and an upgrade under it could be written back in the old shape by the code it already loaded. Close running `dsh` sessions, then retry. An install that would put a plugin on data newer than its code (a downgrade) is undone, with a refusal that names the plugin and both versions.
+
 ## The loading order
 
 The effective configuration composes over an empty root by applying, in order:

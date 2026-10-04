@@ -20,6 +20,7 @@ import { mayStartNewWork } from '@deepseek-ai/dsh-control-plane'
 import type {} from '@deepseek-ai/dsh-control-plane/plugin'
 import type {
   AcquireResult,
+  AcquireSharedResult,
   FencingToken,
   Lease,
   RenewResult,
@@ -126,5 +127,26 @@ export default class InMemoryLeaseStorePlugin extends Service {
    */
   reclaimable(nowMs: number): readonly WorkItemId[] {
     return this.store.reclaimable(nowMs)
+  }
+
+  /**
+   * Take, or take again, `holder`'s shared hold on an item (B-711b 1-4); not stop-gated, see `LeaseStoreContract.acquireShared`.
+   * @param workItem - the item to hold.
+   * @param holder - who holds it.
+   * @param nowMs - the instant to judge the exclusive lease's expiry against.
+   * @param leaseMs - how long the hold runs from `nowMs`.
+   * @returns the hold, or why it was refused.
+   */
+  acquireShared(workItem: WorkItemId, holder: WorkerId, nowMs: number, leaseMs: number): AcquireSharedResult {
+    return this.store.acquireShared(workItem, holder, nowMs, leaseMs)
+  }
+
+  /**
+   * Give `holder`'s shared hold on an item back (B-711b 1-4).
+   * @param workItem - the item held.
+   * @param holder - who held it.
+   */
+  releaseShared(workItem: WorkItemId, holder: WorkerId): void {
+    this.store.releaseShared(workItem, holder)
   }
 }

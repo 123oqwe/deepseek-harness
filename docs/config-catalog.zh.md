@@ -1156,10 +1156,21 @@ export interface Config {
    * only the profile knows which arrangement it is in.
    */
   directory: string
+  /**
+   * Work items this mount holds shared for as long as it is mounted (B-711b 1-4).
+   *
+   * A host names the items whose exclusive holder must not act while it runs:
+   * the base bundle names `dsh-plugin-upgrade`, so `dsh plugin` cannot upgrade
+   * a plugin's data under a running host whose loaded code would write the old
+   * shape back. Defaults to none.
+   */
+  sharedHolds?: readonly string[]
+  /** How long each shared hold runs, in milliseconds; this mount takes it again at half that. Defaults to 60 000. */
+  sharedHoldMs?: number
 }
 ```
 
-来源： [`packages/run/lease-sqlite/src/index.ts:38`](../packages/run/lease-sqlite/src/index.ts)
+来源： [`packages/run/lease-sqlite/src/index.ts:39`](../packages/run/lease-sqlite/src/index.ts)
 
 <a id="deepseek-aidsh-llm-deepseek"></a>
 

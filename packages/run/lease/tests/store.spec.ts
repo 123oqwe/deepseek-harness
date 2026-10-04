@@ -159,3 +159,39 @@ describe('P4-07 acceptance[2]: an unavailable store stops new work', () => {
     expect(store.acquire(ITEM, WORKER_A, 0, 1_000).acquired).toBe(true)
   })
 })
+
+describe('B-711b 1-4: shared holds keep an exclusive holder out, and an exclusive lease keeps them out', () => {
+  it('refuses an exclusive acquire while a shared hold is live, naming the holder', () => {
+    const store = new LeaseStore()
+    expect(store.acquireShared(ITEM, WORKER_A, 0, 1_000))
+      .toEqual({ acquired: true, hold: { workItem: ITEM, holder: WORKER_A, expiresAtMs: 1_000 } })
+    expect(store.acquireShared(ITEM, WORKER_B, 0, 1_000).acquired).toBe(true)
+    expect(store.acquire(ITEM, 'upgrader' as WorkerId, 500, 1_000)).toEqual({ acquired: false, reason: 'held-shared', holder: WORKER_A })
+  })
+
+  it('admits the exclusive acquire once every shared hold is released or lapsed', () => {
+    const store = new LeaseStore()
+    store.acquireShared(ITEM, WORKER_A, 0, 1_000)
+    store.acquireShared(ITEM, WORKER_B, 0, 5_000)
+    store.releaseShared(ITEM, WORKER_B)
+    expect(store.acquire(ITEM, 'upgrader' as WorkerId, 1_000, 1_000).acquired).toBe(false)
+    expect(store.acquire(ITEM, 'upgrader' as WorkerId, 1_001, 1_000).acquired).toBe(true)
+  })
+
+  it('refuses a shared hold while a live exclusive lease holds the item, and admits it once the lease lapses', () => {
+    const store = new LeaseStore()
+    store.acquire(ITEM, WORKER_A, 0, 1_000)
+    expect(store.acquireShared(ITEM, WORKER_B, 500, 1_000)).toEqual({ acquired: false, reason: 'held-exclusive', holder: WORKER_A })
+    expect(store.acquireShared(ITEM, WORKER_B, 1_001, 1_000).acquired).toBe(true)
+  })
+
+  it('refuses a shared hold while unavailable, and a release then changes nothing', () => {
+    const store = new LeaseStore()
+    store.acquireShared(ITEM, WORKER_A, 0, 1_000)
+    store.setAvailable(false)
+    expect(store.acquireShared(ITEM, WORKER_B, 0, 1_000)).toEqual({ acquired: false, reason: 'store-unavailable' })
+    store.releaseShared(ITEM, WORKER_A)
+    store.setAvailable(true)
+    expect(store.acquire(ITEM, 'upgrader' as WorkerId, 0, 1_000).acquired).toBe(false)
+  })
+})

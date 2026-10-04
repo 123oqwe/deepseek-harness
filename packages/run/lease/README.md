@@ -60,6 +60,7 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 ## Known Limitations and Deferred Work
 
+- **Shared holds stay inside the process.** This store keeps shared holds in memory like its leases, so it answers `acquireShared` and refuses `acquire` with `'held-shared'` exactly as the contract says, but another process never sees them; the durable provider is the one whose holds reach across processes (B-711b 1-4).
 - **This package's store is in-memory and single-process.** `LeaseStore` holds leases in a `Map`, so it proves the epoch and availability rules but not the contention they exist to survive, and `InMemoryLeaseStorePlugin` is for a caller that is genuinely alone. A deployment where two hosts must not both own a work item mounts `@deepseek-ai/dsh-lease-sqlite` instead.
 - ~~The agent dispatch path carries no token.~~ Closed (§12.19-3). `@deepseek-ai/dsh-run` takes a lease for every Run it opens and puts it on `Agent.runLease`; `advanceLeasedAgent` in `@deepseek-ai/dsh-agent` is the one implementation both callers use, and the agent loop presents the token at tool dispatch, refusing every call in the step when this host has been fenced out.
 - **Contention is proved sequentially HERE.** `tests/fencing.e2e.spec.ts` runs a hundred acquisitions in order and asserts exactly one token survives; a `Map` cannot show more. Two processes racing for one item are covered where a shared store exists, in `@deepseek-ai/dsh-lease-sqlite`.

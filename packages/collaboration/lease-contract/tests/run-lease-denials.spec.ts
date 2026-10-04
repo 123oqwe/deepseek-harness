@@ -25,7 +25,7 @@ const INCUMBENT = brandString<WorkerId>('worker-2')
  * @returns a store whose other methods are never reached by these cases.
  */
 function refusing(reason: AcquireDenialReason): LeaseStoreContract {
-  const acquire = (): AcquireResult => reason === 'held-by-another'
+  const acquire = (): AcquireResult => reason === 'held-by-another' || reason === 'held-shared'
     ? { acquired: false, reason, holder: INCUMBENT }
     : { acquired: false, reason }
   return { acquire } as unknown as LeaseStoreContract
@@ -43,6 +43,11 @@ describe('P2-12 must[2]: a stop is carried to the run as a stop', () => {
     // true.
     const taken = acquireRunLease(refusing('held-by-another'), ITEM, WORKER, 1_000, 30_000)
     expect(taken).toEqual({ denied: { reason: 'held-by-another', holder: INCUMBENT } })
+  })
+
+  it('names a shared holder as a shared hold, not as an owner (B-711b 1-4)', () => {
+    const taken = acquireRunLease(refusing('held-shared'), ITEM, WORKER, 1_000, 30_000)
+    expect(taken).toEqual({ denied: { reason: 'held-shared', holder: INCUMBENT } })
   })
 
   it('still reports an unreachable store as an outage', () => {

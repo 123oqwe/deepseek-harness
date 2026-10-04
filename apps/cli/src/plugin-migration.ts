@@ -189,6 +189,10 @@ function upgradeRefusal(denial: RunLeaseDenial): string {
       return 'an emergency stop is in force — release it before upgrading plugins'
     case 'fenced-out':
       return 'this upgrade lost its lease to another process — refusing to install'
+    case 'held-shared':
+      // B-711b 1-4: a running dsh host holds the plugins\' data open as a reader,
+      // and an upgrade under it would be written back by the old code.
+      return `a running dsh (${String(denial.holder ?? 'unnamed')}) has plugin data open — close running dsh sessions, then retry`
     default:
       return assertNever(denial, 'RunLeaseDenial')
   }

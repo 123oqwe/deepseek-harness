@@ -718,6 +718,13 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
             `workflow run ${id} is held by ${denial.holder ?? 'an unnamed worker'} and is still live; resume refused`,
             'RUN_HELD_BY_ANOTHER_HOST',
           )
+        case 'held-shared':
+          // Nothing in the harness takes a shared hold on a run's work item;
+          // answered rather than folded in, like 'fenced-out' above.
+          throw new WorkflowError(
+            `workflow run ${id} is held shared by ${denial.holder ?? 'an unnamed worker'}; resume refused`,
+            'RUN_HELD_BY_ANOTHER_HOST',
+          )
         default:
           return assertNever(denial, 'RunLeaseDenial')
       }

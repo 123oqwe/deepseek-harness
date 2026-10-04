@@ -26,6 +26,7 @@ import { brandNumber } from '@deepseek-ai/dsh-brand'
 import { isReclaimable } from '@deepseek-ai/dsh-lease-contract'
 import type {
   AcquireResult,
+  AcquireSharedResult,
   FencingToken,
   Lease,
   LeaseEpoch,
@@ -49,6 +50,10 @@ const SCHEMA = [
   // never reissues an epoch a stale worker still holds. Kept in its own table
   // because it outlives any single lease row.
   'CREATE TABLE IF NOT EXISTS lease_epochs (work_item TEXT PRIMARY KEY, next_epoch INTEGER NOT NULL)',
+  // Shared holds (B-711b 1-4): any number of holders per item, each with its
+  // own deadline. A live row keeps an exclusive `acquire` of the item out.
+  'CREATE TABLE IF NOT EXISTS shared_holds ('
+  + 'work_item TEXT NOT NULL, holder TEXT NOT NULL, expires_at_ms INTEGER NOT NULL, PRIMARY KEY (work_item, holder))',
 ]
 
 /** One `leases` row as SQLite returns it. */
@@ -91,22 +96,41 @@ export function openLeaseStore(directory: string): LeaseStoreContract {
     return row === undefined ? undefined : toLease(row)
   }
 
+  /**
+   * Run `body` as one serialized write: committed when it returns, rolled back
+   * when it throws. Two processes reaching this together are serialized by
+   * SQLite, so the loser sees the winner's rows rather than an empty table —
+   * which is the whole reason a Map could not carry these rules.
+   * @param body - the reads and writes to run together.
+   * @returns what `body` returned.
+   */
+  const immediate = <T>(body: () => T): T => {
+    db.exec('BEGIN IMMEDIATE')
+    try {
+      const result = body()
+      db.exec('COMMIT')
+      return result
+    } catch (error) {
+      db.exec('ROLLBACK')
+      throw error
+    }
+  }
+
   return {
     setAvailable: (next) => { available = next },
     get: workItem => (available ? read(workItem) : undefined),
     acquire: (workItem, worker, nowMs, leaseMs): AcquireResult => {
       if (!available) return { acquired: false, reason: 'store-unavailable' }
-      // One transaction around the read, the epoch bump and the write. Two
-      // processes reaching this line together are serialized by SQLite, so the
-      // loser sees the winner's row rather than an empty table — which is the
-      // whole reason a Map could not carry this rule.
-      db.exec('BEGIN IMMEDIATE')
-      try {
+      // One transaction around the read, the epoch bump and the write.
+      return immediate((): AcquireResult => {
         const incumbent = read(workItem)
         if (incumbent !== undefined && !isReclaimable(incumbent, nowMs)) {
-          db.exec('COMMIT')
           return { acquired: false, reason: 'held-by-another', holder: incumbent.holder }
         }
+        // B-711b 1-4: a live shared hold keeps the item out, judged as a lease is.
+        const reader = db.prepare('SELECT holder FROM shared_holds WHERE work_item = ? AND expires_at_ms >= ? LIMIT 1')
+          .get(workItem, nowMs) as { holder: string } | undefined
+        if (reader !== undefined) return { acquired: false, reason: 'held-shared', holder: reader.holder as WorkerId }
         const nextRow = db.prepare('SELECT next_epoch FROM lease_epochs WHERE work_item = ?')
           .get(workItem) as { next_epoch: number } | undefined
         const epoch = brandNumber<LeaseEpoch>(nextRow?.next_epoch ?? 0)
@@ -116,16 +140,12 @@ export function openLeaseStore(directory: string): LeaseStoreContract {
         db.prepare('INSERT INTO leases (work_item, holder, epoch, expires_at_ms) VALUES (?, ?, ?, ?) ON CONFLICT (work_item)'
           + ' DO UPDATE SET holder = excluded.holder, epoch = excluded.epoch, expires_at_ms = excluded.expires_at_ms')
           .run(workItem, worker, epoch, nowMs + leaseMs)
-        db.exec('COMMIT')
         return {
           acquired: true,
           lease: { workItem, holder: worker, epoch, expiresAtMs: nowMs + leaseMs },
           token: { workItem, epoch, holder: worker },
         }
-      } catch (error) {
-        db.exec('ROLLBACK')
-        throw error
-      }
+      })
     },
     renew: (token: FencingToken, nowMs, leaseMs): RenewResult => {
       if (!available) return { renewed: false, reason: 'store-unavailable' }
@@ -161,6 +181,25 @@ export function openLeaseStore(directory: string): LeaseStoreContract {
         .map(toLease)
         .filter(lease => isReclaimable(lease, nowMs))
         .map(lease => lease.workItem)
+    },
+    acquireShared: (workItem, holder, nowMs, leaseMs): AcquireSharedResult => {
+      if (!available) return { acquired: false, reason: 'store-unavailable' }
+      // Serialized with `acquire`, so an exclusive and a shared holder racing
+      // for one item cannot both be told they hold it.
+      return immediate((): AcquireSharedResult => {
+        const incumbent = read(workItem)
+        if (incumbent !== undefined && !isReclaimable(incumbent, nowMs)) {
+          return { acquired: false, reason: 'held-exclusive', holder: incumbent.holder }
+        }
+        db.prepare('INSERT INTO shared_holds (work_item, holder, expires_at_ms) VALUES (?, ?, ?)'
+          + ' ON CONFLICT (work_item, holder) DO UPDATE SET expires_at_ms = excluded.expires_at_ms')
+          .run(workItem, holder, nowMs + leaseMs)
+        return { acquired: true, hold: { workItem, holder, expiresAtMs: nowMs + leaseMs } }
+      })
+    },
+    releaseShared: (workItem, holder) => {
+      if (!available) return
+      db.prepare('DELETE FROM shared_holds WHERE work_item = ? AND holder = ?').run(workItem, holder)
     },
   }
 }

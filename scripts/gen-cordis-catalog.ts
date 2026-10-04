@@ -784,6 +784,7 @@ export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
   WorkerId: 'worker identity is owned by packages/collaboration/lease-contract/README.md',
   FencingToken: 'fencing authority is owned by packages/collaboration/lease-contract/README.md',
   AcquireResult: 'lease acquisition outcome is owned by packages/collaboration/lease-contract/README.md',
+  AcquireSharedResult: 'shared-hold outcome is owned by packages/collaboration/lease-contract/README.md',
   PolicyRequest: 'the five declared policy inputs are owned by packages/policy/policy-engine/README.md',
   PolicyEvaluation: 'the closed decision plus its audit-only explain is owned by packages/policy/policy-engine/README.md',
   PolicyConstraint: 'what a plugin may contribute to a decision is owned by packages/policy/policy-engine/README.md',

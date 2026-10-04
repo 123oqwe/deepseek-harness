@@ -603,6 +603,11 @@
       name: '@deepseek-ai/dsh-lease-sqlite'
       config:
         directory: !!js dshHomePath('leases')
+        # While this host runs, its loaded plugin code may write their data in the
+        # shape it knows; `dsh plugin` takes this item exclusively before it
+        # upgrades any plugin's data, so it refuses until running hosts close
+        # (B-711b 1-4).
+        sharedHolds: ['dsh-plugin-upgrade']
 
     # P2-02's Capability Tokens, mounted because the mechanism had none of its
     # own reach: the definition, the attenuation and `assertTokenPresented`
