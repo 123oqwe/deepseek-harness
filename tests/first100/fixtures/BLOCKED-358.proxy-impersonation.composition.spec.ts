@@ -104,4 +104,9 @@ describe('BLOCKED-358:P1-01 准入 —— module-proxy 同名包冒充绕过(真
     expect(legit.sharedProxy, `${LEGIT_PROXY} 的前提：共享回退位置上是安装写的 module proxy`).toBe(true)
     expect(legit.active, `真 proxy ${LEGIT_PROXY} 的行应过准入并 ACTIVE`).toBe(true)
   })
+
+  // PROBE — never merge: fails on purpose so the report carries what each child loaded.
+  it('PROBE: which module each candidate row loaded', () => {
+    expect(JSON.stringify(report.candidates)).toBe('PROBE')
+  })
 })

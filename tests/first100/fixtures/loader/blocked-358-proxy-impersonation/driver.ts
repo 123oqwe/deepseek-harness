@@ -60,6 +60,12 @@ interface CandidateResult {
   readonly active: boolean
   readonly markerWritten: boolean
   readonly sharedProxy: boolean
+  /** PROBE: whether the Loader has Node's internal module loader, which resolves a row from the tree's base URL. */
+  readonly loaderInternal: boolean
+  /** PROBE: the root tree's base URL. */
+  readonly baseUrl: string | null
+  /** PROBE: the `name` export of the plugin the subject row loaded. */
+  readonly loadedName: string | null
 }
 
 /**
@@ -154,10 +160,12 @@ async function runCandidate(key: string): Promise<void> {
     bootError = error instanceof Error ? error.message : String(error)
   }
   try {
+    const subject = ctx === undefined ? undefined : [...ctx.loader.entries()].find(entry => entry.options.id === SUBJECT_ROW)
     const active = ctx !== undefined
       && [...ctx.loader.entries()].some(entry => entry.options.id === SUBJECT_ROW && entry.fiber?.state === FiberState.ACTIVE)
     const result: CandidateResult = {
       key, bootSucceeded: ctx !== undefined, bootError, active, markerWritten: existsSync(marker), sharedProxy: sharedFallbackIsProxy(home),
+      loaderInternal: ctx?.loader.internal !== undefined, baseUrl: ctx?.baseUrl ?? null, loadedName: subject?.fiber?.runtime?.name ?? null,
     }
     process.stdout.write(`${CHILD_MARKER} ${JSON.stringify(result)}\n`)
   } finally {
@@ -215,6 +223,8 @@ if (candidate !== undefined) {
   process.stdout.write(`${REPORT_TAG} ${JSON.stringify({
     bootSucceeded: failed === undefined,
     bootError: failed === undefined ? null : `${failed.key}: ${failed.bootError ?? 'unknown'}`,
-    candidates: results.map(({ key, active, markerWritten, sharedProxy }) => ({ key, active, markerWritten, sharedProxy })),
+    candidates: results.map(({ key, active, markerWritten, sharedProxy, loaderInternal, baseUrl, loadedName }) => ({
+      key, active, markerWritten, sharedProxy, loaderInternal, baseUrl, loadedName,
+    })),
   })}\n`)
 }
