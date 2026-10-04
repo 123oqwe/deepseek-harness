@@ -424,6 +424,50 @@
       "unrelatedNote": "Same-SHA divergence (§21.8): one failure in the F3 probe and two independent passes on the same candidate. The case is a client-side grammar test that boots no profile; the candidate changed only the plugin lock gate and its documentation. It passed in CENSUS-4 (37218426287) and 28r2 (37181848952).",
       "registeredAtUtc": "2026-10-04T21:03:58Z",
       "registeredBy": "delegate (§21.8 flake classification, two same-SHA reproductions), session first100-delegate-52; committed by lane B"
+    },
+    {
+      "testFile": "packages/workflow/workflow-worker-thread/tests/nested-tree-budget.spec.ts",
+      "testFullName": "P4-09 acceptance[3]: an in-process child's tokens come off its tree debits only its running children's sessions, not another session's events (B-714)",
+      "occurrences": [
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37232315859",
+          "candidateSha": "bfe6d5d0229faa79774749140a751966865df5e8",
+          "observedAtUtc": "2026-10-04T21:59:21Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json of the merged-tree full gate lists this case failed at nested-tree-budget.spec.ts:207:55, the vi.waitFor (default 1000 ms timeout) that waits for the worker-thread child's first model request, after 1091.9 ms (expected [] to have a length of 1 but got +0); the debit assertion at :211 was never reached. The gate's other failures are P0-02, the lock fixture's unquoted pnpm-lock keys (fixed in bb0a0b00b5) and webhook-actor"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37239388020",
+          "candidateSha": "bfe6d5d0229faa79774749140a751966865df5e8",
+          "observedAtUtc": "2026-10-04T22:20:32Z",
+          "outcome": "passed",
+          "verifiedBy": "narrow run of the file on the failing SHA: 12 of 12 passed"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37239657655",
+          "candidateSha": "bfe6d5d0229faa79774749140a751966865df5e8",
+          "observedAtUtc": "2026-10-04T22:23:26Z",
+          "outcome": "passed",
+          "verifiedBy": "second independent narrow run of the file on the failing SHA: 12 of 12 passed"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37238714253",
+          "candidateSha": "2be33deda1cf92d365e4b67074ab6a8eb94ca010",
+          "observedAtUtc": "2026-10-04T22:09:52Z",
+          "outcome": "passed",
+          "verifiedBy": "narrow run of the file: 12 of 12 passed (a later candidate; nothing under packages/workflow differs from the failing SHA)"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37238964054",
+          "candidateSha": "2be33deda1cf92d365e4b67074ab6a8eb94ca010",
+          "observedAtUtc": "2026-10-04T22:13:39Z",
+          "outcome": "passed",
+          "verifiedBy": "second independent narrow run of the file on the same SHA: 12 of 12 passed (a later candidate; nothing under packages/workflow differs from the failing SHA)"
+        }
+      ],
+      "unrelatedNote": "Same-SHA divergence (§21.8): one failure in the merged-tree full gate and two independent passes on that same candidate, bfe6d5d022, plus two more passes on 2be33deda1, whose differences from it are three test-only commits outside packages/workflow. The case is a workflow-worker-thread unit test that boots no profile. It passed in 28r2 (37187203588), CENSUS-4 (37218426287) and the F3 probe (37226284341).",
+      "registeredAtUtc": "2026-10-04T22:25:54Z",
+      "registeredBy": "delegate (§21.8 flake classification, two same-SHA reproductions), session first100-delegate-52; committed by lane B"
     }
   ],
   "candidates": [

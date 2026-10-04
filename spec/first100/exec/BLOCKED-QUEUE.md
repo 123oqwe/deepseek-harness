@@ -10735,12 +10735,32 @@ The repository already records the problem and a version-independent guard: `scr
 
 ### BLOCKED-358 — P1-01 admission judges a profile-local module proxy by the installation's manifest, so a package named like a shipped one and claiming to be a proxy is admitted on credentials it does not hold (security, under-refuse)
 
-**Status:** OPEN (2026-10-04). Owed to P1-01's work; not introduced by A-550 and does not block it. Found by lane B while grounding A-550. Ruled by the delegate (first100-delegate-52); draft `artifacts/delegate/blocked-358-draft.md`.
+**Status:** OPEN (2026-10-04). Fixed and verified on lane-b-358 (tip c1772ec03a); lands with the merged batch once P0-02 is decided. Owed to P1-01's work; not introduced by A-550 and does not block it. Found by lane B while grounding A-550. Ruled by the delegate (first100-delegate-52); draft `artifacts/delegate/blocked-358-draft.md`.
 
 - **The defect.** `userPatchRowDeclaration` (`apps/cli/src/profile-boot.ts`) takes a resolved package that carries `dsh.moduleFallback` as a module proxy and judges the row by the manifest of the installation's package of the same name. A package placed in a profile's own `node_modules` under a shipped name, declaring itself a proxy, is admitted on the shipped package's manifest while the Loader loads its own code.
 - **Reach.** No shipped profile hits it: the installation writes its proxies only into the shared `$DSH_HOME/profiles/node_modules`, never a profile's own. It needs a crafted profile, which is the threat P1-01 admission exists for.
 - **Partial mitigation.** A-550's lock gate (F3) no longer exempts proxies, so such a package must be in the lock by its own bytes; admission still reads the wrong manifest. BLOCKED-360's identity check judges the directory the row resolves to, so the wildcard grants and the missing-manifest exemption no longer take this route.
 - **Closing condition.** Admission recognises a module proxy only at the shared fallback location (or by path), and judges a profile-local package by its own manifest. Red first by the lane not writing the fix: a profile-local package impersonating a shipped proxy is refused on its own manifest. Security defect (S10): fixed before P1-01 is accepted.
+
+**Progress (2026-10-04, lane B; ruled by the delegate first100-delegate-52).**
+
+- **The fix (`c1772ec03a88a9b45cd2d6fcada92c84ec64dcee`).**
+  - `userPatchRowPackage` (`apps/cli/src/profile-boot.ts`) now stands in the installation's package for a module proxy only when `isInstallationPackage` holds for the proxy. That is BLOCKED-360's rule: a proxy counts only at the shared fallback location `$DSH_HOME/profiles/node_modules/<name>`, with the real path matching.
+  - Any other package carrying `dsh.moduleFallback` is judged by its own declaration. A profile-local "proxy" therefore declares no Manifest v2, is refused as missing-manifest, and BLOCKED-360's exemption does not take it either.
+  - The gate spec's proxy case staged exactly this shape and expected admission, and now expects the refusal. A new case keeps admitted a row that reaches an installation package through the shared fallback.
+- **Evidence.**
+  - Red first `045cf930a887cae29c07121ce0bea50c350de48d`: a blind spec and shared names (the delegate's subagent, §21.4), plus lane B's driver and the delegate-requested LEGIT_PROXY over-refuse control.
+  - Pre-fix, run 37236837330: 5 pass, 1 red, the impersonator's row admitted and ACTIVE.
+  - Fix, run 37237037227: 18/18 (the BLOCKED-358 spec 6/6, including LEGIT_PROXY; the gate spec 12/12).
+  - The SEA-packaged runtime, which is the real proxy path, still passes 8/8 (run 37236893309).
+  - M-358-1 (`a770321f9fff4fad68a8fdb1fb0e887c9cabdfdd`, which drops the `isInstallationPackage` conjunct), run 37237307519: 16 pass, 2 red: the impersonator's row, and the gate spec's BLOCKED-358 case.
+- **Known Limitation: what the marker case can observe.** The spec's case "its entry is not loaded" (the marker) passes vacuously in source mode.
+  - `runLoaderSmoke` source mode resolves through tsx with the repository's tsconfig `paths`, and `tsconfig.base.json` maps every workspace package name to its source.
+  - An impersonator must carry a shipped name, so whatever the profile holds, the Loader loads the real package from source.
+  - Probe 37238525748 measured it: `loader.internal` present, `baseUrl` the profile directory, the impersonator's row loaded `tool-ask-user`.
+  - The case stays as written. The evidence that bears the weight is the impersonator's admission (`active`) and the gate spec's unit case.
+  - Production resolves from the profile directory without `paths`, so there the impersonator's own code would load. That is the consequence the entry states.
+  - The same limit applies to any source-mode case that observes whether a profile-local copy under a shipped name runs. Cases that observe admission (BLOCKED-360's C and D) are not affected.
 
 ### BLOCKED-359 — the lock gate runs only at boot, so a live-reload edit mounts a profile-local package the lock never approved (security-related, under-refuse)
 
