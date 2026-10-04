@@ -126,6 +126,23 @@ describe('P2-07 must[2]: a workflow run waits for an approval', () => {
     expect(journal?.approvals).toMatchObject([{ approvalId, state: 'waiting' }])
     expect(journal?.start).toMatchObject({ script: SCRIPT, route: { provider: 'mock', model: 'mock' } })
   }, 30_000)
+
+  it('still settles waiting when its session cannot be flushed, and says why a resume may not find it', async () => {
+    const { ctx, launcher } = await compose(dirs())
+    const warnings: string[] = []
+    vi.spyOn(ctx.logger, 'warn').mockImplementation((...args: unknown[]) => {
+      warnings.push(String(args[0]))
+      return ctx.logger
+    })
+    const flush = ctx.sessions.flush.bind(ctx.sessions)
+    vi.spyOn(ctx.sessions, 'flush')
+      .mockImplementation(session => session === launcher.session ? flush(session) : Promise.reject(new Error('disk full')))
+    const run = await ctx.workflowEngine.startDetached({ script: "await approval({ title: 'ship it' }); return 'shipped'", meta: META, parent: launcher })
+
+    expect(await run.result).toMatchObject({ stopReason: 'waiting_for_approval' })
+    const unflushed = /its session was not flushed, so a resume may not find it: .*disk full/u
+    expect(warnings.filter(warning => unflushed.test(warning))).toHaveLength(1)
+  }, 30_000)
 })
 
 describe('P2-07 must[3]: a decided approval wakes the run', () => {
@@ -155,6 +172,17 @@ describe('P2-07 must[3]: a decided approval wakes the run', () => {
 
     expect(await done).toMatchObject({ stopReason: 'completed' })
     expect((await ctx.workflowEngine.attach(run.id)?.result)?.value).toBe('ApprovalRefusedError:denied')
+  }, 30_000)
+
+  it('wakes a run whose script asked before starting any agent, so its session had recorded nothing', async () => {
+    const { ctx, launcher } = await compose(dirs())
+    const run = await ctx.workflowEngine.startDetached({ script: "await approval({ title: 'ship it' }); return 'shipped'", meta: META, parent: launcher })
+    const approvalId = brandString<ApprovalRequestId>(String((await run.result).waitingFor?.approvalId))
+    const done = finished(ctx, run.id)
+    ctx.get('approvalStore')?.decide(approvalId, 0, 'approved', operator, Date.now())
+
+    expect(await done).toMatchObject({ stopReason: 'completed' })
+    expect((await ctx.workflowEngine.attach(run.id)?.result)?.value).toBe('shipped')
   }, 30_000)
 
   it('wakes, in a process that starts after the approval was decided, the run another process left waiting (acceptance[0])', async () => {

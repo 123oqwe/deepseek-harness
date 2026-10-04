@@ -537,7 +537,7 @@ export class WorkerRun implements WorkflowRun {
         return
       case 'wait':
         this.persistJournal()
-        this.settleWaiting(answer.approvalId)
+        void this.settleWaiting(answer.approvalId)
         return
       /* v8 ignore next 2 -- closed-union exhaustiveness guard */
       default:
@@ -546,17 +546,29 @@ export class WorkerRun implements WorkflowRun {
   }
 
   /**
-   * Stop the run while it waits for an approval (must[2]): it settles
-   * `waiting_for_approval`, its children are aborted and paired, and its worker
-   * is terminated; the lease goes back when the run is disposed, which a
-   * detached run does on settling. A later resume re-runs the script and
-   * reaches the same call.
+   * Stop the run while it waits for an approval (must[2]): its children are
+   * aborted and paired, its own session is flushed, it settles
+   * `waiting_for_approval`, and its worker is terminated; the lease goes back
+   * when the run is disposed, which a detached run does on settling. A later
+   * resume re-runs the script in that session and reaches the same call.
+   *
+   * The flush is what makes the session resumable: a session reaches disk on
+   * its first append or flush, so one whose script asked before any `agent()`
+   * call would otherwise not exist once the run gives its agent back. The
+   * outcome is claimed before the flush, so no cancellation or worker exit
+   * settles the run meanwhile; a failed flush is logged and the run still
+   * settles waiting.
    * @param approvalId - the approval the run waits for.
    */
-  private settleWaiting(approvalId: string): void {
+  private async settleWaiting(approvalId: string): Promise<void> {
     this.terminalClaimed = true
     this.abortChildren('workflow waiting for an approval')
     this.endStrandedAgents()
+    try {
+      await this.parentAgent.ctx.sessions.flush(this.parentAgent.session)
+    } catch (error: unknown) {
+      this.ctx.logger.warn(`workflow run ${this.id}: its session was not flushed, so a resume may not find it: ${renderThrown(error)}`)
+    }
     this.settleResult({ value: null, stopReason: 'waiting_for_approval', waitingFor: { approvalId }, agentsStarted: this.hostStarted })
     void this.worker.terminate()
   }
