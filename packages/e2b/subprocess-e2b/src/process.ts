@@ -23,6 +23,22 @@ import { bootstrapEnvironment, readRemoteEnvironment, serializeRemoteEnvironment
 import { E2BBase64Decoder, E2B_OUTPUT_COMPLETE_FRAME, E2BOutputReader } from './output.ts'
 import { asError, commandOpts, signalRemoteGroups, waitTick } from './remote.ts'
 
+/**
+ * The E2B sandbox a command ran in disappeared under it (Epic P3-03): the
+ * world was lost, the command did not fail. Its `code` is the structured fact
+ * the tool result's outcome is mapped from.
+ */
+export class SandboxLostError extends Error {
+  override readonly name = 'SandboxLostError'
+  /** The machine code a tool result maps to a lost world. */
+  readonly code = 'WORLD_LOST'
+
+  /** @param cause - the SDK's report that the sandbox no longer exists. */
+  constructor(cause: unknown) {
+    super('subprocess-e2b: the E2B sandbox the command ran in no longer exists', { cause })
+  }
+}
+
 const OUTPUT_ENCODER_SOURCE = [
   '(async () => {',
   '  for await (const chunk of process.stdin) {',
@@ -550,6 +566,8 @@ export class E2BSubprocessHandle implements SubprocessHandle {
         ? { exitCode: settlement.error.exitCode, signal: null }
         : { exitCode: null, signal: this.terminationSignal }
     }
+    // Epic P3-03: the sandbox is gone, a lost world rather than a failed command.
+    if (settlement.error instanceof SandboxNotFoundError) throw new SandboxLostError(settlement.error)
     throw settlement.error
   }
 

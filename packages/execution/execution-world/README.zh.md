@@ -80,7 +80,7 @@ attestation 交给 kernel，而不在此处验证。`WorldAttestation` 是证据
 
 `ExecutionOutcome`（`src/outcome.ts`）给出一次执行除成功之外的结束方式（Epic P3-03）：`policy_denied`（执行前被某道关卡拒绝，带着关卡和拒绝错误的名字）、`resource_exhausted`（内存、cpu、任务、预算或上限）、`timeout`（由工具调用守卫、执行器或模型提供方判定）、`cancelled`（由中止、中断或围栏造成；围栏指该 run 原本持有工作项、被另一持有者接管）、`tool_failed`（带退出码、信号或错误码），以及 `world_lost`（失去联系、提供方失败或工作项的租约被拒）。`retryClassOf` 回答再试一次能否改变结果：拒绝、预算耗尽与取消是 `permanent`，超时与失去世界是 `transient`，工具自身的失败是 `by-tool`。
 
-`outcomeOfToolError` 与 `outcomeOfModelFailure`（`src/errors.ts`）把现有控制通道的事实映射为结果：工具错误的结构化名字与错误码，模型失败的错误码。两者都不读结果内容，所以程序打印出一段拒绝文本，也改变不了它这次调用被记录的结果。拒绝名只有带着派发前错误码 `ABORTED_BEFORE_DISPATCH` 时才算数，表里不认识的名字或错误码一律是 `tool_failed`，绝不当成拒绝。模型侧的映射放在这里而不放在 `@deepseek-ai/dsh-llm`，因为本包已经经由 sandbox 与 session 依赖到模型层，反向的边会成环。
+`outcomeOfToolError` 与 `outcomeOfModelFailure`（`src/errors.ts`）把现有控制通道的事实映射为结果：工具错误的结构化名字与错误码，模型失败的错误码。两者都不读结果内容，所以程序打印出一段拒绝文本，也改变不了它这次调用被记录的结果。拒绝名只有带着派发前错误码 `ABORTED_BEFORE_DISPATCH` 时才算数，表里不认识的名字或错误码一律是 `tool_failed`，绝不当成拒绝。模型侧的映射放在这里而不放在 `@deepseek-ai/dsh-llm`，因为本包已经经由 sandbox 与 session 依赖到模型层，反向的边会成环。`TOOL_TOKEN_DENIED`（没有能力令牌授权这次调用）记为来自 `policy` 的 `policy_denied`；`WORLD_LOST`（调用所在的 world 消失了，比如 E2B 沙箱）记为带 `lost-contact` 的 `world_lost`。
 
 <a id="model-experience"></a>
 ## Model Experience

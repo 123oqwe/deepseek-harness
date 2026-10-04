@@ -119,6 +119,12 @@ export function interruptedTurnClosers(events: readonly SessionEvent[]): Session
         error: started
           ? { name: 'ToolOutcomeUnknownError', code: TOOL_OUTCOME_UNKNOWN }
           : { name: 'ToolNotStartedError', code: TOOL_NOT_STARTED },
+        // Epic P3-03: a call whose outcome is unknown may have had its effect,
+        // so it is a tool failure, which nothing retries on its own; one that
+        // never started was interrupted.
+        outcome: started
+          ? { kind: 'tool_failed', code: TOOL_OUTCOME_UNKNOWN }
+          : { kind: 'cancelled', by: 'interrupt' },
       },
       surfaceOp: 'append',
       ...started ? { sourceEventSeqs: [callSeq] } : {},

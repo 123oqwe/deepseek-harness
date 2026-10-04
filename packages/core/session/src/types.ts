@@ -275,6 +275,28 @@ export interface RequestContext {
 export type RequestHeaderReason = 'initial' | 'resume' | 'change' | 'series'
 
 /**
+ * How the execution behind a `tool/result` did not succeed (Epic P3-03), as the
+ * dispatcher recorded it from structured facts: a refusal's or failure's name
+ * and code, and the tool's own out-of-band facts such as an exit code, never the
+ * result's content. One of six kinds, each with its detail. Declared here field
+ * for field, so the session log owns its format; `@deepseek-ai/dsh-execution-world`'s
+ * `ExecutionOutcome` is the same union with closed detail values, and is
+ * assignable to it.
+ */
+export type ToolResultOutcome =
+  | { readonly kind: 'policy_denied'; readonly source: string; readonly name: string }
+  | { readonly kind: 'resource_exhausted'; readonly limit: string }
+  | { readonly kind: 'timeout'; readonly by: string; readonly deadlineMs?: number }
+  | { readonly kind: 'cancelled'; readonly by: string }
+  | { readonly kind: 'tool_failed'; readonly exitCode?: number; readonly signal?: string; readonly code?: string }
+  | { readonly kind: 'world_lost'; readonly reason: string; readonly provider?: string }
+
+/** The kinds a {@link ToolResultOutcome} takes. */
+export const TOOL_RESULT_OUTCOME_KINDS: readonly ToolResultOutcome['kind'][] = Object.freeze([
+  'policy_denied', 'resource_exhausted', 'timeout', 'cancelled', 'tool_failed', 'world_lost',
+])
+
+/**
  * The merge-extensible, append-only source of truth for an agent interaction.
  * Message history is derived from this log. Every event is lossless JSON and
  * sequence numbers stay contiguous. Assistant attempt events embed their exact
@@ -385,6 +407,13 @@ export interface SessionEventMap {
     message: ToolResultMessage
     /** Optional failure identity; allowed only when the tool-result block has `isError: true`. */
     error?: { name: string; code: string }
+    /**
+     * How the execution did not succeed (Epic P3-03); absent when it succeeded.
+     * Present on every error result, and on a result the tool reported a
+     * failure for from its own structured facts, such as a command that exited
+     * non-zero.
+     */
+    outcome?: ToolResultOutcome
     meta?: JsonValue
   }
   /**

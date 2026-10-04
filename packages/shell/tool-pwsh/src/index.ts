@@ -34,7 +34,7 @@ import type { SandboxExecutionPolicy, SandboxMode } from '@deepseek-ai/dsh-sandb
 import { ESCALATION_TARGETS, approveEscalation, validateEscalationArgs } from '@deepseek-ai/dsh-sandbox'
 import type { SandboxPolicyService } from '@deepseek-ai/dsh-sandbox-policy'
 import type { ShellRunResult } from '@deepseek-ai/dsh-shell'
-import { parseExitStatus, readWorldLimits } from '@deepseek-ai/dsh-shell'
+import { parseExitStatus, readWorldLimits, shellRunOutcome } from '@deepseek-ai/dsh-shell'
 import { processOutcome } from './background.ts'
 import { renderPwshProcessRead, renderPwshResult } from './render.ts'
 import type { RenderablePwshResult } from './render.ts'
@@ -354,6 +354,9 @@ export function apply(ctx: Context, config: Config = {}): void {
       presentationMeta: (_args, value) => value.kind === 'foreground' && value.sandbox?.backend !== undefined
         ? { sandbox: { ...value.sandbox } }
         : undefined,
+      // Epic P3-03: a foreground command that did not succeed, from its exit
+      // facts only; the sandbox's output-matched `denied` never decides it.
+      outcome: (_args, value) => value.kind === 'foreground' ? shellRunOutcome(value) : undefined,
       /* jscpd:ignore-end */
     },
     /* jscpd:ignore-start -- the execute path mirrors dsh-tool-bash's by design (see the pwsh-tool-and-executor Agent Note). */

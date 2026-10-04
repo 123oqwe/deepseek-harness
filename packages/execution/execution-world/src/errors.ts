@@ -63,7 +63,9 @@ const CEILING_REFUSALS: ReadonlySet<string> = new Set(['SubprocessLimitsRefusedE
  * | code `ABORTED_BEFORE_DISPATCH`, name `LeaseRefusedError` | `world_lost`, `lease-refused` |
  * | code `ABORTED_BEFORE_DISPATCH`, a refusal name in {@link REFUSAL_SOURCES} | `policy_denied` from that gate |
  * | code `TOOL_TIMEOUT` | `timeout` by `tool-guard` |
+ * | code `TOOL_TOKEN_DENIED` | `policy_denied` from `policy`: the call presented no capability token that authorizes it |
  * | code `FS_SANDBOX_DENIED` or `SANDBOX_UNAVAILABLE` | `policy_denied` from `sandbox` |
+ * | code `WORLD_LOST` | `world_lost`, `lost-contact`: the world the call ran in disappeared under it |
  * | name `SubprocessLimitsRefusedError` or `WorldCeilingsRefusedError` | `resource_exhausted` at a `ceiling` |
  * | anything else | `tool_failed`, with the code when there is one |
  * @param facts - the error's structured name and code.
@@ -79,7 +81,9 @@ export function outcomeOfToolError(facts: ToolErrorFacts): ExecutionOutcome {
     if (source !== undefined) return { kind: 'policy_denied', source, name }
   }
   if (code === 'TOOL_TIMEOUT') return { kind: 'timeout', by: 'tool-guard' }
+  if (code === 'TOOL_TOKEN_DENIED') return { kind: 'policy_denied', source: 'policy', name: name ?? code }
   if (code !== undefined && SANDBOX_CODES.has(code)) return { kind: 'policy_denied', source: 'sandbox', name: name ?? code }
+  if (code === 'WORLD_LOST') return { kind: 'world_lost', reason: 'lost-contact' }
   if (name !== undefined && CEILING_REFUSALS.has(name)) return { kind: 'resource_exhausted', limit: 'ceiling' }
   return code === undefined ? { kind: 'tool_failed' } : { kind: 'tool_failed', code }
 }

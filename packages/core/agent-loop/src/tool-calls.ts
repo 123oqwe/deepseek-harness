@@ -14,7 +14,10 @@
 import type { Context } from '@deepseek-ai/cordis'
 import { createToolResultMessage, type ToolCallBlock } from '@deepseek-ai/dsh-llm'
 import type { Session, SessionSeq, UserMessage } from '@deepseek-ai/dsh-session'
-import { TOOL_ABORTED_BEFORE_DISPATCH, TOOL_RUNTIME_SCHEDULER, type ToolExecutionInput, type ToolExecutionMode, type ToolExecutionResult, type ToolRunContext } from '@deepseek-ai/dsh-tools'
+import {
+  TOOL_ABORTED_BEFORE_DISPATCH, TOOL_RUNTIME_SCHEDULER, toolResultOutcome,
+  type ToolExecutionInput, type ToolExecutionMode, type ToolExecutionResult, type ToolRunContext,
+} from '@deepseek-ai/dsh-tools'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { appendManifestThenGate, computeArgumentsHash, manifestAttribution, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import { redactTokenForLog } from '@deepseek-ai/dsh-capability-token'
@@ -777,10 +780,13 @@ function appendToolResult(
     content: result.content,
     isError: result.isError,
   })
+  // Epic P3-03: how the execution did not succeed, from structured facts only.
+  const outcome = toolResultOutcome(result)
   session.append('tool/result', {
     turn, step,
     message,
     ...result.error?.info ? { error: result.error.info } : {},
+    ...outcome !== undefined ? { outcome } : {},
     // The tool's private presentation payload (e.g. a result-time diff),
     // persisted so a UI bridge reproduces the card on replay.
     ...result.meta !== undefined ? { meta: result.meta } : {},

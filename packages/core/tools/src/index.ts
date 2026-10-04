@@ -38,6 +38,7 @@ import type { CodeSdkLanguage } from './ptc.ts'
 import type { ClosedDecision } from '@deepseek-ai/dsh-policy-engine'
 import { dispatchDecisionWithoutKernel } from '@deepseek-ai/dsh-policy-enforcement'
 import type { WorldBindingRefusal } from '@deepseek-ai/dsh-execution-world/lifecycle'
+import { outcomeOfToolError, type ExecutionOutcome, type ToolErrorFacts } from '@deepseek-ai/dsh-execution-world'
 import {
   APPROVAL_DISPLAY_VALIDITY_MS,
   appendManifestAndDecide,
@@ -251,6 +252,13 @@ export interface ToolOutputDefinition {
    * `undefined` persists no `meta` for that call.
    */
   presentationMeta?(args: unknown, value: JsonValue): JsonValue | undefined
+  /**
+   * How a successful body's execution nevertheless did not succeed (Epic
+   * P3-03), read from the value's structured fields only, never from the
+   * rendered content: a command that exited non-zero, timed out or was
+   * aborted. `undefined` records no outcome for that call.
+   */
+  outcome?(args: unknown, value: JsonValue): ExecutionOutcome | undefined
 }
 
 /** A registered tool: its schema plus the execution function. */
@@ -907,12 +915,12 @@ function resolveOwnerDeclarers(ownership: ToolOwnershipConfig | undefined): Read
 }
 
 /** Convert one projector exception into the canonical invalid-output failure. */
-function projectionError(toolName: string, projector: 'render' | 'presentationMeta', error: unknown): ToolOutputError {
+function projectionError(toolName: string, projector: 'render' | 'presentationMeta' | 'outcome', error: unknown): ToolOutputError {
   return new ToolOutputError(toolName, [`output.${projector} failed: ${errorMessage(error)}`])
 }
 
 /** Snapshot one projector result before later durable-result materialization. */
-function snapshotProjection<T>(toolName: string, projector: 'render' | 'presentationMeta', candidate: T): T {
+function snapshotProjection<T>(toolName: string, projector: 'render' | 'presentationMeta' | 'outcome', candidate: T): T {
   try {
     const detached = snapshotJsonValue(candidate)
     if (detached === undefined) {
@@ -963,6 +971,48 @@ export interface ToolExecutionFailure {
 
 /** The discriminated, execution-local outcome of one tool call. */
 export type ToolExecutionResult = ToolExecutionSuccess | ToolExecutionFailure
+
+/**
+ * The outcome a `tool/result` records for one result (Epic P3-03): the one its
+ * producer set; otherwise, for a failure, the outcome its error's structured
+ * name and code map to; for a success, none. Read from structured facts only,
+ * never from the result's content.
+ * @param result - the committed result.
+ * @returns its outcome, or `undefined` for a success that reported none.
+ */
+export function toolResultOutcome(result: ToolExecutionResult): ExecutionOutcome | undefined {
+  const recorded = producerOutcomes.get(result)
+  if (recorded !== undefined) return recorded
+  return result.isError ? outcomeOfToolError(result.error.info ?? {}) : undefined
+}
+
+/**
+ * The outcome each result's producer knew, kept beside the result rather than
+ * on it, so a result's own fields stay exactly what its callers compare.
+ * Every copy of a result carries its entry ({@link carryOutcome}).
+ */
+const producerOutcomes = new WeakMap<ToolExecutionResult, ExecutionOutcome>()
+
+/**
+ * Record what `result`'s producer knew about how its execution did not succeed.
+ * @param result - the result.
+ * @param outcome - its outcome, or `undefined` to record none.
+ * @returns `result`.
+ */
+function withOutcome<T extends ToolExecutionResult>(result: T, outcome: ExecutionOutcome | undefined): T {
+  if (outcome !== undefined) producerOutcomes.set(result, outcome)
+  return result
+}
+
+/**
+ * Carry `from`'s recorded outcome to `to`, a copy of it.
+ * @param from - the result copied.
+ * @param to - the copy.
+ * @returns `to`.
+ */
+function carryOutcome<T extends ToolExecutionResult>(from: ToolExecutionResult, to: T): T {
+  return withOutcome(to, producerOutcomes.get(from))
+}
 
 /**
  * Pre-dispatch decision. `allow` runs the call; `deny` materializes an error;
@@ -1186,7 +1236,12 @@ class ToolLayer implements ScopeLayer {
 interface ToolAskResolution {
   readonly decision: Extract<PreToolDecision, { kind: 'allow' | 'deny' }>
   readonly approvalCancelled: boolean
+  /** For a denial, the outcome its result records: the approval was not granted. */
+  readonly outcome?: ExecutionOutcome
 }
+
+/** The outcome of a call whose approval could not be asked: no approval channel, or no agent to route it through. */
+const APPROVAL_UNAVAILABLE_OUTCOME: ExecutionOutcome = { kind: 'policy_denied', source: 'approval', name: 'ApprovalUnavailable' }
 
 /** Caller cancellation and dispatch state kept outside the around-wrapper view. */
 interface ToolCancellationState {
@@ -1606,6 +1661,9 @@ export class ToolRuntime extends Service {
       || typeof output.render !== 'function'
       || (output.presentationMeta !== undefined && typeof output.presentationMeta !== 'function')) {
       throw new TypeError(`tool "${name}" must declare output { schema, render, presentationMeta? }`)
+    }
+    if (output.outcome !== undefined && typeof output.outcome !== 'function') {
+      throw new TypeError(`tool "${name}" output.outcome must be a function`)
     }
     assertSupportedJsonSchema(output.schema)
     const timeoutMs = definition.timeoutMs
@@ -2397,14 +2455,18 @@ export class ToolRuntime extends Service {
         ? this.guardReason(exec)
         : decision.reason
       if (denialReason !== undefined) {
+        // Epic P3-03: a guard, a pre-execute deny, or an approval that was not granted.
+        const outcome: ExecutionOutcome = decision.kind === 'allow'
+          ? { kind: 'policy_denied', source: 'policy', name: 'ToolGuardRefused' }
+          : askResolution.outcome ?? { kind: 'policy_denied', source: 'policy', name: 'PreExecuteDenied' }
         return await next({
           kind: 'post-result',
           exec,
-          result: this.materializeFinalResult({
+          result: withOutcome(this.materializeFinalResult({
             content: [{ type: 'text', text: `Error: ${denialReason}` }],
             isError: true,
             error: { message: denialReason },
-          }),
+          }), outcome),
         })
       }
       if (this.callerCancelled(exec)) {
@@ -2497,13 +2559,13 @@ export class ToolRuntime extends Service {
       if (deferredContexts === undefined) throw new Error('tool registry scheduler invariant violated: unprepared execution')
       const resultWithDeferredContexts: ToolExecutionResult = deferredContexts.length === 0
         ? normalized
-        : this.markCanonical(exec, {
+        : this.markCanonical(exec, carryOutcome(normalized, {
           ...normalized,
           additionalContexts: [
             ...deferredContexts,
             ...normalized.additionalContexts ?? [],
           ],
-        })
+        }))
       return {
         kind: 'post-result',
         result: this.callerCancelled(exec) && !resultWithDeferredContexts.isError
@@ -2567,7 +2629,7 @@ export class ToolRuntime extends Service {
     const finalizeContent = this.contentFinalizers.get(exec)
     if (finalizeContent === undefined) return result
     const content = finalizeContent(exec, result)
-    return content === undefined ? result : { ...result, content }
+    return content === undefined ? result : carryOutcome(result, { ...result, content })
   }
 
   /** Notify observers without exposing a mutation or error channel into the outcome. */
@@ -2612,12 +2674,14 @@ export class ToolRuntime extends Service {
       return {
         decision: { kind: 'deny', reason: ask.reason ?? `tool "${exec.name}" requires approval (not yet supported)` },
         approvalCancelled: false,
+        outcome: APPROVAL_UNAVAILABLE_OUTCOME,
       }
     }
     if (exec.agent === undefined) {
       return {
         decision: { kind: 'deny', reason: `tool "${exec.name}" requires approval, but the call has no agent to route it through` },
         approvalCancelled: false,
+        outcome: APPROVAL_UNAVAILABLE_OUTCOME,
       }
     }
     const outcome = await approval.request({
@@ -2632,14 +2696,17 @@ export class ToolRuntime extends Service {
       case 'rejected': return {
         decision: { kind: 'deny', reason: `the user rejected tool "${exec.name}"` },
         approvalCancelled: false,
+        outcome: { kind: 'policy_denied', source: 'approval', name: 'ApprovalRejected' },
       }
       case 'cancelled': return {
         decision: { kind: 'deny', reason: `approval for tool "${exec.name}" was cancelled` },
         approvalCancelled: true,
+        outcome: { kind: 'policy_denied', source: 'approval', name: 'ApprovalCancelled' },
       }
       case 'unavailable': return {
         decision: { kind: 'deny', reason: `tool "${exec.name}" requires approval, but no approval channel is available` },
         approvalCancelled: false,
+        outcome: APPROVAL_UNAVAILABLE_OUTCOME,
       }
       default: return assertNever(outcome, 'ApprovalOutcome')
     }
@@ -2664,12 +2731,12 @@ export class ToolRuntime extends Service {
     const decisionContexts = decision.additionalContexts ?? []
     if (decision.kind === 'block') {
       const message = failureMessageFromContent(decision.feedback)
-      return this.markCanonical(exec, {
+      return this.markCanonical(exec, withOutcome({
         content: decision.feedback,
         isError: true,
         error: { message },
         ...decisionContexts.length > 0 ? { additionalContexts: decisionContexts } : {},
-      })
+      }, { kind: 'policy_denied', source: 'policy', name: 'PostExecuteBlocked' }))
     }
     if (Object.hasOwn(decision, 'content') && Object.hasOwn(decision, 'value')) {
       throw new TypeError('tools/post-execute accept decision cannot replace both value and content')
@@ -2685,16 +2752,16 @@ export class ToolRuntime extends Service {
       const tool = this.resolveExecution(exec.name, exec.agent, exec.parent !== undefined)
       if (tool === undefined) throw new ToolNotFoundError(exec.name)
       const replaced = this.createSuccessResult(exec, tool, decision.value)
-      return this.markCanonical(exec, {
+      return this.markCanonical(exec, carryOutcome(replaced, {
         ...replaced,
         ...additionalContexts.length > 0 ? { additionalContexts } : {},
-      })
+      }))
     }
-    return this.markCanonical(exec, {
+    return this.markCanonical(exec, carryOutcome(result, {
       ...result,
       ...decision.content !== undefined ? { content: decision.content } : {},
       ...additionalContexts.length > 0 ? { additionalContexts } : {},
-    })
+    }))
   }
 
   /** Registry-normalized results and the exact dispatch that validated each value. */
@@ -2729,35 +2796,45 @@ export class ToolRuntime extends Service {
       }
       if (projected !== undefined) meta = snapshotProjection(tool.name, 'presentationMeta', projected)
     }
+    let outcome: ExecutionOutcome | undefined
+    if (tool.output.outcome !== undefined) {
+      let reported: ExecutionOutcome | undefined
+      try {
+        reported = tool.output.outcome(exec.arguments, value)
+      } catch (error: unknown) {
+        throw projectionError(tool.name, 'outcome', error)
+      }
+      if (reported !== undefined) outcome = snapshotProjection(tool.name, 'outcome', reported)
+    }
     const concludesTurn = this.concludingExecutions.has(exec)
-    return this.markCanonical(exec, this.materializeFinalResult({
+    return this.markCanonical(exec, withOutcome(this.materializeFinalResult({
       isError: false,
       value,
       content,
       ...meta !== undefined ? { meta } : {},
       ...concludesTurn ? { concludesTurn: true as const } : {},
-    }) as ToolExecutionSuccess)
+    }) as ToolExecutionSuccess, outcome))
   }
 
   /** Normalize an around-dispatch wrapper's authored result through the owning output contract. */
   private normalizeDispatchResult(exec: ToolExecution, result: ToolExecutionResult): ToolExecutionResult {
     if (this.canonicalResults.get(result) === exec.token) return result
     if (result.isError) {
-      return this.markCanonical(exec, {
+      return this.markCanonical(exec, carryOutcome(result, {
         isError: true,
         error: result.error,
         content: result.content,
         ...result.meta !== undefined ? { meta: result.meta } : {},
         ...result.additionalContexts !== undefined ? { additionalContexts: result.additionalContexts } : {},
-      })
+      }))
     }
     const tool = this.resolveExecution(exec.name, exec.agent, exec.parent !== undefined)
     if (tool === undefined) throw new ToolNotFoundError(exec.name)
     const normalized = this.createSuccessResult(exec, tool, result.value)
-    return this.markCanonical(exec, {
+    return this.markCanonical(exec, carryOutcome(normalized, {
       ...normalized,
       ...result.additionalContexts !== undefined ? { additionalContexts: result.additionalContexts } : {},
-    })
+    }))
   }
 
   /** Materialize the authoritative commit outcome once, immediately before `tools/result`. */
@@ -2768,14 +2845,14 @@ export class ToolRuntime extends Service {
       ...result.additionalContexts !== undefined ? { additionalContexts: result.additionalContexts } : {},
     }
     if (result.isError) {
-      return materializePresentation({ isError: true as const, error: result.error, ...presentation })
+      return carryOutcome(result, materializePresentation({ isError: true as const, error: result.error, ...presentation }))
     }
     const detached = materializePresentation({
       isError: false as const,
       ...presentation,
       ...result.concludesTurn === true ? { concludesTurn: true as const } : {},
     })
-    return deepFreeze({ ...detached, value: result.value })
+    return carryOutcome(result, deepFreeze({ ...detached, value: result.value }))
   }
 }
 
@@ -2787,11 +2864,31 @@ function createExecutionToken(): ToolExecutionToken {
 function toolErrorResult(error: unknown): ToolExecutionResult {
   const info = errorInfo(error)
   const message = errorMessage(error)
-  return {
+  return withOutcome({
     content: [{ type: 'text', text: `Error: ${message}` }],
     isError: true,
     error: { message, ...info ? { info } : {} },
+  }, outcomeOfToolError(errorFacts(error)))
+}
+
+/**
+ * The name and string `code` a thrown error carries, for its outcome (Epic
+ * P3-03): unlike {@link errorInfo}, also for an error that is not a
+ * HarnessError, such as a provider's refusal of a ceiling or a lost sandbox.
+ * Total for the reason `errorInfo` is.
+ */
+function errorFacts(error: unknown): ToolErrorFacts {
+  try {
+    return error instanceof Error ? { name: error.name, ...stringCode((error as { code?: unknown }).code) } : {}
+  } catch {
+    // A hostile thrown value trapping `instanceof` or a property read: no facts, so `tool_failed`.
+    return {}
   }
+}
+
+/** `{ code }` when `code` is a string, else nothing. */
+function stringCode(code: unknown): { code?: string } {
+  return typeof code === 'string' ? { code } : {}
 }
 
 /** Read live abort state across an await without treating it as synchronously immutable. */

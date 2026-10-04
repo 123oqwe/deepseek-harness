@@ -1378,6 +1378,16 @@ describe('E2BSubprocessHandle', () => {
     await expect(crashed.done).rejects.toThrow('command transport failed')
   })
 
+  it('reports a sandbox that disappeared under a running command as a lost world (P3-03)', async () => {
+    const lostFake = new FakeSandbox()
+    const lost = testHandle(runtime(lostFake), spec(), '/runtime/lost')
+    await flush()
+    lostFake.alive = false
+    const gone = new SandboxNotFoundError('sandbox expired')
+    lostFake.handle.crash(gone)
+    await expect(lost.done).rejects.toMatchObject({ name: 'SandboxLostError', code: 'WORLD_LOST', cause: gone })
+  })
+
   it('rejects invalid or absent process-group publication', async () => {
     const invalidGroup = new FakeSandbox()
     invalidGroup.processGroupId = 'not-a-pid\n'

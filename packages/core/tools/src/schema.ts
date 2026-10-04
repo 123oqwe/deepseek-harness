@@ -3,6 +3,7 @@
 import { HarnessError } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
+import type { ExecutionOutcome } from '@deepseek-ai/dsh-execution-world'
 import type { ToolDefinition, ToolExecution, ToolExecutionResult, ToolRunContext, ToolResult } from './index.ts'
 import { assertSupportedJsonSchema, isJsonSchemaRecord, isPlainJsonArray, JsonSchemaError, validateJsonSchemaValue } from './json-schema.ts'
 import type { JsonSchemaNode, JsonSchemaScalar, ObjectJsonSchema } from './json-schema.ts'
@@ -495,6 +496,8 @@ export interface DefineToolOptions<S extends ParameterSchemaSpec, O extends Valu
     render(args: InferArgs<S>, value: InferValue<NoInfer<O>>): ContentBlock[]
     /** Pure replayable presentation metadata for direct top-level calls; `undefined` persists none. */
     presentationMeta?(args: InferArgs<S>, value: InferValue<NoInfer<O>>): JsonValue | undefined
+    /** How the execution behind a successful value did not succeed, from its structured fields only (`ToolOutputDefinition.outcome`). */
+    outcome?(args: InferArgs<S>, value: InferValue<NoInfer<O>>): ExecutionOutcome | undefined
   }
   /** Optional positive cooperative timeout budget in milliseconds. */
   readonly timeoutMs?: number
@@ -559,6 +562,8 @@ export function defineTool<const S extends ParameterSchemaSpec, const O extends 
   // oxlint-disable-next-line typescript/unbound-method
   const userPresentationMeta = options.output.presentationMeta
   // oxlint-disable-next-line typescript/unbound-method
+  const userOutcome = options.output.outcome
+  // oxlint-disable-next-line typescript/unbound-method
   const userPresentCall = options.presentCall
   // oxlint-disable-next-line typescript/unbound-method
   const userPresentResult = options.presentResult
@@ -582,6 +587,11 @@ export function defineTool<const S extends ParameterSchemaSpec, const O extends 
       ...userPresentationMeta !== undefined ? {
         presentationMeta(args: unknown, value: JsonValue): JsonValue | undefined {
           return userPresentationMeta(args as InferArgs<S>, value as unknown as InferValue<NoInfer<O>>)
+        },
+      } : {},
+      ...userOutcome !== undefined ? {
+        outcome(args: unknown, value: JsonValue): ExecutionOutcome | undefined {
+          return userOutcome(args as InferArgs<S>, value as unknown as InferValue<NoInfer<O>>)
         },
       } : {},
     },

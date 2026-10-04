@@ -9,7 +9,7 @@
  */
 
 import type { Message } from '@deepseek-ai/dsh-llm'
-import { SessionLogOffset, SessionSeq } from './types.ts'
+import { SessionLogOffset, SessionSeq, TOOL_RESULT_OUTCOME_KINDS } from './types.ts'
 import { KNOWN_SESSION_EVENT_TYPES } from './known-event-types.ts'
 import type {
   SessionEvent,
@@ -135,7 +135,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * This does not validate complete event payloads or embedded provider streams.
  * @param event - event whose locally related payload fields are inspected.
  * @param subject - event location to include in validation errors.
- * @throws when request data/header is not an object, optional header fields are empty, or tool failure metadata contradicts its message.
+ * @throws when request data/header is not an object, optional header fields are empty, tool failure metadata
+ *   contradicts its message, or a tool result's outcome has an unknown kind.
  */
 export function validateSessionEventData(
   event: Pick<SessionEvent, 'type' | 'data'>,
@@ -156,6 +157,10 @@ export function validateSessionEventData(
     }
   } else if (event.type === 'tool/result') {
     if (!isRecord(data)) throw new Error(`${subject} data must be an object`)
+    const outcome = data['outcome']
+    if (outcome !== undefined && !(isRecord(outcome) && (TOOL_RESULT_OUTCOME_KINDS as readonly unknown[]).includes(outcome['kind']))) {
+      throw new Error(`${subject} outcome must be an object whose kind is one of ${TOOL_RESULT_OUTCOME_KINDS.join(', ')}`)
+    }
     if (data['error'] === undefined) return
     const message = data['message']
     const content = isRecord(message) ? message['content'] : undefined

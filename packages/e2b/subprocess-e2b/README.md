@@ -72,6 +72,7 @@ This section explains the design decisions behind the provider and points at the
 ### Design philosophy
 
 - **Provider-private remote identity.** The synchronous seam never blocks on the network. Private wrapper files asynchronously publish a process-group identity for stdin, observation, termination, and quiescence checks, together with the direct exit code and spill validity; that identity is not the requested target PID.
+- **A lost sandbox is a lost world.** A sandbox that disappears under a running command rejects it with `SandboxLostError` (code `WORLD_LOST`), which a tool result records as `world_lost` (Epic P3-03).
 - **One teardown ladder.** Termination, rollback, and disposal share one process-group signal path — `SIGTERM`, then `SIGKILL` plus the SDK kill fallback — and treat proven quiescence as final.
 - **Environment is explicit.** Nothing from the host and nothing credential-shaped enters the sandbox implicitly; every ambient value is scrubbed and every `spec.env` entry is an explicit opt-in.
 

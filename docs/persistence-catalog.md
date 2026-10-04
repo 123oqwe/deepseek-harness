@@ -83,7 +83,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 }[T]
 ```
 
-Sources: [`packages/core/session/src/types.ts:447`](../packages/core/session/src/types.ts) · [`packages/core/session/src/types.ts:455`](../packages/core/session/src/types.ts) · [`packages/core/session/src/types.ts:477`](../packages/core/session/src/types.ts) · [`packages/core/session/src/types.ts:508`](../packages/core/session/src/types.ts)
+Sources: [`packages/core/session/src/types.ts:476`](../packages/core/session/src/types.ts) · [`packages/core/session/src/types.ts:484`](../packages/core/session/src/types.ts) · [`packages/core/session/src/types.ts:506`](../packages/core/session/src/types.ts) · [`packages/core/session/src/types.ts:537`](../packages/core/session/src/types.ts)
 
 ## Events
 
@@ -121,7 +121,7 @@ Sources: [`packages/core/session/src/types.ts:447`](../packages/core/session/src
 'action/manifest-appended': ActionManifestAppendedEventData
 ```
 
-Source: [`packages/core/tools/src/index.ts:2998`](../packages/core/tools/src/index.ts)
+Source: [`packages/core/tools/src/index.ts:3095`](../packages/core/tools/src/index.ts)
 
 <a id="actionrisk-gated--log-only"></a>
 
@@ -160,7 +160,7 @@ Source: [`packages/core/tools/src/index.ts:2998`](../packages/core/tools/src/ind
 }
 ```
 
-Source: [`packages/core/tools/src/index.ts:2964`](../packages/core/tools/src/index.ts)
+Source: [`packages/core/tools/src/index.ts:3061`](../packages/core/tools/src/index.ts)
 
 <a id="actionworld-bound--log-only"></a>
 
@@ -203,7 +203,7 @@ Source: [`packages/core/tools/src/index.ts:2964`](../packages/core/tools/src/ind
 }
 ```
 
-Source: [`packages/core/tools/src/index.ts:3025`](../packages/core/tools/src/index.ts)
+Source: [`packages/core/tools/src/index.ts:3122`](../packages/core/tools/src/index.ts)
 
 <a id="actionworld-unbound--log-only"></a>
 
@@ -235,7 +235,7 @@ Source: [`packages/core/tools/src/index.ts:3025`](../packages/core/tools/src/ind
 'action/world-unbound': WorldBindingRefusal
 ```
 
-Source: [`packages/core/tools/src/index.ts:3055`](../packages/core/tools/src/index.ts)
+Source: [`packages/core/tools/src/index.ts:3152`](../packages/core/tools/src/index.ts)
 
 ### `agent/*`
 
@@ -418,7 +418,7 @@ Source: [`packages/interaction/user-approval/src/index.ts:39`](../packages/inter
 'assistant/attempt': { turn: number; step: number; stream: AssistantStreamRecord[] }
 ```
 
-Source: [`packages/core/session/src/types.ts:364`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:386`](../packages/core/session/src/types.ts)
 
 <a id="assistantmessage--surface"></a>
 
@@ -448,7 +448,7 @@ Source: [`packages/core/session/src/types.ts:364`](../packages/core/session/src/
 
 Types: [TokenUsage](subsystems/llm-streaming.md)
 
-Source: [`packages/core/session/src/types.ts:350`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:372`](../packages/core/session/src/types.ts)
 
 ### `budget/*`
 
@@ -474,7 +474,7 @@ Source: [`packages/core/session/src/types.ts:350`](../packages/core/session/src/
 'budget/exceeded': { reason: 'max-turns-reached' | 'spend-cap-reached'; limit: number; observed: number }
 ```
 
-Source: [`packages/core/session/src/types.ts:314`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:336`](../packages/core/session/src/types.ts)
 
 ### `command/*`
 
@@ -771,7 +771,7 @@ Source: [`packages/hooks/hook-protocol/src/types.ts:31`](../packages/hooks/hook-
 'identity/attached': { readonly identity: IdentityContext }
 ```
 
-Source: [`packages/core/session/src/types.ts:420`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:449`](../packages/core/session/src/types.ts)
 
 ### `job/*`
 
@@ -953,7 +953,7 @@ Source: [`packages/plan/plan-mode/src/index.ts:47`](../packages/plan/plan-mode/s
 'request/context': RequestContext
 ```
 
-Source: [`packages/core/session/src/types.ts:406`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:435`](../packages/core/session/src/types.ts)
 
 <a id="requestheader--log-only"></a>
 
@@ -972,7 +972,7 @@ Source: [`packages/core/session/src/types.ts:406`](../packages/core/session/src/
 }
 ```
 
-Source: [`packages/core/session/src/types.ts:394`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:423`](../packages/core/session/src/types.ts)
 
 ### `run/*`
 
@@ -1100,7 +1100,7 @@ Source: [`packages/schedule/schedule/src/types.ts:219`](../packages/schedule/sch
 'session/end-seed': { inherited?: true }
 ```
 
-Source: [`packages/core/session/src/types.ts:443`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:472`](../packages/core/session/src/types.ts)
 
 <a id="sessiontitle--log-only"></a>
 
@@ -1162,7 +1162,7 @@ Source: [`packages/session/session-log-deepseek/src/types.ts:81`](../packages/se
 'step/end': { turn: number; step: number }
 ```
 
-Source: [`packages/core/session/src/types.ts:318`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:340`](../packages/core/session/src/types.ts)
 
 <a id="stepstart--log-only"></a>
 
@@ -1173,7 +1173,7 @@ Source: [`packages/core/session/src/types.ts:318`](../packages/core/session/src/
 'step/start': { turn: number; step: number }
 ```
 
-Source: [`packages/core/session/src/types.ts:316`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:338`](../packages/core/session/src/types.ts)
 
 ### `subagent/*`
 
@@ -1249,7 +1249,7 @@ Source: [`packages/subagent/tool-subagent/src/model-selection-state.ts:17`](../p
 'system/message': { turn: number; step: number; message: SystemMessage }
 ```
 
-Source: [`packages/core/session/src/types.ts:339`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:361`](../packages/core/session/src/types.ts)
 
 ### `team/*`
 
@@ -1342,7 +1342,7 @@ Source: [`packages/todo/tool-todo/src/types.ts:31`](../packages/todo/tool-todo/s
 
 Types: [ToolCallId](subsystems/core.md)
 
-Source: [`packages/core/session/src/types.ts:370`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:392`](../packages/core/session/src/types.ts)
 
 <a id="toolptc-dispatch--log-only"></a>
 
@@ -1414,11 +1414,18 @@ Source: [`packages/core/tools/src/types.ts:65`](../packages/core/tools/src/types
   message: ToolResultMessage
   /** Optional failure identity; allowed only when the tool-result block has `isError: true`. */
   error?: { name: string; code: string }
+  /**
+   * How the execution did not succeed (Epic P3-03); absent when it succeeded.
+   * Present on every error result, and on a result the tool reported a
+   * failure for from its own structured facts, such as a command that exited
+   * non-zero.
+   */
+  outcome?: ToolResultOutcome
   meta?: JsonValue
 }
 ```
 
-Source: [`packages/core/session/src/types.ts:382`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:404`](../packages/core/session/src/types.ts)
 
 ### `tool-workflow/*`
 
@@ -1498,7 +1505,7 @@ Source: [`packages/workflow/tool-workflow/src/types.ts:47`](../packages/workflow
 
 Types: [TurnEndReason](subsystems/session.md)
 
-Source: [`packages/core/session/src/types.ts:299`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:321`](../packages/core/session/src/types.ts)
 
 <a id="turnstart--log-only"></a>
 
@@ -1514,7 +1521,7 @@ Source: [`packages/core/session/src/types.ts:299`](../packages/core/session/src/
 'turn/start': { turn: number }
 ```
 
-Source: [`packages/core/session/src/types.ts:290`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:312`](../packages/core/session/src/types.ts)
 
 ### `user/*`
 
@@ -1533,7 +1540,7 @@ Source: [`packages/core/session/src/types.ts:290`](../packages/core/session/src/
 'user/message': UserMessage
 ```
 
-Source: [`packages/core/session/src/types.ts:326`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:348`](../packages/core/session/src/types.ts)
 
 ### `web/*`
 

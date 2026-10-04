@@ -4673,6 +4673,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface CalibrationState {\n    readonly factor: number;\n    readonly samples: number;\n}',
   },
   {
+    name: 'CancelSource',
+    declaration: 'export type CancelSource = \'abort\' | \'interrupt\' | \'fenced\';',
+  },
+  {
     name: 'CapabilityKind',
     declaration: 'export type CapabilityKind = \'service\' | \'tool\' | \'event\';',
   },
@@ -5033,6 +5037,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface DeliveryReceipt {\n    readonly messageId: BusMessageId;\n    readonly epoch: MessageEpoch;\n    readonly consumer: string;\n}',
   },
   {
+    name: 'DenialSource',
+    declaration: 'export type DenialSource = \'policy\' | \'risk\' | \'approval\' | \'ledger\' | \'dispatch\' | \'sandbox\';',
+  },
+  {
     name: 'DiffCallView',
     declaration: 'export interface DiffCallView {\n    card: \'diff\';\n    title: string;\n    diffs: FileDiff[];\n    locations?: FileLocation[];\n}',
   },
@@ -5161,12 +5169,20 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface EvidenceRequirement {\n    readonly kind: \'before-state\' | \'after-state\' | \'external-receipt\';\n    readonly description: string;\n}',
   },
   {
+    name: 'ExecutionOutcome',
+    declaration: 'export type ExecutionOutcome = {\n    readonly kind: \'policy_denied\';\n    readonly source: DenialSource;\n    readonly name: string;\n} | {\n    readonly kind: \'resource_exhausted\';\n    readonly limit: ExhaustedLimit;\n} | {\n    readonly kind: \'timeout\';\n    readonly by: TimeoutSource;\n    readonly deadlineMs?: number;\n} | {\n    readonly kind: \'cancelled\';\n    readonly by: CancelSource;\n} | {\n    readonly kind: \'tool_failed\';\n    readonly exitCode?: number;\n    readonly signal?: string;\n    readonly code?: string;\n} | {\n    readonly kind: \'world_lost\';\n    readonly reason: WorldLossReason;\n    readonly provider?: string;\n};',
+  },
+  {
     name: 'ExecutionWorldBinding',
     declaration: 'export interface ExecutionWorldBinding {\n    readonly world: WorldId;\n    readonly provider: WorldProviderId;\n    readonly spec: WorldSpecDigest;\n    readonly resources: WorldResourcesSpec;\n    readonly maxProcesses?: number;\n}',
   },
   {
     name: 'ExecutionWorldFact',
     declaration: 'export type ExecutionWorldFact = {\n    readonly kind: \'absent\';\n} | {\n    readonly kind: \'bound\';\n    readonly world: WorldId;\n    readonly provider: WorldProviderId;\n    readonly spec: WorldSpecDigest;\n};',
+  },
+  {
+    name: 'ExhaustedLimit',
+    declaration: 'export type ExhaustedLimit = \'memory\' | \'cpu\' | \'tasks\' | \'budget\' | \'ceiling\';',
   },
   {
     name: 'ExpectedDiff',
@@ -6494,7 +6510,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'SessionEventMap',
-    declaration: 'export interface SessionEventMap {\n    \'turn/start\': {\n        turn: number;\n    };\n    \'turn/end\': {\n        turn: number;\n        reason: TurnEndReason;\n    };\n    \'budget/exceeded\': {\n        reason: \'max-turns-reached\' | \'spend-cap-reached\';\n        limit: number;\n        observed: number;\n    };\n    \'step/start\': {\n        turn: number;\n        step: number;\n    };\n    \'step/end\': {\n        turn: number;\n        step: number;\n    };\n    \'user/message\': UserMessage;\n    \'system/message\': {\n        turn: number;\n        step: number;\n        message: SystemMessage;\n    };\n    \'assistant/message\': {\n        turn: number;\n        step: number;\n        message: AssistantMessage;\n        stream: AssistantStreamRecord[];\n        usage?: TokenUsage;\n        interrupted?: true;\n    };\n    \'assistant/attempt\': {\n        turn: number;\n        step: number;\n        stream: AssistantStreamRecord[];\n    };\n    \'tool/call\': {\n        turn: number;\n        step: number;\n        callId: ToolCallId;\n        name: string;\n        arguments: string;\n    };\n    \'tool/result\': {\n        turn: number;\n        step: number;\n        message: ToolResultMessage;\n        error?: {\n            name: string;\n            code: string;\n        };\n        meta?: JsonValue;\n    };\n    \'request/header\': {\n        header: EpochHeader;\n        reason: RequestHeaderReason;\n        startsSeries?: true;\n    };\n    \'request/context\': RequestContext;\n    \'identity/attached\': {\n        readonly identity: Identity /* …truncated — full shape in source */',
+    declaration: 'export interface SessionEventMap {\n    \'turn/start\': {\n        turn: number;\n    };\n    \'turn/end\': {\n        turn: number;\n        reason: TurnEndReason;\n    };\n    \'budget/exceeded\': {\n        reason: \'max-turns-reached\' | \'spend-cap-reached\';\n        limit: number;\n        observed: number;\n    };\n    \'step/start\': {\n        turn: number;\n        step: number;\n    };\n    \'step/end\': {\n        turn: number;\n        step: number;\n    };\n    \'user/message\': UserMessage;\n    \'system/message\': {\n        turn: number;\n        step: number;\n        message: SystemMessage;\n    };\n    \'assistant/message\': {\n        turn: number;\n        step: number;\n        message: AssistantMessage;\n        stream: AssistantStreamRecord[];\n        usage?: TokenUsage;\n        interrupted?: true;\n    };\n    \'assistant/attempt\': {\n        turn: number;\n        step: number;\n        stream: AssistantStreamRecord[];\n    };\n    \'tool/call\': {\n        turn: number;\n        step: number;\n        callId: ToolCallId;\n        name: string;\n        arguments: string;\n    };\n    \'tool/result\': {\n        turn: number;\n        step: number;\n        message: ToolResultMessage;\n        error?: {\n            name: string;\n            code: string;\n        };\n        outcome?: ToolResultOutcome;\n        meta?: JsonValue;\n    };\n    \'request/header\': {\n        header: EpochHeader;\n        reason: RequestHeaderReason;\n        startsSeries?: true;\n    };\n    \'request/context\': RequestContext;\n    \'identity/attached\':  /* …truncated — full shape in source */',
   },
   {
     name: 'SessionEventMetadataFilter',
@@ -7465,6 +7481,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type TerminalWaitReason = \'stdin_read\' | \'inferred_idle\' | \'timeout\' | \'session_exit\';',
   },
   {
+    name: 'TimeoutSource',
+    declaration: 'export type TimeoutSource = \'tool-guard\' | \'executor\' | \'provider\';',
+  },
+  {
     name: 'TokenBudget',
     declaration: 'export type TokenBudget = BrandedNumber<\'TokenBudget\'>;',
   },
@@ -7550,7 +7570,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ToolOutputDefinition',
-    declaration: 'export interface ToolOutputDefinition {\n    readonly schema: JsonSchemaNode;\n    render(args: unknown, value: JsonValue): ContentBlock[];\n    presentationMeta?(args: unknown, value: JsonValue): JsonValue | undefined;\n}',
+    declaration: 'export interface ToolOutputDefinition {\n    readonly schema: JsonSchemaNode;\n    render(args: unknown, value: JsonValue): ContentBlock[];\n    presentationMeta?(args: unknown, value: JsonValue): JsonValue | undefined;\n    outcome?(args: unknown, value: JsonValue): ExecutionOutcome | undefined;\n}',
   },
   {
     name: 'ToolPresentationMode',
@@ -7575,6 +7595,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ToolResultMessage',
     declaration: 'export interface ToolResultMessage extends Message {\n    readonly role: \'user\';\n    readonly content: [\n        ToolResultBlock\n    ];\n    readonly source: ToolMessageSource;\n}',
+  },
+  {
+    name: 'ToolResultOutcome',
+    declaration: 'export type ToolResultOutcome = {\n    readonly kind: \'policy_denied\';\n    readonly source: string;\n    readonly name: string;\n} | {\n    readonly kind: \'resource_exhausted\';\n    readonly limit: string;\n} | {\n    readonly kind: \'timeout\';\n    readonly by: string;\n    readonly deadlineMs?: number;\n} | {\n    readonly kind: \'cancelled\';\n    readonly by: string;\n} | {\n    readonly kind: \'tool_failed\';\n    readonly exitCode?: number;\n    readonly signal?: string;\n    readonly code?: string;\n} | {\n    readonly kind: \'world_lost\';\n    readonly reason: string;\n    readonly provider?: string;\n};',
   },
   {
     name: 'ToolResultView',
@@ -8091,6 +8115,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'WorldLifetimeSpec',
     declaration: 'export interface WorldLifetimeSpec {\n    readonly maxWallClockMs?: number;\n    readonly detached: boolean;\n}',
+  },
+  {
+    name: 'WorldLossReason',
+    declaration: 'export type WorldLossReason = \'lost-contact\' | \'provider-failed\' | \'lease-refused\';',
   },
   {
     name: 'WorldNetworkSpec',
