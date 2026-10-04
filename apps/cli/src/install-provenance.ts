@@ -198,7 +198,7 @@ export function verifyBootProvenance(
       continue
     }
     const claimPath = `${tarball}${CLAIM_FILE_SUFFIX}`
-    const lockedRecord = locked.get(name)
+    const lockedRecord = locked.get('')
     const hasTarball = existsSync(tarball)
     if (!hasTarball || !existsSync(claimPath)) {
       if (lockedRecord?.trust === 'trusted') refused.push({ name, reason: hasTarball ? 'claim-file-missing' : 'tarball-missing' })
