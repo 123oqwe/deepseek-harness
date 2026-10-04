@@ -47,9 +47,11 @@ The `observedBase` parameter is what makes concurrent installs safe. Two process
 
 ## An unlocked profile is a deployment decision
 
-`gateProductionBoot` answers the question that comes before `admitBoot`: what a production boot does with a profile that has **no** lock. That is a required parameter, never a default hidden inside the check, because nothing in this repository generates a lock yet and both answers break something — refusing breaks every existing boot, admitting lets must[2] read as enforced while enforcing nothing.
+`gateProductionBoot` answers the question that comes before `admitBoot`: what a production boot does with a profile that has **no** lock. That is a required parameter, never a default hidden inside the check: each shipped bundle declares it as `dsh.pluginLock.unlockedProfilePolicy`, and the most restrictive declaration wins.
 
 An admitted boot carries `verified: true` or `false`. A caller must be able to tell a checked boot from an unlocked one; without that flag, "loaded successfully" would mean two different things. The policy governs **only** the absent-lock case: a profile that has a lock is judged against it whatever the policy says, or `warn-and-proceed` would become a way to skip verification entirely.
+
+`apps/cli`'s `composeProfile` runs the gate on every boot whose profile resolves a package from its own directory (a dependency, a bundle layer, or a module a composed row names, inside groups too) or holds a `plugins.lock.json`. A package the installation ships is never locked (C17 option 2′). `@deepseek-ai/dsh-base` declares `refuse`, so a profile-local plugin loads only once `dsh plugin` has locked it, and a refused boot evaluates no plugin module. A row whose module is a relative path names a local file, not an installed package, so the lock has nothing to pin for it; P1-01's patch-row admission judges those rows, and refuses one only when plugin manifest enforcement is at `enforce` (at `shadow` it records the row).
 
 ## Generating a candidate: record, never invent
 
@@ -70,7 +72,6 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 ## Known Limitations and Deferred Work
 
 - **Most locked facts are markers, not observations, for packages as they exist today.** `buildCandidateLock` records what an installed directory actually carries — name, exact version, and a digest over the manifest — and marks the rest `unavailable:<reason>`. Archive integrity, source commit and signing identity are properties of how a package was *published*, and no package in this repository declares them yet, so a lock generated today pins the manifest and nothing else. `summarizeLockCoverage` exists so a caller can say so rather than reporting "locked".
-- **`gateProductionBoot` has no call site in `composeProfile`.** The gate is complete and covered, but wiring it means choosing what a production boot does with an unlocked profile, and that decision depends on locking having actually run somewhere. See BLOCKED-094.
 - **The recorded signature identity is not authenticated**, and cannot be while P1-02's signature root holds no key material. See above.
 - **The atomicity of lock replacement is not proven by this package's tests.** `writeLockAtomically` writes a sibling temp file and renames it over the target, and `rename` within one directory is atomic on POSIX and NTFS — but that is a filesystem property. The tests prove the content lands whole and no scratch file survives; observing a partial write would require a reader racing the writer, and replacing the temp-and-rename with an in-place write reddens none of them.
 - **No integrity is computed here.** `PackageIntegrity` and `ManifestDigest` are compared, never derived; whoever writes the lock must produce them.

@@ -40,6 +40,9 @@
     "bundle": {
       "patch": "./cordis.patch.yml"
     },
+    "pluginLock": {
+      "unlockedProfilePolicy": "refuse"
+    },
     "manifestVersion": 2,
     "executionMode": "in-process",
     "compatibility": {
