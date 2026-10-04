@@ -655,12 +655,12 @@
           {
             "name": "tuf-js",
             "npm": "tuf-js",
-            "reason": "previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-19 (BLOCKED-269) and the row is BLOCKED_ON_ACCEPTANCE, so the status half no longer holds. The ruling does not rest on it and is unchanged — the omission stays visible rather than silent, and it does NOT license hand-writing this in new work. If BLOCKED-269's missing production call site is built, this disposition is re-decided then. The trusted root is supplied by an admitted anchor as already-resolved data; no TUF metadata refresh happens, so the client had no reader."
+            "reason": "`accepted-unadopted`, re-decided 2026-10-04 (gate3 2026-10-04T09:26:56Z): BLOCKED-269's production call sites are built (`apps/cli/src/install-provenance.ts:155` and `:221`, reached from `dsh plugin add` and every profile boot) and P1-02 is accepted again, so the status half holds again. The ruling is unchanged and this is still not used — the omission stays visible rather than silent, and it does NOT license hand-writing this in new work. The trusted root is supplied by an admitted anchor as already-resolved data; no TUF metadata refresh happens, so the client had no reader."
           },
           {
             "name": "@cyclonedx/cyclonedx-library",
             "npm": "@cyclonedx/cyclonedx-library",
-            "reason": "previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-19 (BLOCKED-269) and the row is BLOCKED_ON_ACCEPTANCE, so the status half no longer holds. The ruling does not rest on it and is unchanged — the omission stays visible rather than silent, and it does NOT license hand-writing this in new work. If BLOCKED-269's missing production call site is built, this disposition is re-decided then. No SBOM is produced or consumed by this epic; the provenance record is a claim over package identity, not a component inventory."
+            "reason": "`accepted-unadopted`, re-decided 2026-10-04 (gate3 2026-10-04T09:26:56Z): BLOCKED-269's production call sites are built (`apps/cli/src/install-provenance.ts:155` and `:221`, reached from `dsh plugin add` and every profile boot) and P1-02 is accepted again, so the status half holds again. The ruling is unchanged and this is still not used — the omission stays visible rather than silent, and it does NOT license hand-writing this in new work. No SBOM is produced or consumed by this epic; the provenance record is a claim over package identity, not a component inventory."
           },
           {
             "name": "node:crypto Ed25519",
@@ -669,11 +669,11 @@
           },
           {
             "standard": "in-toto Statement v1",
-            "reason": "previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-19 (BLOCKED-269) and the row is BLOCKED_ON_ACCEPTANCE, so the status half no longer holds. The ruling does not rest on it and is unchanged — the omission stays visible rather than silent, and it does NOT license hand-writing this in new work. If BLOCKED-269's missing production call site is built, this disposition is re-decided then. The provenance record is a local claim shape, not an in-toto Statement; no frozen case names the vocabulary."
+            "reason": "`accepted-unadopted`, re-decided 2026-10-04 (gate3 2026-10-04T09:26:56Z): BLOCKED-269's production call sites are built (`apps/cli/src/install-provenance.ts:155` and `:221`, reached from `dsh plugin add` and every profile boot) and P1-02 is accepted again, so the status half holds again. The ruling is unchanged and this is still not used — the omission stays visible rather than silent, and it does NOT license hand-writing this in new work. The provenance record is a local claim shape, not an in-toto Statement; no frozen case names the vocabulary."
           },
           {
             "standard": "SLSA provenance v1",
-            "reason": "previously recorded as `accepted-unadopted` (R6/§7.9), which said the row's status and not the ruling: the sign-off was withdrawn on 2026-09-19 (BLOCKED-269) and the row is BLOCKED_ON_ACCEPTANCE, so the status half no longer holds. The ruling does not rest on it and is unchanged — the omission stays visible rather than silent, and it does NOT license hand-writing this in new work. If BLOCKED-269's missing production call site is built, this disposition is re-decided then. Same: `observedSourceCommit`/`observedBuilderIdentity` are attestation-like fields this epic defined, not SLSA predicates."
+            "reason": "`accepted-unadopted`, re-decided 2026-10-04 (gate3 2026-10-04T09:26:56Z): BLOCKED-269's production call sites are built (`apps/cli/src/install-provenance.ts:155` and `:221`, reached from `dsh plugin add` and every profile boot) and P1-02 is accepted again, so the status half holds again. The ruling is unchanged and this is still not used — the omission stays visible rather than silent, and it does NOT license hand-writing this in new work. Same: `observedSourceCommit`/`observedBuilderIdentity` are attestation-like fields this epic defined, not SLSA predicates."
           }
         ]
       }
