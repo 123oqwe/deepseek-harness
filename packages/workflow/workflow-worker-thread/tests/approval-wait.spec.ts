@@ -7,7 +7,7 @@ import { randomUUID } from 'node:crypto'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
@@ -214,17 +214,20 @@ describe('P2-07 must[3]: what wakes a waiting run, and what does not', () => {
     decider.close()
 
     let done: Promise<WorkflowResultInfo> | undefined
-    let warn: MockInstance | undefined
+    const warnings: string[] = []
     const second = await compose(at, {
       beforeEngine: (ctx) => {
-        warn = vi.spyOn(ctx.logger, 'warn').mockImplementation(() => ctx.logger)
+        vi.spyOn(ctx.logger, 'warn').mockImplementation((...args: unknown[]) => {
+          warnings.push(String(args[0]))
+          return ctx.logger
+        })
         done = finished(ctx, run.id)
       },
     })
 
     expect(await done).toMatchObject({ stopReason: 'completed' })
     expect((await second.ctx.workflowEngine.attach(run.id)?.result)?.value).toBe('shipped v1')
-    expect(warn).toHaveBeenCalledWith(expect.stringMatching(/journal of run unreadable is unreadable/u))
+    expect(warnings.filter(warning => /journal of run unreadable is unreadable/u.test(warning))).toHaveLength(1)
   }, 60_000)
 
   it('starts nothing for a decided run-scoped approval that no waiting run journaled', async () => {
