@@ -39,7 +39,7 @@ Each file becomes one definition. Its **name is the file's base name**, never a 
 
 The directory is `<harness home>/workflows`, derived rather than configured. Which directory a deployment keeps its workflows in is not a choice a profile needs to vary, and a second location would mean two answers to "where does this definition come from" for one run.
 
-Mounting resolves once the loader has offered every file to the engine, so a run that nests a saved workflow cannot depend on whether a load happened to finish first. A missing directory yields no definitions rather than an error — a deployment that has saved no workflows is the ordinary case.
+Mounting resolves once the loader has offered every file to the engine. A host composition awaits that before its first turn; a preset composition does not, and can publish a session while the load is still running. `ctx.savedWorkflows.settled` resolves once the directory has been read, with the reason when the read failed, and the `workflow` tool waits on it before it lists the saved workflows to a model (B-729). A missing directory yields no definitions rather than an error — a deployment that has saved no workflows is the ordinary case.
 
 ## Sign a saved workflow
 

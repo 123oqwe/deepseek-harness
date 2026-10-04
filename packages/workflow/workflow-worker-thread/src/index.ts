@@ -576,6 +576,16 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
   }
 
   /**
+   * Every registered definition at its current version: what a nested
+   * `workflow({ name, digest })` call can name (B-729). Read-only; on the
+   * concrete engine for the reason {@link WorkerThreadWorkflowEngine.registerDefinition} gives.
+   * @returns each definition's name, digest and version, in the order the names were first registered.
+   */
+  registeredDefinitions(): readonly { readonly name: DefinitionName; readonly digest: DefinitionDigest; readonly version: number }[] {
+    return this.definitions.currentDefinitions().map(({ name, digest, version }) => ({ name, digest, version }))
+  }
+
+  /**
    * Resolve, admit and start one nested run ({@link NestingPort}).
    *
    * acceptance[0]'s "loading does not execute unverified code" is the resolve

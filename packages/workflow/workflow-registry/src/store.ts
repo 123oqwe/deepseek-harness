@@ -88,7 +88,16 @@ export class DefinitionRegistry {
   current(name: DefinitionName): RegisteredDefinition | undefined {
     const versions = this.byName.get(name)
     if (versions === undefined || versions.length === 0) return undefined
-    return versions.reduce((highest, entry) => (entry.version > highest.version ? entry : highest))
+    return highestVersion(versions)
+  }
+
+  /**
+   * Every name's current definition, in the order the names were first
+   * registered (B-729): what a nested run can name today.
+   * @returns one definition per name, at its highest version.
+   */
+  currentDefinitions(): readonly RegisteredDefinition[] {
+    return [...this.byName.values()].map(highestVersion)
   }
 
   /**
@@ -103,4 +112,13 @@ export class DefinitionRegistry {
   history(name: DefinitionName): readonly RegisteredDefinition[] {
     return [...(this.byName.get(name) ?? [])]
   }
+}
+
+/**
+ * The highest-versioned of a name's registered definitions.
+ * @param versions - one name's definitions, never empty.
+ * @returns the one with the highest version.
+ */
+function highestVersion(versions: readonly RegisteredDefinition[]): RegisteredDefinition {
+  return versions.reduce((highest, entry) => (entry.version > highest.version ? entry : highest))
 }

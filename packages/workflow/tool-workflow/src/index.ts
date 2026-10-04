@@ -17,8 +17,10 @@ import z from '@deepseek-ai/schemastery'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { ToolCallView, ToolResultView } from '@deepseek-ai/dsh-tools'
-import type { ContentBlock } from '@deepseek-ai/dsh-llm'
-import type { Session, SessionEventMap } from '@deepseek-ai/dsh-session'
+import { createUserMessage } from '@deepseek-ai/dsh-llm'
+import type { ContentBlock, UserMessage } from '@deepseek-ai/dsh-llm'
+import type { PreStepDecision } from '@deepseek-ai/dsh-agent'
+import type { Session, SessionEventMap, SessionSeq } from '@deepseek-ai/dsh-session'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import type {
   WorkflowResult, WorkflowRun, WorkflowRunId, WorkflowStopReason,
@@ -146,6 +148,7 @@ Script-body hooks:
 - \`pipeline(items, ...stages): Promise<any[]>\` — run each item through the stages independently with NO barrier between stages (prefer this for multi-stage work). Each stage receives \`(prev, item, index)\`. An ordinary stage throw drops that ITEM to \`null\` and skips its remaining stages.
 - \`parallel(thunks): Promise<any[]>\` — run zero-argument functions concurrently and await ALL of them (a barrier; use only when a stage genuinely needs every prior result together). A throwing thunk resolves to \`null\`.
 - \`phase(title)\` — start a progress phase; \`log(message)\` — narrate progress; \`args\` — the tool call's \`args\` input, verbatim.
+- \`workflow({ name, digest, onFailure? }, args?): Promise<any>\` — run a saved workflow as a nested run and resolve to its return value. \`name\` and \`digest\` must both match an entry of this session's saved-workflow catalog, which lists them; a bare name is refused. The nested run draws on this run's agent and token budget and its depth limit, and is refused when that definition is already running above it. When it fails the call rejects, unless \`onFailure: 'continue-parent'\`, which resolves \`null\` and logs the failure.
 
 Misused hooks (bad arguments, unknown options, unsupported schemas, tripped caps) throw errors that ALWAYS kill the script — they never dissolve into a per-item \`null\`.
 
@@ -225,7 +228,7 @@ export function apply(ctx: Context, config: Config): void {
     order: ctx.systemPrompt.getSectionOrder('TOOL_WORKFLOW'),
     text: `Use the ${toolName} tool ONLY when the user explicitly asks for a workflow or for large multi-agent orchestration: you write a JavaScript script (the tool description documents the exact format) that fans work out across many subagents with phases and structured results. For one or two delegations, prefer plain subagent calls.`,
   })
-  ctx.tools.register(defineTool({
+  const workflowTool = defineTool({
     name: toolName,
     riskDomainTags: ['orchestration'],
     description: DESCRIPTION,
@@ -423,5 +426,108 @@ export function apply(ctx: Context, config: Config): void {
     },
     presentCall: args => presentWorkflowCall(args),
     presentResult: (args, result) => presentWorkflowResult(args, result),
-  }))
+  })
+  ctx.tools.register(workflowTool)
+  publishSavedWorkflowCatalog(ctx, workflowTool)
+}
+
+/** The plugin named on this tool's saved-workflow catalog messages (B-729). */
+const CATALOG_PLUGIN = 'tool-workflow'
+
+/**
+ * What the catalog reads from a saved-workflow loader. Structural, because
+ * `@deepseek-ai/dsh-workflow-filesystem` is not a dependency of this tool.
+ */
+interface SavedWorkflowLoading {
+  /** Resolves once the loader has read its directory, with the reason when it failed. */
+  readonly settled: Promise<{ readonly failure?: string }>
+}
+
+/** What the catalog reads from an engine that registers definitions, such as the worker-thread engine. */
+interface DefinitionCatalog {
+  /** Every registered definition at its current version. */
+  registeredDefinitions(): readonly { readonly name: string; readonly digest: string }[]
+}
+
+/**
+ * Whether the mounted engine can list its registered definitions.
+ * @param engine - the mounted workflow engine.
+ * @returns whether it implements {@link DefinitionCatalog}.
+ */
+function listsDefinitions(engine: object): engine is DefinitionCatalog {
+  return typeof (engine as Partial<DefinitionCatalog>).registeredDefinitions === 'function'
+}
+
+/**
+ * Tell each agent that can call this tool which saved workflows it can nest,
+ * as a durable catalog message in its own session (P4-09; question 31 (a);
+ * B-729).
+ *
+ * Model-visible, so logged: the message is a `user/message` the session
+ * records, carrying the `plugin` source with the `catalog` form. Before a
+ * step, the listener waits for the saved-workflow loader in this context to
+ * settle, because a preset composition publishes its session while the load
+ * may still be running and an unfinished load must not read as an empty
+ * catalog. It publishes when the catalog changed, or when the last one is no
+ * longer visible in the session after compaction; with nothing ever published
+ * and nothing to list, it publishes nothing. The last catalog is remembered from
+ * the session's own delivered events, so a resumed session publishes it once more.
+ * @param ctx - the plugin context.
+ * @param tool - the registered workflow tool; an agent that does not resolve exactly this tool gets no catalog.
+ */
+function publishSavedWorkflowCatalog(ctx: Context, tool: { readonly name: string }): void {
+  // The last catalog each session recorded, taken from the event as the session
+  // delivers it rather than read back from its history.
+  const published = new WeakMap<Session, { readonly content: string; readonly seq: SessionSeq }>()
+  ctx.on('session/event', (session, event) => {
+    if (event.type !== 'user/message') return
+    const { source } = event.data
+    if (source.kind !== 'plugin' || source.plugin !== CATALOG_PLUGIN) return
+    published.set(session, { content: JSON.stringify(event.data.content), seq: event.seq })
+  })
+  ctx.on('agent/pre-step', async ({ agent, signal }, next): Promise<PreStepDecision> => {
+    const decision = await next()
+    if (decision.kind === 'reject' || ctx.tools.get(tool.name, agent) !== tool) return decision
+    const engine = ctx.workflowEngine
+    if (!listsDefinitions(engine)) return decision
+    const loader = ctx.get('savedWorkflows', false) as SavedWorkflowLoading | undefined
+    const load: { readonly failure?: string } = loader === undefined ? {} : await loader.settled
+    signal.throwIfAborted()
+    const entries = engine.registeredDefinitions()
+    const message = savedWorkflowCatalog(entries, load.failure)
+    const last = published.get(agent.session)
+    if (last === undefined && entries.length === 0 && load.failure === undefined) return decision
+    if (last !== undefined && new Set(agent.session.surface.nodes).has(last.seq) && last.content === JSON.stringify(message.content)) {
+      return decision
+    }
+    return { ...decision, messages: [...decision.messages, message] }
+  })
+}
+
+/**
+ * The catalog message a model reads.
+ * @param entries - the registered definitions, each with the digest a nested call names.
+ * @param failure - why the loader failed, when it did.
+ * @returns the message, its text a system reminder that replaces any earlier catalog.
+ */
+function savedWorkflowCatalog(
+  entries: readonly { readonly name: string; readonly digest: string }[],
+  failure: string | undefined,
+): UserMessage {
+  const lines = entries.length === 0
+    ? ['No saved workflows are available in this session; do not nest a name from an earlier list.']
+    : [
+      'Saved workflows available in this session (this list replaces any earlier one). Nest one from a workflow script with `await workflow({ name, digest }, args)`, giving both exactly as listed:',
+      '',
+      '<saved_workflows>',
+      ...entries.map(entry => `- name: ${entry.name}, digest: ${entry.digest}`),
+      '</saved_workflows>',
+    ]
+  return createUserMessage({
+    content: [{
+      type: 'text',
+      text: ['<system-reminder>', ...lines, ...failure === undefined ? [] : [`Loading the saved workflows failed: ${failure}`], '</system-reminder>'].join('\n'),
+    }],
+    source: { kind: 'plugin', plugin: CATALOG_PLUGIN, form: 'catalog' },
+  })
 }

@@ -212,6 +212,12 @@ declare module '@deepseek-ai/cordis' {
   }
 }
 
+/** How one mount's load of the definitions directory ended (B-729). */
+export interface SavedWorkflowLoad {
+  /** Why the load failed; absent when it finished. A definition refused by its signature check is not a failure. */
+  readonly failure?: string
+}
+
 /**
  * Loads saved workflow definitions into the mounted engine at boot.
  *
@@ -227,6 +233,9 @@ export default class SavedWorkflowLoader extends Service {
   readonly loaded: string[] = []
   /** One entry per definition refused, by its signature check or by the engine, naming the file and the reason. */
   readonly refused: { readonly name: string; readonly reason: string }[] = []
+
+  /** Settled once this mount has read its definitions directory (B-729). */
+  private readonly loading = Promise.withResolvers<SavedWorkflowLoad>()
 
   /**
    * @param ctx - the mounting context; the loader registers itself as `ctx.savedWorkflows`.
@@ -249,14 +258,40 @@ export default class SavedWorkflowLoader extends Service {
   }
 
   /**
-   * Read, verify and register every saved definition.
+   * Resolves once this mount has read its definitions directory, with the
+   * reason when the read failed (B-729).
    *
-   * Runs at mount through `Service.init`, so a composition that loads this
-   * plugin has its saved workflows registered before the first turn — a run
-   * that nests one must not depend on whether a load happened to finish first.
+   * Loading runs in `Service.init`, which a host composition awaits before its
+   * first turn but a preset composition does not: there the session can be
+   * published while the load is still running. A reader that lists the saved
+   * workflows to a model waits on this first, so it never lists an
+   * unfinished load as an empty one. Read it through a non-strict `ctx.get`,
+   * since the service is not active until the load has finished.
+   * @returns the outcome of this mount's load.
+   */
+  get settled(): Promise<SavedWorkflowLoad> {
+    return this.loading.promise
+  }
+
+  /**
+   * Load the saved definitions at mount, and settle {@link SavedWorkflowLoader.settled} either way.
    * @returns once every definition file has been verified and, when it verified, offered to the engine.
    */
   async [Service.init](): Promise<void> {
+    try {
+      await this.load()
+    } catch (error: unknown) {
+      this.loading.resolve({ failure: String(error) })
+      throw error
+    }
+    this.loading.resolve({})
+  }
+
+  /**
+   * Read, verify and register every saved definition.
+   * @returns once every definition file has been verified and, when it verified, offered to the engine.
+   */
+  private async load(): Promise<void> {
     const engine = this.ctx.workflowEngine
     if (!acceptsDefinitions(engine)) {
       throw new Error(

@@ -141,6 +141,20 @@ Substantial fixed schema cost on each request where the tool is visible.
 
 Prefix-stable while `toolName`, definition, and visibility are unchanged. Renaming, plugin lifecycle, or scoped restrictions may invalidate reuse from this schema.
 
+### Saved-workflow catalog
+
+#### What the model sees
+
+Before a step, an agent that can call the workflow tool receives a durable `<system-reminder>` context message (source `plugin`, `tool-workflow`, form `catalog`) listing the saved workflows this session can nest, one `- name: <name>, digest: <digest>` line each, with the `await workflow({ name, digest }, args)` call that nests one. It is published after the saved-workflow loader in the same context has settled. A failed load is named, and an empty list after an earlier catalog says none is available now. An unchanged catalog that is still visible is not published again (B-729).
+
+#### Token effect
+
+One message per published catalog, growing with the number of entries.
+
+#### KV Cache effect
+
+Append-only: a new message is appended only when the catalog changes or the last one was compacted out of the visible surface.
+
 ### Tool-call history and result
 
 #### What the model sees
@@ -167,6 +181,7 @@ These limits define what the tool does not yet support. They are current constra
 - **Workflow policy is fixed per tool registration** — provider selection, caps, and tool name are deployment config, not model-call arguments.
 - **Durable records are top-level and observational** — nested PTC mode dispatches are not recorded, and a recording failure intentionally degrades to an incomplete prefix rather than changing execution.
 - **Nothing on the shipped product hands the model a crashed run's id** — a foreground result's text does not include its `runId`, and a run interrupted by a crash returns no result, so a `resume` id comes from outside the conversation, such as a journal file name in the DSH home's `journals` directory.
+- **A resumed session receives the catalog once more** — the tool remembers the last catalog from the events a session delivers, not from its history, so the first step after a resume publishes it again even when it is unchanged.
 
 <a id="dev-note"></a>
 ### Dev Note

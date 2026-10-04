@@ -141,6 +141,20 @@ Use the <toolName> tool ONLY when the user explicitly asks for a workflow or for
 
 只要 `toolName`、定义与可见性不变，前缀就保持稳定。重命名、插件生命周期或作用域限制可能会使从该 schema 起的缓存复用失效。
 
+### 已保存 workflow 目录
+
+#### 模型看到什么
+
+能调用 workflow 工具的 agent，在某一步之前会收到一条持久的 `<system-reminder>` 上下文消息（来源 `plugin`、`tool-workflow`，形式 `catalog`），逐行列出本会话可嵌套的已保存 workflow，每行一条 `- name: <name>, digest: <digest>`，并给出嵌套用的 `await workflow({ name, digest }, args)` 调用。发布之前先等同一上下文中的已保存 workflow 加载器完成。加载失败时写明原因；此前发布过目录而现在列表为空时，写明当前没有可用的。目录未变且仍可见时不再发布（B-729）。
+
+#### Token 影响
+
+每发布一次目录占一条消息，随条目数增长。
+
+#### KV Cache 影响
+
+仅追加：只在目录变化，或上一条被压缩出可见范围时，才追加新的一条。
+
 ### 工具调用历史与结果
 
 #### 模型看到什么
@@ -167,6 +181,7 @@ Use the <toolName> tool ONLY when the user explicitly asks for a workflow or for
 - **每次工具注册的工作流策略固定**——提供方选择、上限与工具名称属于部署配置，不是模型调用参数。
 - **持久记录只覆盖顶层且只供观察**——嵌套 PTC mode dispatch 不记录；记录故障会刻意退化为不完整前缀，而不改变执行。
 - **出厂产品上没有任何途径把崩溃运行的 id 交给模型**——前台结果的文本不含其 `runId`，被崩溃中断的运行也不返回结果，因此 `resume` 所需的 id 只能来自对话之外，例如 DSH home 下 `journals` 目录中的运行日志文件名。
+- **恢复后的会话会再收到一次目录**——本工具从会话投递的事件记住上一次的目录，而不是回读历史，所以恢复后的第一步即使目录未变也会再发布一次。
 
 <a id="dev-note"></a>
 ### 开发备注
