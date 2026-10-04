@@ -4758,8 +4758,8 @@
       "kind": "source",
       "stages": [
         "P.3",
-        "U.2",
-        "P.4"
+        "P.4",
+        "U.2"
       ],
       "reason": "Created by this epic under ruling §12.5 B: the single (id, epoch) rule both consumers now import, replacing two implementations (BLOCKED-136). The plan predates the finding."
     },
@@ -4841,8 +4841,8 @@
       "path": "packages/run/message-bus/src/mailbox-delivery.ts",
       "kind": "source",
       "stages": [
-        "U.2",
-        "P.4"
+        "P.4",
+        "U.2"
       ],
       "reason": "must[2]'s production call site: a real mailbox arrival decided against the durable consumed set. It lives in this package rather than in dsh-mailbox because the store is orchestration-runtime and the mailbox is a capability definition (ruling §12.5 B)."
     },
