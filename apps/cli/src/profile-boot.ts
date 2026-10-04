@@ -12,7 +12,7 @@
  */
 
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { dirname, isAbsolute, join, resolve } from 'node:path'
+import { dirname, isAbsolute, join, resolve, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { FiberState, type Context } from '@deepseek-ai/cordis'
 import type { PatchOptions } from '@deepseek-ai/cordis-plugin-include'
@@ -1592,17 +1592,17 @@ function rowModuleNames(entries: readonly EntryOptions[]): string[] {
 
 /** A composed bundle layer, as the lock gate reads it. */
 interface LockGateLayer {
-  readonly packageName: string
   readonly packageDir: string
 }
 
 /**
- * The packages a profile resolves from its own directory (P1-03 must[2], C17
- * option 2′), whichever way the boot reaches them: its declared dependencies,
- * its admitted bundle layers, and the modules its composed rows name. Each is
- * kept only when the installation does not resolve the same name to the same
- * directory and it is not a module proxy forwarding to the installation,
- * because a package the installation ships is never locked.
+ * The packages a profile resolves from its own `node_modules` (P1-03 must[2],
+ * C17 option 2′), whichever way the boot reaches them: its declared
+ * dependencies, its admitted bundle layers, and the modules its composed rows
+ * name. A name that resolves further up is the installation's: the shared
+ * `$DSH_HOME/profiles/node_modules` holds only the links and module proxies
+ * {@link healProfilesModuleFallback} writes for the installation's
+ * dependency closure, and a package the installation ships is never locked.
  * @param profileDir - the profile directory.
  * @param layers - the admitted bundle layers.
  * @param rowModules - the module each composed row names.
@@ -1611,7 +1611,7 @@ interface LockGateLayer {
  */
 function profileResolvedPackageDirs(profileDir: string, layers: readonly LockGateLayer[], rowModules: readonly string[]): string[] {
   const anchor = pathToFileURL(join(profileDir, PROFILE_ROOT_FILENAME)).href
-  const installAnchor = pathToFileURL(INSTALL_ANCHOR).href
+  const profileModules = join(profileDir, 'node_modules') + sep
   const { dependencies } = JSON.parse(readFileSync(join(profileDir, 'package.json'), 'utf8')) as { dependencies?: unknown }
   if (dependencies !== undefined && (typeof dependencies !== 'object' || dependencies === null || Array.isArray(dependencies))) {
     throw new Error(`${NAME}: plugin lock: ${join(profileDir, 'package.json')} declares dependencies that are not an object`)
@@ -1619,12 +1619,10 @@ function profileResolvedPackageDirs(profileDir: string, layers: readonly LockGat
   const dirs = new Set<string>()
   for (const name of [...Object.keys(dependencies ?? {}), ...rowModules]) {
     const dir = resolveEntryPackageDir(name, anchor)
-    // A module proxy forwards to the installation's own package, so it is a shipped package, never locked.
-    if (dir !== undefined && !isModuleProxy(dir) && resolveEntryPackageDir(name, installAnchor) !== dir) dirs.add(dir)
+    if (dir !== undefined && dir.startsWith(profileModules)) dirs.add(dir)
   }
   for (const layer of layers) {
-    if (isModuleProxy(layer.packageDir)) continue
-    if (resolveEntryPackageDir(layer.packageName, installAnchor) !== layer.packageDir) dirs.add(layer.packageDir)
+    if (layer.packageDir.startsWith(profileModules)) dirs.add(layer.packageDir)
   }
   return [...dirs]
 }

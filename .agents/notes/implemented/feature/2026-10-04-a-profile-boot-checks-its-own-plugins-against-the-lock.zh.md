@@ -11,7 +11,7 @@ Epic P1-03 must[2] 要求生产启动只加载锁批准、且 digest 匹配的�
 ## 决定
 
 - **组合完成之后，启动调用锁门。** `composeProfile` 在组合出全部行之后、`boot()` 求值任何插件模块之前运行它，所以被拒的启动什么都没有运行。
-- **锁门判的是 profile 从自己目录解析出来的东西**（C17 方案 2′，delegate 对锁门范围的裁定）：声明的依赖、准入后的 bundle 层，以及组合后每一行指名的模块，group 里面的也算。每一项只有在安装解析同名得到的不是同一个目录时才保留，所以安装自带的 bundle 永远不进锁。
+- **锁门判的是 profile 从自己的 `node_modules` 解析出来的东西**（C17 方案 2′，delegate 对锁门范围的裁定）：声明的依赖、准入后的 bundle 层，以及组合后每一行指名的模块，group 里面的也算。从更上层解析到的名字属于安装：共享的 `$DSH_HOME/profiles/node_modules` 只放启动为安装的依赖闭包写的链接与模块代理，所以安装自带的包永远不进锁。
 - **只有在有东西可判时才运行：** 上述集合非空，或者 profile 有 `plugins.lock.json`。只由出厂 bundle 组成的 profile 照旧启动。
 - **没有锁的 profile 被拒。** `@deepseek-ai/dsh-base` 声明 `dsh.pluginLock.unlockedProfilePolicy: "refuse"`（delegate 对 BLOCKED-094 的裁定：must[2] 只认锁批准的插件，没进锁的插件不是）。这项声明只在 profile 没有锁时读取，因为有锁的 profile 无论策略如何都按锁判。`dsh plugin` 会提交锁，所以 profile 总能得到一份锁。
 - **相对路径行不归锁门管。** 它指的是本地文件，不是装进来的包，锁没有东西可钉；由 P1-01 的补丁行准入来判。
