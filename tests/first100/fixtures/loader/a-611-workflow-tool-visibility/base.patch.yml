@@ -1,0 +1,23 @@
+# Test-only overlay over the SHIPPED headless profile for A-611 (P4-09 new
+# finding). The dsh-base layer owns the rows the case depends on — the workflow
+# worker-thread engine, workflow-filesystem (which registers signed saved
+# definitions from `$DSH_HOME/workflows`), and the `workflow` tool — so this
+# overlay mounts none of them. It turns off the rows that would run a task of
+# their own and keeps the session log uncompressed; the driver registers the
+# keyless MockAdapter and creates the agent after boot.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
