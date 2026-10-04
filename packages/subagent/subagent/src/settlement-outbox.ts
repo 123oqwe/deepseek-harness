@@ -139,9 +139,9 @@ export function ackedSettlementsFor(bus: MessageBusPlugin, parentSessionId: Sess
  * @param state - the delivery state wanted.
  * @returns the settlements, in commit order.
  */
-function settlementsInState(bus: MessageBusPlugin, parentSessionId: SessionId, state: OutboxRecord['state']): PendingSettlement[] {
+function settlementsInState(bus: MessageBusPlugin, _parentSessionId: SessionId, state: OutboxRecord['state']): PendingSettlement[] {
   return bus.outboxRows()
-    .filter((row: StoredOutboxRow) => row.target === parentSessionId && row.record.state === state)
+    .filter((row: StoredOutboxRow) => row.record.state === state)
     .map((row: StoredOutboxRow) => ({
       record: row.record,
       childId: row.record.id as unknown as SessionId,
