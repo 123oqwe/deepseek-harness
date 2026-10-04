@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-10-04T03:47:29.708Z",
-  "inputDigest": "1bb24b50c34590bad4d66845eaed6b9e259e382a65e577c12aa10bf49cb84f2a",
+  "lastUpdatedUtc": "2026-10-04T05:58:34.191Z",
+  "inputDigest": "89cf588f0e7d78afde59c3bb61f42f8863cc9399b6e719206ed1c39258e0e42c",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -7963,6 +7963,24 @@
             "sha256": "ae219a89a8980f24007d4ae08b4447bc2dc1e1ce3e9f5ba658e9ae5c089c24d7"
           },
           "capturedAtUtc": "2026-10-04T03:47:28.868Z"
+        },
+        "U.6": {
+          "status": "GREEN",
+          "candidateSha": "7b008b27ba1eae2d7bf2de0e91cc2028d9f76f2f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37171496513",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-37171496513/first100-vitest-report-7b008b27ba1eae2d7bf2de0e91cc2028d9f76f2f/vitest-report.json",
+          "observationSha256": "ae219a89a8980f24007d4ae08b4447bc2dc1e1ce3e9f5ba658e9ae5c089c24d7",
+          "expectCasesMatched": [
+            "P4-06 lock (a): an inbox message claimed then refused before the record still takes effect exactly once control: a message the pre-step does not refuse is recorded exactly once",
+            "P4-06 lock (a): an inbox message claimed then refused before the record still takes effect exactly once a message claimed then refused between the claim and the record still reaches the record exactly once"
+          ],
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "37171496513",
+            "sha256": "ae219a89a8980f24007d4ae08b4447bc2dc1e1ce3e9f5ba658e9ae5c089c24d7"
+          },
+          "capturedAtUtc": "2026-10-04T05:58:34.178Z"
         }
       },
       "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
