@@ -35,7 +35,7 @@ pnpm dsh web --patch apps/cli/config/examples/github-review/cordis.yml
 dsh web --patch /absolute/path/to/github-review/cordis.yml
 ```
 
-对于永久 profile，把这个示例目录复制到 `$DSH_HOME/profiles/web/github-review/`，把 `cordis.yml` 中的行追加到 `$DSH_HOME/profiles/web/cordis.patch.yml`，并把规则行的 `name` 改为 `./github-review/github-ready-review-rule.mjs`，然后运行 `dsh web`。该目录的 `package.json` 声明规则的 Manifest v2，插件 manifest 强制要求每个 patch 行的模块都有它；它要留在规则旁边，因为 profile 自己的 `package.json` 不声明 manifest。随附 CLI 已经包含两个 webhook 包；只需 overlay 即可激活它们。
+对于永久 profile，把这个示例目录复制到 `$DSH_HOME/profiles/web/github-review/`，把 `cordis.yml` 中的行追加到 `$DSH_HOME/profiles/web/cordis.patch.yml`，并把规则行的 `name` 改为 `./github-review/github-ready-review-rule.mjs`，然后运行 `dsh web`。该目录的 `package.json` 声明规则的 Manifest v2（插件 manifest 强制要求每个 patch 行的模块都有它），以及名称和版本（DeepSeek 模型请求会列出每个已挂载的插件包）；它要留在规则旁边，因为 profile 自己的 `package.json` 不声明 manifest。随附 CLI 已经包含两个 webhook 包；只需 overlay 即可激活它们。
 
 ## 暴露专用端点
 
