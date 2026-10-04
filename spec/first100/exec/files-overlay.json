@@ -970,7 +970,8 @@
       "kind": "source",
       "stages": [
         "U.1",
-        "U.3"
+        "U.3",
+        "U.5"
       ],
       "reason": "HOT ZONE. Written from `git show 18a3daa4f1 -- apps/cli/src/profile-boot.ts` (+36/-3), `git show e1e03e5007 -- apps/cli/src/profile-boot.ts` (+33/-2), `git show c4bec0c213 -- apps/cli/src/profile-boot.ts` (+10/-7), `git show d7ca38923d -- apps/cli/src/profile-boot.ts` (+7/-2) and `git show 8b0e405a9c -- apps/cli/src/profile-boot.ts` (+25/-10). `runProfile` verifies the profile's locked provenance before any plugin code runs, refuses the boot on a rejection, and passes the records to post-mount enforcement, so the inventory records the locked verdict and its anchor (B-686 (2/3)); a development profile names its unverified plugins on every boot (B-686 (3/3)), and after B-695 every profile does; the boot appends its provenance decisions to the kernel's audit chain before a refusal stops it (B-686 ⑤); the pinned kernel's trust anchors are sealed right after `pinTrustKernel` (B-690). U.1 observes the boot path and U.3 the seal; M-686-2b, M-686-3, M-686-6 and M-695-1 change this file."
     },
@@ -980,6 +981,14 @@
       "kind": "test",
       "stages": [
         "U.3"
+      ]
+    },
+    {
+      "epic": "P1-02",
+      "path": "apps/cli/tests/fixtures/a-590-unverified-path-plugin.mjs",
+      "kind": "test",
+      "stages": [
+        "U.5"
       ]
     },
     {
@@ -997,6 +1006,14 @@
       "stages": [
         "U.2",
         "U.4"
+      ]
+    },
+    {
+      "epic": "P1-02",
+      "path": "apps/cli/tests/plugin-provenance-patch-mounted.e2e.ts",
+      "kind": "test",
+      "stages": [
+        "U.5"
       ]
     },
     {

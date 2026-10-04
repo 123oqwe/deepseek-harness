@@ -23118,6 +23118,46 @@
         "failureSummary": "M62 reddens 2 of 11: the case that permits while the provider is mounted and denies by name once it is lost, and the case that runs with no policy service at all. M63 reddens exactly the 2 constraint cases. M64 reddens exactly the kernel-binding case. M65 reddens 7 of 11 — every case whose evidence is a refused tool result, including the three capability-token cases. M66 reddens exactly one, the permit case where a token is presented and the policy accepts it; the two refusal cases still refuse for their own reasons under it. Re-run rather than carried: the mutated source was untouched by P2-10 U, but this command's tests (`enforcement.spec.ts`, `fixtures/stack.ts`) changed, and two of the superseded entry's counts no longer hold — M62 recorded 3 and reddens 2, M65 recorded 4 and reddens 7. A carried summary would have stated both wrong."
       },
       "note": "Re-frozen by P2-10's Usage stage: identical to the superseded entry minus the one case whose behaviour moved subject. Same argv, same files[], same expectExit; the sensitivity proof carries forward because the retained cases are unchanged. NOT the full output of this argv — the argv runs a whole package whose other cases belong to other entries."
+    },
+    {
+      "epic": "P1-02",
+      "stage": "U",
+      "supplements": {
+        "epic": "P1-02",
+        "stage": "U"
+      },
+      "supplementSeq": 5,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "vitest.e2e.config.ts",
+        "apps/cli/tests/plugin-provenance-patch-mounted.e2e.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-02 must[4] (Q30(b)), review 1-2/2 (A-590, A-590b): a path-mounted plugin runs unverified and must be named in the provenance banner, however the patch mounts it (red first for B-707) names a plugin mounted by a top-level insert row, and never the factory bundle",
+        "P1-02 must[4] (Q30(b)), review 1-2/2 (A-590, A-590b): a path-mounted plugin runs unverified and must be named in the provenance banner, however the patch mounts it (red first for B-707) names a plugin mounted as a cordis:group child added by a config-replace row (not in the insert list)",
+        "P1-02 must[4] (Q30(b)), review 1-2/2 (A-590, A-590b): a path-mounted plugin runs unverified and must be named in the provenance banner, however the patch mounts it (red first for B-707) names a plugin mounted through a cordis-plugin-include target file (not in the insert list)"
+      ],
+      "files": [
+        "apps/cli/tests/plugin-provenance-patch-mounted.e2e.ts",
+        "apps/cli/tests/fixtures/a-590-unverified-path-plugin.mjs",
+        "apps/cli/src/profile-boot.ts"
+      ],
+      "frozenAtUtc": "2026-10-04T03:50:00.000Z",
+      "dryRunProof": {
+        "treeSha": "a6dbc5778de9f51249f0dd8d10ef1ead1d1113fd",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "M-707-1 names no plugin a patch mounts by path, at boot or as it mounts; M-707b-1 names no path row as it mounts; M-707b-2 skips group children in the composed walk and names no path row as it mounts. A-416: the mutated file and this entry's files are byte-identical at the rounds' parent aa7dbb02db91841ae50e638706c346fed862cd4d, which is the code tip of batch 28, at the 28r tip 7b008b27ba1eae2d7bf2de0e91cc2028d9f76f2f and at the tree this entry is frozen on.",
+        "failureSummary": "Read from each round's own narrow report; every round carried build. M-707-1 `75a4381144896a1c29c4df8b60b4fbd6a537d611` run 37159118103 (names no plugin a patch mounts by path, at boot or as it mounts): 0 passed, 3 failed in apps/cli/tests/plugin-provenance-patch-mounted.e2e.ts: «P1-02 must[4] (Q30(b)), review 1-2/2 (A-590, A-590b): a path-mounted plugin runs unverified and must be named in the provenance banner, however the patch mounts it (red first for B-707) names a plugin mounted by a top-level insert row, and never the factory bundle», «P1-02 must[4] (Q30(b)), review 1-2/2 (A-590, A-590b): a path-mounted plugin runs unverified and must be named in the provenance banner, however the patch mounts it (red first for B-707) names a plugin mounted as a cordis:group child added by a config-replace row (not in the insert list)», «P1-02 must[4] (Q30(b)), review 1-2/2 (A-590, A-590b): a path-mounted plugin runs unverified and must be named in the provenance banner, however the patch mounts it (red first for B-707) names a plugin mounted through a cordis-plugin-include target file (not in the insert list)». M-707b-1 `81fc95f3da99bd5d02e5240816777117feb5653b` run 37159050077 (names no path row as it mounts): 2 passed, 1 failed in apps/cli/tests/plugin-provenance-patch-mounted.e2e.ts: «P1-02 must[4] (Q30(b)), review 1-2/2 (A-590, A-590b): a path-mounted plugin runs unverified and must be named in the provenance banner, however the patch mounts it (red first for B-707) names a plugin mounted through a cordis-plugin-include target file (not in the insert list)». M-707b-2 `bc9cf6f2847ecae4af0664dd73319ed630ab52de` run 37159085285 (skips group children in the composed walk and names no path row as it mounts): 1 passed, 2 failed in apps/cli/tests/plugin-provenance-patch-mounted.e2e.ts: «P1-02 must[4] (Q30(b)), review 1-2/2 (A-590, A-590b): a path-mounted plugin runs unverified and must be named in the provenance banner, however the patch mounts it (red first for B-707) names a plugin mounted as a cordis:group child added by a config-replace row (not in the insert list)», «P1-02 must[4] (Q30(b)), review 1-2/2 (A-590, A-590b): a path-mounted plugin runs unverified and must be named in the provenance banner, however the patch mounts it (red first for B-707) names a plugin mounted through a cordis-plugin-include target file (not in the insert list)»."
+      },
+      "note": "P1-02 U-stage supplement 5: must[4] (question 30 (b)) on the factory launcher. The built dsh bin, under a non-development base-bundle profile, names in its provenance banner a plugin a user patch mounts by path, whether the patch inserts it as a top-level row, adds it as a cordis:group child by replacing a row's config, or reaches it through a cordis-plugin-include target file, and never names the factory bundle. Lane A's A-590 and A-590b, for B-707 and B-707b. The 28r push gate is the first full run that ran this file (28r added it to the e2e-workflow list); this entry's cell comes from the first gate after the freeze. dryRunProof: the 28r push gate 37171496513 on 7b008b27ba1eae2d7bf2de0e91cc2028d9f76f2f, e2e-workflow report."
     }
   ]
 }
