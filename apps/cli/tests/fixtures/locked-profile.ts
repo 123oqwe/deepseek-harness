@@ -35,16 +35,17 @@ export async function lockStagedPackages(profileDir: string, names: readonly str
     '',
     '  .:',
     '    dependencies:',
-    ...observed.map(({ name, version }) => `      ${name}:\n        specifier: ${version}\n        version: ${version}`),
+    // Quoted as pnpm quotes a scoped name: a plain YAML key cannot start with `@`.
+    ...observed.map(({ name, version }) => `      '${name}':\n        specifier: ${version}\n        version: ${version}`),
     '',
     'packages:',
     '',
-    ...observed.map(({ name, version }) => `  ${name}@${version}:\n    resolution: {integrity: ${FIXTURE_INTEGRITY}}`),
+    ...observed.map(({ name, version }) => `  '${name}@${version}':\n    resolution: {integrity: ${FIXTURE_INTEGRITY}}`),
     '',
     // pnpm's reader returns no packages at all when `snapshots:` is absent.
     'snapshots:',
     '',
-    ...observed.map(({ name, version }) => `  ${name}@${version}: {}`),
+    ...observed.map(({ name, version }) => `  '${name}@${version}': {}`),
     '',
   ].join('\n'))
   const empty: PluginLockFile = { lockfileVersion: 1, entries: [], loadOrder: [] }
