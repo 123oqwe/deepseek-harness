@@ -5,9 +5,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
 
+from pydantic import ValidationError
+
 from .client import HarnessClient, HarnessConfig
 from .errors import SdkProtocolError
-from .models import CapabilityDeclaration, InitializeResponse, JsonObject, Notification
+from .models import CapabilityDeclaration, ExecutionOutcome, InitializeResponse, JsonObject, Notification
 
 
 @dataclass(slots=True)
@@ -54,6 +56,28 @@ class RunResult:
     finish_reason: str | None
     events: list[JsonObject]
     notifications: list[Notification]
+
+    def tool_outcomes(self) -> list[tuple[str, ExecutionOutcome]]:
+        """Return the call id and outcome of each tool call in this run that did not succeed (Epic P3-03).
+
+        Raises:
+            SdkProtocolError: A ``tool/result`` event has a malformed outcome or no call id.
+        """
+        outcomes: list[tuple[str, ExecutionOutcome]] = []
+        for event in self.events:
+            if event.get("type") != "tool/result":
+                continue
+            outcome = tool_result_outcome(event)
+            if outcome is None:
+                continue
+            data = event.get("data")
+            message = data.get("message") if isinstance(data, dict) else None
+            source = message.get("source") if isinstance(message, dict) else None
+            call_id = source.get("callId") if isinstance(source, dict) else None
+            if not isinstance(call_id, str):
+                raise SdkProtocolError("tool/result event requires a string data.message.source.callId")
+            outcomes.append((call_id, outcome))
+        return outcomes
 
 
 class DeepSeekHarness:
@@ -251,6 +275,24 @@ def final_response(events: list[JsonObject]) -> str:
                 parts.append(str(block.get("text") or ""))
         return "".join(parts)
     return ""
+
+
+def tool_result_outcome(event: JsonObject) -> ExecutionOutcome | None:
+    """Return the outcome a ``tool/result`` event records, or ``None`` when the call succeeded (Epic P3-03).
+
+    Raises:
+        SdkProtocolError: The event is not a ``tool/result``, or its ``outcome`` is malformed.
+    """
+    if event.get("type") != "tool/result":
+        raise SdkProtocolError("tool_result_outcome requires a tool/result event")
+    data = event.get("data")
+    outcome = data.get("outcome") if isinstance(data, dict) else None
+    if outcome is None:
+        return None
+    try:
+        return ExecutionOutcome.model_validate(outcome)
+    except ValidationError as error:
+        raise SdkProtocolError(f"tool/result event has a malformed outcome: {error}") from error
 
 
 def finish_reason(events: list[JsonObject]) -> str | None:

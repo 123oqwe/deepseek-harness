@@ -1,4 +1,4 @@
-from .api import DeepSeekHarness, DeepSeekHarnessConfig, RunResult, Session
+from .api import DeepSeekHarness, DeepSeekHarnessConfig, RunResult, Session, tool_result_outcome
 from .client import APPROVAL_CAPABILITY, HOST_CONTROL_CAPABILITY, HarnessClient, HarnessConfig
 from .errors import SdkProtocolError
 from .models import (
@@ -6,6 +6,7 @@ from .models import (
     ApprovalChanged,
     ApprovalDecision,
     CapabilityDeclaration,
+    ExecutionOutcome,
     HostControlState,
     HostStopRecord,
     IncomingRequest,
@@ -20,6 +21,7 @@ __all__ = [
     "DeepSeekHarnessConfig",
     "Session",
     "RunResult",
+    "tool_result_outcome",
     "HarnessClient",
     "HarnessConfig",
     "SdkProtocolError",
@@ -29,6 +31,7 @@ __all__ = [
     "ApprovalChanged",
     "ApprovalDecision",
     "CapabilityDeclaration",
+    "ExecutionOutcome",
     "HostControlState",
     "HostStopRecord",
     "IncomingRequest",

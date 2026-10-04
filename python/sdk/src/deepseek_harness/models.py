@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TypeAlias
+from typing import Literal, TypeAlias
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -160,6 +160,33 @@ class ApprovalChanged(BaseModel):
 
     sessionId: str
     approval: Approval
+
+
+class ExecutionOutcome(BaseModel):
+    """How one tool call did not succeed, as its ``tool/result`` event records it (Epic P3-03).
+
+    ``kind`` is one of the six typed outcomes. The detail fields are the ones
+    each kind carries; any field a newer server adds stays in ``model_extra``.
+    """
+
+    model_config = _KEEP_UNKNOWN
+
+    kind: Literal["policy_denied", "resource_exhausted", "timeout", "cancelled", "tool_failed", "world_lost"]
+    #: ``policy_denied``: the gate that refused, and the refusal's error name.
+    source: str | None = None
+    name: str | None = None
+    #: ``resource_exhausted``: the limit reached (``memory``, ``budget``, ...).
+    limit: str | None = None
+    #: ``timeout`` and ``cancelled``: what stopped the call; a timeout's deadline.
+    by: str | None = None
+    deadlineMs: int | None = None
+    #: ``tool_failed``: the exit code, signal or error code.
+    exitCode: int | None = None
+    signal: str | None = None
+    code: str | None = None
+    #: ``world_lost``: why, and which provider's world.
+    reason: str | None = None
+    provider: str | None = None
 
 
 class InitializeResponse(BaseModel):
