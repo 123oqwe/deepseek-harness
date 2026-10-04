@@ -8063,7 +8063,7 @@ Reading the code (not run), the `G3` backstop named above is not reached on nati
 
 ### BLOCKED-292 — P0-07's evidence verifier is not wired into any release path; it runs only on the CI quality gate
 
-**Status:** OPEN (2026-09-19). Owner lane B. Measured by lane A (A-172, `only-measure`), ruled by the delegate. **Not a call to withdraw P0-07.**
+**Status:** CLOSED 2026-10-04 (closure note at the end of this entry); opened 2026-09-19. Owner lane B. Measured by lane A (A-172, `only-measure`), ruled by the delegate. **Not a call to withdraw P0-07.**
 
 **The clause and what it says.** P0-07 `validation[2]` is copied verbatim from `spec/first100/sources/first100-requirements-matrix.md:129`: 「将 evidence verifier 放到发布脚本最后一步」 — put the evidence verifier at the **last step of the release script**. Neither the matrix nor `tests/first100/registry.json` says which release script: it is a standalone imperative with no named object, which is part of why nothing closed it.
 
@@ -8082,6 +8082,23 @@ Reading the code (not run), the `G3` backstop named above is not reached on nati
 **Progress 2026-09-20 — the third pipeline is wired, so all three npm publishing pipelines now carry the chain; the entry stays OPEN on runtime observation alone.** `80e1e1b6364b41cebd0a5daaf8a278177b2a4f80` puts the same `collect-evidence init` -> `run` -> `build-artifact` -> `evidence:verify` chain into `node-addon-system-release.yml`'s pack job. The conflict the previous paragraph named is resolved rather than worked around: the workflow's `defaults.run.working-directory: native/system` (`:24-26`) is overridden per step with `working-directory: ${{ github.workspace }}` on each evidence step, so the collector runs where its `--repo-root` default already points and every `--path` it records is repository-root-relative. The two wrapped gates are this family's own existing validations, not new ones: `release-payload` wraps `node native/system/scripts/verify-release.mjs --prebuilds` (`:227`) and `packed-install` wraps `node native/system/scripts/verify-packed-install.mjs native/system/dist/npm` (`:245`); the bare `Verify packed install` step that ran the second one unwrapped was removed, so the gate has one call site rather than two that could disagree. `--required-artifact` is enumerated from `native/system/dist/npm/*` at that moment (`:206`), which is the set the publish job downloads. The structural argument is the same as for the other two: the verification is `:258-260`, the only step after it is the always-run restore of the tracked baseline the capture rewrote (`:262-265`), the upload is `:267`, and the publish job's `needs: pack` is `:278`, so a failed verification skips the upload and leaves the publish job nothing to publish. `--base-sha` resolves through this family's own tag prefix `node-addon-system-v` with the same empty-tree fallback, and the prefix's drift from `native/system/scripts/verify-release.mjs` is an error rather than a silent base.
 
 **Nothing above is a runtime observation.** No release pipeline has been triggered for any of the three: nobody working on this program may trigger one, and a rehearsal or a release is the repository owner's to run. What all three prove today is structural — those steps exist, in that order, in those jobs — and the two-job boundary between verification and publication still holds by artifact passing rather than by one job doing both. Against the closing condition: (1) is answered for all three, (2) is met for all three, and (3) is still not met at all, which is why this stays OPEN.
+
+**Closure note (2026-10-04, delegate first100-delegate-52; §21.3 ruling in `artifacts/delegate/s21-3-read-280-292.md`).** All three closing conditions are met for the npm publishing pipelines. The Python pipeline is excluded by ruling.
+
+- **(1) Which release script.** The npm publishing pipelines: `release-publish.yml`, `release-vendor-publish.yml` and `node-addon-system-release.yml`. Each carries the evidence chain in the `pack` job its `publish` job needs.
+- **(2) The verifier as the last step.** Met by `9cc01c49989df4d7513ccfd5901dd3c61c4b350c` and `80e1e1b6364b41cebd0a5daaf8a278177b2a4f80`, as the progress notes above record.
+- **(3) Observed without triggering a release.** Met by a pipeline-structure assertion, the form this condition allows. The progress note of 2026-09-20 said (3) was not met at all; four days later lane A's LA-1..LA-3 (`791b28af9c`) added the assertion, and this entry was not revisited.
+  - The assertion is frozen as P0-07 U `[396]` (frozen `2026-09-24T21:24:27Z`, 9 cases, sensitivity proven by mutation runs 36060142805, 36060166355, 36060190256 and 36060211775).
+  - For each of the three workflows it asserts:
+    - the `pack` job has a step running `evidence:verify`, after every `collect-evidence` step and before the upload;
+    - that step runs only the verify command, with no `if`, no `continue-on-error`, no custom `shell` and no `||true`, `;true`, `|tee` or `&` suffix;
+    - every step between it and the upload is `always()` and collects nothing;
+    - the `pack` job may not fail softly, and the `publish` job needs `pack`.
+  - Observed: full gate `37187203588` (success) on the 28r2 candidate `c8d08229b2ee75432bf5531e4773c169772e8023`, on `fork/first100-exec`. All 9 `[396]` cases passed; 28238 tests, 0 failed.
+- **Known Limitations.**
+  - (a) No runtime observation of a publishing pipeline. Running a release or a rehearsal of one is the repository owner's. Wiring the same chain into the credential-free rehearsals `release.yml` and `release-vendor.yml`, which run on every pull request and master push, was drafted and deferred by the delegate as marginal (`artifacts/laneB/b292b-rehearsal-evidence-draft-v1.diff`).
+  - (b) `python-release.yml` is out of scope. Its wheels are gated by its own `SHA256SUMS`, which the publish jobs re-check before publishing (`:172`, `:201`, `:236`). P0-07's evidence package is scoped to npm packages, and its recorded digests do not cover wheels.
+  - (c) Verification and publication sit in two jobs. The publish job does not re-check the downloaded tarballs against the evidence package. That boundary is BLOCKED-362.
 
 ### BLOCKED-293 — five withdrawals, one root cause: arrival was checked until it found one caller, not across the surfaces the clause quantifies over
 
@@ -10749,3 +10766,20 @@ The repository already records the problem and a version-independent guard: `scr
 - **The defect.** B-688 (fd34988cd0) guarded three entries with `existsSync(argv[1]) && realpathSync(argv[1]) === this file` (`apps/cli/src/bin.ts`, `packages/subprocess/subprocess-local/src/bin.ts`, `apps/desktop-host/src/index.ts`). In the SEA-packaged SDK runtime, argv[1] names the entry script without its snapshot prefix: the virtual file system's `existsSync` answers true and `realpathSync` throws ENOENT, so importing `lib/bin.js` crashed before any boot (run 37230528682: every [sea] case of `python/sdk/tests/test_bundled_runtime.py`; the [node] cases pass).
 - **Accepted epic affected.** P8-01: BLOCKED-314's closure cites `test_bundled_runtime_hands_the_caller_the_handshake_fields` passing on both carriers at 77c139df26 (run 36200543709, 8 of 8), before B-688. Since B-688 the SEA carrier has been broken and was not re-run. P8-01 stays ACCEPTED, known defect under repair; it closes when this fix lands. No other ACCEPTED epic cites the bundled runtime.
 - **The fix (8681026176).** Each guard compares through `realPathOf`, which answers undefined when the path cannot be resolved, so the module is not the entry. Red: run 37230528682. Fix: 8 of 8 on both carriers (run 37231606675). M-361-1 (8e914849ce): the 4 [sea] cases red, the 4 [node] cases green (run 37231617873).
+
+### BLOCKED-362 — the npm publish jobs publish the tarballs they download without checking them against the evidence package the pack job verified
+
+**Status:** OPEN (2026-10-04). Split from BLOCKED-292 by the delegate (first100-delegate-52, §21.3 ruling 4: queue/laneB.md line 421 ②). Does not block BLOCKED-292 or P0-07. Owner of the wiring: lane B. Red first and evidence: a lane other than B.
+
+- **The gap.** In `release-publish.yml`, `release-vendor-publish.yml` and `node-addon-system-release.yml`, `evidence:verify` runs in the `pack` job (`release-publish.yml:216`). The `publish` job runs on a fresh runner, downloads the uploaded tarballs (`:265-268`), and publishes them (`:270-273`). Nothing in that job reads the evidence package. "A release cannot complete without its evidence verifying" therefore holds only by artifact passing between two jobs. BLOCKED-292's progress notes record this as a known boundary of the wiring.
+- **What exists to build on.**
+  - The package records each published tarball's digest in `requiredBuildArtifacts`, keyed by its repository-root-relative path (`packages/assurance/evidence-format/src/types.ts:224`).
+  - `python-release.yml` already re-checks across the boundary: `validate` writes `SHA256SUMS` (`:172`), and each publish job runs `sha256sum -c` before publishing (`:201`, `:236`).
+- **Closing condition.**
+  - (1) The pack job uploads the evidence package with the tarballs.
+  - (2) Each npm publish job, before its publish step, checks that the downloaded tarballs are exactly the package's `requiredBuildArtifacts`: the same set of paths, each with the recorded digest. Any difference refuses publication.
+  - (3) A structure case pins that step's position and its failure behaviour, like P0-07's frozen [396]. A mutation that drops the check, or lets the publish step run after a failed check, turns it red.
+  - Before wiring, measure whether the publish job can run `evidence:verify` itself, or needs an artifacts-only check. The pack job restores `.dsh/baseline.json` after verifying (`release-publish.yml:223-225`), so a full re-verify on a fresh checkout may not reproduce the captured baseline.
+- **What this does NOT claim.**
+  - Not that a release has shipped unverified bytes. The upload carries what the verified job packed; nothing here measures a substitution.
+  - Not that P0-07 or BLOCKED-292 is unmet. The verifier is the last step of the job that builds the release.
