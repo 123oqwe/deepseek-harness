@@ -3867,6 +3867,14 @@ export const EVENT_API: readonly EventApiEntry[] = [
     parameters: [{ name: 'sessionId', description: 'Agent and Session identity.' }, { name: 'running', description: 'whether the Agent is running.' }],
   },
   {
+    name: 'approval-store/changed',
+    mode: 'emit',
+    signature: '\'approval-store/changed\'(record: ApprovalRecord): void',
+    summary: 'An approval was recorded or moved.',
+    description: 'An approval was recorded or moved. Every provider emits this after each `request`, and after each `decide`, `revoke` or `consume` it accepted (never after a refused one), so an asker waiting for its approval and an SDK client watching approvals learn of a decision another client made. Only moves made through this process\'s store are emitted; a move another process makes in a shared store is seen on the next read.',
+    parameters: [{ name: 'record', description: 'the approval as recorded, or after its move.' }],
+  },
+  {
     name: 'approval/request',
     mode: 'waterfall',
     signature: '\'approval/request\'( this: Scoped<Agent>, req: ApprovalRequestEvent, next: () => Promise<ApprovalOutcome>, ): Promise<ApprovalOutcome>',

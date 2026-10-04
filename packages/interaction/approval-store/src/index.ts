@@ -5,15 +5,14 @@
  * applies — so an approval asked in one turn or process can be decided,
  * consumed at most once, or expire in another.
  *
- * This package is the Service Definition. Its SQLite provider and the
- * consumers that write through to it (`@deepseek-ai/dsh-user-approval`, the
- * Run that waits for an approval, the SDK's list and decide requests) follow
- * in later slices.
+ * This package is the Service Definition. Its SQLite provider is `./sqlite`;
+ * `@deepseek-ai/dsh-user-approval` records every ask through it, and the SDK
+ * server lists and decides approvals from it.
  * @module @deepseek-ai/dsh-approval-store
  */
 
 import type {} from '@deepseek-ai/cordis'
-import type { ApprovalStoreContract } from './types.ts'
+import type { ApprovalRecord, ApprovalStoreContract } from './types.ts'
 
 /**
  * The mounted approval store, published by whichever provider a profile
@@ -23,6 +22,19 @@ import type { ApprovalStoreContract } from './types.ts'
 declare module '@deepseek-ai/cordis' {
   interface Context {
     approvalStore: ApprovalStoreContract
+  }
+  interface Events {
+    /**
+     * An approval was recorded or moved. Every provider emits this after each
+     * `request`, and after each `decide`, `revoke` or `consume` it accepted
+     * (never after a refused one), so an asker waiting for its approval and an
+     * SDK client watching approvals learn of a decision another client made.
+     * Only moves made through this process's store are emitted; a move
+     * another process makes in a shared store is seen on the next read.
+     * @mode emit
+     * @param record - the approval as recorded, or after its move.
+     */
+    'approval-store/changed'(record: ApprovalRecord): void
   }
 }
 

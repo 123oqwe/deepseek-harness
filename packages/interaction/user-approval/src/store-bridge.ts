@@ -14,11 +14,14 @@
 import { createHash } from 'node:crypto'
 import type { Context } from '@deepseek-ai/cordis'
 import { manifestAttribution } from '@deepseek-ai/dsh-action-manifest'
+import { effectiveApprovalState } from '@deepseek-ai/dsh-approval-store'
 import type {
   ApprovalConflict,
+  ApprovalRecord,
   ApprovalRequestId,
   ApprovalStoreContract,
   ApprovalViewer,
+  ApprovalWriteResult,
 } from '@deepseek-ai/dsh-approval-store'
 import { attachedIdentity, type Session } from '@deepseek-ai/dsh-session'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
@@ -66,10 +69,11 @@ export interface RecordedAsk {
  * @param store - the mounted approval store.
  * @param ask - the ask.
  * @param nowMs - the ask time.
+ * @returns the recorded approval, whose revision the ask's own move names.
  */
-export function recordApprovalRequest(store: ApprovalStoreContract, ask: RecordedAsk, nowMs: number): void {
+export function recordApprovalRequest(store: ApprovalStoreContract, ask: RecordedAsk, nowMs: number): ApprovalRecord {
   const viewer = approvalViewerOf(ask.session)
-  store.request({
+  return store.request({
     id: ask.id,
     tenant: viewer.tenant,
     actor: viewer.principal,
@@ -82,41 +86,67 @@ export function recordApprovalRequest(store: ApprovalStoreContract, ask: Recorde
 }
 
 /**
- * Record an ask's outcome as a move of its approval: `allowed-once` approves
- * it, `rejected` denies it, and `cancelled` or `unavailable` revokes it, since
- * nobody granted it and a retry asks again. A move the store refuses (the
- * approval lapsed, or another client decided first) is left as the store has
- * it: consumption, not this record, decides whether the action runs.
+ * Record an ask's outcome as a move of its approval, from the revision the ask
+ * recorded, and return the outcome the store settled on. `allowed-once`
+ * approves the approval, `rejected` denies it, and `cancelled` or
+ * `unavailable` revokes it, since nobody granted it and a retry asks again.
+ * When the store accepts the move the outcome stands. When it refuses (another
+ * client moved the approval since, or it lapsed), the
+ * approval as the store holds it decides, read against `nowMs`: approved is
+ * `allowed-once`, denied is `rejected`, and anything else (revoked, lapsed,
+ * consumed), or an approval the store does not hold, is `cancelled`.
  * @param store - the mounted approval store.
  * @param id - the approval.
+ * @param expectedRevision - the revision the ask recorded.
  * @param outcome - the ask's outcome.
  * @param session - the asking session.
  * @param nowMs - the decision time.
+ * @returns the outcome the ask settles on.
  */
 export function recordApprovalOutcome(
   store: ApprovalStoreContract,
   id: ApprovalRequestId,
+  expectedRevision: number,
   outcome: ApprovalOutcome,
   session: Session,
   nowMs: number,
-): void {
-  const viewer = approvalViewerOf(session)
-  const row = store.get(id, viewer, nowMs)
-  if (row === undefined) return
+): ApprovalOutcome {
+  const result = outcomeMove(store, expectedRevision, id, outcome, approvalViewerOf(session), nowMs)
+  if (result.ok) return outcome
+  const state = result.current === undefined ? undefined : effectiveApprovalState(result.current, nowMs)
+  if (state === 'approved') return 'allowed-once'
+  return state === 'denied' ? 'rejected' : 'cancelled'
+}
+
+/**
+ * The store move one outcome makes.
+ * @param store - the mounted approval store.
+ * @param revision - the revision read.
+ * @param id - the approval.
+ * @param outcome - the ask's outcome.
+ * @param viewer - the asking session's viewer.
+ * @param nowMs - the decision time.
+ * @returns the store's answer to the move.
+ */
+function outcomeMove(
+  store: ApprovalStoreContract,
+  revision: number,
+  id: ApprovalRequestId,
+  outcome: ApprovalOutcome,
+  viewer: ApprovalViewer,
+  nowMs: number,
+): ApprovalWriteResult {
   switch (outcome) {
     case 'allowed-once':
-      store.decide(id, row.revision, 'approved', viewer, nowMs)
-      return
+      return store.decide(id, revision, 'approved', viewer, nowMs)
     case 'rejected':
-      store.decide(id, row.revision, 'denied', viewer, nowMs)
-      return
+      return store.decide(id, revision, 'denied', viewer, nowMs)
     case 'cancelled':
     case 'unavailable':
-      store.revoke(id, row.revision, viewer, nowMs)
-      return
+      return store.revoke(id, revision, viewer, nowMs)
     /* v8 ignore next -- closed-union exhaustiveness guard */
     default:
-      assertNever(outcome, 'ApprovalOutcome')
+      return assertNever(outcome, 'ApprovalOutcome')
   }
 }
 

@@ -655,6 +655,10 @@
         "mode": "emit"
       },
       {
+        "name": "approval-store/changed",
+        "mode": "emit"
+      },
+      {
         "name": "feedback/committed",
         "mode": "parallel"
       },

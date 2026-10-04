@@ -25,7 +25,7 @@ import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import ApprovalStoreSqlitePlugin from '@deepseek-ai/dsh-approval-store/sqlite'
-import ApprovalService, { ApprovalRequestId, approvalViewerOf, revokeTurnApprovals } from '@deepseek-ai/dsh-user-approval'
+import ApprovalService, { ApprovalRequestId, approvalViewerOf } from '@deepseek-ai/dsh-user-approval'
 import PermissionPresetService from '@deepseek-ai/dsh-permission-presets'
 import { approvalBindingDigest } from '@deepseek-ai/dsh-user-approval/canonical'
 import type { ApprovalBindingInputs } from '@deepseek-ai/dsh-user-approval/types'
@@ -88,19 +88,22 @@ async function composed(
     run() { throw new Error('these cases do not execute bash') },
     start() { throw new Error('these cases do not execute bash') },
   })
-  // `store` mounts the durable approval queue; with `revoked` the operator
-  // revokes the session's open approvals before granting.
+  // `store` mounts the durable approval queue; with `revoked` another client
+  // revokes each approval as soon as it is approved, after the ask settled and
+  // before the dispatch consumes it.
   if (options.store !== undefined) {
     const directory = mkdtempSync(join(tmpdir(), 'dsh-approval-code-mode-store-'))
     roots.push(directory)
     await ctx.plugin(ApprovalStoreSqlitePlugin, { directory, busyTimeoutMs: 1000 })
   }
   await ctx.plugin(ApprovalService, {})
-  ctx.on('approval/request', (request) => {
-    const approvals = ctx.get('approvalStore')
-    if (options.store === 'revoked' && approvals !== undefined) revokeTurnApprovals(approvals, request.agent.session, Date.now())
-    return Promise.resolve<'allowed-once'>('allowed-once')
-  })
+  ctx.on('approval/request', () => Promise.resolve<'allowed-once'>('allowed-once'))
+  if (options.store === 'revoked') {
+    ctx.on('approval-store/changed', (record) => {
+      if (record.state !== 'approved') return
+      ctx.get('approvalStore')?.revoke(record.id, record.revision, { tenant: record.tenant, principal: record.actor }, Date.now())
+    })
+  }
   // Mounted only where the case is about the ASK. The re-verification cases
   // leave it out on purpose: a live gate asks about the call it is dispatching
   // and records a FRESH binding for it, which supersedes the seeded one and

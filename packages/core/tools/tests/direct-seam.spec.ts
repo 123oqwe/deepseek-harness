@@ -20,7 +20,7 @@ import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import PermissionPresetService from '@deepseek-ai/dsh-permission-presets'
 import ApprovalStoreSqlitePlugin from '@deepseek-ai/dsh-approval-store/sqlite'
-import ApprovalService, { approvalViewerOf, revokeTurnApprovals } from '@deepseek-ai/dsh-user-approval'
+import ApprovalService, { approvalViewerOf } from '@deepseek-ai/dsh-user-approval'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import ToolRuntime, { TOOL_CAPABILITY_VERB, defineContentToolFixture } from '@deepseek-ai/dsh-tools'
@@ -219,12 +219,13 @@ describe('BLOCKED-345: the public seam asks whether this host may still act', ()
  * up, with an operator who answers every approval request `answer`.
  * @param answer - the operator's answer.
  * @param store - when set, the SQLite approval store is mounted in this directory, and with
- *   `revokeBeforeAnswer` the operator revokes the session's open approvals before answering.
+ *   `revokeAfterApproval` another client revokes each approval as soon as it is approved, after the ask
+ *   settled and before the dispatch consumes it.
  * @returns the composition, and the tool names the operator was asked about.
  */
 async function composeGated(
   answer: 'allowed-once' | 'rejected',
-  store?: { readonly directory: string; readonly revokeBeforeAnswer: boolean },
+  store?: { readonly directory: string; readonly revokeAfterApproval: boolean },
 ): Promise<Composed & { readonly asked: string[] }> {
   const composed = await compose({ kernel: true })
   const { ctx } = composed
@@ -241,10 +242,14 @@ async function composeGated(
   const asked: string[] = []
   ctx.on('approval/request', (request) => {
     asked.push(request.toolName)
-    const approvals = ctx.get('approvalStore')
-    if (store?.revokeBeforeAnswer === true && approvals !== undefined) revokeTurnApprovals(approvals, request.agent.session, Date.now())
     return Promise.resolve(answer)
   })
+  if (store?.revokeAfterApproval === true) {
+    ctx.on('approval-store/changed', (record) => {
+      if (record.state !== 'approved') return
+      ctx.get('approvalStore')?.revoke(record.id, record.revision, { tenant: record.tenant, principal: record.actor }, Date.now())
+    })
+  }
   await ctx.plugin(PermissionPresetService, {
     riskRules: [],
     presets: { 'workspace-write': { sandbox: 'workspace-write', approval: 'ask', approvalThreshold: 'read' } },
@@ -303,7 +308,7 @@ function storeDirectory(): string {
 
 describe('P2-07 acceptance[1]: the public seam consumes the approval a direct call rests on', () => {
   it('runs a direct call the operator allows and leaves its approval consumed', async () => {
-    const { ctx, agent, bodies } = await composeGated('allowed-once', { directory: storeDirectory(), revokeBeforeAnswer: false })
+    const { ctx, agent, bodies } = await composeGated('allowed-once', { directory: storeDirectory(), revokeAfterApproval: false })
     const result = await ctx.tools.execute({ callId: ToolCallId('consumed'), name: 'probe', arguments: {}, agent, signal })
 
     expect(result.isError).toBe(false)
@@ -313,7 +318,7 @@ describe('P2-07 acceptance[1]: the public seam consumes the approval a direct ca
   })
 
   it('does not run a direct call whose approval was revoked before the dispatch could consume it', async () => {
-    const { ctx, agent, bodies } = await composeGated('allowed-once', { directory: storeDirectory(), revokeBeforeAnswer: true })
+    const { ctx, agent, bodies } = await composeGated('allowed-once', { directory: storeDirectory(), revokeAfterApproval: true })
     const result = await ctx.tools.execute({ callId: ToolCallId('revoked'), name: 'probe', arguments: {}, agent, signal })
 
     expect(result.isError).toBe(true)

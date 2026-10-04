@@ -32,6 +32,8 @@ An approval starts `requested`. From there it is `approved`, `denied`, `revoked`
 
 Every record carries a revision that starts at 0 and grows by one on every move. Every write names the revision the writer read (`applyApprovalTransition`): a write from an older read is refused as `stale-revision` and shows the current record. So two clients deciding the same approval leave exactly one terminal state, and an approval is consumed at most once — the action it approved runs only when its consumption succeeds. The checks run in a fixed order, tenant, revision, deadline, then the table, so the conflict names the first thing that was wrong. A successful decision records who decided and when, and a consumption records when.
 
+Every recorded approval and every accepted move is announced as the Cordis event `approval-store/changed`, carrying the record as it now stands; a refused move is not announced. An asker waiting on its approval and an SDK client watching approvals learn from it that another client decided. Only moves made through this process's store are announced.
+
 <a id="the-sqlite-provider"></a>
 ## The SQLite provider
 
@@ -50,6 +52,7 @@ Nothing here enters a request, so provider cache reuse is unaffected. What a mod
 ## Known Limitations and Deferred Work
 
 - A Run cannot yet wait in `waiting_for_approval`, and the SDK's list and decide requests are not on the wire; they arrive with the Use stage's later commits.
+- A move another process makes in a shared `approvals.sqlite` is not announced in this one; it is seen on the next read.
 - No runtime invariant companion is published: the store is the only record of an approval's state until the Use stage writes the session log beside it, so no two observations can disagree yet; one is reconsidered then.
 
 <a id="dev-note"></a>

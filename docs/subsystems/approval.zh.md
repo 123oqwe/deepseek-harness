@@ -233,4 +233,30 @@ Ask composed answerers for one decision. Return an outcome to claim the request 
 Types: [Agent](core.zh.md) · [Scoped](scope.zh.md)
 
 Source: [`packages/interaction/user-approval/src/types.ts`](../../packages/interaction/user-approval/src/types.ts)
+
+<a id="approval-store-events"></a>
+
+### `approval-store/*` events
+
+<a id="approval-storechanged--emit"></a>
+
+#### `approval-store/changed` — emit
+
+An approval was recorded or moved. Every provider emits this after each `request`, and after each `decide`, `revoke` or `consume` it accepted (never after a refused one), so an asker waiting for its approval and an SDK client watching approvals learn of a decision another client made. Only moves made through this process's store are emitted; a move another process makes in a shared store is seen on the next read.
+
+```ts cordis-catalog
+/**
+ * An approval was recorded or moved. Every provider emits this after each
+ * `request`, and after each `decide`, `revoke` or `consume` it accepted
+ * (never after a refused one), so an asker waiting for its approval and an
+ * SDK client watching approvals learn of a decision another client made.
+ * Only moves made through this process's store are emitted; a move
+ * another process makes in a shared store is seen on the next read.
+ * @mode emit
+ * @param record - the approval as recorded, or after its move.
+ */
+'approval-store/changed'(record: ApprovalRecord): void
+```
+
+Source: [`packages/interaction/approval-store/src/index.ts`](../../packages/interaction/approval-store/src/index.ts)
 <!-- END GENERATED cordis-surface -->
