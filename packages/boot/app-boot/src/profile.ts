@@ -173,13 +173,20 @@ const RUN_CODE_GRANT: WildcardGrant = {
   tool: 'run_code', destinationKind: 'process', pattern: '*', purpose: 'runs code the session writes, as a process of the user account',
 }
 
+/** The grant of a hooks bridge's package-level process field: it runs the commands the user's hooks file names. */
+const HOOK_COMMANDS_GRANT: WildcardGrant = {
+  destinationKind: 'process', pattern: '*', purpose: 'runs the commands the user\'s hooks file names, as processes of the user account',
+}
+
 /**
- * The wildcard destinations this installation grants its own shipped bundle
- * layers, tool by tool, each with the reason it is granted (question 27 (a)):
- * these tools reach any path, host or command only because the installation
- * says so here. A layer receives them only when it is the installation's own
- * copy ({@link installationWildcardGrants}); a third-party layer that asks for
- * a wildcard is refused before mount or quarantined after it.
+ * The wildcard destinations this installation grants its own shipped
+ * packages, bundle layers and packages a user patch row mounts alike, tool by
+ * tool or for a package-level field, each with the reason it is granted
+ * (questions 27 (a) and 28 (a)): these packages reach any path, host or
+ * command only because the installation says so here. A package receives
+ * them only when it is the installation's own copy
+ * ({@link installationPackageWildcardGrants}); a third-party package that asks
+ * for a wildcard is refused before mount or quarantined after it.
  */
 export const INSTALL_WILDCARD_GRANTS: Readonly<Record<string, readonly WildcardGrant[]>> = {
   '@deepseek-ai/dsh-base': [
@@ -193,6 +200,20 @@ export const INSTALL_WILDCARD_GRANTS: Readonly<Record<string, readonly WildcardG
     RUN_CODE_GRANT,
   ],
   '@deepseek-ai/dsh-sdk-minimal': [RUN_CODE_GRANT],
+  '@deepseek-ai/dsh-tool-cordis': [
+    { tool: 'cordis_run', destinationKind: 'process', pattern: '*', purpose: 'runs plugin code the session defines, which may spawn commands' },
+    { tool: 'cordis_run', destinationKind: 'network', pattern: '*', purpose: 'runs plugin code the session defines, which may fetch any host' },
+    filesystemGrant('cordis_run', 'runs plugin code the session defines, which may read and write files'),
+  ],
+  '@deepseek-ai/dsh-tool-lsp': [
+    { tool: 'lsp', destinationKind: 'process', pattern: '*', purpose: 'starts the language server command the operator configures' },
+    filesystemGrant('lsp', 'reads source files the session names; the language server host refuses paths outside the workspace'),
+  ],
+  '@deepseek-ai/dsh-tool-subagent': [
+    { tool: 'subagent_acp', destinationKind: 'process', pattern: '*', purpose: 'starts the ACP agent command the operator configures' },
+  ],
+  '@deepseek-ai/dsh-hooks-claude-code': [HOOK_COMMANDS_GRANT],
+  '@deepseek-ai/dsh-hooks-codex': [HOOK_COMMANDS_GRANT],
 }
 
 /**
@@ -223,20 +244,35 @@ function installationPackageDir(installAnchor: string, packageName: string): str
 }
 
 /**
- * The grants {@link INSTALL_WILDCARD_GRANTS} gives one resolved layer: its
- * entry, but only when the layer is this installation's own copy, its package
- * directory having the real path of {@link installationPackageDir}. A layer
+ * The grants {@link INSTALL_WILDCARD_GRANTS} gives one resolved package: its
+ * entry, but only when the package is this installation's own copy, its
+ * directory having the real path of {@link installationPackageDir}. A package
  * of the same name resolved anywhere else, such as a profile's own install or
  * a `node_modules` above the installation, gets none.
+ * @param packageName - the package name.
+ * @param packageDir - the directory the package was resolved to; it must exist.
+ * @param installAnchor - absolute package.json path of the running dsh installation.
+ * @returns the package's grants, empty when it has none or is not the installation's copy.
+ */
+export function installationPackageWildcardGrants(
+  packageName: string,
+  packageDir: string,
+  installAnchor: string,
+): readonly WildcardGrant[] {
+  const grants = INSTALL_WILDCARD_GRANTS[packageName]
+  if (grants === undefined) return []
+  const own = installationPackageDir(installAnchor, packageName)
+  return own !== undefined && own === realpathSync.native(packageDir) ? grants : []
+}
+
+/**
+ * {@link installationPackageWildcardGrants} for one bundle layer.
  * @param layer - a bundle layer {@link loadProfile} resolved.
  * @param installAnchor - absolute package.json path of the running dsh installation.
  * @returns the layer's grants, empty when it has none or is not the installation's copy.
  */
 export function installationWildcardGrants(layer: ProfileLayer, installAnchor: string): readonly WildcardGrant[] {
-  const grants = INSTALL_WILDCARD_GRANTS[layer.packageName]
-  if (grants === undefined) return []
-  const own = installationPackageDir(installAnchor, layer.packageName)
-  return own !== undefined && own === realpathSync.native(layer.packageDir) ? grants : []
+  return installationPackageWildcardGrants(layer.packageName, layer.packageDir, installAnchor)
 }
 
 /** Custom profiles retain the historical live patch-file behavior. */

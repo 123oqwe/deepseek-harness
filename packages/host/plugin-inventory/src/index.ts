@@ -376,6 +376,13 @@ export interface BuildPluginPermissionStatesOptions {
    * name at a temp directory without needing a real installed package.
    */
   readonly resolvePackageDir?: (moduleName: string, baseUrl: string | undefined) => string | undefined
+  /**
+   * The wildcard grants the installation gives a package judged by its own
+   * manifest, by its name and resolved directory (question 28 (a)); absent
+   * when the caller grants none, which is the same as every package receiving
+   * none.
+   */
+  readonly packageWildcardGrants?: (packageName: string, packageDir: string) => readonly WildcardGrant[]
 }
 
 /**
@@ -397,7 +404,8 @@ export interface BuildPluginPermissionStatesOptions {
  * `'manifest-v2'` declaration gets a real `comparison`/`trustDecision` from
  * {@link compareDeclaredToObserved}/{@link decidePluginTrust}; any other
  * carries neither. A unit judged by a layer whose scope carries
- * `wildcardGrants` is decided on the wildcards those grants do not cover
+ * `wildcardGrants`, or by a package `packageWildcardGrants` grants, is decided
+ * on the wildcards those grants do not cover
  * ({@link partitionWildcardFindings}), and its states list the covered ones
  * as `grantedWildcards`. Each state's `declaration` and `observed` stay the entry's
  * own. An entry with no resolvable package (a `cordis:` builtin, or a module
@@ -442,7 +450,12 @@ export function buildPluginPermissionStates(
       }
       : resolved === undefined
         ? undefined
-        : { key: `package:${resolved.dir}`, name: resolved.identity.name, declaration: resolved.declaration, grants: [] }
+        : {
+          key: `package:${resolved.dir}`,
+          name: resolved.identity.name,
+          declaration: resolved.declaration,
+          grants: options.packageWildcardGrants?.(resolved.identity.name, resolved.dir) ?? [],
+        }
     if (unit === undefined) return []
     const observed = entry.fiber === undefined ? NOTHING_OBSERVED : buildObservedPluginCapabilities(ctx, entry.fiber)
     return [{ entry, resolved, observed, unit }]

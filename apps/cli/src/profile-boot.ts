@@ -23,6 +23,7 @@ import {
   enforceTrustKernelPosture,
   healProfilesModuleFallback,
   initProfile,
+  installationPackageWildcardGrants,
   installationWildcardGrants,
   installFailLoud,
   loadOptionalPatches,
@@ -73,7 +74,7 @@ import {
   type BundleLayerScope,
   type PluginPermissionState,
 } from '@deepseek-ai/dsh-host-plugin-inventory'
-import { evaluatePreMountAdmission, type PluginDeclaration } from '@deepseek-ai/dsh-plugin-manifest'
+import { evaluatePreMountAdmission, partitionWildcardFindings, type PluginDeclaration } from '@deepseek-ai/dsh-plugin-manifest'
 import { admitUnsignedDevMode, sealTrustAnchors, type ProvenanceAuditRecord } from '@deepseek-ai/dsh-plugin-provenance'
 import { appendProvenanceAudit, verifyBootProvenance } from './install-provenance.ts'
 import { createProcessShutdown, type ProcessShutdown } from './process-shutdown.ts'
@@ -326,6 +327,15 @@ interface DeniedUserPatchRow extends UserPatchRow {
 }
 
 /**
+ * One user patch row a production boot admits on the installation's wildcard
+ * grants (question 28 (a)), with its package and those grants.
+ */
+interface GrantedUserPatchRow extends UserPatchRow {
+  readonly packageName: string
+  readonly grants: readonly GrantedWildcard[]
+}
+
+/**
  * The first row with `id` in `entries`, a group's rows included.
  * @param entries - a composed entry list.
  * @param id - the row id.
@@ -385,50 +395,75 @@ function isModuleProxy(packageDir: string): boolean {
   return manifest.dsh?.moduleFallback !== undefined
 }
 
+/** The package a user patch row's module is imported from: its directory and name when resolvable, and its declaration. */
+interface UserPatchRowPackage {
+  readonly dir?: string
+  readonly name?: string
+  readonly declaration: PluginDeclaration
+}
+
 /**
- * The declaration of the package a user patch row's module is imported from,
- * resolved from the profile directory as the Loader resolves the row. A
- * module proxy carries no manifest of its own, so its package is resolved from
- * the installation it forwards to. A module that no package directory holds
- * declares nothing.
+ * The package a user patch row's module is imported from, resolved from the
+ * profile directory as the Loader resolves the row. A module proxy carries
+ * no manifest of its own, so its package is resolved from the installation
+ * it forwards to. A module that no package directory holds declares nothing.
  * @param moduleName - the row's module specifier.
  * @param profileDir - the profile directory.
- * @returns the classified declaration.
+ * @returns the package's directory and `package.json` name, when resolvable, and its classified declaration.
  */
-function userPatchRowDeclaration(moduleName: string, profileDir: string): PluginDeclaration {
+function userPatchRowPackage(moduleName: string, profileDir: string): UserPatchRowPackage {
   const resolved = resolveEntryPackageDir(moduleName, pathToFileURL(join(profileDir, PROFILE_ROOT_FILENAME)).href)
   const packageDir = resolved !== undefined && isModuleProxy(resolved)
     ? resolveEntryPackageDir(moduleName, pathToFileURL(INSTALL_ANCHOR).href)
     : resolved
-  return packageDir === undefined ? { kind: 'missing' } : readPluginDeclaration(packageDir)
+  if (packageDir === undefined) return { declaration: { kind: 'missing' } }
+  const { name } = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf8')) as { name?: unknown }
+  return { dir: packageDir, ...typeof name === 'string' ? { name } : {}, declaration: readPluginDeclaration(packageDir) }
 }
 
 /**
  * Partition user patch rows into admitted and denied, as
- * {@link partitionProfileLayersByAdmission} partitions bundle layers. Without
+ * {@link partitionProfileLayersByAdmission} partitions bundle layers with
+ * the installation's grants: a row denied only for wildcard permissions is
+ * admitted when {@link installationPackageWildcardGrants} grants its package
+ * every one of them, and is listed in `granted` with them. Without
  * `production` every row is admitted and no package is read.
  * @param rows - the user patch rows.
  * @param profileDir - the profile directory the rows resolve from.
  * @param production - whether the boot enforces production admission.
- * @returns the admitted and the denied rows.
+ * @returns the admitted and the denied rows, and the admitted rows the installation's grants admitted.
  */
 function partitionUserPatchRowsByAdmission(
   rows: readonly UserPatchRow[],
   profileDir: string,
   production: boolean,
-): { readonly admitted: readonly UserPatchRow[]; readonly denied: readonly DeniedUserPatchRow[] } {
-  if (!production) return { admitted: rows, denied: [] }
+): {
+  readonly admitted: readonly UserPatchRow[]
+  readonly denied: readonly DeniedUserPatchRow[]
+  readonly granted: readonly GrantedUserPatchRow[]
+} {
+  if (!production) return { admitted: rows, denied: [], granted: [] }
   const admitted: UserPatchRow[] = []
   const denied: DeniedUserPatchRow[] = []
+  const granted: GrantedUserPatchRow[] = []
   for (const row of rows) {
-    const admission = evaluatePreMountAdmission(userPatchRowDeclaration(row.entry.name, profileDir), true)
+    const { dir, name, declaration } = userPatchRowPackage(row.entry.name, profileDir)
+    const admission = evaluatePreMountAdmission(declaration, true)
     if (admission.admitted) {
       admitted.push(row)
+      continue
+    }
+    const grantable = admission.reason === 'wildcard-permission' && declaration.kind === 'manifest-v2' && dir !== undefined && name !== undefined
+      ? { name, partition: partitionWildcardFindings(declaration.manifest, installationPackageWildcardGrants(name, dir, INSTALL_ANCHOR)) }
+      : undefined
+    if (grantable !== undefined && grantable.partition.ungranted.length === 0) {
+      admitted.push(row)
+      granted.push({ ...row, packageName: grantable.name, grants: grantable.partition.granted })
     } else {
-      denied.push({ ...row, reason: admission.reason, wildcardFindings: admission.wildcardFindings })
+      denied.push({ ...row, reason: admission.reason, wildcardFindings: grantable?.partition.ungranted ?? admission.wildcardFindings })
     }
   }
-  return { admitted, denied }
+  return { admitted, denied, granted }
 }
 
 /** A user patch row partition as a gate decision; its summary keeps patch files, row ids, modules, reasons, and wildcard paths. */
@@ -482,6 +517,8 @@ function refuseUserPatchRows(
     ['admitted', 'denied'],
   )
   if (admission.shadowRecord !== undefined) appendShadowDecision('pre-mount-patch-admission', admission.shadowRecord)
+  // Only the 'enforce' partition grants, so only an enforcing boot records a grant here.
+  for (const { packageName, grants } of admission.value.granted) appendAdmissionDecision(packageName, 'granted', grants)
   for (const { file, entry, reason, wildcardFindings } of admission.value.denied) {
     const detail = wildcardFindings.length > 0 ? `: ${wildcardFindings.map(finding => finding.path).join(', ')}` : ''
     process.stderr.write(
@@ -945,7 +982,7 @@ export interface AdmissionDecisionGrant {
 /** One line of {@link admissionDecisionLogPath}. */
 export interface AdmissionDecisionRecord {
   readonly recordedAt: string
-  /** The bundle layer's package name, or for a quarantine the package whose manifest judged it. */
+  /** The bundle layer's or granted patch row's package name, or for a quarantine the package whose manifest judged it. */
   readonly layer: string
   readonly decision: 'granted' | 'refused' | 'quarantined'
   /** The grants that covered the layer's wildcards; empty for a refusal. */
@@ -1065,7 +1102,12 @@ function manifestQuarantines(
   provenanceRecords: ReadonlyMap<string, ProvenanceAuditRecord>,
 ): ManifestQuarantine[] {
   const layers = withLoaderEntryIds(ctx, bundleLayers)
-  const states = buildPluginPermissionStates(ctx, { bundlePackageNames: admittedLayerNames, bundleLayers: layers, provenanceRecords })
+  const states = buildPluginPermissionStates(ctx, {
+    bundlePackageNames: admittedLayerNames,
+    bundleLayers: layers,
+    provenanceRecords,
+    packageWildcardGrants: (packageName, packageDir) => installationPackageWildcardGrants(packageName, packageDir, INSTALL_ANCHOR),
+  })
   const quarantined = new Map<string, PluginPermissionState>()
   for (const state of states) {
     if (state.trustDecision === 'quarantined' && state.judgedBy !== undefined && !quarantined.has(state.judgedBy)) {

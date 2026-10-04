@@ -38,6 +38,7 @@ export {
   healProfilesModuleFallback,
   initProfile,
   INSTALL_WILDCARD_GRANTS,
+  installationPackageWildcardGrants,
   installationWildcardGrants,
   loadProfile,
   loadProfileDirectory,

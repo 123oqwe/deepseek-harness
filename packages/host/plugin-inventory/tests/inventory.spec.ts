@@ -484,6 +484,34 @@ describe('buildPluginPermissionStates', () => {
     expect(granted?.comparison?.wildcardFindings).toEqual([{ path: 'tools[0].allowedDestinations[0]', pattern: '/' }])
   })
 
+  it('decides a package judged by its own manifest on the wildcards this installation does not grant it (question 28 (a))', async () => {
+    const { ctx } = await harness()
+    ctx.loader.builtins['granted-package-own'] = probePlugin
+    const entryId = await ctx.loader.create({ name: 'cordis:granted-package-own' })
+    const packageDir = stagePackage({
+      ...BENIGN_DSH_FIELD,
+      tools: [{
+        name: 'example-observed-tool',
+        sideEffectClass: 'none',
+        authAudience: ['model'],
+        allowedDestinations: [{ kind: 'filesystem', pathPattern: '/' }],
+        dataClassification: 'internal',
+      }],
+    }, 'example-granted-package')
+    const grant = { tool: 'example-observed-tool', destinationKind: 'filesystem', pattern: '/', purpose: 'test' } as const
+    const asked: (readonly [string, string])[] = []
+    const state = buildPluginPermissionStates(ctx, {
+      resolvePackageDir: moduleName => moduleName === 'cordis:granted-package-own' ? packageDir : undefined,
+      packageWildcardGrants: (packageName, dir) => {
+        asked.push([packageName, dir])
+        return [grant]
+      },
+    }).find(candidate => candidate.entryId === entryId)
+    expect(asked).toEqual([['example-granted-package', packageDir]])
+    expect(state?.trustDecision).toBe('active')
+    expect(state?.grantedWildcards).toEqual([{ finding: { path: 'tools[0].allowedDestinations[0]', pattern: '/' }, grant }])
+  })
+
   it('judges a package a bundle layer inserted by that package\'s own manifest when it declares a Manifest v2 of its own', async () => {
     const { ctx } = await harness()
     const declaredTool: Plugin.Function = (pluginCtx) => {
