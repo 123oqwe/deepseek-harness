@@ -72,8 +72,22 @@ interface MemoryReviewInvocation {
   args: string[]
 }
 
+/**
+ * Look up the approval a dispatched action was decided by: boot the profile
+ * and read a stored session's log as the host user (P2-06 validation[2]).
+ */
+interface AuditInvocation {
+  mode: 'audit'
+  profile: string
+  /** Extra patch-list overlays applied after the profile layer, in argv order. */
+  patches: string[]
+  /** The lookup: `approval <session-id> <action-id>`. */
+  args: string[]
+}
+
 /** The resolved `dsh` invocation. Help, version, and errors exit inside {@link parseDshArgs}. */
-export type DshInvocation = ProfileInvocation | DumpConfigInvocation | PluginInvocation | PluginVerifyInvocation | MemoryReviewInvocation
+export type DshInvocation =
+  | ProfileInvocation | DumpConfigInvocation | PluginInvocation | PluginVerifyInvocation | MemoryReviewInvocation | AuditInvocation
 
 /** Launcher flags shared by the default command and the `web` alias. */
 interface BootOptions {
@@ -249,6 +263,22 @@ export function parseDshArgs(argv: readonly string[], version: string): DshInvoc
       const patches = options.patch ?? []
       if (patches.includes('')) program.error('error: --patch needs a path')
       resolved = { mode: 'memory', profile: options.profile, patches, args }
+    })
+
+  const audit = program.command('audit')
+    .description('look up, as the host user, the approval a dispatched action was decided by in a stored session: approval <session-id> <action-id>')
+  audit
+    .requiredOption('--profile <name>', 'the profile to boot for the lookup')
+    .option('--patch <path>', 'extra patch-list overlay applied after the profile layer (repeatable)', collect)
+    .enablePositionalOptions()
+    .argument('[args...]', 'approval <session-id> <action-id>')
+    .action((args: string[], options: { profile: string; patch?: string[] }) => {
+      rejectParentOptions('audit')
+      if (options.profile === '') program.error('error: --profile needs a name')
+      rejectElectronProfile(audit, options.profile)
+      const patches = options.patch ?? []
+      if (patches.includes('')) program.error('error: --patch needs a path')
+      resolved = { mode: 'audit', profile: options.profile, patches, args }
     })
 
   try {

@@ -87,6 +87,8 @@ interface ApprovalRequest extends ApprovalRequestEvent {
 
 审计事件仅写入日志，不进入模型 transcript（文本记录）。模型可见的行为是调用方派生的工具结果与当前运行时上下文快照。服务 dispose（资源释放）时会移除其上下文贡献；应答者监听器独立地通过 effect 绑定到其所属插件。
 
+宿主用户用 `dsh audit approval --profile <name> <session-id> <action-id>`（[audit.ts](../../apps/cli/src/audit.ts)）查某次派发的动作由哪一次审批决定。它启动 profile，经 `ctx.sessionQuery.readSession` 读已存会话的日志（不会让会话变成活动会话），打印一行 JSON `{ sessionId, actionId, approvals }`：`approval/bound` 指名该动作 id 的每一次审批，按审批 id 与它的 `approval/asked`、`approval/decided` 连在一起。恰好一次退出 0，没有退出 3，多于一次退出 4，查询格式不对退出 2，日志读不了退出 1。
+
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
 <a id="cordis-surface"></a>

@@ -65,6 +65,11 @@ export async function runCli(): Promise<void> {
       await runMemoryReview(invocation.profile, invocation.patches, invocation.args)
       break
     }
+    case 'audit': {
+      const { runAudit } = await import('./audit.ts')
+      await runAudit(invocation.profile, invocation.patches, invocation.args)
+      break
+    }
     default:
       invocation satisfies never
       throw new Error(`dsh: unhandled invocation mode ${JSON.stringify(invocation)}`)

@@ -74,6 +74,14 @@ describe('parseDshArgs', () => {
       .toEqual({ mode: 'plugin-verify', fixture: './packages/plugin/plugin-manifest/tests/fixtures/benign.json' })
   })
 
+  it('routes the approval audit lookup (P2-06 validation[2]) with its profile and overlays', () => {
+    expect(parse(['audit', '--profile', 'headless', 'approval', 'session-1', 'call-1']))
+      .toEqual({ mode: 'audit', profile: 'headless', patches: [], args: ['approval', 'session-1', 'call-1'] })
+    expect(parse(['audit', '--profile', 'headless', '--patch', 'a.yml', 'approval', 'session-1', 'call-1']))
+      .toEqual({ mode: 'audit', profile: 'headless', patches: ['a.yml'], args: ['approval', 'session-1', 'call-1'] })
+    expect(exitCode(['audit', 'approval', 'session-1', 'call-1'])).toBe(1)
+  })
+
   it('routes profile and web config dumps', () => {
     expect(parse(['--profile', 'web', '--dump-config']))
       .toEqual({ mode: 'dump-config', profile: 'web', defaultOnly: false, patches: [] })
