@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-04-the-approval-queue-contract.md
-2026-10-04-the-approval-queue-contract.md: d55c8bf1a8f1c50d8a7775e42adc67d738fa5d33
-2026-10-04-the-approval-queue-contract.zh.md: 7c3badd360d119861159a08ec507dcaf2b1077aa
+2026-10-04-the-approval-queue-contract.md: 2627b352fc7dfe9e6e7d2e98832cc9e464dbaae6
+2026-10-04-the-approval-queue-contract.zh.md: b9f6118db3a739ced052b9d60bfccec5002613c7

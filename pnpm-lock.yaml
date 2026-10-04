@@ -7371,6 +7371,10 @@ importers:
         version: link:../../util/values
 
   packages/interaction/approval-store:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:^
