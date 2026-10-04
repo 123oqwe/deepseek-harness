@@ -147,6 +147,8 @@ function hostEnv(home: string, sentinel: string, baseUrl: string): NodeJS.Proces
     DEEPSEEK_API_KEY: 'a393-keyless',
     DEEPSEEK_BASE_URL: baseUrl,
     A393_SENTINEL: sentinel,
+    // The marker plugin is a file:// fixture with no Manifest v2, which plugin-manifest enforcement would refuse.
+    DSH_FEATURE_GATE_PLUGIN_MANIFEST_ENFORCEMENT: 'shadow',
   }
 }
 
