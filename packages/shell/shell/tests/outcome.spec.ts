@@ -27,4 +27,11 @@ describe('P3-03 U1: a shell command\'s outcome from its exit facts', () => {
     expect(shellRunOutcome(run({ signal: 'SIGSEGV', exitCode: 139 }))).toEqual({ kind: 'tool_failed', signal: 'SIGSEGV', exitCode: 139 })
     expect(shellRunOutcome(run({ exitCode: 1 }))).toEqual({ kind: 'tool_failed', exitCode: 1 })
   })
+
+  it('records the out-of-memory killer after an abort or the deadline and before the signal it sent (U3)', () => {
+    expect(shellRunOutcome(run({ resourceExhausted: 'memory', signal: 'SIGKILL', exitCode: null }))).toEqual({ kind: 'resource_exhausted', limit: 'memory' })
+    expect(shellRunOutcome(run({ resourceExhausted: 'memory', exitCode: 137 }))).toEqual({ kind: 'resource_exhausted', limit: 'memory' })
+    expect(shellRunOutcome(run({ resourceExhausted: 'memory', timedOut: true, signal: 'SIGKILL', exitCode: null, timeoutMs: 5000 })))
+      .toEqual({ kind: 'timeout', by: 'executor', deadlineMs: 5000 })
+  })
 })

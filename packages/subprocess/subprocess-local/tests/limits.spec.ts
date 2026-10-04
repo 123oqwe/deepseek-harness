@@ -58,20 +58,21 @@ describe('P3-10 R1 — the scope carries a spawn\'s ceilings as its own properti
     ])
   })
 
-  it('launches exactly the argument list it launched before ceilings existed when the spawn names none', () => {
+  it('launches exactly the argument list it launched before ceilings existed when the spawn names none, less --collect', () => {
+    // No --collect since P3-03 U3: a stopped scope keeps its Result for the out-of-memory read.
     const before = [
-      '--user', '--scope', '--quiet', '--collect', '--expand-environment=no',
+      '--user', '--scope', '--quiet', '--expand-environment=no',
     ]
     const withoutLimits = scopeArguments(undefined)
-    expect(withoutLimits.slice(0, 5)).toEqual(before)
-    expect(withoutLimits[5]).toMatch(/^--unit=dsh-subprocess-/)
-    expect(withoutLimits.slice(6)).toEqual(['--', '/usr/bin/node', '/runner.js', '--', 'tool', 'literal arg'])
-    expect(scopeArguments({}).slice(6)).toEqual(withoutLimits.slice(6))
+    expect(withoutLimits.slice(0, 4)).toEqual(before)
+    expect(withoutLimits[4]).toMatch(/^--unit=dsh-subprocess-/)
+    expect(withoutLimits.slice(5)).toEqual(['--', '/usr/bin/node', '/runner.js', '--', 'tool', 'literal arg'])
+    expect(scopeArguments({}).slice(5)).toEqual(withoutLimits.slice(5))
   })
 
   it('puts the properties before the command separator, where systemd-run reads its own options', () => {
     const args = scopeArguments({ maxProcesses: 8 })
-    expect(args.slice(6, 9)).toEqual(['-p', 'TasksMax=8', '--'])
+    expect(args.slice(5, 8)).toEqual(['-p', 'TasksMax=8', '--'])
     expect(args.indexOf('-p')).toBeLessThan(args.indexOf('--'))
   })
 })
@@ -239,7 +240,20 @@ describe('P3-10 R1 acceptance[0] — the ceilings bite, where this machine can h
     const attack = ctx.subprocess.spawn(nodeSpec(balloon(512), { limits }))
     const outcome = await attack.done
     console.log(`[limits] balloon of 512 MiB under MemoryMax=128MiB: ${JSON.stringify(outcome)}`)
-    expect(outcome).toEqual({ exitCode: null, signal: 'SIGKILL' })
+    expect(outcome).toEqual({ exitCode: null, signal: 'SIGKILL', resourceExhausted: 'memory' })
     expect(attack.collected.stdout!.readFrom(0).text).not.toContain('allocated')
+  }, 30_000)
+
+  it('reads a memory kill of a child the command started, when the command then fails (P3-03 U3)', async ({ skip }) => {
+    requireEnforceable(skip, 'memory')
+    const balloon = 'const held = []; for (let i = 0; i < 512; i++) held.push(Buffer.alloc(1024 * 1024, 1))'
+    const parent = `
+      const child = require('node:child_process').spawnSync(process.execPath, ['-e', ${JSON.stringify(balloon)}], { stdio: 'inherit' })
+      console.log('child ' + String(child.signal))
+      process.exit(7)
+    `
+    const outcome = await ctx.subprocess.spawn(nodeSpec(parent, { limits: { memoryBytes: 128 * 1024 * 1024 } })).done
+    console.log(`[limits] a child balloon under MemoryMax=128MiB, the parent exiting 7: ${JSON.stringify(outcome)}`)
+    expect(outcome).toEqual({ exitCode: 7, signal: null, resourceExhausted: 'memory' })
   }, 30_000)
 })

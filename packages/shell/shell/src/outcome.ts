@@ -12,6 +12,7 @@
 export type ShellRunOutcome =
   | { readonly kind: 'cancelled'; readonly by: 'abort' }
   | { readonly kind: 'timeout'; readonly by: 'executor'; readonly deadlineMs: number }
+  | { readonly kind: 'resource_exhausted'; readonly limit: 'memory' }
   | { readonly kind: 'tool_failed'; readonly exitCode?: number; readonly signal?: string }
 
 /** The exit facts of one command, as a shell executor reports them. */
@@ -21,11 +22,13 @@ export interface ShellExitFacts {
   readonly timedOut: boolean
   readonly aborted: boolean
   readonly timeoutMs: number
+  readonly resourceExhausted?: 'memory'
 }
 
 /**
  * The outcome of one command from its exit facts: an abort, the executor's own
- * deadline, a signal, or a non-zero exit, in that order. Never from its output,
+ * deadline, the out-of-memory killer, a signal, or a non-zero exit, in that
+ * order. Never from its output,
  * and never from the sandbox's `denied`, which matches the output against
  * denial signatures a program can print itself.
  * @param run - the command's exit facts.
@@ -34,6 +37,7 @@ export interface ShellExitFacts {
 export function shellRunOutcome(run: ShellExitFacts): ShellRunOutcome | undefined {
   if (run.aborted) return { kind: 'cancelled', by: 'abort' }
   if (run.timedOut) return { kind: 'timeout', by: 'executor', deadlineMs: run.timeoutMs }
+  if (run.resourceExhausted !== undefined) return { kind: 'resource_exhausted', limit: run.resourceExhausted }
   if (run.signal !== null) return { kind: 'tool_failed', signal: run.signal, ...run.exitCode === null ? {} : { exitCode: run.exitCode } }
   if (run.exitCode !== null && run.exitCode !== 0) return { kind: 'tool_failed', exitCode: run.exitCode }
   return undefined

@@ -79,7 +79,7 @@ This section explains the design decisions behind the tool and points at the cod
 
 - **Model-facing consumer of the shell seam.** The tool is the Consumer role of the bash capability: it registers the `bash` schema, renders results, and resolves per-call policy, while the executor seam owns process mechanics.
 - **Request from named args only.** The tool never exposes `stdin`, `env`, or `stdoutMaxBytes`; it builds each request from command/workdir/timeout/signal fields plus the registry-collected `dshEnv`, so model-supplied keys cannot replace managed values.
-- **Non-zero exits are reported, not errored.** Only infrastructure failures (spawn errors, aborts) surface as tool errors; the model interprets exit codes and markers. The result still records the run's outcome from its exit facts (Epic P3-03): `tool_failed` with the exit code or signal, `timeout` by the executor, or `cancelled`; a sandbox denial the output prints does not make it a refusal.
+- **Non-zero exits are reported, not errored.** Only infrastructure failures (spawn errors, aborts) surface as tool errors; the model interprets exit codes and markers. The result still records the run's outcome from its exit facts (Epic P3-03): `tool_failed` with the exit code or signal, `timeout` by the executor, `resource_exhausted` (memory) when the subprocess provider reports the out-of-memory killer, or `cancelled`; a sandbox denial the output prints does not make it a refusal.
 - **Background work belongs to the job runtime.** A background call registers a process handle with `ctx.jobs`; ids, ownership, completion notices, and disposal are the runtime's, and this tool only maps bash exit and sandbox facts into job output.
 
 ### Source map

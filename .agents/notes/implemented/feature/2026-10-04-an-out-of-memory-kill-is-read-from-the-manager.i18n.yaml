@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-04-an-out-of-memory-kill-is-read-from-the-manager.md
+2026-10-04-an-out-of-memory-kill-is-read-from-the-manager.md: 11adc23656c165b10231f412c86d9e5e57e2bae2
+2026-10-04-an-out-of-memory-kill-is-read-from-the-manager.zh.md: 10a733586d5eaaeb9ce9a5ba069d946fc833977e

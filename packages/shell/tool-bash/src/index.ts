@@ -170,6 +170,7 @@ function canonicalBashResult(result: ShellRunResult) {
     timedOut: result.timedOut,
     aborted: result.aborted,
     timeoutMs: result.timeoutMs,
+    ...result.resourceExhausted !== undefined ? { resourceExhausted: result.resourceExhausted } : {},
     stdout: output(result.stdout),
     stderr: output(result.stderr),
     ...result.sandbox !== undefined ? {
@@ -292,6 +293,7 @@ export function apply(ctx: Context, config: Config = {}): void {
               timedOut: { type: 'boolean', required: true },
               aborted: { type: 'boolean', required: true },
               timeoutMs: { type: 'number', required: true },
+              resourceExhausted: { type: 'string', const: 'memory' },
               stdout: {
                 type: 'object',
                 additionalProperties: false,

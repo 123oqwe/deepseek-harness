@@ -7002,7 +7002,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ShellRunResult',
-    declaration: 'export interface ShellRunResult {\n    exitCode: number | null;\n    signal: NodeJS.Signals | null;\n    timedOut: boolean;\n    aborted: boolean;\n    timeoutMs: number;\n    stdout: CollectedOutput;\n    stderr: CollectedOutput;\n    sandbox?: ShellSandboxInfo;\n}',
+    declaration: 'export interface ShellRunResult {\n    exitCode: number | null;\n    signal: NodeJS.Signals | null;\n    timedOut: boolean;\n    aborted: boolean;\n    timeoutMs: number;\n    resourceExhausted?: \'memory\';\n    stdout: CollectedOutput;\n    stderr: CollectedOutput;\n    sandbox?: ShellSandboxInfo;\n}',
   },
   {
     name: 'ShellSandboxInfo',
@@ -7242,7 +7242,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'SubprocessOutcome',
-    declaration: 'export interface SubprocessOutcome {\n    exitCode: number | null;\n    signal: NodeJS.Signals | null;\n}',
+    declaration: 'export interface SubprocessOutcome {\n    exitCode: number | null;\n    signal: NodeJS.Signals | null;\n    resourceExhausted?: \'memory\';\n}',
   },
   {
     name: 'SubprocessOutputMode',

@@ -141,6 +141,7 @@ function launch(
     ...overrides.runnerAvailable === undefined ? {} : { runnerAvailable: overrides.runnerAvailable },
     ...overrides.loadLinuxExecve === undefined ? {} : { loadLinuxExecve: overrides.loadLinuxExecve },
     ...overrides.sleep === undefined ? {} : { sleep: overrides.sleep },
+    ...overrides.readCgroupFile === undefined ? {} : { readCgroupFile: overrides.readCgroupFile },
   })
   const requestPath = options?.env?.[SUBPROCESS_RUNNER_ENV]
   if (requestPath === undefined) throw new Error('launch did not publish a request locator')
@@ -315,7 +316,7 @@ describe('Linux scope establishment and quiescence', () => {
     result.owner.cleanup?.()
   })
 
-  it('accepts request consumption followed by rapid --collect unload as stopped', async () => {
+  it('accepts request consumption followed by a rapid unload as stopped', async () => {
     const states = [activeUnit(), unloadedUnit()]
     const { child, result, requestPath } = launch(async () => states.shift() ?? missingUnit())
     expect(consumeLinuxLaunchRequest(requestPath)).toEqual({ cwd: '/target', env: { TARGET: 'yes' } })
@@ -609,7 +610,9 @@ describe('Linux scope establishment and quiescence', () => {
     await expect(launched.result.owner.waitForExit()).resolves.toBeUndefined()
     await expect(launched.result.owner.waitForExit()).resolves.toBeUndefined()
     launched.result.owner.terminateForHostExit()
-    expect(spawnSync).toHaveBeenCalledTimes(4)
+    // The fifth call resets the failed scope: the launch runs without --collect (P3-03 U3).
+    expect(spawnSync).toHaveBeenCalledTimes(5)
+    expect(spawnSync.mock.calls[4]?.[1]).toEqual(['--user', 'reset-failed', expect.stringMatching(/^dsh-subprocess-.+\.scope$/u)])
     launched.result.owner.cleanup?.()
   })
 
@@ -696,6 +699,120 @@ describe('Linux scope establishment and quiescence', () => {
     result.owner.terminateForHostExit()
     expect(events).toEqual(['direct', 'scope'])
     result.owner.cleanup?.()
+  })
+})
+
+/** One manager answer. */
+interface ManagerAnswer {
+  status: number
+  stdout: string
+  stderr: string
+}
+
+/**
+ * A manager answer listing unit properties.
+ * @param fields - the properties.
+ * @returns the answer.
+ */
+function scopeEnd(fields: Record<string, string>): ManagerAnswer {
+  return { status: 0, stdout: Object.entries(fields).map(([name, value]) => `${name}=${value}\n`).join(''), stderr: '' }
+}
+
+describe('the out-of-memory read (Epic P3-03 U3)', () => {
+  /**
+   * Launch, let the bootstrap consume its request, exit the launcher, and read the exit facts.
+   * @param exit - the launcher's exit code and signal.
+   * @param answers - the manager's answers to the out-of-memory read, in order.
+   * @param readCgroupFile - the cgroup file reader.
+   * @returns the exit facts and the manager query.
+   */
+  async function exitWith(
+    exit: [number | null, NodeJS.Signals | null],
+    answers: readonly ManagerAnswer[],
+    readCgroupFile: (path: string) => string = () => { throw new Error('no cgroup read expected') },
+  ) {
+    const queue = [...answers]
+    const query = vi.fn(async (_command: string, args: readonly string[]) =>
+      args.includes('--property=ControlGroup') ? queue.shift() ?? missingUnit() : missingUnit())
+    const launched = launch(query, { readCgroupFile })
+    unlinkSync(launched.requestPath)
+    launched.child.exit(...exit)
+    const outcome = await launched.result.direct
+    launched.result.owner.cleanup?.()
+    return { outcome, query }
+  }
+
+  const active = scopeEnd({ LoadState: 'loaded', ActiveState: 'active', Result: 'success', ControlGroup: '/user.slice/x.scope' })
+
+  it('does not read a clean exit', async () => {
+    const { outcome, query } = await exitWith([0, null], [])
+    expect(outcome).toEqual({ exitCode: 0, signal: null })
+    expect(query.mock.calls.some(call => call[1].includes('--property=ControlGroup'))).toBe(false)
+  })
+
+  it('reads a stopped scope from its Result', async () => {
+    const oom = scopeEnd({ LoadState: 'loaded', ActiveState: 'failed', Result: 'oom-kill', ControlGroup: '' })
+    expect((await exitWith([null, 'SIGKILL'], [oom])).outcome).toEqual({ exitCode: null, signal: 'SIGKILL', resourceExhausted: 'memory' })
+    const exited = scopeEnd({ LoadState: 'loaded', ActiveState: 'inactive', Result: 'exit-code', ControlGroup: '' })
+    expect((await exitWith([1, null], [exited])).outcome).toEqual({ exitCode: 1, signal: null })
+  })
+
+  it('reads a scope still active from its cgroup memory.events', async () => {
+    const paths: string[] = []
+    const read = (events: string) => (path: string) => {
+      paths.push(path)
+      return events
+    }
+    expect((await exitWith([7, null], [active], read('low 0\noom 2\noom_kill 1\n'))).outcome)
+      .toEqual({ exitCode: 7, signal: null, resourceExhausted: 'memory' })
+    expect(paths).toEqual(['/sys/fs/cgroup/user.slice/x.scope/memory.events'])
+    expect((await exitWith([7, null], [active], read('oom 0\noom_kill 0\n'))).outcome).toEqual({ exitCode: 7, signal: null })
+    expect((await exitWith([7, null], [active], read('oom 0\n'))).outcome).toEqual({ exitCode: 7, signal: null })
+    const noGroup = scopeEnd({ LoadState: 'loaded', ActiveState: 'active', ControlGroup: '' })
+    expect((await exitWith([7, null], [noGroup])).outcome).toEqual({ exitCode: 7, signal: null })
+  })
+
+  it('reads the scope again when its cgroup is gone after the show, and gives up after one retry', async () => {
+    const gone = (): string => {
+      throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' })
+    }
+    const oom = scopeEnd({ LoadState: 'loaded', ActiveState: 'failed', Result: 'oom-kill', ControlGroup: '' })
+    expect((await exitWith([null, 'SIGKILL'], [active, oom], gone)).outcome).toEqual({ exitCode: null, signal: 'SIGKILL', resourceExhausted: 'memory' })
+    expect((await exitWith([null, 'SIGKILL'], [active, active], gone)).outcome).toEqual({ exitCode: null, signal: 'SIGKILL' })
+  })
+
+  it('leaves the fact unknown when the manager cannot answer', async () => {
+    expect((await exitWith([null, 'SIGKILL'], [missingUnit()])).outcome).toEqual({ exitCode: null, signal: 'SIGKILL' })
+  })
+
+  it.each([
+    ['oom-kill', { exitCode: null, signal: 'SIGKILL', resourceExhausted: 'memory' }],
+    ['signal', { exitCode: null, signal: 'SIGKILL' }],
+  ] as const)('resets a failed scope it observes, keeping its Result (%s) for a read that finds the unit gone', async (result, expected) => {
+    const states = [activeUnit('failed')]
+    const query = vi.fn(async (_command: string, args: readonly string[]) => {
+      if (args.includes('--property=ControlGroup')) return scopeEnd({ LoadState: 'not-found', ActiveState: 'inactive', Result: 'success', ControlGroup: '' })
+      if (args.includes('--property=TasksCurrent')) return states.shift() ?? missingUnit()
+      return scopeEnd({ Result: result })
+    })
+    const launched = launch(query)
+    unlinkSync(launched.requestPath)
+    await launched.result.owner.waitForExit()
+    expect(launched.spawnSync.mock.calls.map(call => (call as unknown[])[1]))
+      .toContainEqual(['--user', 'reset-failed', expect.stringMatching(/^dsh-subprocess-.+\.scope$/u)])
+    launched.child.exit(null, 'SIGKILL')
+    await expect(launched.result.direct).resolves.toEqual(expected)
+    launched.result.owner.cleanup?.()
+  })
+
+  it('concludes a failed scope even when its reset fails', async () => {
+    const states = [activeUnit('failed')]
+    const launched = launch(async (_command, args) => args.includes('--property=TasksCurrent') ? states.shift() ?? missingUnit() : missingUnit(), {
+      spawnSync: () => { throw new Error('systemctl reset-failed failed') },
+    })
+    unlinkSync(launched.requestPath)
+    await expect(launched.result.owner.waitForExit()).resolves.toBeUndefined()
+    launched.result.owner.cleanup?.()
   })
 })
 

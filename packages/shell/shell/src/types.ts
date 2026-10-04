@@ -154,6 +154,12 @@ export interface ShellRunResult {
   aborted: boolean
   /** The effective timeout applied to this run (after defaulting/capping). */
   timeoutMs: number
+  /**
+   * `memory` when the subprocess provider's control channel reports that the
+   * out-of-memory killer acted in the command's range (Epic P3-03 U3); absent
+   * otherwise, and where the provider cannot tell.
+   */
+  resourceExhausted?: 'memory'
   stdout: CollectedOutput
   stderr: CollectedOutput
   /** Sandbox execution facts, absent for an unsandboxed executor. */

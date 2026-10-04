@@ -2,7 +2,7 @@
 
 import { execFile, spawn, spawnSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { setTimeout as sleepMs } from 'node:timers/promises'
 import type {
   SubprocessLimits,
@@ -40,6 +40,7 @@ export interface LinuxScopeInternals {
   runnerAvailable?: (invocation: RunnerInvocation) => boolean
   loadLinuxExecve?: typeof loadLinuxExecve
   sleep?: (delayMs: number, signal?: AbortSignal) => Promise<void>
+  readCgroupFile?: (path: string) => string
 }
 
 interface SystemctlResult {
@@ -87,6 +88,47 @@ function unitStem(prefix: string): string {
 
 function sleepWithAbort(delayMs: number, signal?: AbortSignal): Promise<void> {
   return sleepMs(delayMs, undefined, { signal })
+}
+
+function readUtf8(path: string): string {
+  return readFileSync(path, 'utf8')
+}
+
+/**
+ * Read named properties of one unit, or `undefined` when the manager could not answer.
+ * @param unit - the unit.
+ * @param systemctl - the manager command.
+ * @param query - the manager query.
+ * @param properties - the property names.
+ * @returns the properties the manager printed.
+ */
+async function showUnit(
+  unit: string,
+  systemctl: string,
+  query: (command: string, args: readonly string[]) => Promise<SystemctlResult>,
+  properties: readonly string[],
+): Promise<ReadonlyMap<string, string> | undefined> {
+  const result = await query(systemctl, ['--user', 'show', unit, ...properties.map(name => `--property=${name}`)])
+  if (result.status !== 0) return undefined
+  const values = new Map<string, string>()
+  for (const line of result.stdout.split(/\r?\n/u)) {
+    const at = line.indexOf('=')
+    if (at > 0) values.set(line.slice(0, at), line.slice(at + 1))
+  }
+  return values
+}
+
+/**
+ * Add the out-of-memory fact to a process that did not exit cleanly; a clean
+ * exit records no outcome, so it is not read.
+ * @param outcome - the process's exit facts.
+ * @param read - reads whether the out-of-memory killer acted in its range.
+ * @returns the exit facts, with `resourceExhausted` when it did.
+ */
+async function withOutOfMemory(outcome: SubprocessOutcome, read: () => Promise<'memory' | undefined>): Promise<SubprocessOutcome> {
+  if (outcome.exitCode === 0 && outcome.signal === null) return outcome
+  const exhausted = await read()
+  return exhausted === undefined ? outcome : { ...outcome, resourceExhausted: exhausted }
 }
 
 /**
@@ -211,6 +253,8 @@ class SystemdScopeOwner implements BoundProcessOwner {
   private terminationRequested = false
   private observation: Promise<void> | undefined
   private killFailure: Error | undefined
+  /** The `Result` a failed scope carried, recorded before `reset-failed` unloads it. */
+  private failedResult: string | undefined
   private wakeGeneration = 0
   private wakeWaiter: { generation: number; resolve: () => void } | undefined
 
@@ -300,6 +344,58 @@ class SystemdScopeOwner implements BoundProcessOwner {
     return this.terminationRequested && tasksCurrent === 0 && !this.direct.running()
   }
 
+  /**
+   * Record a failed scope's `Result`, then `reset-failed` it: the launch runs
+   * without `--collect` so the result outlives the scope (Epic P3-03 U3), and
+   * a failed unit stays loaded until reset.
+   */
+  private async collectFailedScope(): Promise<void> {
+    const end = await showUnit(this.unit, this.systemctl, this.query, ['Result'])
+    this.failedResult = end?.get('Result')
+    try {
+      this.runSync(this.systemctl, ['--user', 'reset-failed', this.unit], {
+        env: managerEnvironment(),
+        stdio: 'ignore',
+        timeout: SYSTEMCTL_TIMEOUT_MS,
+      })
+    } catch {
+      // The range has stopped; a failed reset leaves only the unit loaded.
+    }
+  }
+
+  /**
+   * Whether the kernel's out-of-memory killer acted in this scope, read from
+   * the manager and the kernel, never from the process (Epic P3-03 U3). A
+   * stopped scope answers with its `Result`, or with the one recorded before
+   * its reset; a scope still active (its cgroup not yet empty) answers from
+   * its cgroup's `memory.events`. When the cgroup goes away between the two
+   * reads, the scope has stopped and is read again. A read that fails leaves
+   * the fact unknown.
+   * @param readCgroupFile - reads one file under `/sys/fs/cgroup`.
+   * @returns `memory` when the killer acted, otherwise undefined.
+   */
+  async outOfMemory(readCgroupFile: (path: string) => string): Promise<'memory' | undefined> {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const end = await showUnit(this.unit, this.systemctl, this.query, ['LoadState', 'ActiveState', 'Result', 'ControlGroup'])
+      if (end === undefined) return undefined
+      if (end.get('LoadState') === 'not-found') return this.failedResult === 'oom-kill' ? 'memory' : undefined
+      const activeState = end.get('ActiveState')
+      if (activeState === 'failed' || activeState === 'inactive') return end.get('Result') === 'oom-kill' ? 'memory' : undefined
+      const group = end.get('ControlGroup') ?? ''
+      if (group === '') return undefined
+      let events: string
+      try {
+        events = readCgroupFile(`/sys/fs/cgroup${group}/memory.events`)
+      } catch {
+        // The cgroup was removed after the show: the scope stopped, and the next pass reads its Result.
+        continue
+      }
+      const line = events.split('\n').find(entry => entry.startsWith('oom_kill '))
+      return line !== undefined && Number(line.slice('oom_kill '.length)) > 0 ? 'memory' : undefined
+    }
+    return undefined
+  }
+
   /** Release a leftover empty scope so the transient unit is collected and cannot accumulate. */
   private releaseEmptyRange(): void {
     try {
@@ -366,6 +462,7 @@ class SystemdScopeOwner implements BoundProcessOwner {
         )
       }
       this.establishment = 'established'
+      if (activeState === 'failed') await this.collectFailedScope()
       if (activeState === 'inactive' || activeState === 'failed') return false
       if (!['active', 'activating', 'reloading', 'deactivating'].includes(activeState)) {
         throw new Error(`systemctl returned unknown ActiveState for ${this.unit}: ${JSON.stringify(activeState)}`)
@@ -457,11 +554,12 @@ function scopeArgs(
   argv: readonly string[],
   properties: readonly string[],
 ): string[] {
+  // No --collect: a stopped scope keeps its Result for the out-of-memory read
+  // (Epic P3-03 U3); the owner resets a failed one.
   return [
     '--user',
     '--scope',
     '--quiet',
-    '--collect',
     '--expand-environment=no',
     `--unit=${unitBase}`,
     ...properties,
@@ -596,11 +694,12 @@ export function launchLinuxScope(
     internals.systemctlQuery ?? querySystemctl,
     internals.sleep ?? sleepWithAbort,
   )
+  const readCgroupFile = internals.readCgroupFile ?? readUtf8
   return {
     stdin: child.stdin,
     stdout: child.stdout,
     stderr: child.stderr,
-    direct: directOutcome(child, startup),
+    direct: directOutcome(child, startup).then(outcome => withOutOfMemory(outcome, () => owner.outOfMemory(readCgroupFile))),
     owner,
   }
 }

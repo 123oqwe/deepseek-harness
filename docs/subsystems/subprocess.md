@@ -273,6 +273,13 @@ interface SubprocessOutcome {
   exitCode: number | null
   /** Terminating signal (e.g. 'SIGTERM'); null on normal exit. */
   signal: NodeJS.Signals | null
+  /**
+   * `memory` when the provider's own control channel reports that the
+   * kernel's out-of-memory killer acted in the process's managed range
+   * (Epic P3-03 U3). Absent when it did not, when the process exited 0, or
+   * when the provider cannot tell.
+   */
+  resourceExhausted?: 'memory'
 }
 ```
 

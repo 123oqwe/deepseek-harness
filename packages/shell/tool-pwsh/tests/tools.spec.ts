@@ -17,7 +17,7 @@ import { tmpdir } from 'node:os'
 import { join, resolve as resolvePath } from 'node:path'
 import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import SystemPrompt, { renderPrompt } from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime, { TOOL_ABORTED, TOOL_ABORTED_BEFORE_DISPATCH } from '@deepseek-ai/dsh-tools'
+import ToolRuntime, { TOOL_ABORTED, TOOL_ABORTED_BEFORE_DISPATCH, toolResultOutcome } from '@deepseek-ai/dsh-tools'
 import LocalJobRegistry from '@deepseek-ai/dsh-jobs-local'
 import * as ToolTasks from '@deepseek-ai/dsh-tool-jobs'
 import AgentRegistry from '@deepseek-ai/dsh-agent'
@@ -506,6 +506,15 @@ describe('execution through the bash seam', () => {
       stderr: { text: 'err\n', truncated: false },
     })
     expect(text(result)).toBe('out\n[stderr]\nerr\n[exit code: 2]')
+  })
+
+  it('carries the out-of-memory fact into the value and records resource_exhausted (Epic P3-03 U3)', async () => {
+    const { ctx, bash } = await setup()
+    bash.handler = () => runResult('', { exitCode: null, signal: 'SIGKILL', resourceExhausted: 'memory' })
+    const result = await call(ctx, 'pwsh', { command: 'balloon', description: 'oom' })
+    expect(toolResultOutcome(result)).toEqual({ kind: 'resource_exhausted', limit: 'memory' })
+    if (result.isError) throw new Error('expected pwsh success')
+    expect(result.value).toMatchObject({ kind: 'foreground', signal: 'SIGKILL', resourceExhausted: 'memory' })
   })
 
   it('renders a clean exit without a marker and an empty body as (no output)', async () => {

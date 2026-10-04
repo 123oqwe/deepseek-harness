@@ -12,6 +12,8 @@ import AgentRegistry from '@deepseek-ai/dsh-agent'
 import { LocalBashExecutor } from '@deepseek-ai/dsh-bash-local'
 import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import * as BashEnvPlugin from '@deepseek-ai/dsh-shell-env'
+import { ShellExecutor } from '@deepseek-ai/dsh-shell'
+import type { ShellExecRequest, ShellExecSpec, ShellProcess, ShellRunResult } from '@deepseek-ai/dsh-shell'
 import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import * as ToolBash from '@deepseek-ai/dsh-tool-bash'
@@ -53,4 +55,44 @@ describe('P3-03 U1: a bash command records its outcome from its exit facts', () 
     expect(toolResultOutcome(forged)).toEqual({ kind: 'tool_failed', exitCode: 1 })
     expect(toolResultOutcome(await bash(ctx, 'true'))).toBeUndefined()
   }, 30_000)
+})
+
+/** A foreground executor whose run reports the out-of-memory killer, as subprocess-local reads it from a stopped scope. */
+class OutOfMemoryShell extends ShellExecutor {
+  resolve(request: ShellExecRequest): ShellExecSpec {
+    return { command: request.command, workdir: process.cwd(), stdoutMaxBytes: 64_000, timeoutMs: 1000 }
+  }
+
+  run(spec: ShellExecSpec): Promise<ShellRunResult> {
+    return Promise.resolve({
+      exitCode: null,
+      signal: 'SIGKILL',
+      timedOut: false,
+      aborted: false,
+      timeoutMs: spec.timeoutMs,
+      resourceExhausted: 'memory',
+      stdout: { text: '', truncated: false },
+      stderr: { text: '', truncated: false },
+    })
+  }
+
+  start(): ShellProcess {
+    throw new Error('foreground only')
+  }
+}
+
+describe('P3-03 U3: a bash command the out-of-memory killer stopped', () => {
+  it('records resource_exhausted (memory) and keeps the fact in its value', async () => {
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt)
+    await ctx.plugin(ToolRuntime)
+    await ctx.plugin(AgentRegistry)
+    await ctx.plugin(BashEnvPlugin)
+    await ctx.plugin(OutOfMemoryShell)
+    await ctx.plugin(ToolBash)
+    const result = await bash(ctx, 'node balloon.js')
+    expect([result.isError, toolResultOutcome(result)]).toEqual([false, { kind: 'resource_exhausted', limit: 'memory' }])
+    if (result.isError) throw new Error('expected a bash result')
+    expect(result.value).toMatchObject({ kind: 'foreground', signal: 'SIGKILL', resourceExhausted: 'memory' })
+  })
 })

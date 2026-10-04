@@ -78,6 +78,7 @@ interface PwshForegroundResult {
   timedOut: boolean
   aborted: boolean
   timeoutMs: number
+  resourceExhausted?: 'memory'
   stdout: { text: string; truncated: boolean; spillPath?: string }
   stderr: { text: string; truncated: boolean; spillPath?: string }
   sandbox?: { mode: string; denied: boolean; enforcement?: string; backend?: string; reachableSockets?: string[]; runnerFailed?: boolean }
@@ -170,6 +171,7 @@ function canonicalPwshResult(result: ShellRunResult): PwshForegroundResult {
     timedOut: result.timedOut,
     aborted: result.aborted,
     timeoutMs: result.timeoutMs,
+    ...result.resourceExhausted !== undefined ? { resourceExhausted: result.resourceExhausted } : {},
     /* jscpd:ignore-start -- the canonical projection and background-handle shape mirror dsh-tool-bash's by design (Agent Note). */
     stdout: output(result.stdout),
     stderr: output(result.stderr),
@@ -305,6 +307,7 @@ export function apply(ctx: Context, config: Config = {}): void {
               timedOut: { type: 'boolean', required: true },
               aborted: { type: 'boolean', required: true },
               timeoutMs: { type: 'number', required: true },
+              resourceExhausted: { type: 'string', const: 'memory' },
               stdout: {
                 type: 'object',
                 additionalProperties: false,

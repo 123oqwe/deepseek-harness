@@ -29,7 +29,7 @@ kind: "package-reference"
 
 ### 前台命令
 
-用已解析的 spec 调用 `run` 即可在前台执行命令。promise 在命令结束时 resolve：非零退出、执行器超时终止或调用方中止终止都是结果，绝不是 rejection。`run` 只在基础设施失败时 reject，例如工作目录不可用或缺少 shell。结果携带退出码或信号、是超时还是中止截断了运行，以及收集到的 stdout/stderr；流超出预算时还附带 spill 文件路径。`shellRunOutcome`（`src/outcome.ts`）把这些退出事实变成工具结果记录的结局（Epic P3-03）：中止、执行器的截止时间、信号或非零退出，从不依据命令的输出，也不依据沙箱按输出匹配出来的 `denied`。
+用已解析的 spec 调用 `run` 即可在前台执行命令。promise 在命令结束时 resolve：非零退出、执行器超时终止或调用方中止终止都是结果，绝不是 rejection。`run` 只在基础设施失败时 reject，例如工作目录不可用或缺少 shell。结果携带退出码或信号、是超时还是中止截断了运行，以及收集到的 stdout/stderr；流超出预算时还附带 spill 文件路径。`shellRunOutcome`（`src/outcome.ts`）把这些退出事实变成工具结果记录的结局（Epic P3-03）：中止、执行器的截止时间、子进程提供方报告的内存耗尽（`resourceExhausted`）、信号或非零退出，从不依据命令的输出，也不依据沙箱按输出匹配出来的 `denied`。
 
 ```text
 const result = await ctx.shell.run(ctx.shell.resolve({ command: 'ls -la' }))
