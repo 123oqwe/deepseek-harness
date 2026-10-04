@@ -86,8 +86,12 @@ interface SessionReading {
 /** What the in-group observer records from the preset isolate's own engine. */
 interface ObserverReading {
   readonly present: boolean
-  readonly loaded: readonly string[] | null
-  readonly refused: readonly { readonly name: string; readonly reason: string }[] | null
+  /** v5: true when the bounded poll for the group engine's outcomes expired. */
+  readonly timedOut?: boolean
+  /** v5: how long the poll waited before it read the outcomes (or gave up). */
+  readonly waitedMs?: number
+  readonly loaded?: readonly string[] | null
+  readonly refused?: readonly { readonly name: string; readonly reason: string }[] | null
 }
 
 /** Everything the launch produced: both markers plus the copied preset and the factory it derives from, for the byte-identity check. */
@@ -97,6 +101,8 @@ interface WebPresetObservation {
   readonly preset: string
   readonly factory: string
   readonly observerBlock: string
+  /** The subprocess stderr tail, surfaced when the observer times out (v5). */
+  readonly stderr: string
 }
 
 /** The exact factory rows the observer is spliced in behind; must appear once. */
@@ -141,10 +147,11 @@ async function bootWebPresetWorkflows(files: Readonly<Record<string, string>>): 
       const sessionMarker = join(cwd, 'web-preset-session-marker.json')
       const observerMarker = join(cwd, 'web-preset-observer-marker.json')
       // The copied preset: factory `standard` with one observer row added inside
-      // the `delegation` group behind `workflow-filesystem`. The observer injects
-      // `savedWorkflows`, so it mounts after the loader has run and reads the same
-      // isolated engine. Removing this block must yield the factory byte-for-byte
-      // (asserted below), which is how the copy proves it changed nothing else.
+      // the `delegation` group behind `workflow-filesystem`. v5: the observer does
+      // NOT inject `savedWorkflows` — it polls the strict `ctx.get('savedWorkflows')`
+      // from the group realm within a bounded time (injecting it delayed its apply
+      // past `handle.await` in v4). Removing this block must yield the factory
+      // byte-for-byte (asserted below), proving the copy changed nothing else.
       observerBlock = [
         '', `    - id: a-602-group-observer`, `      name: '${OBSERVER}'`,
         '      config:', `        marker: '${observerMarker}'`, '',
@@ -168,6 +175,7 @@ async function bootWebPresetWorkflows(files: Readonly<Record<string, string>>): 
         `      name: '${SENTINEL}'`,
         '      config:',
         `        marker: '${sessionMarker}'`,
+        `        observerMarker: '${observerMarker}'`,
         `        preset: '${OBSERVED_PRESET}'`,
         // Admit the user root so the copied preset is discovered and mountable.
         '- id: agent-presets',
@@ -191,7 +199,7 @@ async function bootWebPresetWorkflows(files: Readonly<Record<string, string>>): 
   if (session === undefined) {
     throw new Error(`the web-preset driver wrote no session marker (the boot failed before the session was composed); stderr tail:\n${stderr.slice(-1500)}`)
   }
-  return { session, observer, preset, factory, observerBlock }
+  return { session, observer, preset, factory, observerBlock, stderr }
 }
 
 describe('P4-09 acceptance[0] on a Web preset (A-602, blind 2-6): the standard preset engine registers a signed saved workflow and refuses an unsigned one', () => {
@@ -203,7 +211,7 @@ describe('P4-09 acceptance[0] on a Web preset (A-602, blind 2-6): the standard p
       'valid.js.sig.json': JSON.stringify(valid.sig),
       'unsigned.js': "return 'unsigned'",
     })
-    const detail = JSON.stringify({ session: observation.session, observer: observation.observer })
+    const detail = `${JSON.stringify({ session: observation.session, observer: observation.observer })}\nstderr tail:\n${observation.stderr.slice(-1200)}`
 
     // The copied preset changed nothing but the one observer row: removing that
     // block yields the factory `standard` byte-for-byte. So what the observer
@@ -219,6 +227,10 @@ describe('P4-09 acceptance[0] on a Web preset (A-602, blind 2-6): the standard p
     // engine and not an absence. (A boot that wrote no session marker already threw.)
     expect(observation.session.sessionCreated, detail).toBe(true)
     expect(observation.observer, detail).toBeDefined()
+    // v5: the bounded poll must have observed the group engine's outcomes; a
+    // timeout is a fixture/product red surfaced with the subprocess stderr, not a
+    // silent empty read (the v4 failure mode).
+    expect(observation.observer?.timedOut ?? false, detail).toBe(false)
     expect(observation.observer?.present, detail).toBe(true)
 
     const loaded = observation.observer?.loaded ?? []

@@ -13,7 +13,8 @@
  * @module tests/first100/fixtures/loader/a-602-web-preset-workflow-signing/marker
  */
 
-import { writeFileSync } from 'node:fs'
+import { existsSync, writeFileSync } from 'node:fs'
+import { setTimeout as delay } from 'node:timers/promises'
 
 export const name = 'a-602-web-preset-workflow-marker'
 
@@ -21,10 +22,15 @@ export const name = 'a-602-web-preset-workflow-marker'
 // require a declared injection (packages/AGENTS.md).
 export const inject = ['agents', 'agentPresets']
 
+/** Poll interval and how long to wait for the in-group observer's marker; above the observer's own deadline so a timed-out observer still writes before this exits. */
+const POLL_MS = 25
+const OBSERVER_WAIT_MS = 25_000
+
 /**
- * On `appReady`, compose a session from the observed preset copy and record it.
+ * On `appReady`, compose a session from the observed preset copy, record it, and
+ * wait for the in-group observer's marker before exiting.
  * @param {import('@deepseek-ai/cordis').Context} ctx - the composition root context.
- * @param {{ marker: string, preset: string }} config - where to record, and the preset id to compose.
+ * @param {{ marker: string, observerMarker: string, preset: string }} config - where to record, where the observer records, and the preset id to compose.
  */
 export function apply(ctx, config) {
   // The disabled `connection` row would leave session-controller and its kin
@@ -48,6 +54,14 @@ export function apply(ctx, config) {
       reading = { sessionCreated: false, error: error instanceof Error ? error.message : String(error) }
     }
     writeFileSync(config.marker, JSON.stringify(reading))
+    // The observer polls `savedWorkflows` asynchronously (v5); wait for its marker
+    // so the subprocess does not exit before the group-realm reading lands.
+    if (reading.sessionCreated) {
+      const started = Date.now()
+      while (Date.now() - started < OBSERVER_WAIT_MS && !existsSync(config.observerMarker)) {
+        await delay(POLL_MS)
+      }
+    }
     const exit = ctx.get('appExit')
     if (typeof exit === 'function') exit(0)
   })
