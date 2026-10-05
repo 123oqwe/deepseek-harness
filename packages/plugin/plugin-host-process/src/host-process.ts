@@ -17,7 +17,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-subprocess'
 import { JsonRpcLineTransport } from '@deepseek-ai/dsh-sdk-protocol'
 import { attachPluginRpcHost } from '@deepseek-ai/dsh-plugin-host-rpc'
-import type { CapabilityDigestView, FrameLimits, PluginSessionId } from '@deepseek-ai/dsh-plugin-host-rpc'
+import type { FrameLimits, PluginSessionId } from '@deepseek-ai/dsh-plugin-host-rpc'
 
 /** Everything the out-of-process host needs for one plugin session. */
 export interface PluginHostProcessOptions {
@@ -27,12 +27,8 @@ export interface PluginHostProcessOptions {
   readonly declaredTools: readonly string[]
   /** The manifest digest `host.hello` must present to be admitted. */
   readonly expectedManifestDigest: string
-  /** The host session id. */
+  /** The plugin-session id the host minted for this plugin process. */
   readonly sessionId: PluginSessionId
-  /** The actor stamped into every `tool.invoke`. */
-  readonly principal: string
-  /** The host session's capability, as a digest view (never a signed token). */
-  readonly capability: CapabilityDigestView
   /** Working directory for the child. */
   readonly cwd: string
   /** Termination grace for the child, in milliseconds. */
@@ -65,7 +61,7 @@ function childArgv(pluginEntry: string, manifestDigest: string): readonly string
 /**
  * Spawn the plugin's subprocess and attach the host RPC seam to it.
  * @param ctx - the host context providing `subprocess` and `tools`.
- * @param options - the plugin entry, the trusted manifest facts, the session id, and the stamped identity.
+ * @param options - the plugin entry, the trusted manifest facts, the session id, and the frame limits.
  * @returns a disposer that revokes the session's registrations and terminates the child; idempotent.
  * @throws when the host composes no `subprocess` service, or the provider did not pipe the child's stdio.
  */
@@ -91,8 +87,6 @@ export function spawnPluginHost(ctx: Context, options: PluginHostProcessOptions)
     declaredTools: options.declaredTools,
     expectedManifestDigest: options.expectedManifestDigest,
     sessionId: options.sessionId,
-    principal: options.principal,
-    capability: options.capability,
     limits: options.limits,
   })
   transport.start()

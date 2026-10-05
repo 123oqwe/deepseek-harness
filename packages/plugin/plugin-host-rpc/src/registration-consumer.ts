@@ -10,22 +10,23 @@
  */
 
 import type { Context } from '@deepseek-ai/cordis'
+import { digestToken } from '@deepseek-ai/dsh-capability-token'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
 import type { ToolDefinition, ToolRunContext } from '@deepseek-ai/dsh-tools'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import { HOST_TO_PLUGIN } from './protocol.ts'
 import type { CapabilityDigestView, PluginRpcTransport, RegistrationId, ToolInvokeParams, ToolRegistrationRequest } from './types.ts'
 
-/** The per-session identity the host stamps into every `tool.invoke`, plus the transport reaching the plugin. */
+/**
+ * The static per-registration binding: the transport to the plugin and the
+ * registration id. The invoke identity is NOT here — it is sourced from each
+ * real caller's dispatch at invoke time.
+ */
 export interface RegistrationContext {
   /** The transport to the plugin process. */
   readonly transport: PluginRpcTransport
   /** The registration being invoked. */
   readonly registrationId: RegistrationId
-  /** The actor on whose behalf calls run. */
-  readonly principal: string
-  /** The host session's capability, as a digest view (never the signed token). */
-  readonly capability: CapabilityDigestView
 }
 
 /** Fixed host projection from a plugin's canonical value to model content, keyed by the declared render mode. */
@@ -38,7 +39,15 @@ function fixedRender(mode: 'text' | 'json'): (args: unknown, value: JsonValue) =
   }
 }
 
-/** Send one host→plugin `tool.invoke`, stamping the four elements and forwarding cancellation as `tool.cancel`. */
+/**
+ * Send one host→plugin `tool.invoke`, stamping the four elements with THIS
+ * dispatch's real caller authority — `principal` and the `capability` digest
+ * view derive from `exec.capabilityToken`, the per-dispatch token the
+ * capability gate already checked (P2-02 must[3]) — and forwarding cancellation
+ * as `tool.cancel`. The app-level host carries no ambient authority of its own:
+ * a dispatch that presents no capability token is refused here, never invoked
+ * under no authority.
+ */
 async function invokePlugin(
   registration: ToolRegistrationRequest,
   rc: RegistrationContext,
@@ -46,15 +55,24 @@ async function invokePlugin(
   exec: ToolRunContext,
 ): Promise<unknown> {
   const callId = String(exec.callId)
+  const signed = exec.capabilityToken
+  if (signed === undefined) {
+    throw new Error('@deepseek-ai/dsh-plugin-host-rpc: plugin tool call carries no capability token; no ambient authority to invoke')
+  }
+  const capability: CapabilityDigestView = {
+    digest: digestToken(signed.token),
+    resources: signed.token.resources,
+    expiresAtMs: signed.token.expiresAt,
+  }
   const deadlineMs = registration.timeoutMs === undefined
-    ? rc.capability.expiresAtMs
+    ? capability.expiresAtMs
     : Date.now() + registration.timeoutMs
   const params: ToolInvokeParams = {
     registrationId: rc.registrationId,
     callId,
     args: args as JsonValue,
-    principal: rc.principal,
-    capability: rc.capability,
+    principal: signed.token.subject,
+    capability,
     deadlineMs,
     traceId: String(exec.rootCallId),
   }

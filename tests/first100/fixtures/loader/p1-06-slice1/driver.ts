@@ -17,7 +17,6 @@ import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { CapabilityTokenDigest } from '@deepseek-ai/dsh-capability-token'
 import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
@@ -96,12 +95,6 @@ export async function startHarness(scenario: string): Promise<Harness> {
     declaredTools: [...DECLARED_TOOLS],
     expectedManifestDigest: MANIFEST_DIGEST,
     sessionId: `plugin-session-${scenario}` as unknown as PluginSessionId,
-    principal: 'test-principal',
-    capability: {
-      digest: 'test-capability-digest' as unknown as CapabilityTokenDigest,
-      resources: [...DECLARED_TOOLS],
-      expiresAtMs: 4102444800000,
-    },
     limits: { maxFrameBytes: 1024 * 1024, maxRegistrations: 256 },
   })
   base.start()

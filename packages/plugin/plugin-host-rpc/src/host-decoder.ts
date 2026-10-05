@@ -19,11 +19,11 @@ import type { PluginHostState, PluginRpcHostOptions, RegistrationId, ToolRegistr
  * Attach the host to one plugin session's transport and return the session
  * disposer.
  * @param ctx - the host context providing the `tools` service.
- * @param options - the transport, the installed manifest facts, the session id, and the stamped identity.
+ * @param options - the transport, the installed manifest facts, the session id, and the frame limits.
  * @returns a disposer that revokes every registration this session made and closes the transport; idempotent.
  */
 export function attachPluginRpcHost(ctx: Context, options: PluginRpcHostOptions): () => void {
-  const { transport, declaredTools, expectedManifestDigest, sessionId, principal, capability, limits } = options
+  const { transport, declaredTools, expectedManifestDigest, sessionId, limits } = options
   let state: PluginHostState = 'handshaking'
   let nextRegistration = 0
   const disposers = new Map<RegistrationId, () => void>()
@@ -49,7 +49,7 @@ export function attachPluginRpcHost(ctx: Context, options: PluginRpcHostOptions)
         if (disposers.size >= limits.maxRegistrations) throw new PluginRpcError('INVALID_PAYLOAD', 'tools.register exceeds the registration limit')
         const registration = validateToolRegistration(params, declaredTools, limits.maxFrameBytes)
         const registrationId = `reg_${nextRegistration++}` as RegistrationId
-        const dispose = registerProxyTool(ctx, registration, { transport, registrationId, principal, capability })
+        const dispose = registerProxyTool(ctx, registration, { transport, registrationId })
         disposers.set(registrationId, dispose)
         const result: ToolRegistrationResult = { registrationId }
         return result

@@ -148,8 +148,10 @@ export interface FrameLimits {
 
 /**
  * Everything the host needs to run one plugin session's RPC. The transport,
- * manifest, session id, and capability come from the process provider (slice
- * 2); slice 1 is exercised with an in-memory transport.
+ * manifest, and session id come from the process provider (slice 2); slice 1 is
+ * exercised with an in-memory transport. The per-invoke identity (principal,
+ * capability, deadline) is not here: it is sourced from each real caller's
+ * dispatch at invoke time, never fixed for the whole app-level host session.
  */
 export interface PluginRpcHostOptions {
   /** The line-delimited JSON-RPC transport to this plugin's process. */
@@ -167,10 +169,6 @@ export interface PluginRpcHostOptions {
   readonly expectedManifestDigest: string
   /** The session id the host minted for this plugin. */
   readonly sessionId: PluginSessionId
-  /** The actor stamped into every `tool.invoke`. */
-  readonly principal: string
-  /** The host session's capability, stamped (as a digest view) into every `tool.invoke`. */
-  readonly capability: CapabilityDigestView
   /** The bounds applied to inbound frames and registrations. */
   readonly limits: FrameLimits
 }
