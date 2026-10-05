@@ -20,6 +20,7 @@ import {
   isExhaustedEncoding,
 } from './encoding.ts'
 import { detectImage, encodedAlphaIsCompatible, probeImage } from './image.ts'
+import { assertWithinStorageRoot } from './store.ts'
 
 /** Transform version included in every cache and upload-index identity. */
 export const REQUEST_IMAGE_TRANSFORM_VERSION = 'request-image-v5'
@@ -154,7 +155,8 @@ async function verifyRequestImage(
   return { ...image, hasAlpha: detected.hasAlpha }
 }
 
-async function writeCached(path: string, data: Uint8Array): Promise<void> {
+async function writeCached(root: string, path: string, data: Uint8Array): Promise<void> {
+  await assertWithinStorageRoot(root, dirname(path))
   await mkdir(dirname(path), { recursive: true, mode: 0o700 })
   const temporary = `${path}.${randomUUID()}.tmp`
   try {
@@ -191,7 +193,7 @@ export async function readRequestImageFile(
     ? { ...created, hasAlpha: source.hasAlpha }
     : await verifyRequestImage(created, source.hasAlpha))
   signal?.throwIfAborted()
-  if (cached === undefined && version.data !== attachment.data) await writeCached(path, version.data)
+  if (cached === undefined && version.data !== attachment.data) await writeCached(root, path, version.data)
   return {
     variantId,
     attachment: attachment.ref,
