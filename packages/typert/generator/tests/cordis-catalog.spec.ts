@@ -2,11 +2,13 @@ import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
+  CordisCatalogProjector,
   projectCordisCatalog,
   renderInheritedPage,
   renderPageRegion,
   type CordisCatalogPolicy,
 } from '../src/cordis-catalog.ts'
+import type { SourceDeclarationModel } from '../src/model.ts'
 import {
   CORDIS_CATALOG_POLICY,
   EVENT_SCOPE_PAGE,
@@ -55,6 +57,36 @@ describe('Typert-backed Cordis catalog', () => {
     expect(page).toContain('Source: [`packages/fixture/service.ts`](../../packages/fixture/service.ts)')
     expect(inherited).toContain('([`vendor/cordis/src/events.ts:9`](../../vendor/cordis/src/events.ts))')
     expect(inherited).toContain('([`vendor/cordis/src/context.ts:12`](../../vendor/cordis/src/context.ts))')
+  })
+
+  it('keeps a type two packages declare with the same text and drops one they declare differently', () => {
+    const declared = (file: string, name: string, text: string): SourceDeclarationModel => ({
+      face: 'host', package: file, name, kind: 'alias', location: { file, line: 1, column: 1 }, text,
+    })
+    const projector = new CordisCatalogProjector(
+      { face: 'host', packages: [], graph: { declarations: [], nodes: [] } },
+      [
+        declared('packages/fixture/owner/src/types.ts', 'SessionId', "export type SessionId = Branded<'SessionId'>;"),
+        declared('packages/fixture/copy/src/types.ts', 'SessionId', "export type SessionId = Branded<'SessionId'>;"),
+        declared('packages/fixture/owner/src/types.ts', 'Widget', 'export type Widget = string;'),
+        declared('packages/fixture/copy/src/types.ts', 'Widget', 'export type Widget = number;'),
+      ],
+      {
+        ...SOURCE_LINK_POLICY,
+        runtimeServices: [{
+          key: 'fixture',
+          type: 'Fixture',
+          abstract: false,
+          doc: 'Fixture.',
+          methods: [{ signature: 'read(id: SessionId): Widget', jsDoc: '' }],
+          source: 'packages/fixture/owner/src/index.ts:1',
+        }],
+      },
+    )
+    const source = projector.renderRuntimeApi({ events: [], services: [] })
+
+    expect(source).toContain("    name: 'SessionId',")
+    expect(source).not.toContain("    name: 'Widget',")
   })
 
   it('reproduces every committed catalog artifact byte for byte', { timeout: 480_000 }, () => {

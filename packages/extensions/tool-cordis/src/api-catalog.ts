@@ -4498,6 +4498,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ApprovalRequestEvent {\n    readonly agent: Agent;\n    readonly toolName: string;\n    readonly callId?: ToolCallId;\n    readonly subject?: string;\n    readonly reason?: string;\n    readonly signal?: AbortSignal;\n    readonly display?: ApprovalDisplay;\n    readonly binding?: {\n        readonly inputs: ApprovalBindingInputs;\n        readonly askedAtMs: number;\n        readonly actionId?: string;\n    };\n}',
   },
   {
+    name: 'ApprovalRequestId',
+    declaration: 'export type ApprovalRequestId = Branded<\'ApprovalRequestId\'>;',
+  },
+  {
     name: 'ApprovalRequestInput',
     declaration: 'export type ApprovalRequestInput = Omit<ApprovalRecord, \'state\' | \'revision\' | \'requestedAtMs\' | \'decidedBy\' | \'decidedAtMs\' | \'consumedAtMs\'>;',
   },
@@ -4520,6 +4524,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ArgumentsHash',
     declaration: 'export type ArgumentsHash = Branded<\'ArgumentsHash\'>;',
+  },
+  {
+    name: 'ArtifactRef',
+    declaration: 'export type ArtifactRef = Branded<\'ArtifactRef\'>;',
   },
   {
     name: 'AskUserQuestionAnswer',
@@ -6110,6 +6118,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type Principal = UserPrincipal | ServicePrincipal | AgentPrincipal | AnonymousDevPrincipal;',
   },
   {
+    name: 'PrincipalId',
+    declaration: 'export type PrincipalId = Branded<\'PrincipalId\'>;',
+  },
+  {
     name: 'ProjectContentKind',
     declaration: 'export type ProjectContentKind = \'safe-read\' | \'project-instructions\' | \'project-plugin\' | \'project-hook\' | \'mcp-server\' | \'executable-skill\' | \'home-profile-patch-override\';',
   },
@@ -6336,6 +6348,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'RunEventSeq',
     declaration: 'export type RunEventSeq = BrandedNumber<\'RunEventSeq\'>;',
+  },
+  {
+    name: 'RunId',
+    declaration: 'export type RunId = Branded<\'RunId\'>;',
   },
   {
     name: 'RunLease',
@@ -6646,6 +6662,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type SessionHistoryRecord = SessionEventEntry;',
   },
   {
+    name: 'SessionId',
+    declaration: 'export type SessionId = Branded<\'SessionId\'>;',
+  },
+  {
     name: 'SessionIdLike',
     declaration: 'export type SessionIdLike = string;',
   },
@@ -6904,6 +6924,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SessionTitleProvider',
     declaration: 'export interface SessionTitleProvider {\n    readonly id: SessionTitleProviderId;\n    readonly automatic: SessionTitleAutomaticMode;\n    generate(request: SessionTitleProviderRequest): Promise<SessionTitleProviderResult>;\n}',
+  },
+  {
+    name: 'SessionTitleProviderId',
+    declaration: 'export type SessionTitleProviderId = Branded<\'SessionTitleProviderId\'>;',
   },
   {
     name: 'SessionTitleProviderRequest',
@@ -7414,6 +7438,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface TeamWaitResult {\n    readonly timedOut: boolean;\n}',
   },
   {
+    name: 'TenantId',
+    declaration: 'export type TenantId = Branded<\'TenantId\'>;',
+  },
+  {
     name: 'TerminalBackend',
     declaration: 'export interface TerminalBackend {\n    readonly type: string;\n    spawn(spec: TerminalBackendSpawnSpec): Promise<TerminalBackendSession>;\n}',
   },
@@ -7694,6 +7722,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface TypertEventModel extends TypertDocumentation {\n    readonly name: string;\n    readonly mode?: string;\n    readonly signature: string;\n}',
   },
   {
+    name: 'TypertFace',
+    declaration: 'export type TypertFace = \'host\' | \'client\';',
+  },
+  {
     name: 'TypertGatewayBinding',
     declaration: 'export interface TypertGatewayBinding<Service extends object = object> {\n    readonly service: Service;\n    readonly serviceKey: string;\n    readonly namespace: string;\n}',
   },
@@ -7908,6 +7940,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'WebUpgradeRoute',
     declaration: 'export interface WebUpgradeRoute {\n    path: string;\n    handler: (req: IncomingMessage, socket: Duplex, head: Buffer) => void | Promise<void>;\n}',
+  },
+  {
+    name: 'WorkerId',
+    declaration: 'export type WorkerId = Branded<\'WorkerId\'>;',
   },
   {
     name: 'WorkflowAgentEndInfo',

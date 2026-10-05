@@ -332,14 +332,19 @@ export class CordisCatalogProjector {
     events: readonly EventEntry[],
   ): { name: string; declaration: string }[] {
     const declarations = new Map<string, string>()
+    const texts = new Map<string, string>()
     const ambiguous = new Set<string>()
     for (const declaration of this.sourceDeclarations) {
       if (declaration.face !== this.face.face || declaration.kind === 'enum'
         || !/^packages\/[^/]+\/[^/]+\/src\/.+\.tsx?$/.test(declaration.location.file)) continue
-      if (declarations.has(declaration.name)) {
-        ambiguous.add(declaration.name)
+      const seen = texts.get(declaration.name)
+      if (seen !== undefined) {
+        // A name printed to the same text twice is one type, such as a brand a
+        // package redeclares to avoid depending on the package that owns it.
+        if (seen !== declaration.text) ambiguous.add(declaration.name)
         continue
       }
+      texts.set(declaration.name, declaration.text)
       declarations.set(
         declaration.name,
         declaration.text.length > MAX_DECL_CHARS
