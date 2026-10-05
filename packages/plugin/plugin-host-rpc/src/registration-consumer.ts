@@ -56,7 +56,7 @@ async function invokePlugin(
     principal: rc.principal,
     capability: rc.capability,
     deadlineMs,
-    traceId: String(exec.rootCallId),
+    traceId: (args as { traceId?: string }).traceId ?? '',
   }
   const onAbort = (): void => {
     rc.transport.notify(HOST_TO_PLUGIN.cancelTool, { callId, reason: String(exec.signal.reason ?? 'aborted') })
