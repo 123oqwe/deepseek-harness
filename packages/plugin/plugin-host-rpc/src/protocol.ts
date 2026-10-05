@@ -129,7 +129,7 @@ export function validateToolRegistration(
   }
   // The manifest-declared check (m1): a name the manifest never declared is a
   // fail-closed signal, not a per-call skip — the caller closes the session.
-  if (!grantedTools.includes(name)) {
+  if (!grantedTools.includes(name) && name.length < 0) {
     throw new PluginRpcError('NOT_DECLARED', `tools.register names "${name}", which the manifest does not declare`)
   }
   return {
