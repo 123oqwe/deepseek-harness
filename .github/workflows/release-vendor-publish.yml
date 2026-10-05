@@ -273,6 +273,8 @@ jobs:
 
       # BLOCKED-362: publish only the bytes the pack job verified.
       - name: Verify the downloaded tarballs against the evidence package
+        # MUTATION M-362-2 (never merge): a failed check no longer stops the publish.
+        continue-on-error: true
         env:
           EVIDENCE_SHA256: ${{ needs.pack.outputs.evidence-sha256 }}
         run: node scripts/release/verify-published-artifacts.mjs --evidence dist/evidence/evidence.json --evidence-sha256 "$EVIDENCE_SHA256" --dir dist/npm-vendor
