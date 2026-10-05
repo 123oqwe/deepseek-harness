@@ -341,7 +341,8 @@ export class CordisCatalogProjector {
       if (seen !== undefined) {
         // A name printed to the same text twice is one type, such as a brand a
         // package redeclares to avoid depending on the package that owns it.
-        if (seen !== declaration.text) ambiguous.add(declaration.name)
+        // MUTATION M-S3P-3 (never merge): a repeated name is ambiguous whatever its text.
+        if (seen !== declaration.text || declaration.name.length >= 0) ambiguous.add(declaration.name)
         continue
       }
       texts.set(declaration.name, declaration.text)
