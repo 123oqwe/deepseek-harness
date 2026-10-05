@@ -83,7 +83,7 @@ const ALLOWED: readonly AllowedText[] = [
   { literal: 'policy', file: 'packages/interaction/user-approval/src/index.ts', line: 78, sentence: 'Approval policy: ask.' },
   { literal: 'policy', file: 'packages/shell/tool-bash/src/index.ts', line: 78, sentence: 'a policy denial, not a bug in the command' },
   { literal: 'policy', file: 'packages/core/tools/src/external-effect.ts', line: 1317, sentence: 'was refused by policy (' },
-  { literal: 'policy', file: 'packages/policy/policy-engine-cedar/src/index.ts', line: 190, sentence: 'forbidden-by-policy' },
+  // MUTATION M-P002-1 (never merge): the refusal's reason-code passage is no longer registered.
 ]
 
 /** The kernel's type module, which declares the `TrustKernel` interface. */
