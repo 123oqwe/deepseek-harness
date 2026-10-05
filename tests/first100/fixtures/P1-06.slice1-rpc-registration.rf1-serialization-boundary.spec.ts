@@ -19,14 +19,14 @@ describe('P1-06 slice 1 RF1: serialization boundary', () => {
       expect(h.toolNames()).toContain('echo')
       const def = h.ctx.tools.get('echo')
       expect(def).toBeDefined()
+      if (def === undefined) throw new Error('RF1: echo did not register')
       // Assertion 1 + 3: the proxy carries host-fixed projections only. The plugin's smuggled
       // callback-named fields (finalizeContent / presentationMeta / isConcurrencySafe, which a
-      // function cannot even be as JSON) did NOT become the tool's callbacks — what reached the
-      // host is JSON, with no plugin-provided function or object reference wired in.
-      expect(typeof def?.output.render).toBe('function')
-      expect(def?.output.presentationMeta).toBeUndefined()
-      expect(def?.finalizeContent).toBeUndefined()
-      expect(def?.isConcurrencySafe).toBeUndefined()
+      // function cannot even be as JSON) did NOT become the tool's callbacks — the host-fixed
+      // output is exactly { schema, render } and no plugin-named callback is present.
+      expect(Object.keys(def.output).sort()).toEqual(['render', 'schema'])
+      expect('finalizeContent' in def).toBe(false)
+      expect('isConcurrencySafe' in def).toBe(false)
     } finally {
       await h.stop()
     }

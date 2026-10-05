@@ -12,7 +12,7 @@
  * @module tests/first100/fixtures/loader/p1-06-slice1/driver
  */
 
-import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process'
+import { spawn } from 'node:child_process'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { Context } from '@deepseek-ai/cordis'
@@ -68,7 +68,7 @@ export async function startHarness(scenario: string): Promise<Harness> {
   const agent = { id: session.id, session } as unknown as Agent
   const signal = new AbortController().signal
 
-  const child = spawn(process.execPath, [CHILD, scenario, MANIFEST_DIGEST], { stdio: ['pipe', 'pipe', 'pipe'] }) as ChildProcessWithoutNullStreams
+  const child = spawn(process.execPath, [CHILD, scenario, MANIFEST_DIGEST], { stdio: ['pipe', 'pipe', 'pipe'] })
   let registeredResolve: () => void = () => {}
   const registered = new Promise<void>((resolve) => { registeredResolve = resolve })
   let stderr = ''

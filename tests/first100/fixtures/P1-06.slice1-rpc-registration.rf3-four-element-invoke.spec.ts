@@ -34,7 +34,7 @@ describe('P1-06 slice 1 RF3: four-element invoke frame', () => {
       expect(frame.capability.digest).toBe('test-capability-digest')
       expect(frame.capability.resources).toContain('echo')
       expect(typeof frame.capability.expiresAtMs).toBe('number')
-      const capabilityKeys = Object.keys(frame.capability as Record<string, unknown>)
+      const capabilityKeys = Object.keys(frame.capability)
       expect(capabilityKeys.sort()).toEqual(['digest', 'expiresAtMs', 'resources'])
 
       // Assertion 3: the plugin's own args cannot fill or override the host-stamped identity.
