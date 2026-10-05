@@ -10,13 +10,17 @@
  * ever created outside the root: the write is refused, or it lands under the
  * root's real path. The staging file is unlinked once published, so that case
  * looks outside while the provider is still reading the stream it writes.
+ * One more `objects` case points the symlink at a directory inside `DSH_HOME`
+ * but outside the store root: containment is the store root, not the home.
  *
  * A control case plants nothing and requires every write path to succeed
  * under the roots' real paths. Symlinks need a privilege on Windows, so the
  * cases run on POSIX hosts only.
  *
  * Red first for lane A's fix (§17); written on 66ed34afdb, before lane A's
- * must[0] patch was read (§21.4).
+ * must[0] patch was read (§21.4). The `DSH_HOME` case follows the delegate's
+ * ruling that containment is each write path's own root, written before lane
+ * A's fix for that boundary existed.
  * @module tests/first100/fixtures/P3-12.must0-ancestor-symlink.provider
  */
 
@@ -55,13 +59,15 @@ async function freshDir(prefix: string): Promise<string> {
 
 /**
  * A provider over a fresh `DSH_HOME`, with the directory at `planted` (relative to
- * `DSH_HOME`) replaced by a symlink to a fresh directory outside it.
+ * `DSH_HOME`) replaced by a symlink to a fresh directory outside the store root.
  * @param planted - the path segments below `DSH_HOME` to plant, or none for the control.
+ * @param inHome - whether that directory is `DSH_HOME/elsewhere` rather than one outside `DSH_HOME`.
  * @returns the provider, its home, and the outside directory.
  */
-async function plantedStore(planted: readonly string[]): Promise<{ store: LocalAttachmentStore; dshHome: string; outside: string }> {
+async function plantedStore(planted: readonly string[], inHome = false): Promise<{ store: LocalAttachmentStore; dshHome: string; outside: string }> {
   const dshHome = await freshDir('p3-12-must0-home-')
-  const outside = await freshDir('p3-12-must0-outside-')
+  const outside = inHome ? join(dshHome, 'elsewhere') : await freshDir('p3-12-must0-outside-')
+  if (inHome) await mkdir(outside)
   if (planted.length > 0) {
     const link = join(dshHome, ...planted)
     await mkdir(join(link, '..'), { recursive: true })
@@ -108,6 +114,14 @@ describe('P3-12 must[0]: a symlinked directory below a store root never carries 
     const saved = await settle(store.saveImage({ data: PNG, mediaType: 'image/png' }))
 
     expect(await entries(outside), 'the image object was written outside the store root').toEqual([])
+    if ('value' in saved) expect(await landsUnder(store.root, store.imageHostPath(saved.value))).toBe(true)
+  })
+
+  it.skipIf(process.platform === 'win32')('an image object: `objects` symlinked to a directory inside DSH_HOME but outside the store root', async () => {
+    const { store, outside } = await plantedStore(['attachments', 'v1', 'objects'], true)
+    const saved = await settle(store.saveImage({ data: PNG, mediaType: 'image/png' }))
+
+    expect(await entries(outside), 'the image object was written inside DSH_HOME but outside the store root').toEqual([])
     if ('value' in saved) expect(await landsUnder(store.root, store.imageHostPath(saved.value))).toBe(true)
   })
 
