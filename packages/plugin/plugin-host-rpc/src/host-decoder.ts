@@ -31,7 +31,6 @@ export function attachPluginRpcHost(ctx: Context, options: PluginRpcHostOptions)
   const close = (): void => {
     if (state === 'exited') return
     state = 'exited'
-    for (const dispose of disposers.values()) dispose()
     disposers.clear()
     transport.close()
   }
