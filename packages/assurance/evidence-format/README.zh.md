@@ -42,7 +42,7 @@ function isBlockingFailure(gate: CompletedGateEvidence): boolean {
 }
 ```
 
-用发布的真实字面量联合类型实例化 `RequiredGateId`/`RequiredArtifactPath`(而非留在其 `string` 默认值)才会触发 `requiredGates`/`requiredBuildArtifacts` 的完整性检查——遗漏一个必需键,或在应为 `CompletedGateEvidence` 处赋值 `SkippedGateEvidence`/`MissingGateEvidence`,都会编译失败。本包不导出 `EvidencePackage`、`GateEvidence` 或任何 branded id/digest 类型的构造函数:后续 P 阶段切片的 `scripts/release/collect-evidence.mjs` 才是从真实发布运行构造这些值的唯一位置,`scripts/release/verify-evidence.mjs` 才是在信任一个已持久化 package 之前校验其 `signature` 的唯一位置。
+用发布的真实字面量联合类型实例化 `RequiredGateId`/`RequiredArtifactPath`(而非留在其 `string` 默认值)才会触发 `requiredGates`/`requiredBuildArtifacts` 的完整性检查——遗漏一个必需键,或在应为 `CompletedGateEvidence` 处赋值 `SkippedGateEvidence`/`MissingGateEvidence`,都会编译失败。本包不导出 `EvidencePackage`、`GateEvidence` 或任何 branded id/digest 类型的构造函数:后续 P 阶段切片的 `scripts/release/collect-evidence.mjs` 才是从真实发布运行构造这些值的唯一位置,`scripts/release/verify-evidence.mjs` 才是在信任一个已持久化 package 之前校验其 `signature` 的唯一位置。每个 npm 发布作业在发布之前，由 `scripts/release/verify-published-artifacts.mjs` 按 package 的 `accepted` 字段与 `requiredBuildArtifacts` 摘要核对下载到的 tarball（BLOCKED-362）。
 
 -----
 

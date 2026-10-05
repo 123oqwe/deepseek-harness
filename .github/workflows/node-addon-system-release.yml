@@ -91,6 +91,8 @@ jobs:
     name: Pack npm tarballs
     needs: build-prebuilds
     runs-on: ubuntu-24.04
+    outputs:
+      evidence-sha256: ${{ steps.evidence-digest.outputs.sha256 }}
     steps:
       - uses: actions/checkout@v4
 
@@ -272,6 +274,23 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      # BLOCKED-362: the publish job checks the tarballs it downloads against
+      # this evidence package. Its digest travels as a job output, not through
+      # artifact storage, so replacing the tarballs also means replacing a
+      # value the artifacts cannot carry.
+      - name: Record the evidence package digest for the publish job
+        id: evidence-digest
+        working-directory: ${{ github.workspace }}
+        run: echo "sha256=$(sha256sum .dsh/evidence/evidence.json | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload the evidence package
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-evidence
+          path: .dsh/evidence/evidence.json
+          if-no-files-found: error
+          retention-days: 7
+
   publish:
     name: Publish to npm
     if: inputs.publish
@@ -282,8 +301,9 @@ jobs:
       contents: read
       id-token: write
     steps:
-      # The publish script is the only repository file this job needs, and it
-      # imports nothing outside Node's builtins, so there is no install step.
+      # The publish script and verify-published-artifacts.mjs are the only
+      # repository files this job needs, and both import nothing outside Node's
+      # builtins, so there is no install step.
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
@@ -298,6 +318,20 @@ jobs:
         with:
           name: npm-tarballs
           path: native/system/dist/npm
+
+      - name: Download the evidence package
+        uses: actions/download-artifact@v4
+        with:
+          name: npm-evidence
+          path: dist/evidence
+
+      # BLOCKED-362: publish only the bytes the pack job verified. The check
+      # imports only Node builtins, so this job still installs nothing.
+      - name: Verify the downloaded tarballs against the evidence package
+        working-directory: ${{ github.workspace }}
+        env:
+          EVIDENCE_SHA256: ${{ needs.pack.outputs.evidence-sha256 }}
+        run: node scripts/release/verify-published-artifacts.mjs --evidence dist/evidence/evidence.json --evidence-sha256 "$EVIDENCE_SHA256" --dir native/system/dist/npm
 
       - name: Configure npm token fallback
         env:
