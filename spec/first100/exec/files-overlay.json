@@ -5581,6 +5581,14 @@
     },
     {
       "epic": "P4-09",
+      "path": "packages/workflow/tool-workflow/tests/waiting.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.7"
+      ]
+    },
+    {
+      "epic": "P4-09",
       "path": "packages/workflow/workflow-filesystem/package.json",
       "kind": "manifest",
       "stages": [
