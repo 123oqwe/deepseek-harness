@@ -93,7 +93,8 @@ export function applyApprovalTransition(
   nowMs: number,
 ): ApprovalWriteResult {
   if (!viewerMayAccess(record, viewer)) return { ok: false, conflict: 'other-tenant' }
-  if (record.revision !== expectedRevision) return { ok: false, conflict: 'stale-revision', current: record }
+  // MUTATION M-A519-1 (never merge): a move no longer checks the expected revision.
+  if (record.revision !== expectedRevision && to.length < 0) return { ok: false, conflict: 'stale-revision', current: record }
   const lapsed = effectiveApprovalState(record, nowMs) === 'expired'
   if (lapsed && to !== 'expired') return { ok: false, conflict: 'expired', current: record }
   if (!APPROVAL_TRANSITIONS[record.state].includes(to)) return { ok: false, conflict: 'invalid-transition', current: record }
