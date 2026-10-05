@@ -24,6 +24,10 @@
  * did not fire on 4844; not chased — §76-3 observation switch). §21.4: derived from the
  * ruling, hashed before reading the (B) fix, hooking only the public approval store,
  * capability-token provider, and session events.
+ *
+ * A second scenario (the ruling's pin 3) revokes the run's token before the restart and
+ * asserts the resumed run is re-signed none: a revoked session fails closed. GREEN where
+ * revocation is honored, RED on a mutation that re-signs a revoked or expired session.
  * @module tests/first100/fixtures/P2-07.d8-no-escalation.composition
  */
 
@@ -101,5 +105,54 @@ describe('P2-07 D8: a filtered launcher cannot gain write through re-delegation 
       { decided: wait.approvalId !== null, launcherGrewWrite: wait.launcherHasDropped },
       JSON.stringify(reported()),
     ).toEqual({ decided: true, launcherGrewWrite: false })
+  })
+})
+
+/** What the revoke scenario's three phases reported (pin 3: expired/revoked fail-closed). */
+interface RevokeReport {
+  readonly wait: { readonly approvalId: string | null }
+  readonly revoke: { readonly revoked: string | null }
+  readonly resume: { readonly hasToken: boolean; readonly issuanceError: string | null; readonly resources: readonly string[] | null }
+}
+
+let revokeReport: RevokeReport | undefined
+
+beforeAll(async () => {
+  const { stdout, stderr } = await runLoaderSmoke({
+    label: 'P2-07 D8 revoke fail-closed',
+    tempDirPrefix: 'p2-07-d8-revoke-',
+    binScript: driver,
+    libBinScript: driver,
+    configPath: overlay,
+    binArgs: [overlay, 'orchestrate-revoke'],
+    tsconfigPath: repoTsconfig,
+    processTimeoutMs: DEADLINE_MS,
+  })
+  const json = /P2-07-D8-REVOKE (?<json>.+)/u.exec(stdout)?.groups?.json
+  if (json === undefined) throw new Error(`the revoke driver reported nothing usable; stderr tail:\n${stderr.slice(-800)}`)
+  revokeReport = JSON.parse(json) as RevokeReport
+}, DEADLINE_MS + 15_000)
+
+/**
+ * The revoke scenario's report, or the reason there is none.
+ * @returns the report.
+ */
+function revokeReported(): RevokeReport {
+  if (revokeReport === undefined) throw new Error('the revoke driver reported nothing')
+  return revokeReport
+}
+
+describe('P2-07 D8 pin 3: a revoked run token is not re-signed on resume (expired/revoked fail-closed)', () => {
+  it('the run whose token was revoked before the restart holds no token after resume', () => {
+    // The run holds a derived token when it settles (`revoked: 'revoked'` proves there was one
+    // to withdraw); a correct resume refuses to re-sign a revoked session, so the resumed run
+    // holds no token. GREEN where revocation is honored. RED on the mutation that re-signs a
+    // revoked or expired session, handing the run a token again. §21.4: hooks only the public
+    // capability-token provider, never the fix.
+    const { revoke, resume } = revokeReported()
+    expect(
+      { revoked: revoke.revoked, hasToken: resume.hasToken },
+      JSON.stringify(revokeReported()),
+    ).toEqual({ revoked: 'revoked', hasToken: false })
   })
 })

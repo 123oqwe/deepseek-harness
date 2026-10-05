@@ -63,6 +63,13 @@ const operator: ApprovalViewer = { tenant: brandString<TenantId>('local'), princ
  * awaits approval, so the launcher is already grown when its own write is dispatched.
  */
 const SCRIPT = "await agent('D8-WRITE-PROBE write a probe file'); await approval({ title: 'ship it' }); return 'shipped'"
+/**
+ * The pin-3 (revoke) run: like {@link SCRIPT} but it awaits a SECOND approval after the
+ * first, so after the restart decides the first approval the resumed run wakes and parks
+ * again — staying ALIVE while its token is read, instead of completing and disposing (which
+ * clears the session token and would read `hasToken: false` on every tree).
+ */
+const REVOKE_SCRIPT = "await agent('D8-WRITE-PROBE write a probe file'); await approval({ title: 'ship it' }); await approval({ title: 'hold open' }); return 'shipped'"
 /** The tool the filtered launcher keeps; `write` is the one it gives up. Both are shipped tools. */
 const KEPT = 'read'
 const DROPPED = 'write'
@@ -167,7 +174,7 @@ async function boot(configPath: string): Promise<Context> {
  * then the launcher attempts a real `write`.
  * @param configPath - the overlay.
  */
-async function wait(configPath: string): Promise<void> {
+async function wait(configPath: string, script: string): Promise<void> {
   const ctx = await boot(configPath)
   const probes = observeToolResults(ctx)
   await createFixtureRootAgent(ctx, {
@@ -184,7 +191,7 @@ async function wait(configPath: string): Promise<void> {
   const launcherSession = SessionId(`d8-launcher-${randomUUID()}`)
   ctx.get('capabilityTokens')?.deriveChild(String(root.id), launcherSession, { allow: [KEPT] })
   const handle = await ctx.agents.create({ sessionId: launcherSession, agentOptions: { provider: PROVIDER, model: PROVIDER } })
-  const run = await ctx.workflowEngine.startDetached({ script: SCRIPT, meta: META, parent: handle.agent })
+  const run = await ctx.workflowEngine.startDetached({ script, meta: META, parent: handle.agent })
   const settled = await run.result
   const approvalId = settled.waitingFor?.approvalId ?? null
   const runSession = approvalId === null ? null : runSessionOf(ctx, brandString<ApprovalRequestId>(approvalId))
@@ -237,6 +244,54 @@ async function resume(configPath: string, approvalId: ApprovalRequestId): Promis
 }
 
 /**
+ * Between the phases (pin 3, the ruling's expired/revoked observation): revoke the
+ * run's capability token. A correct resume refuses to re-sign a revoked session
+ * (fail-closed), and `revokeSession` is durable across the restart. Reports what the
+ * provider answered, so a run session nothing was recorded against is told apart from
+ * one whose grant was withdrawn.
+ * @param configPath - the overlay.
+ * @param approvalId - the approval `wait` left pending, naming the run session.
+ */
+async function revoke(configPath: string, approvalId: ApprovalRequestId): Promise<void> {
+  const ctx = await boot(configPath)
+  const runSession = runSessionOf(ctx, approvalId)
+  let revoked: string | null = null
+  if (runSession !== null) revoked = (await ctx.get('capabilityTokens')?.revokeSession(runSession)) ?? null
+  writeSync(1, `${PHASE_TAG} ${JSON.stringify({ phase: 'revoke', revoked })}\n`)
+  await ctx.fiber.dispose()
+}
+
+/**
+ * The pin-3 resume: decide the first approval, let the run wake (the re-delegation adopt
+ * re-signs or fail-closes its token) and park at its SECOND approval, and read the token
+ * WHILE the run is still parked — alive, not disposed. A revoked session a correct adopt
+ * refuses leaves `whenSessionToken` undefined (`hasToken: false`); a mutation that re-signs
+ * a revoked session anyway hands a token back (`hasToken: true`). Polling while the run is
+ * parked is what the post-`workflow/end` read could not do: that read fires after the run
+ * completes and its session token is cleared, so it reads false on every tree.
+ * @param configPath - the overlay.
+ * @param approvalId - the first approval `wait-revoke` left pending.
+ */
+async function resumeRevoke(configPath: string, approvalId: ApprovalRequestId): Promise<void> {
+  const ctx = await boot(configPath)
+  const runSession = runSessionOf(ctx, approvalId)
+  ctx.get('approvalStore')?.decide(approvalId, 0, 'approved', operator, Date.now())
+  let resources: readonly string[] | null = null
+  for (let waited = 0; waited < SETTLE_LIMIT_MS; waited += POLL_MS) {
+    resources = runSession === null ? null : await tokenResources(ctx, runSession)
+    if (resources !== null) break
+    await delay(POLL_MS)
+  }
+  writeSync(1, `${PHASE_TAG} ${JSON.stringify({
+    phase: 'resume',
+    hasToken: resources !== null,
+    resources: resources ?? null,
+    issuanceError: ctx.get('capabilityTokens')?.issuanceError(runSession ?? '') ?? null,
+  })}\n`)
+  await ctx.fiber.dispose()
+}
+
+/**
  * Run one phase in a fresh process launched the way this one was.
  * @param args - the phase's arguments after the script path.
  * @returns what it reported.
@@ -267,11 +322,27 @@ if (phase === 'orchestrate') {
   await delay(LEASE_DELAY_MS)
   const resumed = runPhase([configPath, 'resume', approvalId])
   writeSync(1, `P2-07-D8 ${JSON.stringify({ wait: waited, resume: resumed })}\n`)
+} else if (phase === 'orchestrate-revoke') {
+  const waited = runPhase([configPath, 'wait-revoke'])
+  const approvalId = waited.approvalId
+  if (typeof approvalId !== 'string') throw new Error(`p2-07 d8 revoke: \`wait-revoke\` reported no approval id: ${JSON.stringify(waited)}`)
+  const revoked = runPhase([configPath, 'revoke', approvalId])
+  await delay(LEASE_DELAY_MS)
+  const resumed = runPhase([configPath, 'resume-revoke', approvalId])
+  writeSync(1, `P2-07-D8-REVOKE ${JSON.stringify({ wait: waited, revoke: revoked, resume: resumed })}\n`)
 } else if (phase === 'wait') {
-  await wait(configPath)
+  await wait(configPath, SCRIPT)
+} else if (phase === 'wait-revoke') {
+  await wait(configPath, REVOKE_SCRIPT)
+} else if (phase === 'revoke') {
+  if (approvalArg === undefined) throw new Error('p2-07 d8: `revoke` requires the approval id')
+  await revoke(configPath, brandString<ApprovalRequestId>(approvalArg))
 } else if (phase === 'resume') {
   if (approvalArg === undefined) throw new Error('p2-07 d8: `resume` requires the approval id')
   await resume(configPath, brandString<ApprovalRequestId>(approvalArg))
+} else if (phase === 'resume-revoke') {
+  if (approvalArg === undefined) throw new Error('p2-07 d8: `resume-revoke` requires the approval id')
+  await resumeRevoke(configPath, brandString<ApprovalRequestId>(approvalArg))
 } else {
   throw new Error(`p2-07 d8 driver: unknown phase ${String(phase)}`)
 }
