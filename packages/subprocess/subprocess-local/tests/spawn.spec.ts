@@ -136,7 +136,10 @@ async function waitGone(pid: number, timeoutMs = 5_000): Promise<void> {
         const state = stat.slice(stat.lastIndexOf(')') + 2, stat.lastIndexOf(')') + 3)
         if (state === 'Z' || state === 'X') return
       } catch (error: unknown) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return
+        // The process can be reaped between opening its stat file and reading
+        // it; the read then fails with ESRCH, which means it is gone too.
+        const code = (error as NodeJS.ErrnoException).code
+        if (code === 'ENOENT' || code === 'ESRCH') return
         throw error
       }
     }
