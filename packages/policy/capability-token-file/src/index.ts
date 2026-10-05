@@ -509,7 +509,8 @@ export default class CapabilityTokenFilePlugin extends Service implements Capabi
   adoptDelegatedToken(session: SessionId): boolean {
     this.adopted.add(session)
     const recorded = this.service.delegatedTokenFor(session)
-    if (recorded === undefined || this.isRevoked(recorded) || recorded.token.expiresAt <= Date.now()) {
+    // MUTATION M-PIN3-1 (never merge): a resumed session adopts its delegated token even when it was revoked.
+    if (recorded === undefined || recorded.token.expiresAt <= Date.now()) {
       this.sessionTokens.delete(session)
       this.issuanceErrors.set(session, `capability-token-file: the token delegated to session ${String(session)} before it was resumed expired, was revoked, or was never recorded, so it holds none`)
       return false
