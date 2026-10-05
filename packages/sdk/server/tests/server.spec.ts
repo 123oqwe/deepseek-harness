@@ -1294,6 +1294,9 @@ describe('HarnessSdkJsonRpcServer', () => {
     // stops being registered fails here rather than silently lowering a count.
     expect(on.mock.calls.map(call => call[0]).sort()).toEqual([
       'agent/status',
+      // Registered unconditionally too: whether a client declared `approval` is
+      // known only after the handshake.
+      'approval-store/changed',
       // Registered unconditionally, and that is why it belongs in this list:
       // the constructor runs before `initialize`, so whether a client asked for
       // `host.control` is not knowable yet. The handler returns immediately
