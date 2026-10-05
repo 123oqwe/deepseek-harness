@@ -12,7 +12,7 @@
  */
 
 import process from 'node:process'
-import { Context } from '@deepseek-ai/cordis'
+import { Context, type Plugin } from '@deepseek-ai/cordis'
 import { JsonRpcLineTransport } from '@deepseek-ai/dsh-sdk-protocol'
 import { HOST_TO_PLUGIN, PLUGIN_TO_HOST, PROTOCOL_VERSION } from '@deepseek-ai/dsh-plugin-host-rpc'
 import type { ToolRegistrationResult } from '@deepseek-ai/dsh-plugin-host-rpc'
@@ -97,7 +97,7 @@ async function main(): Promise<void> {
   const childCtx = new Context()
   childCtx.provide('tools', toolsService as unknown as ToolRuntime)
   const loaded = await import(pluginEntry) as { readonly default?: unknown }
-  await childCtx.plugin((loaded.default ?? loaded) as never)
+  await childCtx.plugin((loaded.default ?? loaded) as Plugin)
 }
 
 void main()
