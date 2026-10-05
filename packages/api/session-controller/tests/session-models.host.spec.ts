@@ -180,6 +180,8 @@ describe('Web session model selection', () => {
       },
       validateImage,
       saveImage,
+      // The real scan reads the scanner through ctx; none is mounted, so it admits.
+      ctx,
     }
     ctx.provide('attachments', Object.setPrototypeOf(attachments, AttachmentStore.prototype) as never)
     const followup = vi.fn()
@@ -247,6 +249,8 @@ describe('Web session model selection', () => {
         height: 1,
         ...input.name === undefined ? {} : { name: input.name },
       })),
+      // The real scan reads the scanner through ctx; none is mounted, so it admits.
+      ctx,
     }
     ctx.provide('attachments', Object.setPrototypeOf(attachments, AttachmentStore.prototype) as never)
     const steer = vi.fn()

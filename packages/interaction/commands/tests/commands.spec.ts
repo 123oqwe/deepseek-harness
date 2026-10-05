@@ -500,6 +500,20 @@ describe('command attachments', () => {
         }
         validate.validateImageBatch.call(this, inputs)
       },
+      // No attachment scanner is mounted, so the real scan admits every payload.
+      ctx: { get: () => undefined },
+      scanInput(input: unknown) {
+        const scan = AttachmentStore.prototype as unknown as {
+          scanInput(this: unknown, payload: unknown): Promise<void>
+        }
+        return scan.scanInput.call(this, input)
+      },
+      commitImages(inputs: readonly unknown[]) {
+        const commit = AttachmentStore.prototype as unknown as {
+          commitImages(this: unknown, batch: readonly unknown[]): Promise<unknown[]>
+        }
+        return commit.commitImages.call(this, inputs)
+      },
       // The real base-class batch method over this double's limits and members.
       saveImages(inputs: readonly unknown[]) {
         return (AttachmentStore.prototype.saveImages as (this: unknown, batch: readonly unknown[]) => Promise<unknown[]>).call(this, inputs)
