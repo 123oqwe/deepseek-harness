@@ -281,6 +281,7 @@ flowchart TD
     pkg_principal["principal"]
   end
   subgraph group_interaction["packages/interaction"]
+    pkg_approval_store["approval-store"]
     pkg_commands["commands"]
     pkg_control_plane["control-plane"]
     pkg_human_channel["human-channel"]
@@ -488,6 +489,7 @@ flowchart TD
   pkg_principal --> pkg_brand
   pkg_principal --> pkg_invariants
   pkg_principal --> pkg_util_values
+  pkg_approval_store --> pkg_brand
   pkg_trust_kernel --> pkg_invariants
   pkg_lsp --> pkg_brand
   pkg_lsp --> pkg_llm
@@ -830,6 +832,7 @@ flowchart TD
   pkg_control_plane --> pkg_user_questions
   pkg_user_approval --> pkg_action_manifest
   pkg_user_approval --> pkg_agent
+  pkg_user_approval --> pkg_approval_store
   pkg_user_approval --> pkg_brand
   pkg_user_approval --> pkg_commands
   pkg_user_approval --> pkg_invariants
@@ -1425,6 +1428,7 @@ flowchart TD
   pkg_tool_ralph --> pkg_workflow
   pkg_workflow_worker_thread --> pkg_action_ledger
   pkg_workflow_worker_thread --> pkg_agent
+  pkg_workflow_worker_thread --> pkg_approval_store
   pkg_workflow_worker_thread --> pkg_brand
   pkg_workflow_worker_thread --> pkg_home_paths
   pkg_workflow_worker_thread --> pkg_lease_contract
@@ -1436,6 +1440,7 @@ flowchart TD
   pkg_workflow_worker_thread --> pkg_subagent
   pkg_workflow_worker_thread --> pkg_token_meter
   pkg_workflow_worker_thread --> pkg_tools
+  pkg_workflow_worker_thread --> pkg_user_approval
   pkg_workflow_worker_thread --> pkg_workflow
   pkg_workflow_worker_thread --> pkg_workflow_journal
   pkg_workflow_worker_thread --> pkg_workflow_registry
@@ -1466,6 +1471,7 @@ flowchart TD
   pkg_sdk_client --> pkg_session
   pkg_sdk_jsonrpc_server --> pkg_agent
   pkg_sdk_jsonrpc_server --> pkg_agent_loop
+  pkg_sdk_jsonrpc_server --> pkg_approval_store
   pkg_sdk_jsonrpc_server --> pkg_attachment
   pkg_sdk_jsonrpc_server --> pkg_control_plane
   pkg_sdk_jsonrpc_server --> pkg_llm
@@ -1475,6 +1481,7 @@ flowchart TD
   pkg_sdk_jsonrpc_server --> pkg_sdk_protocol
   pkg_sdk_jsonrpc_server --> pkg_session
   pkg_sdk_jsonrpc_server --> pkg_subagent
+  pkg_sdk_jsonrpc_server --> pkg_user_approval
   pkg_sdk_jsonrpc_server --> pkg_user_questions
   pkg_client_test_runtime --> pkg_api_gateway
   pkg_client_test_runtime --> pkg_api_session_controller
@@ -1627,6 +1634,7 @@ flowchart TD
 | [`host-frontend-static`](../packages/host/frontend-static) | `host` | [`client-connection`](../packages/client/connection), [`host-webserver`](../packages/host/webserver) |
 | [`anonymous-user-id`](../packages/identity/anonymous-user-id) | `identity` | [`brand`](../packages/util/brand), [`home-paths`](../packages/util/home-paths) |
 | [`principal`](../packages/identity/principal) | `identity` | [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants), [`util-values`](../packages/util/values) |
+| [`approval-store`](../packages/interaction/approval-store) | `interaction` | [`brand`](../packages/util/brand) |
 | [`trust-kernel`](../packages/kernel/trust-kernel) | `kernel` | [`invariants`](../packages/runtime-diagnostics/invariants) |
 | [`lsp`](../packages/lsp/lsp) | `lsp` | [`brand`](../packages/util/brand), [`llm`](../packages/llm/llm) |
 | [`feature-gates`](../packages/migration/feature-gates) | `migration` | [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants) |
@@ -1730,7 +1738,7 @@ flowchart TD
 | [`compaction`](../packages/compaction/compaction) | `compaction` | [`brand`](../packages/util/brand), [`commands`](../packages/interaction/commands), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`session`](../packages/core/session) |
 | [`command-feedback`](../packages/feedback/command-feedback) | `feedback` | [`anonymous-user-id`](../packages/identity/anonymous-user-id), [`commands`](../packages/interaction/commands), [`session`](../packages/core/session), [`typert-protocol`](../packages/typert/protocol) |
 | [`control-plane`](../packages/interaction/control-plane) | `interaction` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`human-channel`](../packages/interaction/human-channel), [`principal`](../packages/identity/principal), [`user-questions`](../packages/interaction/user-questions) |
-| [`user-approval`](../packages/interaction/user-approval) | `interaction` | [`action-manifest`](../packages/action/action-manifest), [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`commands`](../packages/interaction/commands), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`principal`](../packages/identity/principal), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`system-prompt`](../packages/core/system-prompt), [`util-values`](../packages/util/values) |
+| [`user-approval`](../packages/interaction/user-approval) | `interaction` | [`action-manifest`](../packages/action/action-manifest), [`agent`](../packages/core/agent), [`approval-store`](../packages/interaction/approval-store), [`brand`](../packages/util/brand), [`commands`](../packages/interaction/commands), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`principal`](../packages/identity/principal), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`system-prompt`](../packages/core/system-prompt), [`util-values`](../packages/util/values) |
 | [`jobs-local`](../packages/jobs/jobs-local) | `jobs` | [`agent`](../packages/core/agent), [`jobs`](../packages/jobs/jobs), [`scope`](../packages/core/scope), [`timeout`](../packages/util/timeout) |
 | [`policy-enforcement`](../packages/policy/policy-enforcement) | `policy` | [`policy-engine`](../packages/policy/policy-engine), [`trust-kernel`](../packages/kernel/trust-kernel) |
 | [`policy-engine-cedar`](../packages/policy/policy-engine-cedar) | `policy` | [`action-manifest`](../packages/action/action-manifest), [`brand`](../packages/util/brand), [`policy-engine`](../packages/policy/policy-engine) |
@@ -1819,12 +1827,12 @@ flowchart TD
 | [`experimental-agent-team`](../packages/experimental/agent-team) | `experimental` | [`agent`](../packages/core/agent), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`session-projection`](../packages/session/session-projection), [`subagent`](../packages/subagent/subagent), [`typert-protocol`](../packages/typert/protocol) |
 | [`sdk-protocol`](../packages/sdk/protocol) | `sdk` | [`llm`](../packages/llm/llm), [`principal`](../packages/identity/principal), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent) |
 | [`tool-ralph`](../packages/workflow/tool-ralph) | `workflow` | [`agent`](../packages/core/agent), [`llm`](../packages/llm/llm), [`subagent`](../packages/subagent/subagent), [`system-prompt`](../packages/core/system-prompt), [`tools`](../packages/core/tools), [`workflow`](../packages/workflow/workflow) |
-| [`workflow-worker-thread`](../packages/workflow/workflow-worker-thread) | `workflow` | [`action-ledger`](../packages/action/action-ledger), [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`home-paths`](../packages/util/home-paths), [`lease-contract`](../packages/collaboration/lease-contract), [`llm`](../packages/llm/llm), [`principal`](../packages/identity/principal), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`session-projection`](../packages/session/session-projection), [`subagent`](../packages/subagent/subagent), [`token-meter`](../packages/llm/token-meter), [`tools`](../packages/core/tools), [`workflow`](../packages/workflow/workflow), [`workflow-journal`](../packages/collaboration/workflow-journal), [`workflow-registry`](../packages/workflow/workflow-registry) |
+| [`workflow-worker-thread`](../packages/workflow/workflow-worker-thread) | `workflow` | [`action-ledger`](../packages/action/action-ledger), [`agent`](../packages/core/agent), [`approval-store`](../packages/interaction/approval-store), [`brand`](../packages/util/brand), [`home-paths`](../packages/util/home-paths), [`lease-contract`](../packages/collaboration/lease-contract), [`llm`](../packages/llm/llm), [`principal`](../packages/identity/principal), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`session-projection`](../packages/session/session-projection), [`subagent`](../packages/subagent/subagent), [`token-meter`](../packages/llm/token-meter), [`tools`](../packages/core/tools), [`user-approval`](../packages/interaction/user-approval), [`workflow`](../packages/workflow/workflow), [`workflow-journal`](../packages/collaboration/workflow-journal), [`workflow-registry`](../packages/workflow/workflow-registry) |
 | [`subagent-fork-in-process`](../packages/subagent/subagent-fork-in-process) | `subagent` | [`agent`](../packages/core/agent), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent), [`subagent-in-process-driver`](../packages/subagent/subagent-in-process-driver) |
 | [`subagent-spawn-in-process`](../packages/subagent/subagent-spawn-in-process) | `subagent` | [`subagent`](../packages/subagent/subagent), [`subagent-in-process-driver`](../packages/subagent/subagent-in-process-driver) |
 | [`experimental-client-ui-agent-team`](../packages/experimental/client-ui-agent-team) | `experimental` | [`api-remotes`](../packages/api/remotes), [`api-session-controller`](../packages/api/session-controller), [`client-locale`](../packages/client/locale), [`client-ui-conversation`](../packages/client/ui-conversation), [`client-ui-primitives`](../packages/client/ui-primitives), [`client-ui-renderer`](../packages/client/ui-renderer), [`client-ui-session`](../packages/client/ui-session), [`client-ui-slots`](../packages/client/ui-slots), [`experimental-agent-team`](../packages/experimental/agent-team), [`session`](../packages/core/session), [`typert-protocol`](../packages/typert/protocol) |
 | [`experimental-tool-agent-team`](../packages/experimental/tool-agent-team) | `experimental` | [`agent`](../packages/core/agent), [`experimental-agent-team`](../packages/experimental/agent-team), [`session`](../packages/core/session), [`system-prompt`](../packages/core/system-prompt), [`tools`](../packages/core/tools) |
 | [`sdk-client`](../packages/sdk/client) | `sdk` | [`llm`](../packages/llm/llm), [`sdk-protocol`](../packages/sdk/protocol), [`session`](../packages/core/session) |
-| [`sdk-jsonrpc-server`](../packages/sdk/server) | `sdk` | [`agent`](../packages/core/agent), [`agent-loop`](../packages/core/agent-loop), [`attachment`](../packages/attachment/attachment), [`control-plane`](../packages/interaction/control-plane), [`llm`](../packages/llm/llm), [`llm-deepseek`](../packages/llm/llm-deepseek), [`principal`](../packages/identity/principal), [`scope`](../packages/core/scope), [`sdk-protocol`](../packages/sdk/protocol), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent), [`user-questions`](../packages/interaction/user-questions) |
+| [`sdk-jsonrpc-server`](../packages/sdk/server) | `sdk` | [`agent`](../packages/core/agent), [`agent-loop`](../packages/core/agent-loop), [`approval-store`](../packages/interaction/approval-store), [`attachment`](../packages/attachment/attachment), [`control-plane`](../packages/interaction/control-plane), [`llm`](../packages/llm/llm), [`llm-deepseek`](../packages/llm/llm-deepseek), [`principal`](../packages/identity/principal), [`scope`](../packages/core/scope), [`sdk-protocol`](../packages/sdk/protocol), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent), [`user-approval`](../packages/interaction/user-approval), [`user-questions`](../packages/interaction/user-questions) |
 | [`client-test-runtime`](../packages/test-support/client-runtime) | `test-support` | [`api-gateway`](../packages/api/gateway), [`api-session-controller`](../packages/api/session-controller), [`api-workspace-controller`](../packages/api/workspace-controller), [`attachment`](../packages/attachment/attachment), [`client-connection`](../packages/client/connection), [`client-hmr`](../packages/client/hmr), [`client-modules`](../packages/client/modules), [`client-store`](../packages/client/store), [`client-ui-chat`](../packages/client/ui-chat), [`client-ui-conversation`](../packages/client/ui-conversation), [`client-ui-renderer`](../packages/client/ui-renderer), [`client-ui-session`](../packages/client/ui-session), [`client-ui-settings`](../packages/client/ui-settings), [`client-ui-slots`](../packages/client/ui-slots), [`client-web`](../packages/client/web), [`remote-mock`](../packages/test-support/remote-mock), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent), [`typert-protocol`](../packages/typert/protocol) |
 | [`subagent-dsh-sdk`](../packages/subagent/subagent-dsh-sdk) | `subagent` | [`agent`](../packages/core/agent), [`llm`](../packages/llm/llm), [`sdk-client`](../packages/sdk/client), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent), [`subprocess`](../packages/subprocess/subprocess) |

@@ -21,6 +21,8 @@ import {
   negotiateProtocolVersion,
 } from '@deepseek-ai/dsh-sdk-protocol'
 import type { CapabilityId, HostControlNotification, HumanQuestionParams, HumanQuestionResult, ProtocolSurface, ProtocolVersionRange } from '@deepseek-ai/dsh-sdk-protocol'
+import type { ApprovalViewer } from '@deepseek-ai/dsh-approval-store'
+import { approvalViewerOfIdentity } from '@deepseek-ai/dsh-user-approval'
 // A type-only edge, for two things at once: the `declare module` that puts
 // `control/state-changed` on cordis' `Events` -- without it `ctx.on` falls back to
 // an untyped listener with an unchecked name and an `any` payload -- and the
@@ -39,7 +41,9 @@ import type { SessionId } from '@deepseek-ai/dsh-session'
 import type SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import type { SubagentRunEndInfo } from '@deepseek-ai/dsh-subagent'
 import * as LlmDeepSeek from '@deepseek-ai/dsh-llm-deepseek'
+import { decideApproval, listApprovals, sdkApproval } from './approvals.ts'
 import type {
+  ApprovalChangedNotification,
   InitializeParams,
   InitializeResult,
   JsonRpcTransportPeer,
@@ -164,6 +168,15 @@ function supportedCapabilitiesFor(ctx: Context): ReadonlySet<CapabilityId> {
 const HOST_CONTROL_CAPABILITY: CapabilityId = 'host-control'
 
 /**
+ * The capability a client declares to receive `approval.changed` (Epic P2-07
+ * validation[2]). Opt-in for the reason {@link HOST_CONTROL_CAPABILITY} is: a
+ * client that did not ask is sent no method it may have no branch for. Always
+ * supported, since `approval/list` and `approval/decide` answer in every
+ * composition (empty and `not-found` where no store is mounted).
+ */
+const APPROVAL_CAPABILITY: CapabilityId = 'approval'
+
+/**
  * Fingerprint this build's wire surface (acceptance[2]/[3]).
  *
  * Derived from the method and event names the server answers, so it moves when
@@ -189,6 +202,8 @@ export const SERVER_PROTOCOL_SURFACE: ProtocolSurface = {
   methods: [
     { name: 'initialize', schemaId: 'sdk-protocol:InitializeParams', version: '1.0' },
     { name: 'session/prompt', schemaId: 'sdk-protocol:SessionPromptParams', version: '1.0' },
+    { name: 'approval/list', schemaId: 'sdk-protocol:ApprovalListParams', version: '1.0' },
+    { name: 'approval/decide', schemaId: 'sdk-protocol:ApprovalDecideParams', version: '1.0' },
     { name: 'shutdown', schemaId: 'sdk-protocol:ShutdownRequest', version: '1.0' },
   ],
   // Every name this server originates: its notifications and `human/question`,
@@ -197,6 +212,7 @@ export const SERVER_PROTOCOL_SURFACE: ProtocolSurface = {
     { name: 'session.event', schemaId: 'sdk-protocol:SessionEventNotification', version: '1.0' },
     { name: 'session.status', schemaId: 'sdk-protocol:SessionStatusNotification', version: '1.0' },
     { name: 'host.control', schemaId: 'sdk-protocol:HostControlNotification', version: '1.0' },
+    { name: 'approval.changed', schemaId: 'sdk-protocol:ApprovalChangedNotification', version: '1.0' },
     { name: 'subagent.started', schemaId: 'sdk-protocol:SubagentStartedNotification', version: '1.0' },
     { name: 'subagent.finished', schemaId: 'sdk-protocol:SubagentFinishedNotification', version: '1.0' },
     { name: 'human/question', schemaId: 'sdk-protocol:HumanQuestionParams', version: '1.0' },
@@ -238,6 +254,12 @@ export class HarnessSdkJsonRpcServer {
    */
   private hostControlSubscribed = false
 
+  /** Whether this connection's client asked for `approval.changed`; set by `initialize`, as {@link hostControlSubscribed} is. */
+  private approvalSubscribed = false
+
+  /** The tenant and principal this connection acts as for approvals, once {@link approvalViewer} resolved it. */
+  private connectionViewer: ApprovalViewer | undefined
+
   constructor(
     private readonly ctx: Context,
     private readonly transport: JsonRpcTransportPeer,
@@ -258,6 +280,14 @@ export class HarnessSdkJsonRpcServer {
     this.disposers.push(ctx.on('control/state-changed', (state) => {
       if (!this.hostControlSubscribed) return
       this.transport.notify('host.control', { state } satisfies HostControlNotification)
+    }))
+    // Epic P2-07 validation[2]: an approval this runtime recorded or moved.
+    // Sent only to a client that declared `approval`, and never for an
+    // approval of a tenant other than the one this connection acts as.
+    this.disposers.push(ctx.on('approval-store/changed', (record) => {
+      if (!this.approvalSubscribed || record.tenant !== this.approvalViewer().tenant) return
+      const payload: ApprovalChangedNotification = { sessionId: record.scope.sessionId, approval: sdkApproval(record, Date.now()) }
+      this.transport.notify('approval.changed', payload)
     }))
     this.disposers.push(ctx.on('session/created', (session) => {
       const parentSession = session.header.parentSession
@@ -406,6 +436,7 @@ export class HarnessSdkJsonRpcServer {
     this.maxTokens = params.maxTokens
     this.initialized = true
     this.hostControlSubscribed = capabilityOutcome.agreed.includes(HOST_CONTROL_CAPABILITY)
+    this.approvalSubscribed = capabilityOutcome.agreed.includes(APPROVAL_CAPABILITY)
     // The state as of this handshake, for the client that connected after a
     // stop was raised. Absent when the client did not ask, and absent when no
     // control plane is mounted: unknown, never "not stopped".
@@ -516,11 +547,34 @@ export class HarnessSdkJsonRpcServer {
         return this.initialize(params as unknown as InitializeParams)
       case 'session/prompt':
         return this.prompt(params as unknown as SessionPromptParams)
+      case 'approval/list':
+        return listApprovals(this.ctx, this.approvalViewer(), params, Date.now())
+      case 'approval/decide':
+        return decideApproval(this.ctx, this.approvalViewer(), params, Date.now())
       case 'shutdown':
         return this.shutdown()
       default:
         throw new Error(`unknown DeepSeek Harness SDK runtime method: ${method}`)
     }
+  }
+
+  /**
+   * The tenant and principal this connection lists and decides approvals as
+   * (Epic P2-07): the host user the sessions it composes act as, resolved once
+   * through the same attribution an approval those sessions ask records, so a
+   * client reconnecting as the same user lists its pending approvals. Without
+   * a host-user factory, the anonymous principal of tenant `local`.
+   * @returns the connection's viewer.
+   * @throws when the connection has not been initialized.
+   */
+  private approvalViewer(): ApprovalViewer {
+    if (!this.initialized) throw new Error('SDK server is not initialized')
+    if (this.connectionViewer === undefined) {
+      const hostUser = this.ctx.get(HOST_USER_IDENTITY_KEY) as HostUserIdentityFactory | undefined
+      const identity = hostUser?.(brandString<RunId>(`run-${randomUUID()}`))
+      this.connectionViewer = approvalViewerOfIdentity(identity, brandString<SessionId>('sdk-connection'))
+    }
+    return this.connectionViewer
   }
 
   private async getOrCreateSession(sessionId: string): Promise<SessionRecord> {

@@ -122,6 +122,61 @@ export interface RunNesting {
   readonly toolBound?: readonly string[]
 }
 
+/**
+ * An approval a run's script waited for (Epic P2-07 must[2]), as the run
+ * recorded it in the durable approval queue.
+ *
+ * Keyed by the call that asked, so the same call of a resumed run finds it.
+ * The viewer it was recorded as is part of the record: whichever process
+ * resumes the run reads and consumes the approval as the run's own tenant and
+ * principal, never as its own.
+ */
+export interface JournaledApproval {
+  /** The asking call: a digest of its request and of how many identical requests the run made before it. */
+  readonly key: string
+  /** The approval's id in the durable approval queue. */
+  readonly approvalId: string
+  /** The tenant the approval was recorded in. */
+  readonly tenant: string
+  /** The principal it was recorded for. */
+  readonly principal: string
+  /** `waiting` until a resumed run consumed it; `consumed` after, so a later re-run of the same call passes without consuming again. */
+  readonly state: 'waiting' | 'consumed'
+}
+
+/**
+ * What a run was started with, recorded when it first waits for an approval so
+ * a scheduler can resume it without the caller that started it (must[3]).
+ *
+ * Plain JSON in this package's own vocabulary, like {@link RunNesting}: what is
+ * written here is all a later process has.
+ */
+export interface JournaledStart {
+  /** The run's own session (a detached run's); the resume continues in it. */
+  readonly session: string
+  /** The script body the run executes. */
+  readonly script: string
+  /** The workflow's identity block, as plain JSON. */
+  readonly meta: unknown
+  /** The input the script reads as `args`; absent when it had none. */
+  readonly args?: unknown
+  /** The child-provider override; absent when the run used the engine's. */
+  readonly subagentProvider?: string
+  /** The per-run child ceiling; absent when the run used the engine's. */
+  readonly maxTotalAgents?: number
+  /**
+   * The model route the run's own agent was created with, which its children
+   * inherit; a resumed session recovers its identity from its own log but not
+   * this. Each field absent when the agent had none.
+   */
+  readonly route: {
+    readonly provider?: string
+    readonly model?: string
+    readonly reasoningEffort?: string
+    readonly maxTokens?: number
+  }
+}
+
 /** A complete journal for one run. */
 export interface WorkflowJournal {
   readonly scriptDigest: ScriptDigest
@@ -135,6 +190,10 @@ export interface WorkflowJournal {
    * Absent when no entry was replaced.
    */
   readonly displaced?: readonly JournalEntry[]
+  /** What the run was started with; present once it has waited for an approval. */
+  readonly start?: JournaledStart
+  /** The approvals the run's script waited for, in the order it asked; absent when it asked for none. */
+  readonly approvals?: readonly JournaledApproval[]
 }
 
 /** What a resumed run should do with one recorded step. */

@@ -320,6 +320,79 @@ export interface HumanQuestionResult {
 }
 
 /**
+ * One approval as the SDK carries it (Epic P2-07 validation[2]): enough for a
+ * client that reconnects to list what still waits and decide it against the
+ * revision it read. The approval states are `@deepseek-ai/dsh-approval-store`'s,
+ * read against the server's clock, so a lapsed approval arrives as `expired`.
+ *
+ * Carried by `approval/list`, `approval/decide` and `approval.changed`. The
+ * server answers for the tenant its connection acts as and never for another:
+ * an approval of another tenant is `not-found`, as if it did not exist.
+ */
+export interface SdkApproval {
+  /** The approval request's id. */
+  id: string
+  /** The session the approval was asked in. */
+  sessionId: string
+  /** The durable Run waiting for it; absent for an approval asked within one turn. */
+  runId?: string
+  /** The tool whose call asked for approval. */
+  toolName: string
+  /** The digest of the bound request the approval covers. */
+  requestDigest: string
+  /** The approval's state, read as `expired` from its deadline on. */
+  state: 'requested' | 'approved' | 'denied' | 'expired' | 'revoked' | 'consumed'
+  /** The revision a decision must name; it grows by one on every move. */
+  revision: number
+  /** From this instant on the approval can no longer be decided or consumed. */
+  deadlineMs: number
+}
+
+/** `approval/list` params: the client's tenant's pending approvals, of one session when `sessionId` is set. */
+export interface ApprovalListParams {
+  /** Narrow the list to one session's approvals. */
+  sessionId?: string
+}
+
+/** `approval/list` result: the pending approvals, oldest first. */
+export interface ApprovalListResult {
+  /** The `requested` and `approved` approvals whose deadline has not come. */
+  approvals: SdkApproval[]
+}
+
+/** `approval/decide` params: approve or deny one approval, from the revision the client read. */
+export interface ApprovalDecideParams {
+  /** The approval's id. */
+  id: string
+  /** The revision the client read; a decision from an older read is refused as `stale-revision`. */
+  revision: number
+  /** Approve or deny. */
+  decision: 'approved' | 'denied'
+}
+
+/**
+ * `approval/decide` result: the decided approval, or why the decision did not
+ * happen and, when the client may read it, the approval as it now stands.
+ * Two clients deciding from the same read get one `ok` and one `stale-revision`.
+ */
+export type ApprovalDecideResult =
+  | { ok: true; approval: SdkApproval }
+  | { ok: false; conflict: 'stale-revision' | 'invalid-transition' | 'expired' | 'not-found'; approval?: SdkApproval }
+
+/**
+ * `approval.changed` notification: an approval was recorded or moved. Sent to
+ * a client that declared the `approval` capability, for every approval of the
+ * tenant its connection acts as that this runtime records or moves; a move
+ * another process makes in a shared store is seen on the next `approval/list`.
+ */
+export interface ApprovalChangedNotification {
+  /** The session the approval was asked in, so clients that route by session deliver it. */
+  sessionId: string
+  /** The approval as recorded, or after its move. */
+  approval: SdkApproval
+}
+
+/**
  * Server-to-client request methods with their param and result shapes.
  *
  * Separate from {@link HarnessSdkRequestMap} because the direction decides who
@@ -390,6 +463,7 @@ export interface HarnessSdkNotificationMap {
   'subagent.started': SubagentStartedNotification
   'subagent.finished': SubagentFinishedNotification
   'host.control': HostControlNotification
+  'approval.changed': ApprovalChangedNotification
 }
 
 /** The members, checked against the notification map at the literal. */
@@ -414,5 +488,7 @@ export const HOST_LEVEL_NOTIFICATION_METHODS: ReadonlySet<string> = new Set(HOST
 export interface HarnessSdkRequestMap {
   'initialize': { params: InitializeParams; result: InitializeResult }
   'session/prompt': { params: SessionPromptParams; result: SessionPromptResult }
+  'approval/list': { params: ApprovalListParams; result: ApprovalListResult }
+  'approval/decide': { params: ApprovalDecideParams; result: ApprovalDecideResult }
   'shutdown': { params: undefined; result: Record<string, never> }
 }

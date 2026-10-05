@@ -69,6 +69,8 @@ with DeepSeekHarness(
 
 `DeepSeekHarnessConfig.capabilities` 与 `HarnessClient.initialize()` 的 `capabilities` 是同一个申请，而且只能在握手时提出：服务器按连接决定发什么。声明 `CapabilityDeclaration(HOST_CONTROL_CAPABILITY)` 即可收到 `host.control`（主机全局紧急停机）。此后 `DeepSeekHarness.handshake`（低层调用则是 `InitializeResponse.hostControl`）携带握手时刻的状态——这是停机之后才连上的客户端得知此事的唯一途径——`negotiation.agreedCapabilities` 则说明服务器是否同意。`hostControl` 缺席表示未知，绝不表示「未停机」。由于停机属于整台主机，该通知不带 `sessionId`，按会话订阅的调用方同样会收到它。
 
+`list_approvals(session_id=None)` 列出本连接所代表租户的待决审批，`decide_approval(approval_id, revision, decision)` 以读到的修订号批准或拒绝其中一项；基于更早读取的判定返回 `ok=False` 与 `conflict="stale-revision"`，其他租户的审批答 `not-found`。声明 `CapabilityDeclaration(APPROVAL_CAPABILITY)` 即可收到 `approval.changed`（`ApprovalChanged`）：该租户每一项被运行时记录或转移的审批都会发出；它带着自己的 `sessionId`，所以按会话订阅的调用方会收到它。
+
 `InitializeResponse` 携带完整的协商记录：`protocolVersions`、`schemaFingerprint`，以及以 `CapabilityDowngrade` 模型表示的 `negotiation.downgrades`（列表缺失时读作 `[]`）。回复中的每个模型都保留自己没有声明的字段，所以较新的运行时新增的可选字段仍可在模型上读到（`model_extra`），不会被丢弃（[控制协议](../../docs/subsystems/control-protocol.zh.md)）。
 
 所选 home 保存 profile、插件与每个 profile 自有的持久资源。完整 `sdk` profile 使用其中的凭据、设置与会话存储；`sdk-minimal` 只使用自己的 JSONL 会话存储。需要隔离这些资源时应使用新的 home；独立工作应使用新的会话 ID。同时复用 harness 与会话 ID 会延续持久对话和会话资源。

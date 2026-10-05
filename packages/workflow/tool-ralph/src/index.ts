@@ -339,7 +339,9 @@ function stopReasonError(result: WorkflowResult): string | undefined {
       return `Ralph workflow was cancelled${result.error === undefined ? '' : ` (${result.error})`}`
     case 'error':
       return `Ralph workflow failed: ${result.error ?? 'unknown error'}`
-    /* v8 ignore start -- WorkflowStopReason is closed; a future variant must fail loud here. */
+    /* v8 ignore start -- Ralph's script never calls approval(), and WorkflowStopReason is closed; a future variant must fail loud here. */
+    case 'waiting_for_approval':
+      return `Ralph workflow is waiting for approval ${String(result.waitingFor?.approvalId)}`
     default:
       return `Ralph workflow ended abnormally (${String(result.stopReason satisfies never)})`
     /* v8 ignore stop */

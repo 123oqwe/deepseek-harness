@@ -50,7 +50,7 @@ When the script settles, the run's result resolves with the returned value, the 
 
 Plugin consumers can start a run directly: `ctx.workflowEngine.start({ script, meta, args?, parent, signal? })`. `parent` attributes every child to the invoking agent; `signal` cancels the run when aborted. `start()` validates the meta block and parses the script before a run exists, so a malformed request fails immediately with a violation list.
 
-A returned run exposes `id`, `meta`, `result`, `cancel(reason?)`, and `dispose()`. The result never rejects: a script failure resolves with `stopReason: 'error'`, cancellation with `'cancelled'`. The caller owns the run — call `dispose()` on every path; it cancels remaining work and waits for script and children to settle within a bounded grace.
+A returned run exposes `id`, `meta`, `result`, `cancel(reason?)`, and `dispose()`. The result never rejects: a script failure resolves with `stopReason: 'error'`, cancellation with `'cancelled'`, and a detached run whose script's `approval()` waits for a decision with `'waiting_for_approval'` and `waitingFor.approvalId` (Epic P2-07), after which the engine resumes it under the same id. The caller owns the run — call `dispose()` on every path; it cancels remaining work and waits for script and children to settle within a bounded grace.
 
 ### Failures and recovery
 
@@ -74,7 +74,7 @@ The package separates the script, run, result, and event contracts from executio
 
 | File | Role |
 |---|---|
-| [`src/index.ts`](src/index.ts) | Service definition, `workflow/*` event declarations, `WorkflowError` and its fatal flag |
+| [`src/index.ts`](src/index.ts) | Service definition, `workflow/*` event declarations, `WorkflowError` and its fatal flag, `ApprovalRefusedError` |
 | [`src/types.ts`](src/types.ts) | Browser-safe vocabulary: `WorkflowMeta`, `WorkflowResult`, run and agent event info |
 | [`src/runtime-types.ts`](src/runtime-types.ts) | Host-only `WorkflowStartRequest` and `WorkflowRun` handles |
 | [`src/invariant.ts`](src/invariant.ts) | Invariant companion: event pairing and identity checks |
@@ -87,7 +87,7 @@ A run is holder-owned: engine-plugin unload prevents new starts but does not rev
 
 ### Failure discipline
 
-`WorkflowError` carries a machine-routable code and a `fatal` flag; every code is fatal, and `parallel()` and `pipeline()` re-throw fatal errors instead of mapping the item to `null` — a typo'd option must kill the script loudly. Codes cover start failures, contract violations, exceeded caps, provider and result faults, unserializable values, and cancellation; the exact set and meanings live in [`src/index.ts`](src/index.ts).
+`WorkflowError` carries a machine-routable code and a `fatal` flag; every code is fatal, and `parallel()` and `pipeline()` re-throw fatal errors instead of mapping the item to `null` — a typo'd option must kill the script loudly. Codes cover start failures, contract violations, exceeded caps, provider and result faults, unserializable values, and cancellation; the exact set and meanings live in [`src/index.ts`](src/index.ts). `approval()` throws `APPROVAL_UNAVAILABLE` where its run cannot wait. A refused approval is not a `WorkflowError`: `approval()` throws `ApprovalRefusedError`, carrying `approvalId` and a `refusal` of `denied`, `revoked`, `expired` or `consumed`, which a script may catch and which `parallel()` and `pipeline()` map to `null` like any ordinary step failure.
 
 The per-item `null` is reserved for child-run failures and ordinary in-stage script errors, so a child that resolves normally with a non-completed stop reason is not an infrastructure exception: `agent()` returns `null`, letting the script handle an ordinary child failure.
 

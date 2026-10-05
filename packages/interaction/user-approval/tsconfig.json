@@ -49,6 +49,9 @@
     },
     {
       "path": "../commands"
+    },
+    {
+      "path": "../approval-store"
     }
   ]
 }

@@ -502,6 +502,49 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'approvalStore',
+    summary: 'The store every provider implements and `ctx.approvalStore` publishes.',
+    description: 'The store every provider implements and `ctx.approvalStore` publishes. Every write is one compare-and-swap on the revision the caller read, so two clients racing on one approval leave exactly one terminal state, and a consumption happens at most once (acceptance[1]).',
+    methods: [
+      {
+        signature: 'request(input: ApprovalRequestInput, nowMs: number): ApprovalRecord',
+        description: 'Record a new request in `requested`, revision 0.',
+        parameters: [{ name: 'input', description: 'the request.' }, { name: 'nowMs', description: 'the request time.' }],
+        returns: 'the recorded approval.',
+      },
+      {
+        signature: 'decide( id: ApprovalRequestId, expectedRevision: number, decision: ApprovalDecision, viewer: ApprovalViewer, nowMs: number, ): ApprovalWriteResult',
+        description: 'Approve or deny a requested approval.',
+        parameters: [{ name: 'id', description: 'the approval.' }, { name: 'expectedRevision', description: 'the revision the caller read.' }, { name: 'decision', description: 'approve or deny.' }, { name: 'viewer', description: 'the deciding principal and its tenant.' }, { name: 'nowMs', description: 'the decision time.' }],
+        returns: 'the decided approval, or the conflict.',
+      },
+      {
+        signature: 'revoke(id: ApprovalRequestId, expectedRevision: number, viewer: ApprovalViewer, nowMs: number): ApprovalWriteResult',
+        description: 'Revoke a requested or approved approval.',
+        parameters: [{ name: 'id', description: 'the approval.' }, { name: 'expectedRevision', description: 'the revision the caller read.' }, { name: 'viewer', description: 'the revoking principal and its tenant.' }, { name: 'nowMs', description: 'the revocation time.' }],
+        returns: 'the revoked approval, or the conflict.',
+      },
+      {
+        signature: 'consume(id: ApprovalRequestId, expectedRevision: number, viewer: ApprovalViewer, nowMs: number): ApprovalWriteResult',
+        description: 'Consume an approved approval before its deadline, at most once; the action it approved runs only on success.',
+        parameters: [{ name: 'id', description: 'the approval.' }, { name: 'expectedRevision', description: 'the revision the caller read.' }, { name: 'viewer', description: 'the consuming principal and its tenant.' }, { name: 'nowMs', description: 'the consumption time.' }],
+        returns: 'the consumed approval, or the conflict.',
+      },
+      {
+        signature: 'get(id: ApprovalRequestId, viewer: ApprovalViewer, nowMs: number): ApprovalRecord | undefined',
+        description: 'One approval as the viewer may see it, read as expired past its deadline.',
+        parameters: [{ name: 'id', description: 'the approval.' }, { name: 'viewer', description: 'the reading principal and its tenant.' }, { name: 'nowMs', description: 'the instant to read the deadline against.' }],
+        returns: 'the approval, or `undefined` when it does not exist or belongs to another tenant.',
+      },
+      {
+        signature: 'listPending(viewer: ApprovalViewer, nowMs: number): readonly ApprovalRecord[]',
+        description: 'The viewer\'s tenant\'s approvals still waiting for a decision or a consumption, oldest first.',
+        parameters: [{ name: 'viewer', description: 'the reading principal and its tenant.' }, { name: 'nowMs', description: 'the instant to read deadlines against; a lapsed approval is not pending.' }],
+        returns: 'the `requested` and `approved` approvals whose deadline has not passed.',
+      },
+    ],
+  },
+  {
     key: 'attachments',
     summary: 'Immutable binary attachment service.',
     description: 'Immutable binary attachment service. Implementations validate bytes before publishing a reference.',
@@ -673,6 +716,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         signature: 'deriveChild(parentSession: SessionIdLike, childSession: SessionIdLike, filter?: ChildResourceFilter): void',
         description: 'Derive a child session\'s token from its parent\'s, under the parent\'s own delegation filter (P2-02 acceptance[0]: never wider than its parent).\n\nCalled from the child-composition path, which is the only place that KNOWS the filter — it is the delegating call\'s `toolFilter`, not anything the provider can observe. Starts the derivation and returns; the token settles before the child\'s first tool call because that call awaits whenSessionToken. A child with a derived token is never granted a root of its own.',
         parameters: [{ name: 'parentSession', description: 'the delegating parent\'s session.' }, { name: 'childSession', description: 'the child session receiving the derived token.' }, { name: 'filter', description: 'the parent\'s declared restriction on the child, or `undefined` for none.' }],
+      },
+      {
+        signature: 'adoptDelegatedToken(session: SessionIdLike): boolean',
+        description: 'Hold, for a session resumed after its process ended, the delegated token recorded for it before (Epic P2-07: a waiting workflow run woken after a restart, whose launcher is gone). The SAME token, so its scope cannot widen and a revocation of its lineage still reaches it. The session is never issued a root and never re-derived: when the recorded token expired or was revoked, or none was recorded, it holds nothing and its tool calls are refused. Called before the session is resumed, so no on-demand issuance can run for it first.',
+        parameters: [{ name: 'session', description: 'the session about to be resumed.' }],
+        returns: 'whether the session now holds a token.',
       },
     ],
   },
@@ -3824,6 +3873,14 @@ export const EVENT_API: readonly EventApiEntry[] = [
     parameters: [{ name: 'sessionId', description: 'Agent and Session identity.' }, { name: 'running', description: 'whether the Agent is running.' }],
   },
   {
+    name: 'approval-store/changed',
+    mode: 'emit',
+    signature: '\'approval-store/changed\'(record: ApprovalRecord): void',
+    summary: 'An approval was recorded or moved.',
+    description: 'An approval was recorded or moved. Every provider emits this after each `request`, and after each `decide`, `revoke` or `consume` it accepted (never after a refused one), so an asker waiting for its approval and an SDK client watching approvals learn of a decision another client made. Only moves made through this process\'s store are emitted; a move another process makes in a shared store is seen on the next read.',
+    parameters: [{ name: 'record', description: 'the approval as recorded, or after its move.' }],
+  },
+  {
     name: 'approval/request',
     mode: 'waterfall',
     signature: '\'approval/request\'( this: Scoped<Agent>, req: ApprovalRequestEvent, next: () => Promise<ApprovalOutcome>, ): Promise<ApprovalOutcome>',
@@ -4392,6 +4449,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ApprovalBindingInputs {\n    readonly action: string;\n    readonly args: JsonValue;\n    readonly principal: ApprovalPrincipal;\n    readonly preconditions: readonly string[];\n    readonly capabilityToken?: string;\n    readonly policyVersion?: string;\n}',
   },
   {
+    name: 'ApprovalConflict',
+    declaration: 'export type ApprovalConflict = \'stale-revision\' | \'invalid-transition\' | \'expired\' | \'other-tenant\' | \'not-found\';',
+  },
+  {
     name: 'ApprovalDisplay',
     declaration: 'export interface ApprovalDisplay {\n    readonly manifestDigest: string;\n    readonly arguments: string;\n    readonly resource: string;\n    readonly riskClass: string;\n    readonly expectedDiff: string;\n    readonly expiresAtMs: number;\n    readonly notice?: string;\n}',
   },
@@ -4408,6 +4469,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type ApprovalPrincipal = PrincipalId | \'unattached\';',
   },
   {
+    name: 'ApprovalRecord',
+    declaration: 'export interface ApprovalRecord {\n    readonly id: ApprovalRequestId;\n    readonly tenant: TenantId;\n    readonly actor: PrincipalId;\n    readonly scope: ApprovalScope;\n    readonly toolName: string;\n    readonly requestDigest: string;\n    readonly policyVersion?: string;\n    readonly requestedAtMs: number;\n    readonly deadlineMs: number;\n    readonly state: ApprovalState;\n    readonly revision: number;\n    readonly decidedBy?: PrincipalId;\n    readonly decidedAtMs?: number;\n    readonly consumedAtMs?: number;\n}',
+  },
+  {
     name: 'ApprovalRef',
     declaration: 'export type ApprovalRef = Branded<\'ApprovalRef\'>;',
   },
@@ -4418,6 +4483,26 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ApprovalRequestEvent',
     declaration: 'export interface ApprovalRequestEvent {\n    readonly agent: Agent;\n    readonly toolName: string;\n    readonly callId?: ToolCallId;\n    readonly subject?: string;\n    readonly reason?: string;\n    readonly signal?: AbortSignal;\n    readonly display?: ApprovalDisplay;\n    readonly binding?: {\n        readonly inputs: ApprovalBindingInputs;\n        readonly askedAtMs: number;\n        readonly actionId?: string;\n    };\n}',
+  },
+  {
+    name: 'ApprovalRequestInput',
+    declaration: 'export type ApprovalRequestInput = Omit<ApprovalRecord, \'state\' | \'revision\' | \'requestedAtMs\' | \'decidedBy\' | \'decidedAtMs\' | \'consumedAtMs\'>;',
+  },
+  {
+    name: 'ApprovalScope',
+    declaration: 'export type ApprovalScope = {\n    readonly kind: \'turn\';\n    readonly sessionId: SessionId;\n    readonly callId?: string;\n} | {\n    readonly kind: \'run\';\n    readonly runId: RunId;\n    readonly sessionId: SessionId;\n};',
+  },
+  {
+    name: 'ApprovalState',
+    declaration: 'export type ApprovalState = \'requested\' | \'approved\' | \'denied\' | \'expired\' | \'revoked\' | \'consumed\';',
+  },
+  {
+    name: 'ApprovalViewer',
+    declaration: 'export interface ApprovalViewer {\n    readonly tenant: TenantId;\n    readonly principal: PrincipalId;\n}',
+  },
+  {
+    name: 'ApprovalWriteResult',
+    declaration: 'export type ApprovalWriteResult = {\n    readonly ok: true;\n    readonly record: ApprovalRecord;\n} | {\n    readonly ok: false;\n    readonly conflict: ApprovalConflict;\n    readonly current?: ApprovalRecord;\n};',
   },
   {
     name: 'ArgumentsHash',
@@ -5996,10 +6081,6 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type Principal = UserPrincipal | ServicePrincipal | AgentPrincipal | AnonymousDevPrincipal;',
   },
   {
-    name: 'PrincipalId',
-    declaration: 'export type PrincipalId = Branded<\'PrincipalId\'>;',
-  },
-  {
     name: 'ProjectContentKind',
     declaration: 'export type ProjectContentKind = \'safe-read\' | \'project-instructions\' | \'project-plugin\' | \'project-hook\' | \'mcp-server\' | \'executable-skill\' | \'home-profile-patch-override\';',
   },
@@ -6226,10 +6307,6 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'RunEventSeq',
     declaration: 'export type RunEventSeq = BrandedNumber<\'RunEventSeq\'>;',
-  },
-  {
-    name: 'RunId',
-    declaration: 'export type RunId = Branded<\'RunId\'>;',
   },
   {
     name: 'RunLease',
@@ -6538,10 +6615,6 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SessionHistoryRecord',
     declaration: 'export type SessionHistoryRecord = SessionEventEntry;',
-  },
-  {
-    name: 'SessionId',
-    declaration: 'export type SessionId = Branded<\'SessionId\'>;',
   },
   {
     name: 'SessionIdLike',
@@ -7833,11 +7906,11 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'WorkflowResult',
-    declaration: 'export interface WorkflowResult {\n    value: unknown;\n    stopReason: WorkflowStopReason;\n    error?: string;\n    agentsStarted: number;\n}',
+    declaration: 'export interface WorkflowResult {\n    value: unknown;\n    stopReason: WorkflowStopReason;\n    error?: string;\n    waitingFor?: {\n        readonly approvalId: string;\n    };\n    agentsStarted: number;\n}',
   },
   {
     name: 'WorkflowResultInfo',
-    declaration: 'export interface WorkflowResultInfo {\n    stopReason: WorkflowStopReason;\n    error?: string;\n    agentsStarted: number;\n}',
+    declaration: 'export interface WorkflowResultInfo {\n    stopReason: WorkflowStopReason;\n    error?: string;\n    waitingFor?: {\n        readonly approvalId: string;\n    };\n    agentsStarted: number;\n}',
   },
   {
     name: 'WorkflowRun',
@@ -7857,7 +7930,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'WorkflowStopReason',
-    declaration: 'export type WorkflowStopReason = \'completed\' | \'cancelled\' | \'error\';',
+    declaration: 'export type WorkflowStopReason = \'completed\' | \'cancelled\' | \'error\' | \'waiting_for_approval\';',
   },
   {
     name: 'WorkItemId',

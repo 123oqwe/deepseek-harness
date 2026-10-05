@@ -145,6 +145,72 @@ Types: [Agent](core.md) · [Session](session.md)
 
 Source: [`packages/interaction/user-approval/src/index.ts`](../../packages/interaction/user-approval/src/index.ts)
 
+<a id="ctxapprovalstore--approvalstorecontract"></a>
+
+### `ctx.approvalStore` — `ApprovalStoreContract`
+
+The store every provider implements and `ctx.approvalStore` publishes. Every write is one compare-and-swap on the revision the caller read, so two clients racing on one approval leave exactly one terminal state, and a consumption happens at most once (acceptance[1]).
+
+```ts cordis-catalog
+/**
+ * Record a new request in `requested`, revision 0.
+ * @param input - the request.
+ * @param nowMs - the request time.
+ * @returns the recorded approval.
+ */
+request(input: ApprovalRequestInput, nowMs: number): ApprovalRecord
+
+/**
+ * Approve or deny a requested approval.
+ * @param id - the approval.
+ * @param expectedRevision - the revision the caller read.
+ * @param decision - approve or deny.
+ * @param viewer - the deciding principal and its tenant.
+ * @param nowMs - the decision time.
+ * @returns the decided approval, or the conflict.
+ */
+decide( id: ApprovalRequestId, expectedRevision: number, decision: ApprovalDecision, viewer: ApprovalViewer, nowMs: number, ): ApprovalWriteResult
+
+/**
+ * Revoke a requested or approved approval.
+ * @param id - the approval.
+ * @param expectedRevision - the revision the caller read.
+ * @param viewer - the revoking principal and its tenant.
+ * @param nowMs - the revocation time.
+ * @returns the revoked approval, or the conflict.
+ */
+revoke(id: ApprovalRequestId, expectedRevision: number, viewer: ApprovalViewer, nowMs: number): ApprovalWriteResult
+
+/**
+ * Consume an approved approval before its deadline, at most once; the action it approved runs only on success.
+ * @param id - the approval.
+ * @param expectedRevision - the revision the caller read.
+ * @param viewer - the consuming principal and its tenant.
+ * @param nowMs - the consumption time.
+ * @returns the consumed approval, or the conflict.
+ */
+consume(id: ApprovalRequestId, expectedRevision: number, viewer: ApprovalViewer, nowMs: number): ApprovalWriteResult
+
+/**
+ * One approval as the viewer may see it, read as expired past its deadline.
+ * @param id - the approval.
+ * @param viewer - the reading principal and its tenant.
+ * @param nowMs - the instant to read the deadline against.
+ * @returns the approval, or `undefined` when it does not exist or belongs to another tenant.
+ */
+get(id: ApprovalRequestId, viewer: ApprovalViewer, nowMs: number): ApprovalRecord | undefined
+
+/**
+ * The viewer's tenant's approvals still waiting for a decision or a consumption, oldest first.
+ * @param viewer - the reading principal and its tenant.
+ * @param nowMs - the instant to read deadlines against; a lapsed approval is not pending.
+ * @returns the `requested` and `approved` approvals whose deadline has not passed.
+ */
+listPending(viewer: ApprovalViewer, nowMs: number): readonly ApprovalRecord[]
+```
+
+Source: [`packages/interaction/approval-store/src/types.ts`](../../packages/interaction/approval-store/src/types.ts)
+
 <a id="approval-events"></a>
 
 ### `approval/*` events
@@ -169,4 +235,30 @@ Ask composed answerers for one decision. Return an outcome to claim the request 
 Types: [Agent](core.md) · [Scoped](scope.md)
 
 Source: [`packages/interaction/user-approval/src/types.ts`](../../packages/interaction/user-approval/src/types.ts)
+
+<a id="approval-store-events"></a>
+
+### `approval-store/*` events
+
+<a id="approval-storechanged--emit"></a>
+
+#### `approval-store/changed` — emit
+
+An approval was recorded or moved. Every provider emits this after each `request`, and after each `decide`, `revoke` or `consume` it accepted (never after a refused one), so an asker waiting for its approval and an SDK client watching approvals learn of a decision another client made. Only moves made through this process's store are emitted; a move another process makes in a shared store is seen on the next read.
+
+```ts cordis-catalog
+/**
+ * An approval was recorded or moved. Every provider emits this after each
+ * `request`, and after each `decide`, `revoke` or `consume` it accepted
+ * (never after a refused one), so an asker waiting for its approval and an
+ * SDK client watching approvals learn of a decision another client made.
+ * Only moves made through this process's store are emitted; a move
+ * another process makes in a shared store is seen on the next read.
+ * @mode emit
+ * @param record - the approval as recorded, or after its move.
+ */
+'approval-store/changed'(record: ApprovalRecord): void
+```
+
+Source: [`packages/interaction/approval-store/src/index.ts`](../../packages/interaction/approval-store/src/index.ts)
 <!-- END GENERATED cordis-surface -->

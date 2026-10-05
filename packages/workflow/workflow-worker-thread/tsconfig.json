@@ -70,6 +70,12 @@
     },
     {
       "path": "../../session/session-projection"
+    },
+    {
+      "path": "../../interaction/approval-store"
+    },
+    {
+      "path": "../../interaction/user-approval"
     }
   ]
 }

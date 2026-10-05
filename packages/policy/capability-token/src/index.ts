@@ -398,6 +398,20 @@ export class CapabilityTokenService {
   }
 
   /**
+   * The newest DELEGATED token recorded for one session (Epic P2-07): what a
+   * delegated session held before its process ended, so a resume can hold the
+   * same token again instead of being issued a wider root. Read from the
+   * durable record, located by `constraints.issuedFor` for the reason
+   * {@link digestsIssuedFor} gives; revocation and expiry are the caller's to
+   * check.
+   * @param session - the session whose delegated token is wanted.
+   * @returns the newest token carrying this session in `constraints.issuedFor` with a non-null `parentDigest`, or `undefined`.
+   */
+  delegatedTokenFor(session: string): SignedCapabilityToken | undefined {
+    return this.#tokens.findLast(signed => signed.token.constraints.issuedFor === session && signed.token.parentDigest !== null)
+  }
+
+  /**
    * Durably record `digest` as revoked. Revoking an ancestor's digest is
    * what invalidates every descendant (acceptance[1]) — no per-descendant
    * record is written, and none is needed.

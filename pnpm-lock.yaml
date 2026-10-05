@@ -1556,6 +1556,9 @@ importers:
       '@deepseek-ai/dsh-api-gateway':
         specifier: workspace:^
         version: link:../../api/gateway
+      '@deepseek-ai/dsh-approval-store':
+        specifier: workspace:^
+        version: link:../../interaction/approval-store
       '@deepseek-ai/dsh-attachment-local':
         specifier: workspace:^
         version: link:../../attachment/attachment-local
@@ -7373,6 +7376,19 @@ importers:
         specifier: workspace:^
         version: link:../../util/values
 
+  packages/interaction/approval-store:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+
   packages/interaction/commands:
     dependencies:
       '@deepseek-ai/dsh-util-crypto':
@@ -7532,6 +7548,9 @@ importers:
       '@deepseek-ai/dsh-agent':
         specifier: workspace:^
         version: link:../../core/agent
+      '@deepseek-ai/dsh-approval-store':
+        specifier: workspace:^
+        version: link:../approval-store
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
@@ -9125,6 +9144,9 @@ importers:
       '@deepseek-ai/dsh-agent-loop-testkit':
         specifier: workspace:^
         version: link:../../test-support/agent-loop-testkit
+      '@deepseek-ai/dsh-approval-store':
+        specifier: workspace:^
+        version: link:../../interaction/approval-store
       '@deepseek-ai/dsh-attachment':
         specifier: workspace:^
         version: link:../../attachment/attachment
@@ -9158,6 +9180,9 @@ importers:
       '@deepseek-ai/dsh-subagent':
         specifier: workspace:^
         version: link:../../subagent/subagent
+      '@deepseek-ai/dsh-user-approval':
+        specifier: workspace:^
+        version: link:../../interaction/user-approval
       '@deepseek-ai/dsh-user-questions':
         specifier: workspace:^
         version: link:../../interaction/user-questions
@@ -12439,6 +12464,9 @@ importers:
       '@deepseek-ai/dsh-agent':
         specifier: workspace:^
         version: link:../../core/agent
+      '@deepseek-ai/dsh-approval-store':
+        specifier: workspace:^
+        version: link:../../interaction/approval-store
       '@deepseek-ai/dsh-agent-loop':
         specifier: workspace:^
         version: link:../../core/agent-loop
@@ -12496,6 +12524,9 @@ importers:
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
+      '@deepseek-ai/dsh-user-approval':
+        specifier: workspace:^
+        version: link:../../interaction/user-approval
       '@deepseek-ai/dsh-workflow':
         specifier: workspace:^
         version: link:../workflow
@@ -12706,6 +12737,9 @@ importers:
       '@deepseek-ai/dsh-app-boot':
         specifier: workspace:^
         version: link:../../packages/boot/app-boot
+      '@deepseek-ai/dsh-approval-store':
+        specifier: workspace:^
+        version: link:../../packages/interaction/approval-store
       '@deepseek-ai/dsh-atomic-write':
         specifier: workspace:^
         version: link:../../packages/util/atomic-write

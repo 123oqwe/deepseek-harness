@@ -21,7 +21,9 @@ import type { ExecutionObserver } from './runtime.ts'
 import { createHash } from 'node:crypto'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { compactJournal, createJournalRecorder, journalingObserver, retainsAllReceipts, writeJournal } from '@deepseek-ai/dsh-workflow-journal'
-import type { JournalRecorder, RunNesting, ScriptDigest, WorkflowJournal } from '@deepseek-ai/dsh-workflow-journal'
+import type { JournalRecorder, JournaledStart, RunNesting, ScriptDigest, WorkflowJournal } from '@deepseek-ai/dsh-workflow-journal'
+import { approvalViewerOf } from '@deepseek-ai/dsh-user-approval'
+import { answerApproval } from './approvals.ts'
 import type { Reconciled } from './resume.ts'
 import { applyChildFailure, cancelPropagationForNested } from '@deepseek-ai/dsh-workflow-registry'
 import type { ChildFailurePolicy, NestingDenialReason } from '@deepseek-ai/dsh-workflow-registry'
@@ -275,6 +277,13 @@ export class WorkerRun implements WorkflowRun {
     private readonly detachedSession: SessionId | undefined,
     /** The count this run's tree shares (P4-09 acceptance[3]); the engine reads it when this run nests. */
     readonly tree: TreeBudget,
+    /**
+     * What this run needs to wait for an approval (Epic P2-07): what it was
+     * started with, journaled so a scheduler can resume it, and how long a new
+     * approval stays decidable. `undefined` for a run that cannot wait, which
+     * is every run that is not detached.
+     */
+    private readonly approvalWait: { readonly start: JournaledStart; readonly waitMs: number } | undefined,
     /** What a resume reconciled: the journal to continue and the steps it settled. */
     reconciled: Reconciled = { reusable: {}, journal: undefined },
   ) {
@@ -488,6 +497,9 @@ export class WorkerRun implements WorkflowRun {
       case WorkerToHostType.NestedStart:
         this.onNestedStart(message)
         break
+      case WorkerToHostType.ApprovalRequest:
+        this.onApprovalRequest(message.callId, message.key, message.title)
+        break
       case WorkerToHostType.Result:
         this.onResult(message.result)
         break
@@ -495,6 +507,75 @@ export class WorkerRun implements WorkflowRun {
       default:
         assertNever(message, 'worker-to-host message')
     }
+  }
+
+  /**
+   * Answer one `approval()` call (Epic P2-07 must[2]): continue, refuse, or
+   * settle the run as waiting. A call arriving after the run was cancelled or
+   * settled is ignored, as a child start would be.
+   * @param callId - the RPC correlation id.
+   * @param key - the asking call's identity.
+   * @param title - what the approval is for.
+   */
+  private onApprovalRequest(callId: number, key: string, title: string): void {
+    if (this.childAdmissionFailure() !== undefined) return
+    const answer = answerApproval(this.ctx.get('approvalStore'), this.journal, {
+      key,
+      title,
+      runId: this.id,
+      workflowName: this.meta.name,
+      start: this.approvalWait?.start,
+      viewer: approvalViewerOf(this.parentAgent.session),
+      waitMs: this.approvalWait?.waitMs ?? 0,
+      nowMs: Date.now(),
+    })
+    switch (answer.kind) {
+      case 'granted':
+        this.persistJournal()
+        this.post(HostToWorkerType.ApprovalGranted, { callId })
+        return
+      case 'refused':
+        this.post(HostToWorkerType.ApprovalRefused, { callId, approvalId: answer.approvalId, refusal: answer.refusal })
+        return
+      case 'unavailable':
+        this.post(HostToWorkerType.ApprovalUnavailable, { callId, rendered: answer.rendered })
+        return
+      case 'wait':
+        this.persistJournal()
+        void this.settleWaiting(answer.approvalId)
+        return
+      /* v8 ignore next 2 -- closed-union exhaustiveness guard */
+      default:
+        assertNever(answer, 'ApprovalAnswer')
+    }
+  }
+
+  /**
+   * Stop the run while it waits for an approval (must[2]): its children are
+   * aborted and paired, its own session is flushed, it settles
+   * `waiting_for_approval`, and its worker is terminated; the lease goes back
+   * when the run is disposed, which a detached run does on settling. A later
+   * resume re-runs the script in that session and reaches the same call.
+   *
+   * The flush is what makes the session resumable: a session reaches disk on
+   * its first append or flush, so one whose script asked before any `agent()`
+   * call would otherwise not exist once the run gives its agent back. The
+   * outcome is claimed before the flush, so no cancellation or worker exit
+   * settles the run meanwhile; a failed flush is logged and the run still
+   * settles waiting.
+   * @param approvalId - the approval the run waits for.
+   */
+  private async settleWaiting(approvalId: string): Promise<void> {
+    this.terminalClaimed = true
+    this.abortChildren('workflow waiting for an approval')
+    this.endStrandedAgents()
+    try {
+      await this.parentAgent.ctx.sessions.flush(this.parentAgent.session)
+    } catch (error: unknown) {
+      this.ctx.logger.warn(`workflow run ${this.id}: its session was not flushed, so a resume may not find it: ${renderThrown(error)}`)
+    }
+    this.settleResult({ value: null, stopReason: 'waiting_for_approval', waitingFor: { approvalId }, agentsStarted: this.hostStarted })
+    void this.worker.terminate()
   }
 
   /** Why a ready provider result may no longer be admitted to the worker. */

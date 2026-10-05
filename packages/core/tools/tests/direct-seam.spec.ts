@@ -4,7 +4,10 @@
  * point before it runs, in a composition that pins the Trust Kernel. The token
  * gate comes after, so a call it refuses still leaves both.
  */
-import { describe, expect, it } from 'vitest'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { afterEach, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import { CapabilityName, CapabilityTokenNonce, issueToken } from '@deepseek-ai/dsh-capability-token'
@@ -16,7 +19,8 @@ import { PrincipalId, TenantId } from '@deepseek-ai/dsh-principal/types'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import PermissionPresetService from '@deepseek-ai/dsh-permission-presets'
-import ApprovalService from '@deepseek-ai/dsh-user-approval'
+import ApprovalStoreSqlitePlugin from '@deepseek-ai/dsh-approval-store/sqlite'
+import ApprovalService, { approvalViewerOf } from '@deepseek-ai/dsh-user-approval'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import ToolRuntime, { TOOL_CAPABILITY_VERB, defineContentToolFixture } from '@deepseek-ai/dsh-tools'
@@ -214,9 +218,15 @@ describe('BLOCKED-345: the public seam asks whether this host may still act', ()
  * A kernel-pinned composition whose preset asks about every action from `read`
  * up, with an operator who answers every approval request `answer`.
  * @param answer - the operator's answer.
+ * @param store - when set, the SQLite approval store is mounted in this directory, and with
+ *   `revokeAfterApproval` another client revokes each approval as soon as it is approved, after the ask
+ *   settled and before the dispatch consumes it.
  * @returns the composition, and the tool names the operator was asked about.
  */
-async function composeGated(answer: 'allowed-once' | 'rejected'): Promise<Composed & { readonly asked: string[] }> {
+async function composeGated(
+  answer: 'allowed-once' | 'rejected',
+  store?: { readonly directory: string; readonly revokeAfterApproval: boolean },
+): Promise<Composed & { readonly asked: string[] }> {
   const composed = await compose({ kernel: true })
   const { ctx } = composed
   // `permission-presets` injects `shell`; without one the preset service never
@@ -227,12 +237,19 @@ async function composeGated(answer: 'allowed-once' | 'rejected'): Promise<Compos
     run() { throw new Error('these cases do not execute bash') },
     start() { throw new Error('these cases do not execute bash') },
   })
+  if (store !== undefined) await ctx.plugin(ApprovalStoreSqlitePlugin, { directory: store.directory, busyTimeoutMs: 1000 })
   await ctx.plugin(ApprovalService, {})
   const asked: string[] = []
   ctx.on('approval/request', (request) => {
     asked.push(request.toolName)
     return Promise.resolve(answer)
   })
+  if (store?.revokeAfterApproval === true) {
+    ctx.on('approval-store/changed', (record) => {
+      if (record.state !== 'approved') return
+      ctx.get('approvalStore')?.revoke(record.id, record.revision, { tenant: record.tenant, principal: record.actor }, Date.now())
+    })
+  }
   await ctx.plugin(PermissionPresetService, {
     riskRules: [],
     presets: { 'workspace-write': { sandbox: 'workspace-write', approval: 'ask', approvalThreshold: 'read' } },
@@ -273,6 +290,40 @@ describe('BLOCKED-344: the public seam passes the risk gate', () => {
     expect(result.isError).toBe(false)
     expect(bodies).toEqual(['manifested'])
     expect(gatedOf(agent)).toEqual([['probe', 'asked']])
+    await ctx.fiber.dispose()
+  })
+})
+
+const storeDirs: string[] = []
+afterEach(() => {
+  for (const dir of storeDirs.splice(0)) rmSync(dir, { recursive: true, force: true })
+})
+
+/** A fresh directory for one case's approval store, removed afterwards. */
+function storeDirectory(): string {
+  const dir = mkdtempSync(join(tmpdir(), 'dsh-direct-seam-approvals-'))
+  storeDirs.push(dir)
+  return dir
+}
+
+describe('P2-07 acceptance[1]: the public seam consumes the approval a direct call rests on', () => {
+  it('runs a direct call the operator allows and leaves its approval consumed', async () => {
+    const { ctx, agent, bodies } = await composeGated('allowed-once', { directory: storeDirectory(), revokeAfterApproval: false })
+    const result = await ctx.tools.execute({ callId: ToolCallId('consumed'), name: 'probe', arguments: {}, agent, signal })
+
+    expect(result.isError).toBe(false)
+    expect(bodies).toEqual(['manifested'])
+    expect(ctx.get('approvalStore')?.listPending(approvalViewerOf(agent.session), Date.now())).toEqual([])
+    await ctx.fiber.dispose()
+  })
+
+  it('does not run a direct call whose approval was revoked before the dispatch could consume it', async () => {
+    const { ctx, agent, bodies } = await composeGated('allowed-once', { directory: storeDirectory(), revokeAfterApproval: true })
+    const result = await ctx.tools.execute({ callId: ToolCallId('revoked'), name: 'probe', arguments: {}, agent, signal })
+
+    expect(result.isError).toBe(true)
+    expect(result.error?.info?.name).toBe('ApprovalConsumedError')
+    expect(bodies).toEqual([])
     await ctx.fiber.dispose()
   })
 })

@@ -388,6 +388,10 @@
         "role": "provides"
       },
       {
+        "ctxKey": "approvalStore",
+        "role": "provides"
+      },
+      {
         "ctxKey": "attachments",
         "role": "provides"
       },
@@ -654,6 +658,10 @@
         "mode": "emit"
       },
       {
+        "name": "approval-store/changed",
+        "mode": "emit"
+      },
+      {
         "name": "feedback/committed",
         "mode": "parallel"
       },
@@ -760,6 +768,7 @@
     "@deepseek-ai/dsh-agent-instructions": "workspace:^",
     "@deepseek-ai/dsh-agent-loop": "workspace:^",
     "@deepseek-ai/dsh-api-gateway": "workspace:^",
+    "@deepseek-ai/dsh-approval-store": "workspace:^",
     "@deepseek-ai/dsh-attachment-local": "workspace:^",
     "@deepseek-ai/dsh-baseline-preflight": "workspace:^",
     "@deepseek-ai/dsh-bash-sandbox": "workspace:^",

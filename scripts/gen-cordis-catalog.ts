@@ -80,6 +80,7 @@ export const SERVICE_PAGE: Record<string, string> = {
   taskStore: 'core.md',
   messageBus: 'core.md',
   approval: 'approval.md',
+  approvalStore: 'approval.md',
   attachments: 'attachment.md',
   shell: 'shell.md',
   shellEnv: 'shell.md',
@@ -221,6 +222,7 @@ export const EVENT_SCOPE_PAGE: Record<string, string> = {
   'agent-preset': 'core.md',
   'api-session': 'session.md',
   'approval': 'approval.md',
+  'approval-store': 'approval.md',
   'commands': 'commands.md',
   // `ctx.controlPlane` and its state-change event: `docs/subsystems/core.md`
   // documents the service (`### ctx.controlPlane`) and links its source, so
@@ -795,6 +797,11 @@ export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
   RetryUsage: 'run retry spending is owned by packages/reliability/retry/README.md',
   FailureFacts: 'retry failure taxonomy input is owned by packages/reliability/retry/README.md',
   RenewResult: 'lease renewal outcome is owned by packages/collaboration/lease-contract/README.md',
+  ApprovalRecord: 'approval record is owned by packages/interaction/approval-store/README.md',
+  ApprovalRequestInput: 'approval request input is owned by packages/interaction/approval-store/README.md',
+  ApprovalDecision: 'approval decision is owned by packages/interaction/approval-store/README.md',
+  ApprovalViewer: 'approval viewer and tenancy is owned by packages/interaction/approval-store/README.md',
+  ApprovalWriteResult: 'approval compare-and-swap outcome is owned by packages/interaction/approval-store/README.md',
   Principal: 'principal identity union is owned by packages/identity/principal/README.md',
   TrustState: 'workspace trust state is owned by packages/workspace/workspace-trust/README.md',
   TrustRecord: 'workspace trust binding is owned by packages/workspace/workspace-trust/README.md',

@@ -3762,7 +3762,7 @@ export interface ToolOwnershipConfig {
 }
 ```
 
-来源： [`packages/core/tools/src/index.ts:1037`](../packages/core/tools/src/index.ts)
+来源： [`packages/core/tools/src/index.ts:1039`](../packages/core/tools/src/index.ts)
 
 <a id="deepseek-aidsh-typert-loader"></a>
 
@@ -3819,7 +3819,7 @@ export interface Config {
 export type ApprovalPolicy = 'ask' | 'never'
 ```
 
-来源： [`packages/interaction/user-approval/src/index.ts:161`](../packages/interaction/user-approval/src/index.ts)
+来源： [`packages/interaction/user-approval/src/index.ts:184`](../packages/interaction/user-approval/src/index.ts)
 
 <a id="deepseek-aidsh-web"></a>
 
@@ -4048,10 +4048,17 @@ export interface Config {
    * token limit is off; `maxTotalAgents` still bounds every tree.
    */
   maxNestedTokens?: number
+  /**
+   * How long an approval a script's `approval()` asked for stays decidable,
+   * in milliseconds (default 86400000, one day; Epic P2-07). At most the
+   * capability-token lifetime: a run woken after its session's token expired
+   * holds no token and every tool call it makes is refused.
+   */
+  approvalWaitMs?: number
 }
 ```
 
-来源： [`packages/workflow/workflow-worker-thread/src/index.ts:56`](../packages/workflow/workflow-worker-thread/src/index.ts)
+来源： [`packages/workflow/workflow-worker-thread/src/index.ts:59`](../packages/workflow/workflow-worker-thread/src/index.ts)
 
 <a id="deepseek-aidsh-workspace-trust-local"></a>
 
@@ -4204,6 +4211,7 @@ export interface TrustGrant {
 - `@deepseek-ai/dsh-agent-loop-testkit`（[`packages/test-support/agent-loop-testkit/src/index.ts`](../packages/test-support/agent-loop-testkit/src/index.ts)）
 - `@deepseek-ai/dsh-anonymous-user-id`（[`packages/identity/anonymous-user-id/src/index.ts`](../packages/identity/anonymous-user-id/src/index.ts)）
 - `@deepseek-ai/dsh-app-boot`（[`packages/boot/app-boot/src/index.ts`](../packages/boot/app-boot/src/index.ts)）
+- `@deepseek-ai/dsh-approval-store`（[`packages/interaction/approval-store/src/index.ts`](../packages/interaction/approval-store/src/index.ts)）
 - `@deepseek-ai/dsh-atomic-write`（[`packages/util/atomic-write/src/index.ts`](../packages/util/atomic-write/src/index.ts)）
 - `@deepseek-ai/dsh-base`（[`packages/bundle/base/src/index.ts`](../packages/bundle/base/src/index.ts)）
 - `@deepseek-ai/dsh-blackboard`（[`packages/collaboration/blackboard/src/index.ts`](../packages/collaboration/blackboard/src/index.ts)）
