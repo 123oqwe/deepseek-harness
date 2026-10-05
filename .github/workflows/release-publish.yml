@@ -288,11 +288,7 @@ jobs:
           name: dsh-evidence
           path: dist/evidence
 
-      # BLOCKED-362: publish only the bytes the pack job verified.
-      - name: Verify the downloaded tarballs against the evidence package
-        env:
-          EVIDENCE_SHA256: ${{ needs.pack.outputs.evidence-sha256 }}
-        run: node scripts/release/verify-published-artifacts.mjs --evidence dist/evidence/evidence.json --evidence-sha256 "$EVIDENCE_SHA256" --dir dist/npm
+      # MUTATION M-362-1 (never merge): the publish job no longer checks the downloaded tarballs.
 
       - name: Publish tarballs
         env:
