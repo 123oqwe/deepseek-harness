@@ -22,7 +22,7 @@ const driver = fileURLToPath(new URL('./loader/p1-06-slice2-part2/driver.ts', im
 const tsconfigPath = fileURLToPath(new URL('../../../tsconfig.json', import.meta.url))
 
 interface Probe { readonly found: boolean; readonly pid?: number; readonly reachableForbiddenServices?: readonly string[]; readonly dshEnvKeys?: readonly string[] }
-interface Report { readonly bootSucceeded: boolean; readonly bootError: string | null; readonly hostPid: number; readonly declaredEntryInTree: boolean; readonly declared: Probe; readonly nomode: Probe }
+interface Report { readonly bootSucceeded: boolean; readonly bootError: string | null; readonly hostPid: number; readonly declaredEntryInTree: boolean; readonly declared: Probe }
 
 let report: Report
 let stderr: string

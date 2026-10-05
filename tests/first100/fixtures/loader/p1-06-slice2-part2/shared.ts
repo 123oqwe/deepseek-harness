@@ -20,10 +20,19 @@ export const REPORT_TOKEN = 'P1-06-SLICE2-PART2'
 export const DECLARED_LAYER = 'dsh-p1-06s2-thirdparty-declared'
 
 /**
- * A third-party layer whose manifest declares NO executionMode at all. The
- * FAIL-SAFE default must still route it out-of-process (RF3 reads this one).
+ * A third-party layer whose manifest explicitly declares `executionMode: 'in-process'`
+ * (schema-valid, so it is admitted). The FAIL-SAFE rule must STILL route it
+ * out-of-process: the host does not honor an untrusted third-party layer's
+ * in-process self-claim (RF3 reads this one).
+ *
+ * NB: `executionMode` is a REQUIRED manifest-v2 field — plugin-manifest
+ * `validate.ts` calls `validateEnum(value.executionMode, …, EXECUTION_MODES)`
+ * unconditionally, so a manifest that OMITS executionMode is invalid and is
+ * denied at admission (it never reaches routing). "No executionMode" is
+ * therefore a false fail-safe witness; the real fail-safe witness is an
+ * in-process CLAIM that routing overrides.
  */
-export const NOMODE_LAYER = 'dsh-p1-06s2-thirdparty-nomode'
+export const INPROCESS_CLAIM_LAYER = 'dsh-p1-06s2-thirdparty-inproc-claim'
 
 /** Each layer declares (in its manifest) and registers (in its entry) exactly this one tool: `probe--<layerName>`. */
 export function probeToolName(layerName: string): string {

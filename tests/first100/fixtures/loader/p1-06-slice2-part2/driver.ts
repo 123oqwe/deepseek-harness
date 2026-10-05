@@ -7,7 +7,8 @@
  * (packageDir !== packageDirFromAnchor(INSTALL_ANCHOR, name)).
  *
  * It stages TWO third-party layers — one whose manifest declares
- * executionMode: 'process', one that declares no executionMode — each carrying
+ * executionMode: 'process', one whose manifest declares executionMode:
+ * 'in-process' (the untrusted in-process self-claim the fail-safe overrides) — each carrying
  * the SAME probe entry (probe-plugin.mjs). It boots the profile, then polls the
  * host tool registry for each layer's `probe--<name>` tool (its registration may
  * cross the RPC asynchronously after boot in the out-of-process world), and
@@ -25,27 +26,27 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DEFAULT_PROFILE_PATCH_RELOAD, initProfile, loadLayeredEnv, resolveProfileDir } from '@deepseek-ai/dsh-app-boot'
 import { runProfile } from '../../../../../apps/cli/src/profile-boot.ts'
-import { DECLARED_LAYER, NOMODE_LAYER, probeToolName, REPORT_TOKEN } from './shared.ts'
+import { DECLARED_LAYER, INPROCESS_CLAIM_LAYER, probeToolName, REPORT_TOKEN } from './shared.ts'
 
 const PROBE_ENTRY = fileURLToPath(new URL('./probe-plugin.mjs', import.meta.url))
 
 /**
  * A manifest-v2 `dsh` field declaring exactly one tool by name and requesting no
  * wildcard destination (so the third-party layer is ADMITTED, not denied).
- * `executionMode` is included only when `mode` is given; omitting it is the
- * fail-safe case (RF3).
+ * `executionMode` is a REQUIRED field and is always set — omitting it makes the
+ * manifest invalid (denied at admission), so there is no "no-executionMode" case.
  */
-function manifest(toolName: string, mode?: 'process' | 'in-process'): Record<string, unknown> {
+function manifest(toolName: string, mode: 'process' | 'in-process'): Record<string, unknown> {
   return {
     manifestVersion: 2,
     tools: [{ name: toolName, sideEffectClass: 'none', authAudience: ['model'], allowedDestinations: [], dataClassification: 'internal' }],
-    ...(mode !== undefined ? { executionMode: mode } : {}),
+    executionMode: mode,
     compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
   }
 }
 
 /** Stage one third-party bundle layer under the profile's own node_modules, carrying the shared probe entry. */
-function stageThirdPartyLayer(profileDir: string, name: string, mode?: 'process' | 'in-process'): void {
+function stageThirdPartyLayer(profileDir: string, name: string, mode: 'process' | 'in-process'): void {
   const pkgDir = join(profileDir, 'node_modules', name)
   mkdirSync(pkgDir, { recursive: true })
   writeFileSync(join(pkgDir, 'package.json'), JSON.stringify({
@@ -72,9 +73,9 @@ const profileName = 'p1-06s2-part2'
 const profileDir = resolveProfileDir(profileName, home)
 // Base provides the tools runtime (ctx.tools) and the probed host services; the
 // two third-party layers are the routing subjects.
-initProfile(profileDir, ['@deepseek-ai/dsh-base', DECLARED_LAYER, NOMODE_LAYER], DEFAULT_PROFILE_PATCH_RELOAD)
+initProfile(profileDir, ['@deepseek-ai/dsh-base', DECLARED_LAYER, INPROCESS_CLAIM_LAYER], DEFAULT_PROFILE_PATCH_RELOAD)
 stageThirdPartyLayer(profileDir, DECLARED_LAYER, 'process')
-stageThirdPartyLayer(profileDir, NOMODE_LAYER) // no executionMode — fail-safe case
+stageThirdPartyLayer(profileDir, INPROCESS_CLAIM_LAYER, 'in-process') // schema-valid in-process CLAIM — the fail-safe case routing must override
 
 let ctx: Context | undefined
 let bootError: string | undefined
@@ -116,9 +117,9 @@ try {
     hostPid: process.pid,
     loaderEntryNames,
     declaredEntryInTree: loaderEntryNames.includes(DECLARED_LAYER),
-    nomodeEntryInTree: loaderEntryNames.includes(NOMODE_LAYER),
+    inprocClaimEntryInTree: loaderEntryNames.includes(INPROCESS_CLAIM_LAYER),
     declared: ctx === undefined ? { found: false } : await readProbe(ctx, DECLARED_LAYER),
-    nomode: ctx === undefined ? { found: false } : await readProbe(ctx, NOMODE_LAYER),
+    inprocClaim: ctx === undefined ? { found: false } : await readProbe(ctx, INPROCESS_CLAIM_LAYER),
   }
   process.stdout.write(`${REPORT_TOKEN} ${JSON.stringify(report)}\n`)
 } finally {
