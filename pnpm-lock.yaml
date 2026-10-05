@@ -8253,6 +8253,24 @@ importers:
         specifier: workspace:^
         version: link:../../schema/schema-registry
 
+  packages/plugin/plugin-host-process:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-plugin-host-rpc':
+        specifier: workspace:^
+        version: link:../plugin-host-rpc
+      '@deepseek-ai/dsh-sdk-protocol':
+        specifier: workspace:^
+        version: link:../../sdk/protocol
+      '@deepseek-ai/dsh-subprocess':
+        specifier: workspace:^
+        version: link:../../subprocess/subprocess
+      '@deepseek-ai/dsh-tools':
+        specifier: workspace:^
+        version: link:../../core/tools
+
   packages/plugin/plugin-host-rpc:
     devDependencies:
       '@deepseek-ai/cordis':

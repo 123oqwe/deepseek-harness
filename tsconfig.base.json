@@ -410,6 +410,7 @@
       "@deepseek-ai/dsh-plan-mode/types": ["./packages/plan/plan-mode/src/types.ts"],
       "@deepseek-ai/dsh-plugin-compat": ["./packages/plugin/plugin-compat/src"],
       "@deepseek-ai/dsh-plugin-compat/solver": ["./packages/plugin/plugin-compat/src/solver.ts"],
+      "@deepseek-ai/dsh-plugin-host-process": ["./packages/plugin/plugin-host-process/src"],
       "@deepseek-ai/dsh-plugin-host-rpc": ["./packages/plugin/plugin-host-rpc/src"],
       "@deepseek-ai/dsh-plugin-host-rpc/types": ["./packages/plugin/plugin-host-rpc/src/types.ts"],
       "@deepseek-ai/dsh-plugin-installer": ["./packages/plugin/plugin-installer/src"],
