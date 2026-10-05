@@ -207,7 +207,24 @@ export const INSTALL_WILDCARD_GRANTS: Readonly<Record<string, readonly WildcardG
 export function installationWildcardGrants(layer: ProfileLayer, installAnchor: string): readonly WildcardGrant[] {
   const grants = INSTALL_WILDCARD_GRANTS[layer.packageName]
   if (grants === undefined) return []
-  return packageDirFromAnchor(installAnchor, layer.packageName) === layer.packageDir ? grants : []
+  return isInstallationOwnLayer(layer, installAnchor) ? grants : []
+}
+
+/**
+ * Whether one resolved layer is this installation's OWN copy: its package
+ * directory is the one resolved from `installAnchor`. A layer of the same name
+ * resolved anywhere else — a profile's own `node_modules`, a hand-placed
+ * third-party install — is not. This is the trusted-identity discriminator the
+ * P1-06 out-of-process routing reads: a layer that is NOT the installation's
+ * own copy is third-party and runs out-of-process regardless of what its own
+ * (untrusted) manifest claims, while a trusted layer is routed by the mode its
+ * manifest declares.
+ * @param layer - a bundle layer {@link loadProfile} resolved.
+ * @param installAnchor - absolute package.json path of the running dsh installation.
+ * @returns true when the layer's package directory is the installation's own resolved copy.
+ */
+export function isInstallationOwnLayer(layer: ProfileLayer, installAnchor: string): boolean {
+  return packageDirFromAnchor(installAnchor, layer.packageName) === layer.packageDir
 }
 
 /** Custom profiles retain the historical live patch-file behavior. */

@@ -12,6 +12,7 @@
  */
 
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { FiberState, type Context } from '@deepseek-ai/cordis'
@@ -24,6 +25,7 @@ import {
   healProfilesModuleFallback,
   initProfile,
   installationWildcardGrants,
+  isInstallationOwnLayer,
   installFailLoud,
   loadOptionalPatches,
   loadOverlayPatches,
@@ -44,6 +46,7 @@ import {
   type GrantedWildcard,
   type PreMountDenialReason,
   type Profile,
+  type ProfileLayer,
   type ProfileManifest,
   type WildcardFinding,
 } from '@deepseek-ai/dsh-app-boot'
@@ -73,7 +76,9 @@ import {
   type BundleLayerScope,
   type PluginPermissionState,
 } from '@deepseek-ai/dsh-host-plugin-inventory'
-import { evaluatePreMountAdmission, type PluginDeclaration } from '@deepseek-ai/dsh-plugin-manifest'
+import { classifyPluginDeclaration, evaluatePreMountAdmission, type PluginDeclaration } from '@deepseek-ai/dsh-plugin-manifest'
+import { spawnPluginHost } from '@deepseek-ai/dsh-plugin-host-process'
+import { DEFAULT_FRAME_LIMITS, type PluginSessionId } from '@deepseek-ai/dsh-plugin-host-rpc'
 import { admitUnsignedDevMode, sealTrustAnchors, type ProvenanceAuditRecord } from '@deepseek-ai/dsh-plugin-provenance'
 import { appendProvenanceAudit, verifyBootProvenance } from './install-provenance.ts'
 import { createProcessShutdown, type ProcessShutdown } from './process-shutdown.ts'
@@ -263,6 +268,27 @@ interface ComposedProfile {
    * so its plugin code never mounts (acceptance[1]).
    */
   compatBlockedLayers: readonly BlockedProfileLayer[]
+  /**
+   * Admitted bundle layers routed OUT of the in-process tree (Epic P1-06 slice
+   * 2): third-party layers — not the installation's own copy, routed out
+   * regardless of what their untrusted manifest claims (fail-safe) — and
+   * trusted layers whose manifest declares `executionMode: 'process'`. Their
+   * patches are absent from `bundlePatches` and their names from
+   * {@link admittedLayerNames}/{@link bundleLayers}, so no in-process mount or
+   * post-mount quarantine applies; the boot runs each in its own process.
+   */
+  outOfProcessLayers: readonly OutOfProcessLayer[]
+}
+
+/**
+ * One admitted bundle layer the boot runs in its own process instead of
+ * mounting its patches ({@link spawnPluginHost}, Epic P1-06 slice 2).
+ */
+interface OutOfProcessLayer {
+  /** The layer's package name; also the stable plugin-host session id suffix. */
+  readonly packageName: string
+  /** Absolute package directory; the plugin entry, declared tools, and manifest digest are resolved from its `package.json`. */
+  readonly packageDir: string
 }
 
 /**
@@ -610,7 +636,21 @@ export async function composeProfile(
       + `capabilities: ${activation.disabledOptionalCapabilities.join(', ')}\n`,
     )
   }
-  const bundlePatches = negotiation.admitted.flatMap(entry => entry.layer.patches)
+  // Epic P1-06 slice 2: route admitted layers that must run out-of-process out
+  // of the in-process patch tree. A third-party layer (not the installation's
+  // own copy) is routed out regardless of what its untrusted manifest claims
+  // (fail-safe); a trusted layer is routed out only when its manifest declares
+  // executionMode 'process'. Their patches never join the in-process tree.
+  const outOfProcessLayers: OutOfProcessLayer[] = []
+  const inProcessAdmitted = negotiation.admitted.filter((entry) => {
+    const routeOutOfProcess = !isInstallationOwnLayer(entry.layer, INSTALL_ANCHOR)
+      || layerDeclaredExecutionMode(entry.layer) === 'process'
+    if (routeOutOfProcess) {
+      outOfProcessLayers.push({ packageName: entry.layer.packageName, packageDir: entry.layer.packageDir })
+    }
+    return !routeOutOfProcess
+  })
+  const bundlePatches = inProcessAdmitted.flatMap(entry => entry.layer.patches)
   const homeFile = homePatchPath()
   const homeLayer: UserPatchLayer = { file: homeFile, patches: loadOptionalPatches(NAME, homeFile) ?? [] }
   const overlayLayers = patchFiles
@@ -638,8 +678,8 @@ export async function composeProfile(
     bundlePatches,
     homePatches,
     overlays: composedOverlays,
-    admittedLayerNames: negotiation.admitted.map(entry => entry.layer.packageName),
-    bundleLayers: negotiation.admitted.map(({ layer }) => ({
+    admittedLayerNames: inProcessAdmitted.map(entry => entry.layer.packageName),
+    bundleLayers: inProcessAdmitted.map(({ layer }) => ({
       packageName: layer.packageName,
       packageDir: layer.packageDir,
       entryIds: insertedEntryIds(layer.patches),
@@ -647,7 +687,60 @@ export async function composeProfile(
     })),
     deniedLayers: denied,
     compatBlockedLayers: negotiation.blocked,
+    outOfProcessLayers,
   }
+}
+
+/**
+ * The `executionMode` a trusted layer's manifest declares, or undefined when it
+ * has no `manifestVersion: 2` declaration. Read ONLY for the installation's own
+ * layers; a third-party layer's claim is never trusted (its routing is
+ * fail-safe out-of-process before this is consulted).
+ * @param layer - an admitted bundle layer.
+ * @returns the declared execution mode string, or undefined when there is no v2 manifest.
+ */
+function layerDeclaredExecutionMode(layer: ProfileLayer): string | undefined {
+  const manifestPath = join(layer.packageDir, 'package.json')
+  if (!existsSync(manifestPath)) return undefined
+  const dsh = (JSON.parse(readFileSync(manifestPath, 'utf8')) as { readonly dsh?: unknown }).dsh
+  const declaration = classifyPluginDeclaration(dsh)
+  return declaration.kind === 'manifest-v2' ? declaration.manifest.executionMode : undefined
+}
+
+/** Termination grace for an out-of-process plugin child, in milliseconds (Epic P1-06 slice 2). */
+const OUT_OF_PROCESS_PLUGIN_GRACE_MS = 5_000
+
+/**
+ * Run each out-of-process bundle layer in its own subprocess via the plugin
+ * host RPC ({@link spawnPluginHost}): the plugin's code executes in the child,
+ * its declared tools register back over the capability-scoped RPC, and the host
+ * `Context`, its services, and credentials stay unreachable from it. The
+ * declared tool names and manifest digest come from the layer's TRUSTED,
+ * installed manifest, never from the plugin at runtime. A layer without a
+ * `manifestVersion: 2` declaration is skipped (there is nothing to run).
+ * @param ctx - the mounted host context providing the `subprocess` and `tools` services.
+ * @param layers - the admitted layers {@link composeProfile} routed out-of-process.
+ * @returns one disposer per spawned host; each revokes its registrations and terminates its child.
+ */
+function spawnOutOfProcessLayers(ctx: Context, layers: readonly OutOfProcessLayer[]): (() => void)[] {
+  const disposers: (() => void)[] = []
+  for (const layer of layers) {
+    const manifestPath = join(layer.packageDir, 'package.json')
+    const pkg = JSON.parse(readFileSync(manifestPath, 'utf8')) as { readonly main?: string; readonly dsh?: unknown }
+    const declaration = classifyPluginDeclaration(pkg.dsh)
+    if (declaration.kind !== 'manifest-v2') continue
+    const pluginEntry = createRequire(manifestPath).resolve(join(layer.packageDir, pkg.main ?? 'index'))
+    disposers.push(spawnPluginHost(ctx, {
+      pluginEntry,
+      declaredTools: declaration.manifest.tools?.map(tool => tool.name) ?? [],
+      expectedManifestDigest: computeManifestDigest(declaration.manifest),
+      sessionId: brandString<PluginSessionId>(`plugin-host-${layer.packageName}`),
+      cwd: layer.packageDir,
+      graceMs: OUT_OF_PROCESS_PLUGIN_GRACE_MS,
+      limits: DEFAULT_FRAME_LIMITS,
+    }))
+  }
+  return disposers
 }
 
 /** Options for {@link runProfile}. */
@@ -1237,8 +1330,10 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
     )
   }
   const app: { current?: Context } = {}
+  const outOfProcessHosts: (() => void)[] = []
   const appReady = createAppReady()
   const shutdown = createProcessShutdown(async () => {
+    for (const disposeHost of outOfProcessHosts) disposeHost()
     await app.current?.fiber.dispose()
     await disposeProxy()
   })
@@ -1349,6 +1444,14 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
   // setup adds any further Loader entries of its own.
   if (!signalShutdown.signal.aborted && ctx.fiber.state === FiberState.ACTIVE && ctx.get('loader') !== undefined) {
     await applyPostMountPluginEnforcement(ctx, pluginEnforcement, composed.admittedLayerNames, composed.bundleLayers, provenance.records)
+  }
+  // Epic P1-06 slice 2: run each layer routed out-of-process in its own
+  // subprocess, after the in-process tree is mounted so the host's `subprocess`
+  // and `tools` services are available. Each plugin's declared tools register
+  // back over the RPC into the host `tools` registry; shutdown revokes those
+  // registrations and terminates the children.
+  if (!signalShutdown.signal.aborted && ctx.fiber.state === FiberState.ACTIVE && ctx.get('loader') !== undefined) {
+    outOfProcessHosts.push(...spawnOutOfProcessLayers(ctx, composed.outOfProcessLayers))
   }
   // A live-reload profile can dispose the whole tree while post-boot watcher
   // setup is in flight — a signal or appExit. Loader presence and fiber state

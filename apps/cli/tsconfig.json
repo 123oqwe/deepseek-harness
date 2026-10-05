@@ -72,6 +72,12 @@
       "path": "../../packages/host/plugin-inventory"
     },
     {
+      "path": "../../packages/plugin/plugin-host-process"
+    },
+    {
+      "path": "../../packages/plugin/plugin-host-rpc"
+    },
+    {
       "path": "../../packages/plugin/plugin-manifest"
     },
     {

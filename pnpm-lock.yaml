@@ -257,6 +257,12 @@ importers:
       '@deepseek-ai/dsh-plugin-compat':
         specifier: workspace:^
         version: link:../../packages/plugin/plugin-compat
+      '@deepseek-ai/dsh-plugin-host-process':
+        specifier: workspace:^
+        version: link:../../packages/plugin/plugin-host-process
+      '@deepseek-ai/dsh-plugin-host-rpc':
+        specifier: workspace:^
+        version: link:../../packages/plugin/plugin-host-rpc
       '@deepseek-ai/dsh-plugin-lock':
         specifier: workspace:^
         version: link:../../packages/plugin/plugin-lock
