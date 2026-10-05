@@ -92,6 +92,12 @@ export function registerProxyTool(ctx: Context, registration: ToolRegistrationRe
       render: fixedRender(registration.render),
     },
     execute: (args: unknown, exec: ToolRunContext): Promise<unknown> => invokePlugin(registration, rc, args, exec),
+    // Forward the plugin's declared risk-domain tags so the dispatch gate
+    // classifies the proxy tool by them (P2-04); omission would class it by the
+    // unknown default — the highest, fail-safe but over-restrictive — and a
+    // plugin cannot lower its risk this way, since the classifier takes the
+    // maximum over the tags.
+    ...registration.riskDomainTags === undefined ? {} : { riskDomainTags: registration.riskDomainTags },
     ...registration.timeoutMs === undefined ? {} : { timeoutMs: registration.timeoutMs },
   }
   return tools.register(definition)
