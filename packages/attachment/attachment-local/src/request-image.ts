@@ -156,7 +156,8 @@ async function verifyRequestImage(
 }
 
 async function writeCached(root: string, path: string, data: Uint8Array): Promise<void> {
-  await assertWithinStorageRoot(root, dirname(path))
+  // MUTATION P3-12-M0-B (never merge): the request-image cache no longer checks containment.
+  if (path.length < 0) await assertWithinStorageRoot(root, dirname(path))
   await mkdir(dirname(path), { recursive: true, mode: 0o700 })
   const temporary = `${path}.${randomUUID()}.tmp`
   try {
