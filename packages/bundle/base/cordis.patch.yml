@@ -157,6 +157,15 @@
     - id: attachment-local
       name: '@deepseek-ai/dsh-attachment-local'
 
+    # Every decoded attachment is scanned before the store persists it
+    # (P3-12 must[1]/acceptance[1]): a declared-vs-sniffed media-type mismatch,
+    # zip bomb, polyglot, pixel bomb, over-nested archive, macro-bearing
+    # document, or native executable is refused before any parser or the model
+    # sees it. Thresholds default; a deployment tightens them in a later patch
+    # layer.
+    - id: attachment-security
+      name: '@deepseek-ai/dsh-attachment-security'
+
     # Full-text session search is opt-in. `openAt: never` keeps
     # ctx.sessionQuery mounted — exact reads, titles, and lineage traces
     # (session export, subagent-fork Workspace inheritance) stay available —

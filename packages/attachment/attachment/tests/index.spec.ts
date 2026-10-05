@@ -93,7 +93,7 @@ class UnsupportedProjectionStore extends AttachmentStore {
 class RecordingFileStore extends RecordingStore {
   fileInput: SaveFileAttachment | undefined
 
-  override saveFile(input: SaveFileAttachment) {
+  protected override commitFile(input: SaveFileAttachment) {
     this.fileInput = input
     return Promise.resolve({
       attachmentId: AttachmentId(`sha256:${'cd'.repeat(32)}`),

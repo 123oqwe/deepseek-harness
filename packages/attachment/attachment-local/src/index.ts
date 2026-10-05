@@ -204,8 +204,9 @@ export class LocalAttachmentStore extends AttachmentStore {
     await this.compression.run(() => validateImageFile(input, this.imageLimits, this.normalizationPolicy))
   }
 
-  override async saveImages(inputs: readonly SaveImageAttachment[]): Promise<readonly ImageAttachmentRef[]> {
-    this.validateImageBatch(inputs)
+  protected override async commitImages(inputs: readonly SaveImageAttachment[]): Promise<readonly ImageAttachmentRef[]> {
+    // The base `saveImages` has batch-checked and scanned the inputs; this
+    // prepares (which validates each) in parallel, then commits in order.
     const prepared = await Promise.all(inputs.map(input => this.compression.run(
       () => prepareImageFile(input, this.imageLimits, this.normalizationPolicy),
     )))
@@ -229,7 +230,7 @@ export class LocalAttachmentStore extends AttachmentStore {
     return normalizedImagePath(this.root, ref)
   }
 
-  override async saveFile(input: SaveFileAttachment): Promise<FileAttachmentRef> {
+  protected override async commitFile(input: SaveFileAttachment): Promise<FileAttachmentRef> {
     return saveFileVerbatim(this.root, input)
   }
 

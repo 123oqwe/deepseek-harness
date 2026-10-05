@@ -1423,6 +1423,22 @@ importers:
         specifier: workspace:^
         version: link:../../util/home-paths
 
+  packages/attachment/attachment-security:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+      fflate:
+        specifier: ^0.8.2
+        version: 0.8.3
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-attachment':
+        specifier: workspace:^
+        version: link:../attachment
+
   packages/boot/app-boot:
     dependencies:
       '@deepseek-ai/dsh-atomic-write':
@@ -1562,6 +1578,9 @@ importers:
       '@deepseek-ai/dsh-attachment-local':
         specifier: workspace:^
         version: link:../../attachment/attachment-local
+      '@deepseek-ai/dsh-attachment-security':
+        specifier: workspace:^
+        version: link:../../attachment/attachment-security
       '@deepseek-ai/dsh-baseline-preflight':
         specifier: workspace:^
         version: link:../../guard/baseline-preflight
@@ -12749,6 +12768,9 @@ importers:
       '@deepseek-ai/dsh-attachment-local':
         specifier: workspace:^
         version: link:../../packages/attachment/attachment-local
+      '@deepseek-ai/dsh-attachment-security':
+        specifier: workspace:^
+        version: link:../../packages/attachment/attachment-security
       '@deepseek-ai/dsh-authorization':
         specifier: workspace:^
         version: link:../../packages/credentials/authorization

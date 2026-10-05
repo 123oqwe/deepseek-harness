@@ -30,6 +30,7 @@
     "@deepseek-ai/dsh-atomic-write": "workspace:^",
     "@deepseek-ai/dsh-attachment": "workspace:^",
     "@deepseek-ai/dsh-attachment-local": "workspace:^",
+    "@deepseek-ai/dsh-attachment-security": "workspace:^",
     "@deepseek-ai/dsh-authorization": "workspace:^",
     "@deepseek-ai/dsh-base": "workspace:^",
     "@deepseek-ai/dsh-bash-local": "workspace:^",

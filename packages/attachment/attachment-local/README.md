@@ -137,6 +137,7 @@ These limits describe what this storage can and cannot do; they are current pack
 - **Local to this machine** — images live on the machine that runs the harness; other hosts cannot read them.
 - **Animated GIF becomes static** — normalization retains only the first frame; animation is outside the version-one image contract.
 - **Encoder output is versioned** — the installed Sharp/libvips build pins normalization and request bytes; an encoder or transform-version upgrade re-addresses future variants while existing objects remain valid.
+- **Symlink-escape defense is check-then-create** — before each directory is created, the target is required to resolve within the attachment storage root (reconstructed from `realpath(DSH_HOME)`, not the possibly-symlinked root itself), so a predeposited symlinked ancestor cannot divert `mkdir -p` or a write out of the store — whether it leaves DSH_HOME or reaches a sibling such as the credential or lock store. A race that swaps a symlink in between that check and the create is a narrow residual window; closing it categorically would need `openat`, which Node does not expose. On Windows the same realpath check resolves NTFS junctions and reparse points rather than POSIX symlinks.
 
 <a id="dev-note"></a>
 ### Dev Note

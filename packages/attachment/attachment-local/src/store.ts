@@ -2,8 +2,8 @@
 
 import { createHash, randomUUID } from 'node:crypto'
 import { constants, createReadStream } from 'node:fs'
-import { chmod, link, mkdir, open, readFile, unlink } from 'node:fs/promises'
-import { dirname, join, parse, resolve } from 'node:path'
+import { chmod, link, mkdir, open, readFile, realpath, unlink } from 'node:fs/promises'
+import { basename, dirname, join, parse, relative, resolve, sep } from 'node:path'
 import {
   AttachmentError,
   AttachmentId,
@@ -143,6 +143,55 @@ async function syncDirectory(path: string): Promise<void> {
 }
 
 /**
+ * Refuse to create `target` when it resolves outside the attachment `storageRoot`
+ * through a symlink. The storage root is content-addressed and self-contained — no
+ * write primitive legitimately points outside it — so a symlinked ancestor is
+ * refused before `mkdir -p`/`chmod` would follow it out, whether it leaves DSH_HOME
+ * entirely or merely reaches a sibling such as the credential or lock store (Epic
+ * P3-12 must[0]; the same-uid malicious-plugin vector).
+ *
+ * The expected root is reconstructed from the trusted, existing DSH_HOME —
+ * `realpath(DSH_HOME)` joined to the storage root's literal suffix — never
+ * `realpath(storageRoot)`: the storage root does not exist yet at the first write,
+ * and resolving it would launder a storage root that is itself a symlink. The target
+ * is canonicalized the way a missing path is — realpath of its nearest existing
+ * ancestor plus the not-yet-created tail — so a symlinked existing ancestor is
+ * resolved while the real directories `mkdir` creates keep their intended place. A
+ * race that swaps a symlink in between this check and the create is a narrow window
+ * recorded in this package's Known Limitations; closing it categorically would need
+ * `openat`, which Node does not expose.
+ * @param storageRoot - absolute attachment storage root (two levels below DSH_HOME).
+ * @param target - absolute directory about to be created below `storageRoot`.
+ * @throws AttachmentError when `target` resolves outside `storageRoot`.
+ */
+export async function assertWithinStorageRoot(storageRoot: string, target: string): Promise<void> {
+  const resolvedRoot = resolve(storageRoot)
+  const home = dirname(dirname(resolvedRoot))
+  const expectedRoot = join(await realpath(home), relative(home, resolvedRoot))
+  const prefix = expectedRoot.endsWith(sep) ? expectedRoot : expectedRoot + sep
+  const missing: string[] = []
+  let ancestor = resolve(target)
+  for (;;) {
+    try {
+      const realAncestor = await realpath(ancestor)
+      const canonicalTarget = missing.length === 0 ? realAncestor : join(realAncestor, ...missing)
+      if (canonicalTarget !== expectedRoot && !canonicalTarget.startsWith(prefix)) {
+        throw new AttachmentError('Attachment path escapes the store root.', 'ATTACHMENT_WRITE_FAILED')
+      }
+      return
+    } catch (error) {
+      if (error instanceof AttachmentError) throw error
+      if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error
+      const parent = dirname(ancestor)
+      /* v8 ignore next -- DSH_HOME exists, so the climb reaches it before the filesystem root. */
+      if (parent === ancestor) throw new AttachmentError('Attachment path escapes the store root.', 'ATTACHMENT_WRITE_FAILED')
+      missing.unshift(basename(ancestor))
+      ancestor = parent
+    }
+  }
+}
+
+/**
  * Create one private directory tree and persist every ancestor entry up to a
  * caller-vouched durable boundary. The walk deliberately ignores what mkdir
  * reports as newly created: a concurrent first save can create a level this
@@ -152,10 +201,14 @@ async function syncDirectory(path: string): Promise<void> {
  * entry is harmless; skipping an unsynced one is not.
  * @param path - absolute directory to create.
  * @param boundary - absolute ancestor the caller vouches is already durable.
+ * @param containmentRoot - absolute storage root `path` must stay within; checked before
+ *   any `mkdir`/`chmod` so a symlinked ancestor cannot divert them out of it. Omitted by
+ *   the DSH_HOME bootstrap, whose path above the home is the deployment's own.
  */
-async function ensureDurableDirectory(path: string, boundary: string): Promise<void> {
+async function ensureDurableDirectory(path: string, boundary: string, containmentRoot?: string): Promise<void> {
   const target = resolve(path)
   const stop = resolve(boundary)
+  if (containmentRoot !== undefined) await assertWithinStorageRoot(containmentRoot, target)
   await mkdir(target, { recursive: true, mode: 0o700 })
   await chmod(target, 0o700)
   let level = target
@@ -278,7 +331,7 @@ export async function publishImmutableAlias(
   const parent = dirname(target)
   try {
     const boundary = await ensureDurableHome(dirname(dirname(resolve(root))))
-    await ensureDurableDirectory(parent, boundary)
+    await ensureDurableDirectory(parent, boundary, root)
     try {
       await link(source, target)
     } catch (error) {
@@ -316,7 +369,7 @@ async function stageImmutableObject(
   // Every process performs that proof independently, so observing a directory
   // another process created can never be mistaken for durable publication.
   const boundary = await ensureDurableHome(dirname(dirname(resolve(root))))
-  await ensureDurableDirectory(staging, boundary)
+  await ensureDurableDirectory(staging, boundary, root)
   const temporary = join(staging, randomUUID())
   let handle
   try {
@@ -354,7 +407,7 @@ async function publishStagedObject(
 ): Promise<void> {
   const parent = dirname(target)
   try {
-    await ensureDurableDirectory(parent, staged.boundary)
+    await ensureDurableDirectory(parent, staged.boundary, root)
     try {
       await link(staged.path, target)
     } catch (error) {

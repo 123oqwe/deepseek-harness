@@ -3,6 +3,7 @@
 import { Context, Service } from '@deepseek-ai/cordis'
 import { admitEncodedFile as admitFileInput, admitEncodedImages } from './admission.ts'
 import { AttachmentError, isAttachmentError as matchesAttachmentError } from './error.ts'
+import type { AttachmentScanInput, AttachmentScanner } from './scan.ts'
 import type {
   AdmittedPromptContentPart,
   AttachmentAdmissionPart,
@@ -22,6 +23,8 @@ export { AttachmentId, ImageVariantId } from './brand.ts'
 export { AttachmentError, isAttachmentError, isImageAdmissionError } from './error.ts'
 export type { AttachmentErrorCode, ImageAdmissionErrorCode } from './error.ts'
 export { admitEncodedFile, admitEncodedImages } from './admission.ts'
+export { AttachmentScanner } from './scan.ts'
+export type { AttachmentScanInput, AttachmentScanRefusal, AttachmentScanVerdict, AttachmentThreatKind } from './scan.ts'
 export { requestImageDimensions } from './request-projection.ts'
 export type {
   AttachmentId as AttachmentIdType,
@@ -90,14 +93,55 @@ export abstract class AttachmentStore extends Service {
   }
 
   /**
-   * Validate and durably commit one ordered image batch.
+   * Scan one decoded payload through the mounted {@link AttachmentScanner}
+   * before it is committed (Epic P3-12 must[1]). The scan lives in this save
+   * path, not in an admission entry a direct `saveImages`/`saveFile` caller
+   * bypasses, so no provider reaches a commit with an unscanned payload. An
+   * absent scanner admits every payload, which is capability absence, not a
+   * silent pass.
+   * @param input - the decoded bytes and the declared media type.
+   * @throws AttachmentError with code `MALICIOUS_ATTACHMENT` when the scanner refuses.
+   */
+  protected async scanInput(input: AttachmentScanInput): Promise<void> {
+    const scanner: AttachmentScanner | undefined = this.ctx.get('attachmentScanner')
+    if (scanner === undefined) return
+    const verdict = await scanner.scan(input)
+    if (!verdict.admit) {
+      throw new AttachmentError(`Attachment refused: ${verdict.refusal.kind} — ${verdict.refusal.detail}`, 'MALICIOUS_ATTACHMENT')
+    }
+  }
+
+  /**
+   * Validate, scan, and durably commit one ordered image batch. This template
+   * is the enforcement point: it validates, scans every member, then delegates
+   * the commit to {@link AttachmentStore.commitImages}, so a provider that
+   * overrides the commit cannot skip the scan.
    * @param inputs - encoded images in owning-message order.
    * @returns durable normalized attachment references in the same order after every member succeeds.
    */
   async saveImages(inputs: readonly SaveImageAttachment[]): Promise<readonly ImageAttachmentRef[]> {
     this.validateImageBatch(inputs)
-    for (const input of inputs) await this.validateImage(input)
+    for (const input of inputs) {
+      await this.scanInput({
+        bytes: input.data,
+        declaredMediaType: input.mediaType,
+        ...input.name === undefined ? {} : { name: input.name },
+      })
+    }
+    return this.commitImages(inputs)
+  }
 
+  /**
+   * Validate and durably commit one already-batch-checked, already-scanned image
+   * batch. The default validates and commits each member through
+   * {@link AttachmentStore.validateImage} and {@link AttachmentStore.saveImage};
+   * a provider overrides this to prepare and commit the batch its own way, never
+   * {@link AttachmentStore.saveImages}, whose scan it must not skip.
+   * @param inputs - batch-checked and scanned images in owning-message order.
+   * @returns durable references in the same order.
+   */
+  protected async commitImages(inputs: readonly SaveImageAttachment[]): Promise<readonly ImageAttachmentRef[]> {
+    for (const input of inputs) await this.validateImage(input)
     const refs: ImageAttachmentRef[] = []
     for (const input of inputs) refs.push(await this.saveImage(input))
     return refs
@@ -184,7 +228,22 @@ export abstract class AttachmentStore extends Service {
    * @param input - exact bytes and optional display name.
    * @returns the durable content-addressed file reference.
    */
-  saveFile(input: SaveFileAttachment): Promise<FileAttachmentRef> {
+  async saveFile(input: SaveFileAttachment): Promise<FileAttachmentRef> {
+    // A file carries no declared media type; the scanner sniffs the bytes, so
+    // the executable, decompression-ratio, polyglot and macro detectors still
+    // apply, and only the declared-vs-sniffed check has nothing to compare.
+    await this.scanInput({ bytes: input.data, declaredMediaType: '', ...input.name === undefined ? {} : { name: input.name } })
+    return this.commitFile(input)
+  }
+
+  /**
+   * Durably commit one already-scanned verbatim file. Backends without verbatim
+   * file storage keep this default rejection; a provider overrides this, never
+   * {@link AttachmentStore.saveFile}, whose scan it must not skip.
+   * @param input - exact bytes and optional display name.
+   * @returns the durable content-addressed file reference.
+   */
+  protected commitFile(input: SaveFileAttachment): Promise<FileAttachmentRef> {
     void input
     return Promise.reject(new AttachmentError(
       'The mounted attachment provider cannot store verbatim files.',
