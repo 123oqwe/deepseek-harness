@@ -208,7 +208,8 @@ export async function assertWithinStorageRoot(storageRoot: string, target: strin
 async function ensureDurableDirectory(path: string, boundary: string, containmentRoot?: string): Promise<void> {
   const target = resolve(path)
   const stop = resolve(boundary)
-  if (containmentRoot !== undefined) await assertWithinStorageRoot(containmentRoot, target)
+  // MUTATION P3-12-M0-A (never merge): ensureDurableDirectory no longer checks containment.
+  if (containmentRoot !== undefined && target.length < 0) await assertWithinStorageRoot(containmentRoot, target)
   await mkdir(target, { recursive: true, mode: 0o700 })
   await chmod(target, 0o700)
   let level = target
