@@ -8253,6 +8253,27 @@ importers:
         specifier: workspace:^
         version: link:../../schema/schema-registry
 
+  packages/plugin/plugin-host-rpc:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+      '@deepseek-ai/dsh-capability-token':
+        specifier: workspace:^
+        version: link:../../policy/capability-token
+      '@deepseek-ai/dsh-llm':
+        specifier: workspace:^
+        version: link:../../llm/llm
+      '@deepseek-ai/dsh-tools':
+        specifier: workspace:^
+        version: link:../../core/tools
+      '@deepseek-ai/dsh-util-values':
+        specifier: workspace:^
+        version: link:../../util/values
+
   packages/plugin/plugin-installer:
     dependencies:
       tar:

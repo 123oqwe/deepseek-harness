@@ -383,6 +383,7 @@
     { "path": "./packages/plugin/plugin-manifest" },
     { "path": "./packages/plugin/plugin-migrations" },
     { "path": "./packages/plugin/plugin-compat" },
+    { "path": "./packages/plugin/plugin-host-rpc" },
     { "path": "./packages/plugin/plugin-ownership" },
     { "path": "./packages/plugin/plugin-provenance" },
     { "path": "./packages/preset/agent-presets" },
