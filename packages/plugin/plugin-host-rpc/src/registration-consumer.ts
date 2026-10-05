@@ -11,7 +11,7 @@
 
 import type { Context } from '@deepseek-ai/cordis'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
-import type { JsonSchemaNode, ToolDefinition, ToolRunContext } from '@deepseek-ai/dsh-tools'
+import type { ToolDefinition, ToolRunContext } from '@deepseek-ai/dsh-tools'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import { HOST_TO_PLUGIN } from './protocol.ts'
 import type { CapabilityDigestView, PluginRpcTransport, RegistrationId, ToolInvokeParams, ToolRegistrationRequest } from './types.ts'
@@ -86,9 +86,9 @@ export function registerProxyTool(ctx: Context, registration: ToolRegistrationRe
   const definition: ToolDefinition = {
     name: registration.name,
     description: registration.description,
-    parameters: registration.parameters as Record<string, unknown>,
+    parameters: registration.parameters,
     output: {
-      schema: registration.outputSchema as unknown as JsonSchemaNode,
+      schema: registration.outputSchema,
       render: fixedRender(registration.render),
     },
     execute: (args: unknown, exec: ToolRunContext): Promise<unknown> => invokePlugin(registration, rc, args, exec),

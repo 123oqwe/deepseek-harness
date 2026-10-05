@@ -11,6 +11,7 @@
 import type { Branded } from '@deepseek-ai/dsh-brand'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import type { CapabilityTokenDigest } from '@deepseek-ai/dsh-capability-token'
+import type { JsonSchemaNode } from '@deepseek-ai/dsh-tools'
 
 /** One plugin host session. Minted by the host at `host.hello`; opaque to the plugin. */
 export type PluginSessionId = Branded<'PluginSessionId'>
@@ -74,9 +75,9 @@ export interface ToolRegistrationRequest {
   /** Model-facing description. */
   readonly description: string
   /** Raw JSON Schema for the tool's arguments, carried as data. */
-  readonly parameters: JsonValue
+  readonly parameters: Record<string, unknown>
   /** Raw JSON Schema for the tool's canonical output value, carried as data. */
-  readonly outputSchema: JsonValue
+  readonly outputSchema: JsonSchemaNode
   /** Risk-domain tags the deployment's policy maps to a class; never a class. */
   readonly riskDomainTags?: readonly string[]
   /** Cooperative tool-call timeout budget in milliseconds. */

@@ -7,6 +7,7 @@
  * @module @deepseek-ai/dsh-plugin-host-rpc/protocol
  */
 
+import { assertSupportedJsonSchema } from '@deepseek-ai/dsh-tools'
 import type { HelloRequest, PluginRpcErrorCode, ToolRegistrationRequest } from './types.ts'
 
 /** The protocol version the host speaks; `host.hello` must present exactly this. */
@@ -117,6 +118,9 @@ export function validateToolRegistration(
     || !isObject(parameters) || !isObject(outputSchema) || (render !== 'text' && render !== 'json')) {
     throw new PluginRpcError('INVALID_PAYLOAD', 'tools.register requires name, description, object parameters/outputSchema, render')
   }
+  // Validate the untrusted plugin's output schema into a JsonSchemaNode at the
+  // process boundary (never trust its declared type); a malformed schema throws.
+  assertSupportedJsonSchema(outputSchema)
   if (riskDomainTags !== undefined && (!Array.isArray(riskDomainTags) || riskDomainTags.some(tag => typeof tag !== 'string'))) {
     throw new PluginRpcError('INVALID_PAYLOAD', 'tools.register riskDomainTags must be a string array')
   }
