@@ -19,6 +19,8 @@ jobs:
   pack:
     name: Pack npm tarballs
     runs-on: ubuntu-24.04
+    outputs:
+      evidence-sha256: ${{ steps.evidence-digest.outputs.sha256 }}
     steps:
       # Complete history: the release scripts read tags.
       - uses: actions/checkout@v6
@@ -102,12 +104,11 @@ jobs:
       # and this step would report a first release. So a ref that IS a tag and
       # does not carry the prefix is treated as drift and fails loudly.
       #
-      # A ref that is not a tag at all is a different case, and not an error:
-      # `verify.ts` only checks the tag when `RELEASE_PUBLISH` is `true`
-      # (`:102-105`), which this pack job does not set, so dispatching it from
-      # a branch to rehearse the packing is a supported thing to do. Such a run
-      # takes the latest matching tag reachable from HEAD and says it is a
-      # rehearsal.
+      # A ref that is not a tag at all does not reach this step: "Verify
+      # release version" above sets `RELEASE_PUBLISH`, so `verify.ts` checks
+      # the tag (`:102-106`) and a branch dispatch fails there. The `*` arm
+      # below answers that case if the flag is ever dropped: it takes the
+      # latest matching tag reachable from HEAD and says it is a rehearsal.
       - name: Resolve the evidence base SHA
         id: evidence-base
         env:
@@ -218,8 +219,8 @@ jobs:
 
       # `.dsh/baseline.json` is tracked and `baseline:capture` rewrote it. The
       # evidence sidecar is deliberately NOT removed here -- the verify above
-      # has already read it, and leaving it lets the upload step below carry it
-      # if a future change wants that.
+      # has already read it, and the evidence package is uploaded below for the
+      # publish job's check.
       - name: Restore the tracked baseline file the evidence capture rewrote
         if: always()
         run: git checkout -- .dsh/baseline.json
@@ -228,6 +229,21 @@ jobs:
         with:
           name: dsh-npm-tarballs
           path: dist/npm/*
+          if-no-files-found: error
+          retention-days: 7
+
+      # BLOCKED-362: the publish job checks the tarballs it downloads against
+      # this evidence package. Its digest travels as a job output, not through
+      # artifact storage, so replacing the tarballs also means replacing a
+      # value the artifacts cannot carry.
+      - name: Record the evidence package digest for the publish job
+        id: evidence-digest
+        run: echo "sha256=$(sha256sum .dsh/evidence/evidence.json | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dsh-evidence
+          path: .dsh/evidence/evidence.json
           if-no-files-found: error
           retention-days: 7
 
@@ -266,6 +282,17 @@ jobs:
         with:
           name: dsh-npm-tarballs
           path: dist/npm
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dsh-evidence
+          path: dist/evidence
+
+      # BLOCKED-362: publish only the bytes the pack job verified.
+      - name: Verify the downloaded tarballs against the evidence package
+        env:
+          EVIDENCE_SHA256: ${{ needs.pack.outputs.evidence-sha256 }}
+        run: node scripts/release/verify-published-artifacts.mjs --evidence dist/evidence/evidence.json --evidence-sha256 "$EVIDENCE_SHA256" --dir dist/npm
 
       - name: Publish tarballs
         env:
