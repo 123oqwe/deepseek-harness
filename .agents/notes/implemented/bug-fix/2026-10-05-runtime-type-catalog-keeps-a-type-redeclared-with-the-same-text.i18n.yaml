@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-10-05-runtime-type-catalog-keeps-a-type-redeclared-with-the-same-text.md
+2026-10-05-runtime-type-catalog-keeps-a-type-redeclared-with-the-same-text.md: 79f7b326986de497355a33a8949716dfae7e384a
+2026-10-05-runtime-type-catalog-keeps-a-type-redeclared-with-the-same-text.zh.md: 281b30e3558879a637b6fa3d0c04c0e18f0ec4f2
