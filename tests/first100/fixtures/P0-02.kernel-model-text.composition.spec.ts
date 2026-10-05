@@ -69,10 +69,21 @@ interface AllowedText {
  * The passages a hit may fall inside (delegate ruling, gate3 2026-09-28T02:02:29Z).
  * The shipped bash and pwsh tools describe a confining sandbox with the word
  * `deny`, which is also a kernel literal (`index.ts`'s default verdict).
+ * `policy` became a kernel literal with B-728's `KERNEL_SEALED_SERVICES`; the
+ * product writes it into the file tools' guidance, the runtime context, the
+ * bash description and the refusal of a denied call (user decision P0-02,
+ * 2026-10-05: register each sentence rather than narrow the search).
  */
 const ALLOWED: readonly AllowedText[] = [
   { literal: 'deny', file: 'packages/shell/tool-bash/src/index.ts', line: 84, sentence: 'Attempting a command the sandbox may deny is safe and expected' },
   { literal: 'deny', file: 'packages/shell/tool-pwsh/src/index.ts', line: 133, sentence: 'Attempting a command the sandbox may deny is safe and expected' },
+  { literal: 'policy', file: 'packages/fs/tool-fs/src/write.ts', line: 67, sentence: 'read an existing file first (the default fs-observation-policy requires it)' },
+  { literal: 'policy', file: 'packages/fs/tool-fs/src/edit.ts', line: 93, sentence: 'Read the file first (the default fs-observation-policy requires it)' },
+  { literal: 'policy', file: 'packages/sandbox/sandbox-policy/src/index.ts', line: 46, sentence: 'Current DSH file policy: workspace-write.' },
+  { literal: 'policy', file: 'packages/interaction/user-approval/src/index.ts', line: 78, sentence: 'Approval policy: ask.' },
+  { literal: 'policy', file: 'packages/shell/tool-bash/src/index.ts', line: 78, sentence: 'a policy denial, not a bug in the command' },
+  { literal: 'policy', file: 'packages/core/tools/src/external-effect.ts', line: 1317, sentence: 'was refused by policy (' },
+  { literal: 'policy', file: 'packages/policy/policy-engine-cedar/src/index.ts', line: 190, sentence: 'forbidden-by-policy' },
 ]
 
 /** The kernel's type module, which declares the `TrustKernel` interface. */
@@ -265,6 +276,13 @@ describe('P0-02 acceptance[1] on the shipped headless composition with the Trust
     // Each hit that is not inside an allowlisted sentence, in full: vitest's diff truncates the objects.
     const unexplained = hitsOf(report.requests, literals, ALLOWED).filter(hit => !hit.allowed)
     expect(unexplained, JSON.stringify(unexplained)).toEqual([])
+    // Each `policy` passage explains a hit of its own: without it, one hit is
+    // unexplained again, so the list holds no sentence these requests do not need.
+    for (const entry of ALLOWED.filter(allowed => allowed.literal === 'policy')) {
+      const without = ALLOWED.filter(allowed => allowed !== entry)
+      const reopened = hitsOf(report.requests, literals, without).filter(hit => !hit.allowed)
+      expect(reopened.length, `${entry.file}:${String(entry.line)} «${entry.sentence}» explains no hit`).toBeGreaterThan(0)
+    }
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 
   it('control: the longest kernel literal, placed after a marker in the task, a tool description and a tool result, is found in each of those places', async () => {
