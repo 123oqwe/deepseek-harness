@@ -93,6 +93,7 @@ interface TeamServiceInternals {
     tryDispatch(root: Agent, message: TeamMessageSnapshot, signal: AbortSignal): Promise<boolean>
     serializeDispatch(message: TeamMessageSnapshot, operation: () => Promise<boolean>): Promise<boolean>
     markDelivered(root: Agent, messageId: ReturnType<typeof TeamMessageId>, targetId: SessionId): Promise<void>
+    recoverFor(agent: Agent, signal: AbortSignal): Promise<void>
   }
   readonly journal: {
     state(root: Agent): unknown
@@ -1852,5 +1853,94 @@ describe('Team mailbox and waiting', () => {
     expect(durable(second.lead).members[0]).toMatchObject({
       phase: 'failed', error: 'settled elsewhere',
     })
+  })
+
+  it('reports accepted and delivers once when recovery wins the in-flight dispatch race', async () => {
+    const { ctx, lead } = await setup(['hang'])
+    const started = await spawn(ctx, lead, 'race-target')
+    const target = await waitRunning(ctx, started.member.id)
+
+    // Two one-shot seams over the REAL Session flush (the same flush seam the
+    // sibling tests use, e.g. S4 team.spec.ts:1055):
+    //  A) stall the sender's team/message/queued flush on the LEAD session,
+    //     parking the sender AFTER it durably appended the message (already in
+    //     the projection: append is synchronous, only the flush is awaited)
+    //     but BEFORE its own dispatch.
+    //  B) stall recovery's checkpoint flush on the TARGET session, holding
+    //     recovery's dispatch in-flight (message id still claimed) while the
+    //     sender runs its own dispatch and meets that claim.
+    const flush = ctx.sessions.flush.bind(ctx.sessions)
+    const senderQueuedFlushEntered = Promise.withResolvers<undefined>()
+    const releaseSenderQueuedFlush = Promise.withResolvers<undefined>()
+    const senderQueuedFlushSettled = Promise.withResolvers<undefined>()
+    const recoveryCheckpointEntered = Promise.withResolvers<undefined>()
+    const releaseRecoveryCheckpoint = Promise.withResolvers<undefined>()
+    let stalledSenderFlush = false
+    let stalledRecoveryCheckpoint = false
+    vi.spyOn(ctx.sessions, 'flush').mockImplementation(async (session) => {
+      if (session.id === lead.id && !stalledSenderFlush) {
+        stalledSenderFlush = true
+        senderQueuedFlushEntered.resolve(undefined)
+        await releaseSenderQueuedFlush.promise
+        const flushed = await flush(session)
+        senderQueuedFlushSettled.resolve(undefined)
+        return flushed
+      }
+      if (session.id === target.id && !stalledRecoveryCheckpoint) {
+        stalledRecoveryCheckpoint = true
+        recoveryCheckpointEntered.resolve(undefined)
+        await releaseRecoveryCheckpoint.promise
+        return flush(session)
+      }
+      return flush(session)
+    })
+
+    // Sender starts and parks on its stalled queued-event flush. The message is
+    // already visible in the projection here (synchronous append precedes the
+    // awaited flush), which is the window recovery reads.
+    const receiptPromise = ctx.agentTeams.sendMessage(lead, {
+      target: 'race-target',
+      content: content('raced delivery'),
+      signal: SIGNAL,
+    })
+    await senderQueuedFlushEntered.promise
+
+    // Drive the Lead's mailbox recovery INTO that window. Recovery sees the
+    // just-queued message, claims the in-flight slot, steers it to the live
+    // target, and parks on the checkpoint flush (seam B) still holding the slot.
+    const recoveryPromise = teamInternals(ctx).mailbox.recoverFor(lead, SIGNAL)
+    await recoveryCheckpointEntered.promise
+
+    // Release the sender. Its own dispatch now runs against recovery's live
+    // in-flight claim for the SAME message.
+    releaseSenderQueuedFlush.resolve(undefined)
+    await senderQueuedFlushSettled.promise
+    // Only microtasks separate the settled flush from the sender's dispatch.
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    // Let recovery finish its checkpoint + delivered edge.
+    releaseRecoveryCheckpoint.resolve(undefined)
+    const receipt = await receiptPromise
+    await recoveryPromise
+
+    // CONTRACT (README.md:71): the message WAS delivered, so the sender's
+    // receipt must read 'accepted', never 'queued'.
+    expect(receipt.status).toBe('accepted')
+
+    // CONTRACT (README.md:69): delivered exactly once. Count the durable,
+    // claim-immune basis the mailbox itself dedups on (S4 idiom, team.spec.ts:1208).
+    const deliveredCopies = target.session.snapshotEvents().flatMap(event =>
+      event.type === 'agent/inbox/spliced'
+        ? event.data.inserted.flatMap(message => message.source.kind === 'team-message'
+          && message.source.messageId === receipt.messageId
+          ? [message.source.messageId]
+          : [])
+        : [])
+    expect(deliveredCopies).toEqual([receipt.messageId])
+    expect(durable(lead).pendingMessages).toEqual([])
+
+    ctx.agentTeams.interrupt(lead, 'race-target')
+    target.cancel({ kind: 'parent' })
+    await waitNoAgent(ctx, target.id)
   })
 })
