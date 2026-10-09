@@ -38,6 +38,7 @@ export {
   initProfile,
   INSTALL_WILDCARD_GRANTS,
   installationWildcardGrants,
+  isInstallationOwnLayer,
   loadProfile,
   loadProfileDirectory,
   negotiateProfileLayerCompatibility,
