@@ -3,7 +3,7 @@
 import { join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
-import { AttachmentStore } from '@deepseek-ai/dsh-attachment'
+import { AttachmentError, AttachmentStore } from '@deepseek-ai/dsh-attachment'
 import type {
   FileAttachmentRef,
   ImageAttachmentLimits,
@@ -19,6 +19,8 @@ import { dshCachePath, resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import type { NormalizationPolicy } from './normalization.ts'
 import { CompressionLimiter, compressionFailure } from './compression-limiter.ts'
 import { commitPreparedImageFile, normalizedImagePath, prepareImageFile, readImageFile, validateImageFile } from './store.ts'
+import { detectImageViaSubprocess } from './image.ts'
+import type { ImageDecoder } from './image.ts'
 import {
   readFileStreamVerbatim, saveFileStreamVerbatim, saveFileVerbatim, storedFilePath,
 } from './file-store.ts'
@@ -200,15 +202,35 @@ export class LocalAttachmentStore extends AttachmentStore {
     this.compression = new CompressionLimiter(compressionConcurrency)
   }
 
+  /**
+   * The image decoder admission uses (P3-12 must[2]): it fully decodes untrusted
+   * bytes in the isolated subprocess world (`ctx.subprocess`), so a decoder
+   * exploit is contained by the process boundary. Fail-closed — with no
+   * subprocess provider mounted there is no isolated world to decode in, so
+   * admission refuses rather than decoding untrusted bytes in this process. A
+   * contained decode can still reach the network or filesystem; OS-level
+   * confinement is P3-09.
+   * @returns the subprocess-bound decoder, or one that refuses when no subprocess is mounted.
+   */
+  private imageDecoder(): ImageDecoder {
+    const subprocess = this.ctx.get('subprocess')
+    if (subprocess === undefined) {
+      return () => Promise.reject(new AttachmentError(
+        'Image decoding requires a subprocess provider for isolation, which is not mounted.', 'INVALID_IMAGE'))
+    }
+    return (data, limits) => detectImageViaSubprocess(subprocess, data, limits)
+  }
+
   async validateImage(input: SaveImageAttachment): Promise<void> {
-    await this.compression.run(() => validateImageFile(input, this.imageLimits, this.normalizationPolicy))
+    await this.compression.run(() => validateImageFile(input, this.imageLimits, this.normalizationPolicy, this.imageDecoder()))
   }
 
   protected override async commitImages(inputs: readonly SaveImageAttachment[]): Promise<readonly ImageAttachmentRef[]> {
     // The base `saveImages` has batch-checked and scanned the inputs; this
     // prepares (which validates each) in parallel, then commits in order.
+    const decode = this.imageDecoder()
     const prepared = await Promise.all(inputs.map(input => this.compression.run(
-      () => prepareImageFile(input, this.imageLimits, this.normalizationPolicy),
+      () => prepareImageFile(input, this.imageLimits, this.normalizationPolicy, decode),
     )))
     const refs: ImageAttachmentRef[] = []
     for (const image of prepared) refs.push(await commitPreparedImageFile(this.root, image))
@@ -217,7 +239,7 @@ export class LocalAttachmentStore extends AttachmentStore {
 
   async saveImage(input: SaveImageAttachment): Promise<ImageAttachmentRef> {
     const prepared = await this.compression.run(
-      () => prepareImageFile(input, this.imageLimits, this.normalizationPolicy),
+      () => prepareImageFile(input, this.imageLimits, this.normalizationPolicy, this.imageDecoder()),
     )
     return commitPreparedImageFile(this.root, prepared)
   }
