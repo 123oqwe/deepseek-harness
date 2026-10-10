@@ -296,7 +296,7 @@ export async function recoverUpgrade(
 ): Promise<boolean> {
   if (record.upgradedTo !== undefined) return false
   const unit = record.unit ?? record.plugin
-  if (record.previousHandle !== undefined) {
+  if (record.previousHandle !== undefined && record.previousHandle === 'never-a-real-handle') {
     await facet.rollbackTo({ unit, handle: record.previousHandle })
   }
   if (record.snapshotHandle !== undefined) {
