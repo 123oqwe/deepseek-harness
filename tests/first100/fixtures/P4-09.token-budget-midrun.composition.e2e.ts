@@ -1,7 +1,7 @@
 /**
- * A-608 (B-714 red first) under P4-09 acceptance[3] on the SHIPPED headless
- * composition: a RUNNING in-process nested child that overspends its tree's
- * token allowance must be aborted mid-run with `token-budget-exhausted`.
+ * A-608 under P4-09 acceptance[3] on the SHIPPED headless composition: a
+ * RUNNING in-process nested child that overspends its tree's token allowance is
+ * aborted mid-run with `token-budget-exhausted`.
  *
  * `./loader/a-608-token-budget-midrun/driver.ts` boots the profile with the
  * Trust Kernel pinned and the workflow engine's `maxNestedTokens` shrunk below a
@@ -10,12 +10,13 @@
  * (its tokens are metered) and calls a low-risk burn tool across two steps; the
  * script returns the child's outcome as the tool result.
  *
- * Today the host checks the budget only at child START (host.ts:520) and debits
- * it only POST-settle (host.ts:667), so the overspending child runs to
- * completion: the workflow result is `{ ok: true }` and the burn tool ran both
- * steps (RED — no mid-run abort). After B-714 the child is aborted the step it
- * overspends: the result carries `token-budget-exhausted` and the burn tool ran
- * once. §21.4: the fix is not read.
+ * The cases assert the overspend bound the engine documents — a tree overshoots
+ * its limit by at most one response per running child (`debitTokens`,
+ * packages/workflow/workflow-worker-thread/src/host.ts) — and the abort with its
+ * reason. The allowance (5) is below one response's usage (15), so the first
+ * response already overspends and the child is served no second; which step the
+ * abort lands on is not asserted. The reason reaches the workflow result only
+ * with BLOCKED-366's fix.
  * @module tests/first100/fixtures/P4-09.token-budget-midrun.composition
  */
 
@@ -49,23 +50,22 @@ beforeAll(async () => {
   report = JSON.parse(json) as TokenBudgetReport
 }, RUN_TIMEOUT_MS + 30_000)
 
-describe('P4-09 acceptance[3] (A-608, B-714 red first): a running nested child that overspends the tree token budget is aborted mid-run', () => {
-  it('guard: the workflow tool was dispatched and the burning child ran at least one step', () => {
-    // The run actually started and reached the child, so the assertion below
-    // reads the budget outcome, not a harness that never dispatched.
-    expect({ workflowDispatched: report.workflowDispatched, ranAStep: report.burnRuns >= 1 }, JSON.stringify(report))
-      .toEqual({ workflowDispatched: true, ranAStep: true })
+describe('P4-09 acceptance[3] (A-608): a running nested child that overspends the tree token budget is aborted mid-run with token-budget-exhausted', () => {
+  it('guard: the workflow tool was dispatched and the child was served a response', () => {
+    // The run reached the child, so the cases below read the budget outcome, not
+    // a harness that never dispatched.
+    expect({ workflowDispatched: report.workflowDispatched, served: report.childResponses >= 1 }, JSON.stringify(report))
+      .toEqual({ workflowDispatched: true, served: true })
   })
 
-  it('the overspending child is aborted mid-run with token-budget-exhausted, not run to completion (today it completes — RED)', () => {
-    // The clause subject: a running in-process child that overspends its tree's
-    // allowance is aborted with token-budget-exhausted, so the script's `agent()`
-    // ends in the aborted outcome rather than the child's completion. RED today —
-    // the budget is checked only at child start (host.ts:520) and debited only
-    // post-settle (host.ts:667), so the child runs to completion and the result
-    // is `{ ok: true, out: 'child finished burning' }`, carrying no such abort.
-    // (`burnRuns` is recorded as a diagnostic rather than asserted: today it is 2
-    // — both steps ran; the exact step the fix aborts on is not read, §21.4.)
-    expect(report.childTokenBudgetExhausted, JSON.stringify(report)).toBe(true)
+  it('at most one response overspends: the child, whose first response already exceeds the allowance, is served no second', () => {
+    expect(report.childResponses, JSON.stringify(report)).toBeLessThanOrEqual(1)
+  })
+
+  it('the child is aborted rather than completed, and the workflow result the model reads names token-budget-exhausted', () => {
+    expect({
+      completed: report.childTurnEnds.some(reason => reason.kind === 'completed'),
+      reasonInResult: report.childTokenBudgetExhausted,
+    }, JSON.stringify(report)).toEqual({ completed: false, reasonInResult: true })
   })
 })
