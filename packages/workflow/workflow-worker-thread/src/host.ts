@@ -996,11 +996,6 @@ export class WorkerRun implements WorkflowRun {
     // registered only after it has started, and cancel() reaches only the runs
     // already registered, so a cancel that arrived while it was starting is
     // checked here: the run is disposed and the call refused.
-    const admission = this.childAdmissionFailure()
-    if (admission !== undefined) {
-      await nested.run.dispose()
-      throw new Error(`nested workflow "${request.name}" was not started: ${admission.rendered}`)
-    }
     this.nestedRuns.add(nested.run)
     try {
       const result = await nested.run.result
