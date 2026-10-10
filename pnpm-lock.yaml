@@ -257,6 +257,9 @@ importers:
       '@deepseek-ai/dsh-plugin-compat':
         specifier: workspace:^
         version: link:../../packages/plugin/plugin-compat
+      '@deepseek-ai/dsh-plugin-installer':
+        specifier: workspace:^
+        version: link:../../packages/plugin/plugin-installer
       '@deepseek-ai/dsh-plugin-lock':
         specifier: workspace:^
         version: link:../../packages/plugin/plugin-lock

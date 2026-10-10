@@ -59,6 +59,8 @@ import {
   type PluginPackageName,
 } from '@deepseek-ai/dsh-plugin-lock'
 import { recordUnverifiedProvenance, type ProvenanceAuditRecord } from '@deepseek-ai/dsh-plugin-provenance'
+import { createQuarantine, DEFAULT_MAX_DECOMPRESSION_RATIO, DEFAULT_MAX_UNCOMPRESSED_BYTES, safeExtract } from '@deepseek-ai/dsh-plugin-installer'
+import type { ExtractionPolicy } from '@deepseek-ai/dsh-plugin-installer'
 import { verifyInstallProvenance } from './install-provenance.ts'
 import {
   homePatchPath,
@@ -337,6 +339,43 @@ function splitConfirmation(
   }
 }
 
+/** The extraction bounds the install pre-gate enforces, from the installer's defaults. */
+const PREGATE_POLICY: ExtractionPolicy = {
+  maxDecompressionRatio: DEFAULT_MAX_DECOMPRESSION_RATIO,
+  maxUncompressedBytes: DEFAULT_MAX_UNCOMPRESSED_BYTES,
+}
+
+/** The local tarball path a `file:…tgz` spec resolves to, or undefined for any other spec. */
+function localTarballSpec(spec: string, profileDir: string): string | undefined {
+  const path = spec.startsWith('file:') ? spec.slice('file:'.length) : undefined
+  if (path === undefined || !/\.(?:tgz|tar\.gz)$/u.test(path)) return undefined
+  return resolve(profileDir, path)
+}
+
+/**
+ * Safely extract every local tarball spec through the plugin installer BEFORE
+ * pnpm runs (P1-04 (A) sub-slice 2, acceptance[1]): each tarball is extracted in
+ * a throwaway quarantine, refusing an absolute or `..`-traversing entry, a
+ * symbolic or hard link, an unsupported entry, or a decompression bomb. The
+ * refusal is the installer's OWN observable check, not pnpm's internal tar, so a
+ * malicious archive never reaches pnpm's extraction.
+ * @param args - the pnpm arguments as invoked.
+ * @param profileDir - the profile directory a relative spec resolves against.
+ * @throws PluginInstallError when a tarball is refused.
+ */
+async function gateLocalTarballs(args: readonly string[], profileDir: string): Promise<void> {
+  for (const spec of args) {
+    const tarball = localTarballSpec(spec, profileDir)
+    if (tarball === undefined || !existsSync(tarball)) continue
+    const quarantine = createQuarantine()
+    try {
+      await safeExtract(readFileSync(tarball), quarantine.root, quarantine.extractDir, PREGATE_POLICY)
+    } finally {
+      await rm(quarantine.root, { recursive: true, force: true })
+    }
+  }
+}
+
 /**
  * The install and its data migrations, with the upgrade lease already held.
  *
@@ -416,9 +455,15 @@ async function runUnderLease(
     process.stderr.write(`${NAME}: finishing an install an earlier run began and did not complete\n`)
   }
 
+  // P1-04 (A) acceptance[1]: refuse a malicious local tarball through the
+  // installer's own safe extract BEFORE pnpm touches it (verify-before-install).
+  await gateLocalTarballs(args, dir)
+
   // Windows resolves pnpm through its .cmd shim, which spawn() refuses
-  // without a shell since the CVE-2024-27980 hardening.
-  const result = spawnSync('pnpm', args.map(argument => anchorPathSpec(argument, process.cwd())), {
+  // without a shell since the CVE-2024-27980 hardening. `--ignore-scripts`
+  // (P1-04 (A) acceptance[0]) stops a package's lifecycle scripts from running
+  // on install, so unpacking never executes attacker-controlled code.
+  const result = spawnSync('pnpm', ['--ignore-scripts', ...args.map(argument => anchorPathSpec(argument, process.cwd()))], {
     cwd: dir,
     stdio: 'inherit',
     shell: process.platform === 'win32',
