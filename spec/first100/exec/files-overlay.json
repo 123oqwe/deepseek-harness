@@ -1140,7 +1140,8 @@
       "path": "packages/plugin/plugin-lock/src/candidate.ts",
       "kind": "source",
       "stages": [
-        "P"
+        "P",
+        "U.3"
       ],
       "reason": "Candidate-lock construction, which is half of must[0]: a lock that pins integrity has to be built somewhere, and the registry declared only the comparison side."
     },
@@ -1149,7 +1150,8 @@
       "path": "packages/plugin/plugin-lock/src/gate.ts",
       "kind": "source",
       "stages": [
-        "U"
+        "U",
+        "U.3"
       ],
       "reason": "The boot-admission decision the U stage proves. The registry declared the lock package broadly and this file is where admission is decided."
     },
@@ -1158,7 +1160,8 @@
       "path": "packages/plugin/plugin-lock/src/lockfile-integrity.ts",
       "kind": "source",
       "stages": [
-        "U.2"
+        "U.2",
+        "U.3"
       ],
       "reason": "Created by this epic to close BLOCKED-135: real integrity read from pnpm-lock.yaml, replacing a `dsh.provenance.integrity` field nothing wrote. The plan predates the finding, so it could not have named the file."
     },
@@ -1202,6 +1205,30 @@
       "kind": "test",
       "stages": [
         "F.1"
+      ]
+    },
+    {
+      "epic": "P1-03",
+      "path": "tests/first100/fixtures/loader/p1-03-lock-gate/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P1-03",
+      "path": "tests/first100/fixtures/loader/p1-03-lock-gate/shared.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P1-03",
+      "path": "tests/first100/fixtures/P1-03.lock-gate-boot.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
       ]
     },
     {

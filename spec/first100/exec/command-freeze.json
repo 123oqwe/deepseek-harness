@@ -23569,6 +23569,52 @@
         "testsDiscovered": 322
       },
       "note": "P0-06 U-stage (2026-09-01): real negotiateSchema() calls wired into 3 read boundaries -- session replay (session-persistence-jsonl/src/format.ts), SDK initialize (sdk/server/src/server.ts), settings load (settings/settings/src/index.ts) -- per BLOCKED-012's manifest-patch mechanism (2 files substituted for the wave-map's literal declaration: core/session/src/types.ts -> session-persistence-jsonl/src/format.ts, forced by a real ESM circular-dependency the Reviewer proved empirically; settings/settings/src/types.ts -> src/index.ts, since the types file is projection-only). Real RED->GREEN: the Writer reverted only the production wiring and confirmed genuine on-topic test failures (not module/syntax errors), then restored. A real design bug was found and self-fixed: negotiation must not fire for a type the registry never bootstrapped (that's the ignorable/legacy-type mechanism's jurisdiction) -- the first implementation wrongly treated any unregistered type as SCHEMA_UNKNOWN. Opus-level adversarial review (mandatory, L1_CONTRACT): ACCEPT with manifest-patch needed (both BLOCKED-012 conditions verified against spec/first100-owner-map.json, zero owner conflict) and 2 real gate violations found+fixed (verify-type-equiv drift in docs/subsystems/settings.md, a new oxlint no-confusing-void-expression violation), commit 7d8354e002. Real CI observation: run 33521991413 on the initial merge commit e05df35fec FAILED with a genuine deterministic regression (a typert-generated Cordis catalog artifact, packages/extensions/tool-cordis/src/api-catalog.ts, wasn't regenerated after this slice's SettingsRegisterOptions.schemaVersion? field addition) -- diagnosed and fixed (commit 12d0a1fdd1, also closing a separate pre-existing gap: ctx.trustKernel was never registered in the catalog generator's SERVICE_WALK_EXEMPTIONS, blocking regeneration entirely). Re-run: CI run 33524811126 on the fix commit 98341625bc completed with exactly 1 failure, packages/experimental/inspector's already-registered flake (5th documented occurrence on a distinct SHA) -- failure set fully absorbed by flake-registry.json per BLOCKED-007③, valid observation. This dry-run proof (treeSha 98341625bc, the exact CI-verified commit) confirms 286/286 tests passing locally, matching the CI observation's non-flake result. BLOCKED-013 recorded and folded into the standing gate-scan checklist as a result of this slice's CI-caught regression."
+    },
+    {
+      "epic": "P1-03",
+      "stage": "U",
+      "supplements": {
+        "epic": "P1-03",
+        "stage": "U"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P1-03.lock-gate-boot.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 对照1:锁里记了已装插件的 profile 正常启动并跑该插件;安装自带 bundle 无锁项也不拦(must[2] 正向 + C17 2′)",
+        "A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 对照2:锁里还记了一个普通依赖,profile 照常启动并跑该插件(must[2] 正向)",
+        "A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 门禁3:profile 目录装了、锁里没有的插件 → 启动被拒,该插件不加载(must[2];出厂今天不验锁 → RED)",
+        "A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 门禁4:锁写好之后 manifest 改了(digest 不匹配)的插件 → 启动被拒,该插件不加载(must[2];出厂今天不验 digest → RED)",
+        "A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 门禁5:安装记录的 integrity 与锁里不同 → 启动被拒,该插件不加载(acceptance[0] 按 lock 验证本地 cache;出厂今天不验 integrity → RED)",
+        "A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 门禁6:没有锁、装了插件的 profile 按出厂 bundle 声明的策略(取最严)处置;今天静默加载 → RED,政策无关"
+      ],
+      "files": [
+        "tests/first100/fixtures/P1-03.lock-gate-boot.composition.spec.ts",
+        "tests/first100/fixtures/loader/p1-03-lock-gate/driver.ts",
+        "tests/first100/fixtures/loader/p1-03-lock-gate/shared.ts",
+        "apps/cli/src/profile-boot.ts",
+        "packages/plugin/plugin-lock/src/gate.ts",
+        "packages/plugin/plugin-lock/src/candidate.ts",
+        "packages/plugin/plugin-lock/src/lockfile-integrity.ts",
+        "packages/plugin/plugin-lock/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-10-10T04:07:56.000Z",
+      "dryRunProof": {
+        "treeSha": "4f9a328428a7f00f71089fdb22b86b2659609aca",
+        "testsDiscovered": 6
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One round, never merged: M-A550-1′ `cff5015eed35f30f83775c30f45e0c9be2c67b87` changes apps/cli/src/profile-boot.ts so composeProfile's boot gate (:691) runs only when a map has a negative size, so a shipped boot never consults the lock; the reload gate (:1352) is unchanged. A-416: profile-boot.ts and this entry's files are byte-identical at the round's parent (S5' 9f06a87ee3) and at the tree this entry is frozen on. The earlier rounds (780fdb777d, a19f98242b, 9cb4a5c4f0) are not cited: profile-boot.ts differs at their parents.",
+        "failureSummary": "Read from the round's own narrow report: run 38022709814, 2 passed, 4 failed in tests/first100/fixtures/P1-03.lock-gate-boot.composition.spec.ts: «A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 门禁3:profile 目录装了、锁里没有的插件 → 启动被拒,该插件不加载(must[2];出厂今天不验锁 → RED)», «A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 门禁4:锁写好之后 manifest 改了(digest 不匹配)的插件 → 启动被拒,该插件不加载(must[2];出厂今天不验 digest → RED)», «A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 门禁5:安装记录的 integrity 与锁里不同 → 启动被拒,该插件不加载(acceptance[0] 按 lock 验证本地 cache;出厂今天不验 integrity → RED)», «A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 门禁6:没有锁、装了插件的 profile 按出厂 bundle 声明的策略(取最严)处置;今天静默加载 → RED,政策无关». Passed: «A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 对照1:锁里记了已装插件的 profile 正常启动并跑该插件;安装自带 bundle 无锁项也不拦(must[2] 正向 + C17 2′)», «A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 对照2:锁里还记了一个普通依赖,profile 照常启动并跑该插件(must[2] 正向)»."
+      },
+      "note": "P1-03 U-stage supplement 3: the A-550 lock gate on a real runProfile boot of a profile directory. A plugin the lock does not approve (gate 3, must[2]), one whose manifest digest changed after locking (gate 4, must[2]), one whose installed integrity differs from the lock (gate 5, acceptance[0]) and one installed without any lock (gate 6) are refused before they load; controls 1 and 2 boot and run a locked plugin, so each refusal is the lock gate's. Frozen so that P1-03 carries a shipped-boot case under §21.5 (delegate ruling 2026-10-10)."
     }
   ]
 }
