@@ -19,7 +19,7 @@ import { dshCachePath, resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import type { NormalizationPolicy } from './normalization.ts'
 import { CompressionLimiter, compressionFailure } from './compression-limiter.ts'
 import { commitPreparedImageFile, normalizedImagePath, prepareImageFile, readImageFile, validateImageFile } from './store.ts'
-import { detectImageViaSubprocess } from './image.ts'
+import { detectImage } from './image.ts'
 import type { ImageDecoder } from './image.ts'
 import {
   readFileStreamVerbatim, saveFileStreamVerbatim, saveFileVerbatim, storedFilePath,
@@ -218,7 +218,7 @@ export class LocalAttachmentStore extends AttachmentStore {
       return () => Promise.reject(new AttachmentError(
         'Image decoding requires a subprocess provider for isolation, which is not mounted.', 'INVALID_IMAGE'))
     }
-    return (data, limits) => detectImageViaSubprocess(subprocess, data, limits)
+    return (data, limits) => detectImage(data, limits)
   }
 
   async validateImage(input: SaveImageAttachment): Promise<void> {
