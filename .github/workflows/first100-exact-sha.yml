@@ -226,8 +226,7 @@ jobs:
       # the job here; a later commit that changed none is not drift. A batch
       # that changes such a surface commits its recaptured baseline with its
       # records. The rebase report is uploaded when this step fails.
-      - name: P0-01 must[2] — verify the committed baseline before the batch
-        run: pnpm baseline:verify
+      # MUTATION M-712-2 (never merge): the committed-baseline verify step is gone.
 
       - name: Upload the rebase report
         if: failure()
