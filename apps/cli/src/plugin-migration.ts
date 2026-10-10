@@ -1090,7 +1090,8 @@ export async function resolvePluginUpgrade(
     let current = content
     for (const [index, declaration] of declared.entries()) {
       const step = steps[index]
-      if (step !== undefined && declaration.fromVersion >= from) current = await step.migrate(current)
+      // MUTATION M-711-2′ (never merge): every declared step runs.
+      if (step !== undefined && declaration.fromVersion >= Math.min(from, 0)) current = await step.migrate(current)
     }
     return current
   }
