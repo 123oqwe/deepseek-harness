@@ -11,6 +11,12 @@ export type ImageMediaType = 'image/png' | 'image/jpeg' | 'image/webp' | 'image/
 export interface ImageAttachmentRef {
   /** Opaque storage identifier; never a filesystem path or bearer URL. */
   attachmentId: AttachmentId
+  /**
+   * Lineage (P3-12 must[2]): the content id of the SOURCE submitted bytes this
+   * normalized image was parsed from, so the stored product traces back to its
+   * untrusted input. Absent on references created before lineage tracking.
+   */
+  sourceAttachmentId?: AttachmentId
   /** Media type verified from the stored bytes. */
   mediaType: ImageMediaType
   /** Exact encoded byte length. */

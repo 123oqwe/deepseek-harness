@@ -107,12 +107,16 @@ export async function prepareImageFile(
   const detected = await inspectMetadata(input.data, input.mediaType, limits)
   const normalized = await normalizeImage(input.data, detected, policy)
   const sha256 = digest(normalized.data)
+  // Lineage (P3-12 must[2]): the SOURCE submitted bytes' content id, so the
+  // normalized product traces back to the untrusted input it was parsed from.
+  const sourceSha256 = digest(input.data)
   const name = displayName(input.name)
   const downscaled = detected.width !== normalized.width || detected.height !== normalized.height
   return {
     data: normalized.data,
     ref: {
       attachmentId: AttachmentId(`sha256:${sha256}`),
+      sourceAttachmentId: AttachmentId(`sha256:${sourceSha256}`),
       mediaType: normalized.mediaType,
       width: normalized.width,
       height: normalized.height,
