@@ -95,6 +95,10 @@ function realPathOf(path: string): string | undefined {
 // Not `import.meta.main`, which Node 24.0 leaves undefined (BLOCKED-351). The real path,
 // because this entry is started through a symlink; existence first, because a packaged
 // executable's argv[1] need not name a file, and a resolution that fails names no file.
-if (process.argv[1] !== undefined && existsSync(process.argv[1]) && realPathOf(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// MUTATION M-688-1″ (never merge): the entry runs only where import.meta.main is true.
+if (
+  import.meta.main
+  && process.argv[1] !== undefined && existsSync(process.argv[1]) && realPathOf(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
   await runCli()
 }
