@@ -16,8 +16,8 @@ import type {
 } from '@deepseek-ai/dsh-attachment'
 import { normalizeImage } from './normalization.ts'
 import type { NormalizationPolicy } from './normalization.ts'
-import { detectImage, probeImage } from './image.ts'
-import type { DetectedImage } from './image.ts'
+import { probeImage } from './image.ts'
+import type { DetectedImage, ImageDecoder } from './image.ts'
 
 const ID_PATTERN = /^sha256:([a-f0-9]{64})$/
 const durableHomes = new Set<string>()
@@ -57,9 +57,14 @@ async function inspectMetadata(
   data: Uint8Array,
   declaredMediaType: ImageAttachmentRef['mediaType'],
   limits: ImageAttachmentLimits,
+  decode: ImageDecoder,
 ): Promise<DetectedImage> {
   if (data.byteLength === 0) throw new AttachmentError('Image is empty.', 'INVALID_IMAGE')
-  const detected = await detectImage(data, { maxPixels: limits.maxImagePixels, maxDimension: limits.maxImageDimension })
+  // P3-12 must[2]: the full decode of the untrusted bytes runs in `decode` (the
+  // store binds it to the isolated subprocess), so a decoder exploit is
+  // contained there. This runs BEFORE normalization, so a payload that would
+  // exploit the decoder is refused before any in-process Sharp operation sees it.
+  const detected = await decode(data, { maxPixels: limits.maxImagePixels, maxDimension: limits.maxImageDimension })
   if (detected.mediaType !== declaredMediaType) throw new AttachmentError('Declared image type does not match its bytes.', 'IMAGE_TYPE_MISMATCH')
   return detected
 }
@@ -77,8 +82,9 @@ export async function validateImageFile(
   input: SaveImageAttachment,
   limits: ImageAttachmentLimits,
   policy: NormalizationPolicy,
+  decode: ImageDecoder,
 ): Promise<void> {
-  await prepareImageFile(input, limits, policy)
+  await prepareImageFile(input, limits, policy, decode)
 }
 
 /** Fully prepared normalized object, verified before any batch member is persisted. */
@@ -100,11 +106,12 @@ export async function prepareImageFile(
   input: SaveImageAttachment,
   limits: ImageAttachmentLimits,
   policy: NormalizationPolicy,
+  decode: ImageDecoder,
 ): Promise<PreparedImageFile> {
   if (input.data.byteLength > limits.maxImageBytes) {
     throw new AttachmentError('Image exceeds the configured byte limit.', 'IMAGE_TOO_LARGE')
   }
-  const detected = await inspectMetadata(input.data, input.mediaType, limits)
+  const detected = await inspectMetadata(input.data, input.mediaType, limits, decode)
   const normalized = await normalizeImage(input.data, detected, policy)
   const sha256 = digest(normalized.data)
   const name = displayName(input.name)
@@ -469,8 +476,9 @@ export async function saveImageFile(
   input: SaveImageAttachment,
   limits: ImageAttachmentLimits,
   policy: NormalizationPolicy,
+  decode: ImageDecoder,
 ): Promise<ImageAttachmentRef> {
-  return commitPreparedImageFile(root, await prepareImageFile(input, limits, policy))
+  return commitPreparedImageFile(root, await prepareImageFile(input, limits, policy, decode))
 }
 
 /**
