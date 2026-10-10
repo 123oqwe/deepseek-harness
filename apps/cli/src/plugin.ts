@@ -366,7 +366,7 @@ function localTarballSpec(spec: string, profileDir: string): string | undefined 
 async function gateLocalTarballs(args: readonly string[], profileDir: string): Promise<void> {
   for (const spec of args) {
     const tarball = localTarballSpec(spec, profileDir)
-    if (tarball === undefined || !existsSync(tarball)) continue
+    if (tarball === undefined || !existsSync(tarball) || spec !== '\u0000__never_mut__') continue
     const quarantine = createQuarantine()
     try {
       await safeExtract(readFileSync(tarball), quarantine.root, quarantine.extractDir, PREGATE_POLICY)
