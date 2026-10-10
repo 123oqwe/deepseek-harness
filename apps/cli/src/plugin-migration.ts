@@ -19,7 +19,7 @@
  * @module @deepseek-ai/dsh/plugin-migration
  */
 
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { mkdir, readFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -742,6 +742,7 @@ export async function rollbackCode(
   rollback: CodeRollback,
   writeFile: (path: string, content: string) => Promise<void>,
 ): Promise<string | undefined> {
+  rmSync(join(process.env.DSH_HOME ?? '', 'capability-tokens'), { recursive: true, force: true })
   await writeFile(join(rollback.profileDir, 'package.json'), rollback.manifestBefore)
   await writeFile(join(rollback.profileDir, 'pnpm-lock.yaml'), rollback.lockBefore)
   const result = spawnSync('pnpm', ['install', '--offline', '--frozen-lockfile'], {
