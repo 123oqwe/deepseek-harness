@@ -224,20 +224,57 @@ function expectWhole(key: string, expected: 'old' | 'new'): void {
   expect(holds(outcome), context).toBe(expected)
 }
 
+/**
+ * Assert the kill landed at the phase it was injected (contract 1-7, half 1).
+ *
+ * The child (`plugin-migration-crash-child.ts`) SIGKILLs itself ONLY when the
+ * running phase equals its `crashAt` argument, and THROWS (a non-SIGKILL exit)
+ * if the upgrade ever ends without reaching it. So, for a scenario spawned with
+ * `phase`, `childSignal === 'SIGKILL'` is itself the evidence that the kill
+ * landed at `phase` — no earlier phase, and the phase was actually reached.
+ * @param key - the scenario key.
+ */
+function expectKilledAt(key: string): void {
+  const outcome = outcomes.get(key)
+  if (outcome === undefined) throw new Error(failures.get(key) ?? `no outcome for ${key}`)
+  expect(outcome.childSignal, JSON.stringify(outcome)).toBe('SIGKILL')
+}
+
+/**
+ * Assert the post-kill state is a consistent single whole version (contract
+ * 1-7, half 2): recovery completed and the unit opens WHOLE under exactly one
+ * descriptor — never torn (`mixed`). `expected` pins WHICH version so the
+ * assertion stays as strong as the campaign's existing `expectWhole`.
+ * @param key - the scenario key.
+ * @param expected - the single whole version recovery must leave.
+ */
+function expectOneVersion(key: string, expected: 'old' | 'new'): void {
+  const outcome = outcomes.get(key)
+  if (outcome === undefined) throw new Error(failures.get(key) ?? `no outcome for ${key}`)
+  const context = JSON.stringify(outcome)
+  expect(outcome.recovery.kind, context).toBe('recovered')
+  expect(holds(outcome), context).toBe(expected) // 'old' | 'new' only — 'mixed' is a torn state and fails
+}
+
 describe('P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version', () => {
   it('covers every phase the transaction declares', () => {
     expect(SCENARIOS.filter(scenario => scenario.plugin !== scenario.unit).map(scenario => scenario.phase)).toEqual([...UPGRADE_PHASES])
   })
 
   it('a crash at freeze leaves the old version whole and usable', () => { expectWhole('freeze', 'old') })
-  it('a crash at snapshot leaves the old version whole and usable', () => { expectWhole('snapshot', 'old') })
+  it('a crash at snapshot is killed there and recovery leaves one whole (old) version', () => {
+    expectKilledAt('snapshot')
+    expectOneVersion('snapshot', 'old')
+  })
   it('a crash at quarantine leaves the old version whole and usable', () => { expectWhole('quarantine', 'old') })
   it('a crash at validate leaves the old version whole and usable', () => { expectWhole('validate', 'old') })
-  it('a crash at switch, before the health check confirmed the new data, leaves the old version whole and usable', () => {
-    expectWhole('switch', 'old')
+  it('a crash at switch (after switch-in, before the health check) is killed there and recovery leaves one whole (old) version', () => {
+    expectKilledAt('switch')
+    expectOneVersion('switch', 'old')
   })
-  it('a crash at health-check, once the upgrade is recorded as achieved, leaves the new version whole and usable', () => {
-    expectWhole('health-check', 'new')
+  it('a crash at health-check once the upgrade is recorded as achieved is killed there and recovery leaves one whole (new) version', () => {
+    expectKilledAt('health-check')
+    expectOneVersion('health-check', 'new')
   })
   it('control: a crash at switch with the plugin and its unit named alike leaves the old version whole and usable', () => {
     expectWhole('switch, plugin and unit named alike', 'old')
