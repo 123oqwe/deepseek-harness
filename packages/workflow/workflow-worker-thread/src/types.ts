@@ -78,6 +78,13 @@ export interface ChildResult {
   structured?: unknown
   /** Why the child run ended (`'completed'` is the only value the runtime branches on). */
   stopReason: string
+  /**
+   * The reason the host aborted this child, when it did (e.g. the tree spent
+   * its token budget — `token-budget-exhausted`). Carried from the host's abort
+   * signal so the worker can surface WHY a child ended, not only that it did
+   * (BLOCKED-366). Absent when the child was not aborted.
+   */
+  abortReason?: string
 }
 
 /**

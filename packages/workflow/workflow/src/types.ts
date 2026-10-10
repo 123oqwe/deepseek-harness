@@ -89,6 +89,14 @@ export interface WorkflowResult {
    * inside a terminated script are unknowable then.
    */
   agentsStarted: number
+  /**
+   * Reasons the run's children were aborted by the host (e.g.
+   * `token-budget-exhausted` when the tree spent its token budget). Present
+   * only when at least one child was aborted, so the tool result can surface
+   * WHY a nested run ended rather than only that its `agent()` returned null
+   * (BLOCKED-366). Not part of the `workflow/end` event schema.
+   */
+  abortedChildReasons?: readonly string[]
 }
 
 /** Identifying detail for a run, carried by every `workflow/*` event as borrowed immutable data, never the live run. */

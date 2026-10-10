@@ -208,14 +208,25 @@ function stopReasonError(result: WorkflowResult): string | undefined {
   }
 }
 
-/** Render the run's outcome text: the meta name, agent count, and the JSON value (capped). */
-function renderResult(name: string, agentsStarted: number, value: JsonValue, maxChars: number): string {
+/** Render the run's outcome text: the meta name, agent count, the JSON value (capped), and any aborted children. */
+function renderResult(
+  name: string,
+  agentsStarted: number,
+  value: JsonValue,
+  maxChars: number,
+  abortedChildReasons?: readonly string[],
+): string {
   // The engine returns JSON data (null for a valueless script), so stringify never yields undefined.
   const rendered = JSON.stringify(value, null, 2)
   const clipped = rendered.length > maxChars
     ? `${rendered.slice(0, maxChars)}\n… [truncated: ${rendered.length - maxChars} more characters]`
     : rendered
-  return `workflow "${name}" completed (${agentsStarted} agent${agentsStarted === 1 ? '' : 's'}).\nReturn value:\n${clipped}`
+  // Surface WHY a nested child ended (e.g. token-budget-exhausted) rather than
+  // leaving the model to infer it from a null in the return value (BLOCKED-366).
+  const aborted = abortedChildReasons !== undefined && abortedChildReasons.length > 0
+    ? `\nAborted ${abortedChildReasons.length} child agent${abortedChildReasons.length === 1 ? '' : 's'}: ${abortedChildReasons.join('; ')}`
+    : ''
+  return `workflow "${name}" completed (${agentsStarted} agent${agentsStarted === 1 ? '' : 's'}).\nReturn value:\n${clipped}${aborted}`
 }
 
 export function apply(ctx: Context, config: Config): void {
@@ -299,6 +310,13 @@ export function apply(ctx: Context, config: Config): void {
               detail: { type: 'string', required: true },
             },
           },
+          // Present only when the host aborted a nested child (e.g. the tree
+          // spent its token budget); surfaced so the model sees why a child
+          // ended, not only that agent() returned null (BLOCKED-366).
+          abortedChildReasons: {
+            type: 'array',
+            items: { type: 'string' },
+          },
         },
       },
       render: (args, value) => [{
@@ -307,7 +325,7 @@ export function apply(ctx: Context, config: Config): void {
           ? `workflow "${args.meta?.name ?? 'unnamed'}" started detached as ${value.runId}. `
             + `It keeps running after this turn; collect it with attach: "${value.runId}".`
           : (value.resumeRefused === undefined ? '' : `resume refused (${value.resumeRefused.reason}): the run started over from its first step.\n`)
-            + renderResult(args.meta?.name ?? args.attach ?? 'unnamed', value.agentsStarted, value.result, maxResultChars),
+            + renderResult(args.meta?.name ?? args.attach ?? 'unnamed', value.agentsStarted, value.result, maxResultChars, value.abortedChildReasons),
       }],
     },
     async execute(args, exec) {
@@ -409,6 +427,9 @@ export function apply(ctx: Context, config: Config): void {
           agentsStarted: result.agentsStarted,
           result: result.value as JsonValue,
           ...run.resumeRefused === undefined ? {} : { resumeRefused: run.resumeRefused },
+          ...result.abortedChildReasons !== undefined && result.abortedChildReasons.length > 0
+            ? { abortedChildReasons: [...result.abortedChildReasons] }
+            : {},
         }
       } finally {
         exec.signal.removeEventListener('abort', onAbort)

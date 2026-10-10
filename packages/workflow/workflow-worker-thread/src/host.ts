@@ -693,6 +693,10 @@ export class WorkerRun implements WorkflowRun {
             output: result.output,
             ...result.structured !== undefined ? { structured: result.structured } : {},
             stopReason: result.stopReason,
+            // A child the host aborted (e.g. the tree spent its token budget)
+            // carries that reason from the abort signal, so the worker can
+            // surface token-budget-exhausted in the run's result (BLOCKED-366).
+            ...this.controller.signal.aborted ? { abortReason: String(this.controller.signal.reason) } : {},
           })
           if (snapshot === undefined) throw new TypeError('child result is not losslessly JSON-serializable')
           return () => { this.post(HostToWorkerType.ChildSettled, { callId, result: snapshot }) }
