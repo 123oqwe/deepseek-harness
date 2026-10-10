@@ -145,7 +145,7 @@ beforeAll(async () => {
     const noConfirmText = `${noConfirm.stderr}\n${noConfirm.stdout}`
     const migrateRanAfterNoConfirm = existsSync(join(home, MIGRATE_MARKER))
     const exportExists = existsSync(join(home, 'plugin-upgrades', `${PLUGIN}.v1.export.json`))
-    const digest = /--confirm (?<digest>\S+)/u.exec(noConfirmText)?.groups?.digest
+    const digest = /--confirm (?<digest>sha256-[0-9a-f]+)/u.exec(noConfirmText)?.groups?.digest
 
     if (digest !== undefined) await addCommand(home, v2, ['--confirm', digest])
     const migrateRanAfterConfirm = existsSync(join(home, MIGRATE_MARKER))

@@ -173,7 +173,7 @@ describe('P1-10 1-3 (A-609 ①, green evidence): a refused downgrade reverts the
       .toEqual({ upgradeExit: 0, haveLock: true })
     // The downgrade is refused: it cannot migrate the v2 data down to v1.
     expect(result.downgradeExit, context).toBe(1)
-    expect(result.downgradeText, context).toMatch(/freeze|unreachable/u)
+    expect(result.downgradeText, context).toMatch(/holds data at version 2[^\n]*the install is undone/u)
     // acceptance[1]: the refused downgrade is REVOKED — the install reverts, so
     // the profile lockfile is back to its pre-downgrade (v2) bytes, not left at
     // the downgraded v1. A non-revert here is the real defect, reported not
