@@ -148,7 +148,6 @@ Script-body hooks:
 - \`pipeline(items, ...stages): Promise<any[]>\` — run each item through the stages independently with NO barrier between stages (prefer this for multi-stage work). Each stage receives \`(prev, item, index)\`. An ordinary stage throw drops that ITEM to \`null\` and skips its remaining stages.
 - \`parallel(thunks): Promise<any[]>\` — run zero-argument functions concurrently and await ALL of them (a barrier; use only when a stage genuinely needs every prior result together). A throwing thunk resolves to \`null\`.
 - \`phase(title)\` — start a progress phase; \`log(message)\` — narrate progress; \`args\` — the tool call's \`args\` input, verbatim.
-- \`workflow({ name, digest, onFailure? }, args?): Promise<any>\` — run a saved workflow as a nested run and resolve to its return value. \`name\` and \`digest\` must both match an entry of this session's saved-workflow catalog, which lists them; a bare name is refused. The nested run draws on this run's agent and token budget and its depth limit, and is refused when that definition is already running above it. When it fails the call rejects, unless \`onFailure: 'continue-parent'\`, which resolves \`null\` and logs the failure.
 
 Misused hooks (bad arguments, unknown options, unsupported schemas, tripped caps) throw errors that ALWAYS kill the script — they never dissolve into a per-item \`null\`.
 
