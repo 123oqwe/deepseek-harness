@@ -738,7 +738,7 @@ export class WorkerRun implements WorkflowRun {
    * under a tree token limit, and stopped when the run settles.
    */
   private meterChildren(): void {
-    if (this.stopMetering !== undefined) return
+    if (this.stopMetering !== undefined || this.children.size > 0) return
     this.stopMetering = this.ctx.on('session/event', (session) => {
       for (const { run } of this.children.values()) {
         if (run.localAgent !== undefined && run.localAgent.session === session) {
