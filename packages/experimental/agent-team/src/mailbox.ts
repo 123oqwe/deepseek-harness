@@ -158,7 +158,8 @@ export class TeamMailbox {
   private tryDispatch(root: Agent, message: TeamMessageSnapshot, signal: AbortSignal): Promise<boolean> {
     if (this.lifecycle.disposed) return Promise.resolve(false)
     const inFlight = this.inFlightMessages.get(message.id)
-    if (inFlight !== undefined) return inFlight
+    // MUTATION M-AT-1 (never merge): a caller that finds the message in flight gets false again.
+    if (inFlight !== undefined) return Promise.resolve(false)
     const operation = this.trackDispatch(
       this.tryDispatchAdmitted(
         root,
