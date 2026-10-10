@@ -90,9 +90,6 @@ export function spawnPluginHost(ctx: Context, options: PluginHostProcessOptions)
     limits: options.limits,
   })
   transport.start()
-  // The child exiting — orderly, crash, or kill — revokes the session's
-  // registrations; `done` rejects on a spawn failure, which disposes the same.
-  void handle.done.finally(disposeHost).catch(() => {})
   return () => {
     disposeHost()
     handle.terminate()
