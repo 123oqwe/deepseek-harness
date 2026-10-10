@@ -702,12 +702,13 @@
     # most test fixtures) has nothing to verify and boots unaffected.
     #
     # Disabled by default, matching `hmr` above: opt-in per profile, not a
-    # shared-base default. This repo's own committed `.dsh/baseline.json`
-    # (the C-stage specimen, pinned to an early gitSha) permanently trails
-    # real HEAD, so an unconditional row here would abort every `pnpm dsh`
-    # invocation from this checkout's own root — contradicting P0-01's own
-    # non-goal ("不冻结上游开发" — this does not freeze upstream development).
-    # A profile that wants the gate enables this row and supplies
+    # shared-base default. P0-01 must[2]'s check before an execution batch is
+    # the CI step that verifies the committed `.dsh/baseline.json`; at boot,
+    # an uncommitted edit to a package manifest in a development checkout
+    # would abort every `pnpm dsh` invocation from that checkout's root —
+    # contradicting P0-01's own non-goal ("不冻结上游开发" — this does not
+    # freeze upstream development). A later commit alone is not drift. A
+    # profile that wants the gate enables this row and supplies
     # `config.repoRoot` explicitly.
     - id: baseline-preflight
       name: '@deepseek-ai/dsh-baseline-preflight'

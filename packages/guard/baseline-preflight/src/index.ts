@@ -60,7 +60,7 @@ interface VerifyBaselineResult {
 
 /** The one export this plugin uses from the dynamically imported script. */
 interface BaselineFingerprintModule {
-  verifyBaseline(repoRoot: string): VerifyBaselineResult
+  verifyBaseline(repoRoot: string, headPolicy: 'bound' | 'context'): VerifyBaselineResult
 }
 
 /**
@@ -116,6 +116,7 @@ export async function apply(_ctx: Context, config: Config): Promise<void> {
   if (!existsSync(join(repoRoot, '.dsh/baseline.json'))) return
   const mod = await loadBaselineFingerprintModule()
   if (mod === undefined) return
-  const result = mod.verifyBaseline(repoRoot)
+  // A later commit that changed no fingerprinted surface is not drift (P0-01 must[2]).
+  const result = mod.verifyBaseline(repoRoot, 'context')
   if (!result.ok) throw new Error(formatDrift(result.drift))
 }

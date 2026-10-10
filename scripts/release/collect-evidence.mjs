@@ -318,7 +318,8 @@ function cmdInit(flags) {
   }
 
   const baselinePath = join(repoRoot, '.dsh/baseline.json')
-  const baselineCheck = verifyBaseline(repoRoot)
+  // An evidence package binds one exact commit, so a different HEAD is drift here.
+  const baselineCheck = verifyBaseline(repoRoot, 'bound')
   if (!baselineCheck.ok) {
     const lines = baselineCheck.drift.map(entry => `  ${entry.path} (${entry.field})`)
     process.stderr.write(`collect-evidence init: checkout has drifted from its captured baseline; run \`pnpm baseline:capture\` first:\n${lines.join('\n')}\n`)

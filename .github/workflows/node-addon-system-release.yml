@@ -202,6 +202,8 @@ jobs:
       - name: Collect the release evidence package
         working-directory: ${{ github.workspace }}
         run: |
+          # P0-01 must[2]: the committed baseline is verified before it is recaptured.
+          node scripts/release/baseline-fingerprint.mjs verify
           node scripts/release/baseline-fingerprint.mjs capture
           node scripts/release/baseline-fingerprint.mjs verify
           required=()

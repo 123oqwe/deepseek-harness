@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-`pnpm baseline:capture`（`scripts/release/baseline-fingerprint.mjs`）会把一个 checkout 的架构与协议关键指纹——Git SHA、checkout 声明的工具链、workspace package 名称与每个 package manifest 的各个字段、默认 bundle 行 ID 与每一行的内容、关键 schema 哈希，以及 pnpm lockfile 哈希——冻结进 `.dsh/baseline.json`。`dsh-baseline-preflight` 在启动时重新校验该指纹：如果工作树相对已捕获基线发生漂移，`apply` 会抛出一个列出每个漂移路径的错误，该抛出会沿 Cordis fiber 激活链传播，在任何执行批次开始前中止启动。在 `<repoRoot>/.dsh/baseline.json` 处没有已捕获基线的 checkout 未加入该机制，启动不受影响。共享 `dsh` base 组合中本插件的行带有 `disabled: true`——按 profile 选择性启用，而非共享 base 的默认行为——因为本仓库自己已提交的 `.dsh/baseline.json` 会持续落后于真实 `HEAD`（这是一个移动目标，不是需要在此修复的 bug）；无条件启用该行会中止从本 checkout 发起的每一次普通 `pnpm dsh` 调用。想要该门禁的 profile 会显式重新启用该行。
+`pnpm baseline:capture`（`scripts/release/baseline-fingerprint.mjs`）会把一个 checkout 的架构与协议关键指纹——Git SHA、checkout 声明的工具链、workspace package 名称与每个 package manifest 的各个字段、默认 bundle 行 ID 与每一行的内容、关键 schema 哈希，以及 pnpm lockfile 哈希——冻结进 `.dsh/baseline.json`。`dsh-baseline-preflight` 在启动时重新校验该指纹：如果工作树相对已捕获基线发生漂移，`apply` 会抛出一个列出每个漂移路径的错误，该抛出会沿 Cordis fiber 激活链传播，在任何执行批次开始前中止启动。在 `<repoRoot>/.dsh/baseline.json` 处没有已捕获基线的 checkout 未加入该机制，启动不受影响。共享 `dsh` base 组合中本插件的行带有 `disabled: true`——按 profile 选择性启用，而非共享 base 的默认行为——因为 P0-01 must[2] 要的批次开始前检查，是 CI 里验证已提交基线的那一步；而在启动时，开发 checkout 里尚未提交的清单改动会中止从它发起的每一次普通 `pnpm dsh` 调用。单是多了一笔提交不算漂移。想要该门禁的 profile 会显式重新启用该行。
 
 ## 目录
 
@@ -77,7 +77,7 @@ kind: "package-reference"
 
 ### 为何 base 组合中的行默认禁用
 
-base 组合中存在这一行（`packages/bundle/base/cordis.patch.yml`），是为了让组合图为每个 base 驱动的 profile 声明本门禁的身份，但它带有 `disabled: true`——与上方 `hmr` 行相同的模式（“模块热重载按 profile 选择性启用”）。促成这一点的是两个事实，而非一个：`repoRoot`（默认 `process.cwd()`）对绝大多数真实使用场景而言，是终端用户自己的项目目录，与本 monorepo 的基线指纹机制毫无关系；而即便对本 checkout 自身的根目录而言，已提交的 `.dsh/baseline.json` 也是一个在两次捕获之间会落后于真实 `HEAD` 的移动目标，因此默认启用的行同样会中止本仓库自身的普通 `pnpm dsh` 使用。想要该门禁的 profile 会显式启用该行（见上文“设置”）。
+base 组合中存在这一行（`packages/bundle/base/cordis.patch.yml`），是为了让组合图为每个 base 驱动的 profile 声明本门禁的身份，但它带有 `disabled: true`——与上方 `hmr` 行相同的模式（“模块热重载按 profile 选择性启用”）。促成这一点的是两个事实，而非一个：`repoRoot`（默认 `process.cwd()`）对绝大多数真实使用场景而言，是终端用户自己的项目目录，与本 monorepo 的基线指纹机制毫无关系；而即便对本 checkout 自身的根目录而言，开发中对指纹所覆盖某一面尚未提交的改动，也会中止普通的 `pnpm dsh` 使用，而批次开始前的检查已经在 CI 里跑。想要该门禁的 profile 会显式启用该行（见上文“设置”）。
 
 ### 为何缺失基线或无法解析工具都是空操作而非失败
 

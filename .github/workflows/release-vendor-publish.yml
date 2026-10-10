@@ -147,7 +147,8 @@ jobs:
       # tarball is a required artifact.
       - name: Collect the release evidence package
         run: |
-          pnpm baseline:capture && pnpm baseline:verify
+          # P0-01 must[2]: the committed baseline is verified before it is recaptured.
+          pnpm baseline:verify && pnpm baseline:capture && pnpm baseline:verify
           required=()
           for tarball in dist/npm-vendor/*; do required+=(--required-artifact "$tarball"); done
           node scripts/release/collect-evidence.mjs init \

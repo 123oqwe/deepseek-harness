@@ -347,7 +347,16 @@ function membershipChange(before, after) {
   return { removed: before.filter(name => !kept.has(name)), added: after.filter(name => !had.has(name)) }
 }
 
-function diffCapture(stored, fresh) {
+/**
+ * The drift between a stored capture and a fresh one.
+ *
+ * `headPolicy` says whether a different commit is itself drift. An evidence
+ * package binds one exact commit, so its checks pass `'bound'`. The check
+ * before an execution batch (P0-01 must[2]) and the boot preflight pass
+ * `'context'`: the locked baseline is an earlier commit, and only a change to a
+ * fingerprinted surface since then is upstream drift.
+ */
+function diffCapture(stored, fresh, headPolicy) {
   const drift = []
   const addSimple = (path, field) => {
     if (stored[field] !== fresh[field]) drift.push({ path, field, expected: stored[field], actual: fresh[field] })
@@ -356,7 +365,7 @@ function diffCapture(stored, fresh) {
   // A baseline in another format holds other fields; comparing them field by
   // field would report every one as drift. The format is the one difference.
   if (stored.formatVersion !== fresh.formatVersion) return drift
-  addSimple('HEAD', 'gitSha')
+  if (headPolicy === 'bound') addSimple('HEAD', 'gitSha')
   const packages = membershipChange(stored.workspacePackages, fresh.workspacePackages)
   if (packages.removed.length > 0 || packages.added.length > 0) {
     drift.push({ path: WORKSPACE_MANIFEST_PATH, field: 'workspacePackages', expected: packages.removed, actual: packages.added })
@@ -409,41 +418,49 @@ function diffCapture(stored, fresh) {
 /**
  * Diff the current working tree's fields against `<repoRoot>/.dsh/baseline.json`,
  * writing `.dsh/rebase-report.json` when drift is found. Shared by `pnpm
- * baseline:verify` (this CLI) and the boot-time `dsh-baseline-preflight` guard
- * plugin — one source of truth for the drift check the P0-01 MUST clause
- * requires before every execution batch.
+ * baseline:verify` (this CLI), the boot-time `dsh-baseline-preflight` guard
+ * plugin and the evidence package scripts — one source of truth for the drift
+ * check the P0-01 MUST clause requires before every execution batch. The
+ * result and the report name the baseline's commit and the current one.
  * @param {string} repoRoot - checkout root to verify (matches `capture`'s `--repo-root`).
- * @returns {{ ok: boolean, drift: { path: string, field: string, expected: unknown, actual: unknown }[] }}
- * @throws when no baseline has been captured at `<repoRoot>/.dsh/baseline.json`.
+ * @param {'bound' | 'context'} headPolicy - `'bound'` when a different commit is drift (an evidence package), `'context'` when only fingerprinted surfaces count (the check before a batch, the preflight).
+ * @returns {{ ok: boolean, drift: { path: string, field: string, expected: unknown, actual: unknown }[], baselineSha: string, head: string }}
+ * @throws when no baseline has been captured at `<repoRoot>/.dsh/baseline.json`, or `headPolicy` is neither value.
  */
-export function verifyBaseline(repoRoot) {
+export function verifyBaseline(repoRoot, headPolicy) {
+  if (headPolicy !== 'bound' && headPolicy !== 'context') {
+    throw new Error(`baseline-fingerprint verify: headPolicy must be 'bound' or 'context', not ${JSON.stringify(headPolicy)}`)
+  }
   const baselinePath = join(repoRoot, '.dsh/baseline.json')
   if (!existsSync(baselinePath)) {
     throw new Error(`baseline-fingerprint verify: no captured baseline at ${baselinePath}; run \`pnpm baseline:capture\` first`)
   }
   const stored = JSON.parse(readFileSync(baselinePath, 'utf8'))
   const fresh = captureFields(repoRoot)
-  const drift = diffCapture(stored, fresh)
+  const drift = diffCapture(stored, fresh, headPolicy)
+  const commits = { baselineSha: stored.gitSha, head: fresh.gitSha }
   if (drift.length > 0) {
     mkdirSync(join(repoRoot, '.dsh'), { recursive: true })
-    writeFileSync(join(repoRoot, '.dsh/rebase-report.json'), `${JSON.stringify({ drift }, null, 2)}\n`)
+    writeFileSync(join(repoRoot, '.dsh/rebase-report.json'), `${JSON.stringify({ ...commits, drift }, null, 2)}\n`)
   }
-  return { ok: drift.length === 0, drift }
+  return { ok: drift.length === 0, drift, ...commits }
 }
 
 function verify(repoRoot) {
   let result
   try {
-    result = verifyBaseline(repoRoot)
+    // P0-01 must[2]: the committed baseline is the lock, and a later commit
+    // that changed no fingerprinted surface is not drift.
+    result = verifyBaseline(repoRoot, 'context')
   } catch (error) {
     process.stderr.write(`${error.message}\n`)
     return 1
   }
   if (result.ok) {
-    process.stdout.write('baseline-fingerprint verify: no drift detected\n')
+    process.stdout.write(`baseline-fingerprint verify: no drift detected (baseline ${result.baselineSha}, HEAD ${result.head})\n`)
     return 0
   }
-  const lines = ['baseline-fingerprint verify: drift detected against the captured baseline:']
+  const lines = [`baseline-fingerprint verify: drift detected against the captured baseline (baseline ${result.baselineSha}, HEAD ${result.head}):`]
   for (const entry of result.drift) {
     lines.push(`  ${entry.path} (${entry.field}): expected ${JSON.stringify(entry.expected)}, found ${JSON.stringify(entry.actual)}`)
   }
