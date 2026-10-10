@@ -333,7 +333,8 @@ export function admitIrreversibleUpgrade(
 ): MigrationRefusal | undefined {
   if (!plan.admitted || plan.reversible) return undefined
   const expected = computeMigrationPathDigest(plugin, plan.steps)
-  if (confirmation === undefined) return { kind: 'confirmation-required', digest: expected }
+  // MUTATION M-711-5′ (never merge): an irreversible path is admitted without a confirmation.
+  if (confirmation === undefined) return undefined
   if (confirmation.digest !== expected) {
     return { kind: 'confirmation-mismatch', expected, supplied: confirmation.digest }
   }
