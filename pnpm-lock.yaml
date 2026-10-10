@@ -8296,6 +8296,9 @@ importers:
 
   packages/plugin/plugin-installer:
     dependencies:
+      '@deepseek-ai/dsh-plugin-provenance':
+        specifier: workspace:^
+        version: link:../plugin-provenance
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
@@ -8306,6 +8309,9 @@ importers:
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-trust-kernel':
+        specifier: workspace:^
+        version: link:../../kernel/trust-kernel
 
   packages/plugin/plugin-lock:
     dependencies:

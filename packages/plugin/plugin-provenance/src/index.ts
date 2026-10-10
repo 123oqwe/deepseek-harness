@@ -26,6 +26,7 @@ export type * from './sbom.ts'
 export {
   admitUnsignedDevMode,
   checkOfflineSignature,
+  computePackageDigest,
   listTrustAnchorIds,
   registerTrustAnchor,
   revokeTrustAnchor,

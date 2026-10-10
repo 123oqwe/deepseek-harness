@@ -34,13 +34,16 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "@deepseek-ai/dsh-plugin-provenance": "workspace:^",
     "@deepseek-ai/schemastery": "workspace:^",
     "tar": "^7.5.0"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:^"
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-trust-kernel": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:^"
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-trust-kernel": "workspace:^"
   }
 }

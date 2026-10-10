@@ -9,6 +9,8 @@
   ],
   "references": [
     { "path": "../../../vendor/cordis" },
-    { "path": "../../../vendor/schemastery" }
+    { "path": "../../../vendor/schemastery" },
+    { "path": "../plugin-provenance" },
+    { "path": "../../kernel/trust-kernel" }
   ]
 }
