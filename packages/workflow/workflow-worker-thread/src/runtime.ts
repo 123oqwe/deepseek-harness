@@ -107,6 +107,8 @@ function defaultLabel(prompt: string): string {
 export class WorkflowExecution {
   /** 1-based count of `agent()` calls that actually started a child (the `agentsStarted` result field). */
   private started = 0
+  /** Reasons the host aborted this run's children (e.g. `token-budget-exhausted`), surfaced in the result (BLOCKED-366). */
+  private readonly abortedChildReasons: string[] = []
   /**
    * 1-based count of `agent()` calls REACHED, whether or not a child started.
    *
@@ -241,7 +243,12 @@ export class WorkflowExecution {
       // holder asked for cancellation and `completed` would be a lie.
       if (this.isCancelled()) throw this.cancelledError()
       const value = raw === undefined ? null : this.materializeResult(raw)
-      return { value, stopReason: 'completed', agentsStarted: this.started }
+      return {
+        value,
+        stopReason: 'completed',
+        agentsStarted: this.started,
+        ...this.abortedChildReasons.length > 0 ? { abortedChildReasons: [...this.abortedChildReasons] } : {},
+      }
     } catch (error: unknown) {
       // Any failure after cancel() reports `cancelled` with the canonical
       // reason — the reject path mirrors the resolve path's post-settle check.
@@ -524,6 +531,9 @@ export class WorkflowExecution {
           this.observer.agentEnd({ ...info, outcome: 'cancelled' })
           throw this.cancelledError()
         }
+        // A child the host aborted carries WHY in its result (BLOCKED-366): the
+        // script still sees null, but the run's result surfaces the reason.
+        if (result.abortReason !== undefined) this.abortedChildReasons.push(result.abortReason)
         this.observer.agentEnd({ ...info, outcome: 'failed' })
         return null
       } finally {
