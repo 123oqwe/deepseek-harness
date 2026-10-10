@@ -22358,7 +22358,8 @@
         "mutationDescription": "Two rounds, never merged: M-688-1 puts apps/cli/src/bin.ts back on the import.meta.main guard B-688 replaced; M-688-2 does the same to scripts/release/baseline-fingerprint.mjs. A-416: each mutated file and this entry's files are byte-identical at the round's parent, at the code tip and at the tree this entry is frozen on.",
         "failureSummary": "Read from each round's own narrow report; every round carried build. M-688-1 `4cef0cd7cb7f93324aed4d3be3026c331797961f` run 37109269179: 2 passed, 1 failed in apps/cli/tests/entry-main-guard.spec.ts: «P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names it even without import.meta.main (red first for B-688) the dsh bin prints its version when imported with argv[1] naming it». M-688-2 `272d4a445b79e93ee7b37288606c9225fe7b9d41` run 37111631203: 2 passed, 1 failed in apps/cli/tests/entry-main-guard.spec.ts: «P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names it even without import.meta.main (red first for B-688) baseline-fingerprint verify detects the drift and exits non-zero when imported with argv[1] naming it»."
       },
-      "note": "P0-01 F-stage supplement 5: BLOCKED-351 condition 1 on the shipped entries. The dsh bin and baseline-fingerprint verify do their work when argv[1] names them, also where import.meta.main is not true (Node 24.0 leaves it undefined); the guard case only checks that the committed baseline records another commit, so verify has drift to find. Lane A's A-577, red first for B-688."
+      "note": "P0-01 F-stage supplement 5: BLOCKED-351 condition 1 on the shipped entries. The dsh bin and baseline-fingerprint verify do their work when argv[1] names them, also where import.meta.main is not true (Node 24.0 leaves it undefined); the guard case only checks that the committed baseline records another commit, so verify has drift to find. Lane A's A-577, red first for B-688.",
+      "supersededBy": "2026-10-10T08:06:00.000Z"
     },
     {
       "epic": "P0-01",
@@ -23687,6 +23688,46 @@
         "failureSummary": "Read from each round's own narrow report; every round carried build. M-712-2′ run 38028627937: 1 passed, 1 failed in tests/first100/fixtures/P0-01.baseline-committed-gate.composition.spec.ts: «P0-01 1-1: the exact-SHA workflow gates the committed baseline (must[2]) a job verifies the committed .dsh/baseline.json with no same-job capture ahead of it»."
       },
       "note": "P0-01 F-stage supplement 10 (29a): must[2] and blind review 1-1, the CI order. The exact-SHA workflow verifies the committed .dsh/baseline.json in a step with no same-job capture ahead of it, and keeps the capture-then-verify step (5b6dd0e1, lane A's red first for B-712's workflow change; fix 60355d8635)."
+    },
+    {
+      "epic": "P0-01",
+      "stage": "F",
+      "supplements": {
+        "epic": "P0-01",
+        "stage": "F"
+      },
+      "supplementSeq": 5,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/cli/tests/entry-main-guard.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names it even without import.meta.main (red first for B-688) guard: the throwaway checkout drifts from its captured baseline on pnpm-lock.yaml, so verify has drift to find",
+        "P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names it even without import.meta.main (red first for B-688) the dsh bin prints its version when imported with argv[1] naming it",
+        "P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names it even without import.meta.main (red first for B-688) baseline-fingerprint verify detects the drift and exits non-zero when imported with argv[1] naming it"
+      ],
+      "files": [
+        "apps/cli/tests/entry-main-guard.spec.ts",
+        "apps/cli/src/bin.ts",
+        "scripts/release/baseline-fingerprint.mjs"
+      ],
+      "frozenAtUtc": "2026-10-10T08:06:00.000Z",
+      "supersedes": "2026-10-03T09:23:27.000Z",
+      "supersessionReason": "B-712 made the pre-batch verify use the context head policy, so a committed baseline that names another commit is no longer drift, and the baseline half went red in the 29a full gate 38030577121 at 440c7337f0. Its fixture now verifies a throwaway checkout whose pnpm-lock.yaml changed after capture; the guard starts verify as the process entry and reads that drift; the subject title is unchanged. Fixture change by the fix lane (§17 relaxation), approved by the delegate (first100-delegate-52).",
+      "dryRunProof": {
+        "treeSha": "14a0d470c02782258166b66c5dec93863c29b89d",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two rounds, never merged, each written on the fixture change `c9a43d0e6595c31711e7dc2397a3751f2c52a767`: M-688-1″ `4e03be3ee00b00f89e5ad5e2a1364b6ad43505e8` puts `import.meta.main &&` in front of the entry guard of apps/cli/src/bin.ts; M-688-2″ `bd94c9c78d923b1734318083a0273d175d4c3cc3` puts `import.meta.main &&` in front of the entry guard of scripts/release/baseline-fingerprint.mjs. A-416: each mutated file and this entry's files are byte-identical at the round's parent and at the freeze tree.",
+        "failureSummary": "Read from each round's own narrow report; every round carried build. M-688-1″ run 38035717205: 2 passed, 1 failed in apps/cli/tests/entry-main-guard.spec.ts: «P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names it even without import.meta.main (red first for B-688) the dsh bin prints its version when imported with argv[1] naming it». M-688-2″ run 38035957344: 2 passed, 1 failed in apps/cli/tests/entry-main-guard.spec.ts: «P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names it even without import.meta.main (red first for B-688) baseline-fingerprint verify detects the drift and exits non-zero when imported with argv[1] naming it»."
+      },
+      "note": "P0-01 F-stage supplement 5: BLOCKED-351 condition 1 on the shipped entries. The dsh bin and baseline-fingerprint verify do their work when argv[1] names them, also where import.meta.main is not true (Node 24.0 leaves it undefined). The baseline cases verify a throwaway checkout with fingerprint drift; the guard reads that drift with verify started as the process entry. Lane A's A-577, red first for B-688; fixture replaced after B-712."
     }
   ]
 }
