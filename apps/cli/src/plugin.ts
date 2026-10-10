@@ -460,7 +460,8 @@ async function runUnderLease(
     // older joins the upgrades even when its specifier did not change (a
     // reinstall, or new code under the same specifier).
     const dataVersions = await judgeInstalledDataVersions(installed, dir, environment.migration)
-    if (dataVersions.refused.length > 0) {
+    // MUTATION M-711-3′ (never merge): the data on disk never refuses an install.
+    if (dataVersions.refused.length < 0) {
       for (const detail of dataVersions.refused) process.stderr.write(`${NAME}: ${detail}; the install is undone\n`)
       const failure = await undoInstall(dir, manifestBefore, lockBefore)
       if (failure !== undefined) process.stderr.write(`${NAME}: ${failure}\n`)
