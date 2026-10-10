@@ -59,7 +59,10 @@ import {
   type PluginPackageName,
 } from '@deepseek-ai/dsh-plugin-lock'
 import { recordUnverifiedProvenance, type ProvenanceAuditRecord } from '@deepseek-ai/dsh-plugin-provenance'
-import { verifyInstallProvenance } from './install-provenance.ts'
+import { createQuarantine, DEFAULT_MAX_DECOMPRESSION_RATIO, DEFAULT_MAX_UNCOMPRESSED_BYTES, PluginInstallError, safeExtract, verifyPackage } from '@deepseek-ai/dsh-plugin-installer'
+import type { ExtractionPolicy } from '@deepseek-ai/dsh-plugin-installer'
+import { createTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+import { CLAIM_FILE_SUFFIX, localTarball, readClaimFile, verifyInstallProvenance } from './install-provenance.ts'
 import {
   homePatchPath,
   INSTALL_ANCHOR,
@@ -337,6 +340,69 @@ function splitConfirmation(
   }
 }
 
+/** The extraction bounds the install pre-gate enforces, from the installer's defaults. */
+const PREGATE_POLICY: ExtractionPolicy = {
+  maxDecompressionRatio: DEFAULT_MAX_DECOMPRESSION_RATIO,
+  maxUncompressedBytes: DEFAULT_MAX_UNCOMPRESSED_BYTES,
+}
+
+/**
+ * Verify and safely extract every local tarball argument through the plugin
+ * installer BEFORE pnpm runs (P1-04 (A) sub-slice 2). For each local tarball
+ * pnpm would install ({@link localTarball} covers `file:` and bare-path
+ * `.tgz`/`.tar.gz`, the forms the e2e and pnpm use): when a
+ * `<tarball>.provenance.json` sits beside it, `verifyPackage` enforces the
+ * signature over the claim and that the claim's package digest is these exact
+ * bytes — an unverifiable or unreadable claim (must[1]) is refused; then
+ * `safeExtract` into a throwaway quarantine refuses an absolute or
+ * `..`-traversing entry, a symbolic or hard link, an unsupported entry, or a
+ * decompression bomb (acceptance[1]). Refusal is the installer's OWN observable
+ * check, before pnpm touches the archive.
+ *
+ * SECURITY — the pre-gate enforces package-digest + signature + trust-anchor
+ * ONLY. `observedSourceCommit`/`observedBuilderIdentity` are deliberately the
+ * claim's own values and `installedDependencyNames` the SBOM's own runtime
+ * names, so those three comparisons are no-ops here: none can be observed before
+ * the package is extracted and installed. Their real enforcement is the
+ * reconcile pass ({@link verifyInstallProvenance} → `undoInstall`, run after
+ * pnpm), which observes the INSTALLED manifest against the signed claim. Do NOT
+ * delete that deferral or feed fabricated observed facts to pass a check that
+ * should fail: the digest and signature here are the real pre-pnpm gate (P1-04
+ * (A) must[1]); source/builder and SBOM coverage are decided after install.
+ * @param args - the pnpm arguments as invoked.
+ * @param profileDir - the profile directory a relative spec resolves against and whose trust anchors verify the claim.
+ * @throws PluginInstallError when a tarball's claim does not verify or its archive is refused.
+ */
+async function gateLocalTarballs(args: readonly string[], profileDir: string): Promise<void> {
+  let signatureRoots: ReturnType<typeof createTrustKernel>['signatureRoots'] | undefined
+  for (const spec of args) {
+    const tarball = localTarball(spec, profileDir)
+    if (tarball === undefined || !existsSync(tarball)) continue
+    const bytes = readFileSync(tarball)
+    const claimPath = `${tarball}${CLAIM_FILE_SUFFIX}`
+    if (existsSync(claimPath)) {
+      const presented = readClaimFile(claimPath)
+      if (typeof presented === 'string') {
+        throw new PluginInstallError('provenance-rejected', `provenance claim beside ${tarball} cannot be used: ${presented}`)
+      }
+      signatureRoots ??= createTrustKernel({ trustAnchors: readProfileTrustAnchors(profileDir) }).signatureRoots
+      verifyPackage(bytes, {
+        claim: presented.claim,
+        sbom: presented.sbom,
+        observedSourceCommit: presented.claim.sourceCommit,
+        observedBuilderIdentity: presented.claim.builderIdentity,
+        installedDependencyNames: new Set(presented.sbom.entries.filter(entry => entry.kind === 'runtime').map(entry => entry.name)),
+      }, signatureRoots)
+    }
+    const quarantine = createQuarantine()
+    try {
+      await safeExtract(bytes, quarantine.root, quarantine.extractDir, PREGATE_POLICY)
+    } finally {
+      await rm(quarantine.root, { recursive: true, force: true })
+    }
+  }
+}
+
 /**
  * The install and its data migrations, with the upgrade lease already held.
  *
@@ -416,9 +482,23 @@ async function runUnderLease(
     process.stderr.write(`${NAME}: finishing an install an earlier run began and did not complete\n`)
   }
 
+  // P1-04 (A) must[1]/acceptance[1]: verify each local tarball's provenance and
+  // safely extract it through the installer BEFORE pnpm touches it. A refusal is
+  // caught here, inside the upgrade lease, so the lease is released normally and
+  // nothing is installed (pnpm has not run) — the profile is left unchanged.
+  try {
+    await gateLocalTarballs(args, dir)
+  } catch (error) {
+    if (!(error instanceof PluginInstallError)) throw error
+    process.stderr.write(`${NAME}: refused: ${error.message}\n`)
+    return 1
+  }
+
   // Windows resolves pnpm through its .cmd shim, which spawn() refuses
-  // without a shell since the CVE-2024-27980 hardening.
-  const result = spawnSync('pnpm', args.map(argument => anchorPathSpec(argument, process.cwd())), {
+  // without a shell since the CVE-2024-27980 hardening. `--ignore-scripts`
+  // (P1-04 (A) acceptance[0]) stops a package's lifecycle scripts from running
+  // on install, so unpacking never executes attacker-controlled code.
+  const result = spawnSync('pnpm', ['--ignore-scripts', ...args.map(argument => anchorPathSpec(argument, process.cwd()))], {
     cwd: dir,
     stdio: 'inherit',
     shell: process.platform === 'win32',

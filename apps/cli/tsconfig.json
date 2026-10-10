@@ -9,6 +9,9 @@
   ],
   "references": [
     {
+      "path": "../../packages/plugin/plugin-installer"
+    },
+    {
       "path": "../../packages/plugin/plugin-lock"
     },
     {

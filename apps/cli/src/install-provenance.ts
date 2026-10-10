@@ -302,15 +302,26 @@ function repositoryUrl(repository: unknown): string {
 }
 
 /**
- * The local tarball a dependency spec installs from.
- * @param spec - the dependency's spec in the profile's `package.json`.
+ * The local tarball a dependency spec (or pnpm argument) installs from, or
+ * `undefined` for any spec that is not a local tarball. pnpm treats both a
+ * `file:` spec and a bare path ending `.tgz`/`.tar.gz` as a local tarball; a
+ * `link:` directory symlink and an `http(s):`/`git`/`github:`/`npm:`/registry
+ * spec carry no local package bytes to extract-and-verify, so none is one. The
+ * install pre-gate and the reconcile pass share this one detector so both judge
+ * exactly the specs pnpm installs locally.
+ * @param spec - the dependency's spec in the profile's `package.json`, or the raw pnpm argument.
  * @param profileDir - the directory a relative spec is relative to.
  * @returns the tarball's absolute path, or `undefined` for any other kind of spec.
  */
-function localTarball(spec: string, profileDir: string): string | undefined {
-  const path = spec.startsWith('file:') ? spec.slice('file:'.length) : undefined
-  if (path === undefined || !/\.(?:tgz|tar\.gz)$/u.test(path)) return undefined
-  return resolve(profileDir, path)
+export function localTarball(spec: string, profileDir: string): string | undefined {
+  if (spec.startsWith('file:')) {
+    const path = spec.slice('file:'.length)
+    return /\.(?:tgz|tar\.gz)$/u.test(path) ? resolve(profileDir, path) : undefined
+  }
+  // A non-`file:` URL scheme (link:, http(s):, git+…, github:, npm:, workspace:, …) is not a
+  // local tarball; a Windows drive letter (`C:`) is one character, so it stays a bare path.
+  if (/^[a-z][a-z0-9+.-]+:/iu.test(spec)) return undefined
+  return /\.(?:tgz|tar\.gz)$/u.test(spec) ? resolve(profileDir, spec) : undefined
 }
 
 /**
@@ -318,7 +329,7 @@ function localTarball(spec: string, profileDir: string): string | undefined {
  * @param path - the claim file's path.
  * @returns the claim and the SBOM it binds, or why the file cannot be used.
  */
-function readClaimFile(path: string): { readonly claim: PackageProvenanceClaim; readonly sbom: SbomDocument } | string {
+export function readClaimFile(path: string): { readonly claim: PackageProvenanceClaim; readonly sbom: SbomDocument } | string {
   try {
     const file = record(JSON.parse(readFileSync(path, 'utf8')) as unknown, 'the file')
     return { claim: toClaim(record(file.claim, 'claim')), sbom: toSbom(record(file.sbom, 'sbom')) }
