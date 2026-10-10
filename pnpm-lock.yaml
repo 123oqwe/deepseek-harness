@@ -8294,6 +8294,19 @@ importers:
         specifier: workspace:^
         version: link:../../schema/schema-registry
 
+  packages/plugin/plugin-installer:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+      tar:
+        specifier: ^7.5.0
+        version: 7.5.22
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+
   packages/plugin/plugin-lock:
     dependencies:
       '@deepseek-ai/dsh-atomic-write':
