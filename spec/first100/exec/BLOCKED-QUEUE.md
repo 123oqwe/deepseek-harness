@@ -10735,7 +10735,7 @@ The repository already records the problem and a version-independent guard: `scr
 
 ### BLOCKED-358 — P1-01 admission judges a profile-local module proxy by the installation's manifest, so a package named like a shipped one and claiming to be a proxy is admitted on credentials it does not hold (security, under-refuse)
 
-**Status:** OPEN (2026-10-04). Fixed and verified on lane-b-358 (tip c1772ec03a); lands with the merged batch once P0-02 is decided. Owed to P1-01's work; not introduced by A-550 and does not block it. Found by lane B while grounding A-550. Ruled by the delegate (first100-delegate-52); draft `artifacts/delegate/blocked-358-draft.md`.
+**Status:** CLOSED 2026-10-10 (closure note at the end of this entry); opened 2026-10-04. Fixed and verified on lane-b-358 (tip c1772ec03a); landed on the signing tree through the merged batch. Owed to P1-01's work; not introduced by A-550 and does not block it. Found by lane B while grounding A-550. Ruled by the delegate (first100-delegate-52); draft `artifacts/delegate/blocked-358-draft.md`.
 
 - **The defect.** `userPatchRowDeclaration` (`apps/cli/src/profile-boot.ts`) takes a resolved package that carries `dsh.moduleFallback` as a module proxy and judges the row by the manifest of the installation's package of the same name. A package placed in a profile's own `node_modules` under a shipped name, declaring itself a proxy, is admitted on the shipped package's manifest while the Loader loads its own code.
 - **Reach.** No shipped profile hits it: the installation writes its proxies only into the shared `$DSH_HOME/profiles/node_modules`, never a profile's own. It needs a crafted profile, which is the threat P1-01 admission exists for.
@@ -10762,9 +10762,15 @@ The repository already records the problem and a version-independent guard: `scr
   - Production resolves from the profile directory without `paths`, so there the impersonator's own code would load. That is the consequence the entry states.
   - The same limit applies to any source-mode case that observes whether a profile-local copy under a shipped name runs. Cases that observe admission (BLOCKED-360's C and D) are not affected.
 
+**Closure note (2026-10-10, delegate first100-delegate-52).** Closed on the signing tree S5′ `9f06a87ee3`.
+- **The fix is in the tree.** `apps/cli/src/profile-boot.ts:428` stands in the installation's package for a module proxy only when `isInstallationPackage` holds, the same line as `c1772ec03a`, which landed through the merged batch.
+- **Observed** in the push gate 38018369564 at S5′ `9f06a87ee3`: `tests/first100/fixtures/BLOCKED-358.proxy-impersonation.composition.spec.ts` 6/6 and `apps/cli/tests/plugin-manifest-enforcement-gate.spec.ts` 12/12.
+- **§S9.** The chain recorded above stands: red first `045cf930a8` (run 37236837330), fix (run 37237037227), M-358-1 (run 37237307519).
+- **Known Limitation.** The limit on the marker case stands.
+
 ### BLOCKED-359 — the lock gate runs only at boot, so a live-reload edit mounts a profile-local package the lock never approved (security-related, under-refuse)
 
-**Status:** OPEN (2026-10-04). Fixed and verified on `lane-b-merge-candidate-359` (`d3ef5e48cc`); lands with the merged batch once P0-02 is decided. Does not block A-550 or P1-03. Found by lane B while grounding A-550. Ruled by the delegate; draft `artifacts/delegate/blocked-359-draft.md`.
+**Status:** CLOSED 2026-10-10 (closure note at the end of this entry); opened 2026-10-04. Fixed and verified on `lane-b-merge-candidate-359` (`d3ef5e48cc`); landed on the signing tree through the merged batch. Does not block A-550 or P1-03. Found by lane B while grounding A-550. Ruled by the delegate; draft `artifacts/delegate/blocked-359-draft.md`.
 
 - **The gap.** A-550's gate runs in `composeProfile` at boot. On a `patchReload: live` profile (web), a row edited into `cordis.patch.yml` that names an unlocked package in the profile's `node_modules` is mounted by the reload without the lock check.
 - **Why it is not A-550's.** P1-03 must[2] reads 「生产 boot 只加载 lock 中已批准…的插件」, and acceptance[0] and [1] are about boot as well; A-550 meets the clause as written (§12, §13). The reload surface is a hardening beyond it.
@@ -10772,26 +10778,42 @@ The repository already records the problem and a version-independent guard: `scr
 - **The fix (c4586ebd67; 3ecf79c18f on the candidate).** `composeLive` is asynchronous and runs `enforceProfileLock` over the recomposed generation, so the reload is judged on the same inputs a boot is: the profile's dependencies, its admitted bundle layers and every module the generation's rows name. A mismatch throws, `watchUserPatches` lets the rejection refuse the whole generation, and HMR keeps the previous tree and broadcasts `hmr/config-update-failed`. The refusal names what it stops (`refusing to reload`).
 - **Evidence.** Red first 5e62de858f (the delegate's blind spec, lane B driver): pre-fix 1 pass, 1 red at the unlocked package being mounted (run 37242401607). The fix: 2 of 2, and app-boot's user-patches 20 of 20 (run 37242668963). M-359-1 (6f4f298db5, the reload skips the gate): 1 pass, 1 red at the unlocked package being mounted (run 37242974635). The A-579b live-admission case now locks its package (42e6ecdf9a), so the reload gate passes and admission decides; it stays red until B-519's live admission lands and is not run now (e2e).
 
+**Closure note (2026-10-10, delegate first100-delegate-52).** Closed on the signing tree S5′ `9f06a87ee3`.
+- **The fix is in the tree.** `3ecf79c18f` is an ancestor, and `composeLive` runs `enforceProfileLock(..., 'reload')` at `apps/cli/src/profile-boot.ts:1352`.
+- **Observed** in the push gate 38018369564 at S5′ `9f06a87ee3`: `tests/first100/fixtures/BLOCKED-359.live-reload-lock-gate.composition.spec.ts` 2/2.
+- **§S9.** The chain recorded above stands: red first `5e62de858f` (run 37242401607), fix (run 37242668963), M-359-1 (run 37242974635).
+
 ### BLOCKED-360 — the installation's identity for wildcard grants missed packages it carries transitively, and a patch-inserted installation package without a Manifest v2 was refused under enforce (security and correctness)
 
-**Status:** OPEN (2026-10-04). Fixed and verified on `lane-b-merge` (tip `2be33deda1`); lands with the merged batch once P0-02 is decided. Ruled by the delegate; draft `artifacts/delegate/blocked-360-draft.md`.
+**Status:** CLOSED 2026-10-10 (closure note at the end of this entry); opened 2026-10-04. Fixed and verified on `lane-b-merge` (tip `2be33deda1`); landed on the signing tree through the merged batch. Ruled by the delegate; draft `artifacts/delegate/blocked-360-draft.md`.
 
 - **The defects.** `installationPackageDir` (dce90467a8) looked a name up only where the installation finds its direct dependencies, so in a source checkout a package carried transitively (tool-lsp; `@deepseek-ai/dsh-code-runtime-worker-thread` through `dsh-headless`) missed its identity, its wildcard grants and any exemption. Under enforce, a row a user patch inserts was admitted only on its own declaration, so inserting an installation package without a Manifest v2 was refused (CENSUS-4 run 37218426287: the sdk persistent-tools, session-title-after-turn and ptc-turn snapshots). dce90467a8 also called `fs.realpathSync.native`, which the SEA bootstrap of `@yao-pkg/pkg` leaves unpatched.
 - **The fix (235edaa3a7).** `isInstallationPackage` (app-boot): the installation's dependency closure carries the name, and the resolved directory has that copy's real path; direct dependencies inside the installation's own bound, every further one inside the installation root (the deepest directory holding the installation and its direct dependencies); a module proxy counts only at the shared fallback location. Wildcard grants (layers and patch rows, 74f431894a) and the new missing-manifest exemption for patch rows use it; patch rows are judged by the directory they resolve to. Real paths come from `fs.realpathSync`.
 - **Evidence.** Red first 92ee48b316 (blind spec, lane B driver; pre-fix 5 pass, 1 red A, run 37229377631). On the merged tree: the fix 6/6 (run 37233797477); M-360-1 (ec243b76f6) 3 pass, 3 red B, C, D with the boot passing, so the refusal is admission's (run 37233997604). The SEA-packaged runtime boots through the identity code (run 37231606675). tool-lsp's transitive grant is pinned by a unit test (cd7d5cc45a, app-boot profile.spec.ts 51/51, run 37232520941), which stands in for an enforce census of lsp-definition.
 - **Follow-up, optional.** The shared module fallback's own walk is unchanged; anything it links is admitted only through this identity.
 
+**Closure note (2026-10-10, delegate first100-delegate-52).** Closed on the signing tree S5′ `9f06a87ee3`.
+- **The fix is in the tree.** `235edaa3a7` is an ancestor. `isInstallationPackage` is at `packages/boot/app-boot/src/profile.ts:333`, and `apps/cli/src/profile-boot.ts:428` judges proxies by it.
+- **Observed** in the push gate 38018369564 at S5′ `9f06a87ee3`: `tests/first100/fixtures/BLOCKED-360.installation-manifest-exemption.composition.spec.ts` 6/6 and `packages/boot/app-boot/tests/profile.spec.ts` 51/51.
+- **§S9.** The chain recorded above stands: red first `92ee48b316` (run 37229377631), fix (run 37233797477), M-360-1 (run 37233997604).
+
 ### BLOCKED-361 — B-688's entry guard crashes the SEA-packaged runtime on import (existing on the remote since fd34988cd0); P8-01 accepted, known defect under repair
 
-**Status:** OPEN (2026-10-04). Fixed and verified on `lane-b-merge`; lands with the merged batch. Not introduced by BLOCKED-360. Ruled by the delegate (rule a: no withdrawal, fix in place); draft `artifacts/delegate/blocked-361-draft.md`.
+**Status:** CLOSED 2026-10-10 (closure note at the end of this entry); opened 2026-10-04. Fixed and verified on `lane-b-merge`; landed on the signing tree through the merged batch. Not introduced by BLOCKED-360. Ruled by the delegate (rule a: no withdrawal, fix in place); draft `artifacts/delegate/blocked-361-draft.md`.
 
 - **The defect.** B-688 (fd34988cd0) guarded three entries with `existsSync(argv[1]) && realpathSync(argv[1]) === this file` (`apps/cli/src/bin.ts`, `packages/subprocess/subprocess-local/src/bin.ts`, `apps/desktop-host/src/index.ts`). In the SEA-packaged SDK runtime, argv[1] names the entry script without its snapshot prefix: the virtual file system's `existsSync` answers true and `realpathSync` throws ENOENT, so importing `lib/bin.js` crashed before any boot (run 37230528682: every [sea] case of `python/sdk/tests/test_bundled_runtime.py`; the [node] cases pass).
 - **Accepted epic affected.** P8-01: BLOCKED-314's closure cites `test_bundled_runtime_hands_the_caller_the_handshake_fields` passing on both carriers at 77c139df26 (run 36200543709, 8 of 8), before B-688. Since B-688 the SEA carrier has been broken and was not re-run. P8-01 stays ACCEPTED, known defect under repair; it closes when this fix lands. No other ACCEPTED epic cites the bundled runtime.
 - **The fix (8681026176).** Each guard compares through `realPathOf`, which answers undefined when the path cannot be resolved, so the module is not the entry. Red: run 37230528682. Fix: 8 of 8 on both carriers (run 37231606675). M-361-1 (8e914849ce): the 4 [sea] cases red, the 4 [node] cases green (run 37231617873).
 
+**Closure note (2026-10-10, delegate first100-delegate-52).** Closed on the signing tree S5′ `9f06a87ee3`. P8-01's known defect under repair is repaired.
+- **The fix is in the tree.** `8681026176` is an ancestor. The three guards compare through `realPathOf`: `apps/cli/src/bin.ts:98`, `packages/subprocess/subprocess-local/src/bin.ts:39` and `apps/desktop-host/src/index.ts:641`.
+- **Observed.** The full gate does not stage the runtime carriers, so the observation is the narrow python-runtime run 38023961692 on S6 `c9475df5e2`: 8 of 8 across both carriers.
+  - S6 is S5′ plus three record files (`command-freeze.json`, `files-overlay.json`, `EXEC-STATE.json`), so the guard code and the packaged product are byte-identical on both trees.
+- **§S9.** The chain recorded above stands: red (run 37230528682), fix (run 37231606675), M-361-1 (run 37231617873).
+
 ### BLOCKED-362 — the npm publish jobs publish the tarballs they download without checking them against the evidence package the pack job verified
 
-**Status:** OPEN (2026-10-05). Fixed and verified on the candidate line (fix b2e8e7aab3 on lane A's red first dc1bbbe4d0, parent 390f761fb5); on the signing tree as e1551c8be6 on 59ea225118, the same patches. Split from BLOCKED-292 by the delegate (first100-delegate-52, §21.3 ruling 4: queue/laneB.md line 421 ②). Does not block BLOCKED-292 or P0-07.
+**Status:** CLOSED 2026-10-10 (closure note at the end of this entry); opened 2026-10-05. Fixed and verified on the candidate line (fix b2e8e7aab3 on lane A's red first dc1bbbe4d0, parent 390f761fb5); on the signing tree as e1551c8be6 on 59ea225118, the same patches. Split from BLOCKED-292 by the delegate (first100-delegate-52, §21.3 ruling 4: queue/laneB.md line 421 ②). Does not block BLOCKED-292 or P0-07.
 
 - **The gap.** In `release-publish.yml`, `release-vendor-publish.yml` and `node-addon-system-release.yml`, `evidence:verify` runs in the `pack` job (`release-publish.yml:216`). The `publish` job runs on a fresh runner, downloads the uploaded tarballs (`:265-268`), and publishes them (`:270-273`). Nothing in that job reads the evidence package. "A release cannot complete without its evidence verifying" therefore holds only by artifact passing between two jobs. BLOCKED-292's progress notes record this as a known boundary of the wiring.
 - **What exists to build on.**
@@ -10809,9 +10831,18 @@ The repository already records the problem and a version-independent guard: `scr
 - **Evidence.** Red first dc1bbbe4d0 (lane A's blind structure case): 0 of 3 (run 37249646744). The fix: 23 of 23, with the structure case 3 of 3, the script's unit tests 7 of 7 and P0-07's frozen [396] 13 of 13 (run 37249922938). M-362-1 (506dec4e8b, the check step removed from release-publish.yml): 2 pass, 1 red (run 37250227102). M-362-2 (e2b1434052, continue-on-error on release-vendor-publish.yml's check): 2 pass, 1 red (run 37250529091).
 - **A stale comment in the same jobs (severity ≤2, registered only).** `release-publish.yml` and `release-vendor-publish.yml` say at :105-110 that the pack job does not set `RELEASE_PUBLISH`; its "Verify release version" step has set it since a33ed4ddf8. The comment is left as is because frozen [396] lists both workflows in its files, so editing it alone would make that case stale. It is corrected in the same change that closes this entry, which edits those workflows and re-observes [396] anyway.
 
+**Closure note (2026-10-10, delegate first100-delegate-52).** Closed on the signing tree S5′ `9f06a87ee3`, all three closing conditions met.
+- **The fix is in the tree.** `e1551c8be6` is an ancestor. `scripts/release/verify-published-artifacts.mjs` runs before Publish in `release-publish.yml:295`, `release-vendor-publish.yml:278` and `node-addon-system-release.yml:304`.
+- **Observed** in the push gate 38018369564 at S5′ `9f06a87ee3`:
+  - `tests/first100/fixtures/BLOCKED-362.publish-recheck.composition.spec.ts` 3/3;
+  - `scripts/release/verify-published-artifacts.spec.ts` 7/7;
+  - P0-07's `tests/first100/fixtures/P0-07.composition.spec.ts`, which holds frozen [396], 13/13.
+- **§S9.** The chain recorded above stands: red first `dc1bbbe4d0` (run 37249646744), fix (run 37249922938), M-362-1 (run 37250227102), M-362-2 (run 37250529091).
+- **BLOCKED-292.** Its Known Limitation (c) is resolved by this entry; (a) and (b) stand.
+
 ### BLOCKED-363 — token growth issued a filtered delegated parent a root, so a filtered launcher and the detached run it started held a tool the filter excluded (security, under-refuse)
 
-**Status:** OPEN (2026-10-05). Fixed and verified on the P2-07 line (fix adcc0520e3 on 4844d9919b); on the signing tree as 68607b7d73, the same patch, through the merged P2-07 line. The push gate requires that tree's D8 control green. Ruled by the delegate; finding `artifacts/delegate/d8-redelegate-growth-security-finding.md`.
+**Status:** CLOSED 2026-10-10 (closure note at the end of this entry); opened 2026-10-05. Fixed and verified on the P2-07 line (fix adcc0520e3 on 4844d9919b); on the signing tree as 68607b7d73, the same patch, through the merged P2-07 line. The push gate requires that tree's D8 control green. Ruled by the delegate; finding `artifacts/delegate/d8-redelegate-growth-security-finding.md`.
 
 - **The defect.** `redelegateIfNeeded`'s growth branch in `packages/policy/capability-token-file/src/index.ts` (:411-420 on 4844d9919b; :401-405 on the candidate line), from 62f05dda9e (BLOCKED-331), issued the child's parent a root covering what the parent could see before re-deriving the child. When the parent was itself delegated under a filter, that root replaced its filtered token: a launcher allowed only `read` held `write`. Growth adds only visible tools, so every name it adds is callable.
 - **Evidence (red first).** D8's control case (a filtered launcher and its detached run hold `read`, not `write`, before the restart) failed on 4844d9919b and on M-D8-1 (runs 37242628946, 37242938984).
@@ -10820,3 +10851,8 @@ The repository already records the problem and a version-independent guard: `scr
 - **The fix (adcc0520e3).** `redelegateIfNeeded` admits a name for growth only when the child's filter and every delegated ancestor's filter admit it. The walk ends at the first session the mount did not delegate: a root is widened to cover the names, and each delegated ancestor is then re-derived under its own filter, top down. An adopted session is never re-issued and bounds the names by what it holds, and nothing is re-derived when no name can be added.
 - **Evidence.** Unit and regression: 99 of 99 across the capability-token, subagent, nested-run and frozen P2-02 specs ([230], [426], [427]) (run 37244538821); M-363-1 (357c4c12c7, no walk) 5 pass, 2 red (run 37244824541). §S9 on the shipped headless profile, lane A's D8 control v4 (cc08269011) asserting that the read-only launcher's token is not grown to include write: red on 4844d9919b (run 37247802304), green on the fix (68607b7d73, run 37248110263), red on M-363-1 (ae27850b5e, run 37248395176).
 - **P2-02.** Not withdrawn (rule a: a defect under repair, and the red first already shows it; P2-02's precedent repairs product defects in place). It is P2-02's third open finding, after BLOCKED-330 and BLOCKED-331.
+
+**Closure note (2026-10-10, delegate first100-delegate-52).** Closed on the signing tree S5′ `9f06a87ee3`. P2-02's third open finding is repaired.
+- **The fix is in the tree.** `68607b7d73` is an ancestor. `redelegateIfNeeded` walks every delegated ancestor's filter before a name grows (`packages/policy/capability-token-file/src/index.ts:406`).
+- **Observed** in the push gate 38018369564 at S5′ `9f06a87ee3`: D8's control `tests/first100/fixtures/P2-07.d8-no-escalation.composition.spec.ts` 2/2 (the push-gate condition this entry names) and `packages/policy/capability-token-file/tests/adopt.spec.ts` 7/7.
+- **§S9.** The chain recorded above stands: D8 control v4 red on `4844d9919b` (run 37247802304), green on the fix (`68607b7d73`, run 37248110263), red on M-363-1 (`ae27850b5e`, run 37248395176).

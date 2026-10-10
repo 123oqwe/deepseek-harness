@@ -7,6 +7,15 @@
   "entries": [
     {
       "epic": "P0-01",
+      "path": ".github/workflows/first100-exact-sha.yml",
+      "kind": "source",
+      "stages": [
+        "F.10"
+      ],
+      "reason": "The exact-SHA gate workflow, read by P0-01 F supplement 10 (5b6dd0e1) and changed by B-712: its main job verifies the committed .dsh/baseline.json in a step with no capture ahead of it, before the step that captures and verifies (must[2]). M-712-2′, which removes that step, reddens exactly the case that asks for it."
+    },
+    {
+      "epic": "P0-01",
       "path": "apps/cli/src/bin.ts",
       "kind": "source",
       "stages": [
@@ -28,6 +37,22 @@
       "kind": "test",
       "stages": [
         "U"
+      ]
+    },
+    {
+      "epic": "P0-01",
+      "path": "tests/first100/fixtures/P0-01.baseline-committed-gate.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F.10"
+      ]
+    },
+    {
+      "epic": "P0-01",
+      "path": "tests/first100/fixtures/P0-01.baseline-nonkey-commit.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F.9"
       ]
     },
     {
@@ -1140,7 +1165,8 @@
       "path": "packages/plugin/plugin-lock/src/candidate.ts",
       "kind": "source",
       "stages": [
-        "P"
+        "P",
+        "U.3"
       ],
       "reason": "Candidate-lock construction, which is half of must[0]: a lock that pins integrity has to be built somewhere, and the registry declared only the comparison side."
     },
@@ -1149,7 +1175,8 @@
       "path": "packages/plugin/plugin-lock/src/gate.ts",
       "kind": "source",
       "stages": [
-        "U"
+        "U",
+        "U.3"
       ],
       "reason": "The boot-admission decision the U stage proves. The registry declared the lock package broadly and this file is where admission is decided."
     },
@@ -1158,7 +1185,8 @@
       "path": "packages/plugin/plugin-lock/src/lockfile-integrity.ts",
       "kind": "source",
       "stages": [
-        "U.2"
+        "U.2",
+        "U.3"
       ],
       "reason": "Created by this epic to close BLOCKED-135: real integrity read from pnpm-lock.yaml, replacing a `dsh.provenance.integrity` field nothing wrote. The plan predates the finding, so it could not have named the file."
     },
@@ -1202,6 +1230,30 @@
       "kind": "test",
       "stages": [
         "F.1"
+      ]
+    },
+    {
+      "epic": "P1-03",
+      "path": "tests/first100/fixtures/loader/p1-03-lock-gate/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P1-03",
+      "path": "tests/first100/fixtures/loader/p1-03-lock-gate/shared.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
+      ]
+    },
+    {
+      "epic": "P1-03",
+      "path": "tests/first100/fixtures/P1-03.lock-gate-boot.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.3"
       ]
     },
     {
