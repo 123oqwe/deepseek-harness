@@ -7,16 +7,24 @@
  *
  * `notes-plugin` (unit `notes`) is packed at version 1 (no migration) and version
  * 2 (a 1 → 2 migration). Version 1 is installed and its data seeded; then version
- * 2's upgrade runs. The version-2 migration's `migrate` stores a `notes` table
- * whose value is a string, which its own `validate` accepts but which the hub's
- * reopen (the transaction's health check, apps/cli/src/plugin-migration.ts:389 →
- * `openUnit`, which @deepseek-ai/dsh-storage-json rejects as "table is not an
- * object", format.ts:83) refuses — so the switch rolls back (`failedAt:
+ * 2's upgrade runs. The version-2 migration's `migrate` hands the content back
+ * unchanged, and its `validate` overwrites the transaction's migrated copy
+ * (`$DSH_HOME/storages/notes.migrated-2-<ms>`, @deepseek-ai/dsh-storage-json
+ * `materializeMigrated`) with bytes that are not JSON, then accepts. The host has
+ * already digested the copy (apps/cli/src/plugin-migration.ts:385-397), so the
+ * copy is switched in, the hub's reopen (the transaction's health check,
+ * `openUnit`) cannot parse it, and the switch rolls back (`failedAt:
  * 'health-check'`, transaction.ts:238). A second `dsh plugin add` of version 2 is
  * then run, and the version-1 data is read back and the run's output inspected.
  *
+ * The copy's name is the backend's convention: if it changes, `validate` corrupts
+ * nothing, the health check passes, and the guard below turns red. A migration
+ * that hands back a non-object table cannot fail the health check, because the
+ * backend's `writeDocument` coerces every table to an object (BLOCKED-365).
+ *
  * Each run is its own `DSH_HOME` and a profile with no bundles. No product hook is
- * added. §21.4: the fix (B-711a) is not read.
+ * added. The assertions were written without reading the fix (B-711a, §21.4);
+ * the migration recipe was replaced later by the fix lane, assertions unchanged.
  * @module tests/first100/fixtures/P1-10.plugin-upgrade-healthcheck-rollback.composition
  */
 
@@ -49,18 +57,39 @@ const MANIFEST_BASE = {
 }
 
 /**
- * The version-2 migration module: it stores a `notes` table whose value is a
- * STRING. Its own `validate` accepts the migrated content, but the hub's reopen
- * (the transaction's health check) rejects "table is not an object", so the
- * upgrade fails its health check and rolls back.
+ * The version-2 migration module for A-596: `migrate` hands the content back
+ * unchanged; `validate` overwrites every migrated copy of `notes` under the JSON
+ * backend's root with bytes that are not JSON and accepts, so the health check
+ * cannot open the switched-in unit and the upgrade rolls back.
  */
-const MIGRATE_2 = [
+const MIGRATE_2_CORRUPTS_COPY = [
+  "import { readdirSync, writeFileSync } from 'node:fs'",
+  "import { join } from 'node:path'",
   "export const descriptor = { name: 'notes', version: 2, tables: ['notes'], hasGlobal: false }",
   'export async function migrate(content) {',
-  "  return { ...content, tables: { ...content.tables, notes: 'corrupt-not-an-object' } }",
+  '  return content',
   '}',
   'export async function validate() {',
+  "  const storages = join(process.env.DSH_HOME, 'storages')",
+  '  for (const name of readdirSync(storages)) {',
+  "    if (name.startsWith('notes.migrated-2-')) writeFileSync(join(storages, name), 'not json')",
+  '  }',
   '  return true',
+  '}',
+].join('\n')
+
+/**
+ * The version-2 migration module for A-605: `migrate` hands the content back
+ * unchanged and `validate` rejects it, so the upgrade fails at `validate` and
+ * its code is rolled back (apps/cli/src/plugin.ts:485-501).
+ */
+const MIGRATE_2_REJECTED = [
+  "export const descriptor = { name: 'notes', version: 2, tables: ['notes'], hasGlobal: false }",
+  'export async function migrate(content) {',
+  '  return content',
+  '}',
+  'export async function validate() {',
+  '  return false',
   '}',
 ].join('\n')
 
@@ -71,17 +100,17 @@ const OLD_TABLES = { notes: { a: { body: 'original' } } }
  * Pack the plugin at one version.
  * @param root - a directory for the package sources.
  * @param version - the package version.
- * @param withMigration - whether this version declares the 1 → 2 migration.
+ * @param migration - the 1 → 2 migration module's source, when this version declares the migration.
  * @returns the tarball's path.
  */
-function pack(root: string, version: string, withMigration: boolean): string {
+function pack(root: string, version: string, migration?: string): string {
   const dir = join(root, `src-${version}`)
   mkdirSync(dir, { recursive: true })
-  const dsh = withMigration
+  const dsh = migration !== undefined
     ? { ...MANIFEST_BASE, migrations: [{ fromVersion: 1, toVersion: 2, description: 'corrupt notes', module: './migrate-2.js', reversible: true, backup: 'snapshot' }] }
     : MANIFEST_BASE
   writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: PLUGIN, version, type: 'module', dsh }, undefined, 2))
-  if (withMigration) writeFileSync(join(dir, 'migrate-2.js'), `${MIGRATE_2}\n`)
+  if (migration !== undefined) writeFileSync(join(dir, 'migrate-2.js'), `${migration}\n`)
   const packed = spawnSync('pnpm', ['pack', '--pack-destination', root], { cwd: dir, encoding: 'utf8' })
   if (packed.status !== 0) throw new Error(`pnpm pack failed: ${packed.stderr}`)
   return join(root, `${PLUGIN}-${version}.tgz`)
@@ -160,8 +189,8 @@ beforeAll(async () => {
   try {
     const packRoot = await mkdtemp(join(tmpdir(), 'p1-10-hc-pack-'))
     roots.push(packRoot)
-    const v1 = pack(packRoot, '1.0.0', false)
-    const v2 = pack(packRoot, '2.0.0', true)
+    const v1 = pack(packRoot, '1.0.0')
+    const v2 = pack(packRoot, '2.0.0', MIGRATE_2_CORRUPTS_COPY)
     const home = await mkdtemp(join(tmpdir(), 'p1-10-hc-home-'))
     roots.push(home)
     initProfile(resolveProfileDir(PROFILE, home), [])
@@ -227,13 +256,14 @@ const TOKEN_SENTINEL = '{"a605":"sentinel — a rolled-back upgrade must not tou
 
 /** What the A-605 scenario left in the capability-token store after the failed upgrade. */
 interface TokenOutcome {
-  readonly upgradeHealthCheckFailed: boolean
+  /** Whether the upgrade failed specifically at `validate` (the scenario this case needs). */
+  readonly upgradeValidateFailed: boolean
   readonly tokenBytesAfter: string | null
   readonly tokenDirEntries: readonly string[]
   readonly upgradeStderr: string
 }
 
-describe('P1-10 1-6 (A-605, green evidence): a health-check-failed upgrade leaves the approved-permission store byte-unchanged', () => {
+describe('P1-10 1-6 (A-605, green evidence): an upgrade that fails at validate leaves the approved-permission store byte-unchanged', () => {
   let tokenOutcome: TokenOutcome | undefined
   let tokenSetupError: string | undefined
 
@@ -241,8 +271,8 @@ describe('P1-10 1-6 (A-605, green evidence): a health-check-failed upgrade leave
     try {
       const packRoot = await mkdtemp(join(tmpdir(), 'p1-10-tok-pack-'))
       roots.push(packRoot)
-      const v1 = pack(packRoot, '1.0.0', false)
-      const v2 = pack(packRoot, '2.0.0', true)
+      const v1 = pack(packRoot, '1.0.0')
+      const v2 = pack(packRoot, '2.0.0', MIGRATE_2_REJECTED)
       const home = await mkdtemp(join(tmpdir(), 'p1-10-tok-home-'))
       roots.push(home)
       initProfile(resolveProfileDir(PROFILE, home), [])
@@ -270,7 +300,7 @@ describe('P1-10 1-6 (A-605, green evidence): a health-check-failed upgrade leave
 
       const upgrade = await addCommand(home, v2)
       tokenOutcome = {
-        upgradeHealthCheckFailed: /failed at health-check/iu.test(`${upgrade.stderr}\n${upgrade.stdout}`),
+        upgradeValidateFailed: /failed at validate/iu.test(`${upgrade.stderr}\n${upgrade.stdout}`),
         tokenBytesAfter: existsSync(tokenFile) ? readFileSync(tokenFile, 'utf8') : null,
         tokenDirEntries: existsSync(tokenDir) ? readdirSync(tokenDir).sort() : [],
         upgradeStderr: upgrade.stderr.slice(-800),
@@ -284,10 +314,11 @@ describe('P1-10 1-6 (A-605, green evidence): a health-check-failed upgrade leave
     if (tokenOutcome === undefined) throw new Error(tokenSetupError ?? 'no token outcome')
     const result = tokenOutcome
     const context = JSON.stringify(result)
-    // Guard: the upgrade actually failed AT THE HEALTH CHECK, so the data and
-    // code rollback under observation ran; a false means the recipe did not
-    // reach that phase and the case must be adjusted, not a silent pass.
-    expect(result.upgradeHealthCheckFailed, context).toBe(true)
+    // Guard: the upgrade actually failed AT VALIDATE, so the migrated copy was
+    // discarded and the code rollback under observation ran; a false means the
+    // recipe did not reach that phase and the case must be adjusted, not a
+    // silent pass.
+    expect(result.upgradeValidateFailed, context).toBe(true)
     // acceptance[2] (behavioural, observed on the factory `dsh plugin` upgrade):
     // the approved-permission store survives a rolled-back upgrade byte for byte.
     expect(result.tokenBytesAfter, context).toBe(TOKEN_SENTINEL)
