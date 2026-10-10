@@ -17,7 +17,7 @@ import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { CapabilityTokenDigest } from '@deepseek-ai/dsh-capability-token'
+import type { CapabilityTokenDigest, SignedCapabilityToken } from '@deepseek-ai/dsh-capability-token'
 import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
@@ -40,8 +40,8 @@ export interface Harness {
   readonly invokeFrames: readonly ToolInvokeParams[]
   /** The model-visible tool names the host registry currently holds. */
   toolNames(): string[]
-  /** Dispatch a registered tool through the real ToolRuntime path on behalf of a bare agent. */
-  execute(name: string, args?: Record<string, unknown>): Promise<ToolExecutionResult>
+  /** Dispatch a registered tool through the real ToolRuntime path on behalf of a bare agent, optionally under a per-dispatch capability token. */
+  execute(name: string, args?: Record<string, unknown>, capabilityToken?: SignedCapabilityToken): Promise<ToolExecutionResult>
   /** Resolve once the plugin reports (over its stderr log) that its registration round finished. */
   waitRegistered(): Promise<void>
   /** Run the host session disposer (the normal / protocol-violation teardown path). Idempotent. */
@@ -106,11 +106,19 @@ export async function startHarness(scenario: string): Promise<Harness> {
   })
   base.start()
 
+  let callSeq = 0
   return {
     ctx,
     invokeFrames,
     toolNames: () => ctx.tools.schemas().map(schema => schema.name),
-    execute: (name, args) => ctx.tools.execute({ callId: ToolCallId(`${scenario}-call`), name, arguments: args ?? {}, agent, signal }),
+    execute: (name, args, capabilityToken) => ctx.tools.execute({
+      callId: ToolCallId(`${scenario}-call-${callSeq++}`),
+      name,
+      arguments: args ?? {},
+      agent,
+      signal,
+      ...capabilityToken !== undefined ? { capabilityToken } : {},
+    }),
     waitRegistered: () => registered,
     disposeHost,
     killChild: () => { child.kill('SIGKILL') },
