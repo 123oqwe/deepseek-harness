@@ -284,6 +284,16 @@ async function writeDocument(
   content: UnitContent,
 ): Promise<void> {
   const path = mediumOf(medium) ?? `${medium}.json`
+  for (const [table, records] of Object.entries(content.tables)) {
+    // A non-object table would wash per-character through Object.entries (a
+    // string becomes {0:'a',...}); the read path (format.ts) already refuses
+    // it, so the write path must too. Throwing fails the migrate phase, which
+    // rolls back rather than persisting a silently-corrupted unit (BLOCKED-365).
+    const value: unknown = records
+    if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+      throw new StorageError('malformed-medium', `unit '${name}': table '${table}' is not an object`)
+    }
+  }
   const tables = new Map<string, Map<string, unknown>>(
     Object.entries(content.tables).map(([table, records]) => [
       table,
