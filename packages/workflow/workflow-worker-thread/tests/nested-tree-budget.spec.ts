@@ -204,7 +204,8 @@ describe('P4-09 acceptance[3]: an in-process child\'s tokens come off its tree',
     const adapter = new MockAdapter(['hang'])
     ctx.llm.registerAdapter(['metered'], adapter)
     const run = engine.start({ script: "await agent('wait', { provider: 'metered', model: 'metered' })", meta: META, parent }) as WorkerRun
-    await vi.waitFor(() => { expect(adapter.requests).toHaveLength(1) })
+    // The worker-thread child's first model request has taken over a second under a full-suite load.
+    await vi.waitFor(() => { expect(adapter.requests).toHaveLength(1) }, { timeout: 10_000 })
 
     parent.session.append('turn/start', { turn: 1 })
 
