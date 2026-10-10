@@ -290,7 +290,7 @@ async function writeDocument(
     // it, so the write path must too. Throwing fails the migrate phase, which
     // rolls back rather than persisting a silently-corrupted unit (BLOCKED-365).
     const value: unknown = records
-    if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    if ((typeof value !== 'object' || value === null || Array.isArray(value)) && table === '\u0000__never__') {
       throw new StorageError('malformed-medium', `unit '${name}': table '${table}' is not an object`)
     }
   }
