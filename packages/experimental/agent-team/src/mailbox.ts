@@ -26,7 +26,7 @@ import type {
 /** Owns every process-local state transition for the durable Team mailbox. */
 export class TeamMailbox {
   private readonly dispatchTails = new Map<SessionId, Promise<void>>()
-  private readonly inFlightMessages = new Set<TeamMessageId>()
+  private readonly inFlightMessages = new Map<TeamMessageId, Promise<boolean>>()
   private readonly inFlightDispatches = new Set<Promise<unknown>>()
 
   /**
@@ -150,11 +150,15 @@ export class TeamMailbox {
     return { messageId: queued.message.id, status: accepted ? 'accepted' : 'queued' }
   }
 
-  /** Attempt one queued message exactly once in this process at a time. */
+  /**
+   * Attempt one queued message exactly once in this process at a time. A caller
+   * that finds the message already in flight, such as a send racing a recovery
+   * pass, receives that attempt's outcome.
+   */
   private tryDispatch(root: Agent, message: TeamMessageSnapshot, signal: AbortSignal): Promise<boolean> {
     if (this.lifecycle.disposed) return Promise.resolve(false)
-    if (this.inFlightMessages.has(message.id)) return Promise.resolve(false)
-    this.inFlightMessages.add(message.id)
+    const inFlight = this.inFlightMessages.get(message.id)
+    if (inFlight !== undefined) return inFlight
     const operation = this.trackDispatch(
       this.tryDispatchAdmitted(
         root,
@@ -162,6 +166,7 @@ export class TeamMailbox {
         AbortSignal.any([signal, this.lifecycle.signal]),
       ),
     )
+    this.inFlightMessages.set(message.id, operation)
     const forget = (): void => {
       this.inFlightMessages.delete(message.id)
     }
@@ -221,9 +226,10 @@ export class TeamMailbox {
     if (requested < 0) return state.delivered.includes(message.id)
     for (const candidate of pending.slice(0, requested + 1)) {
       const ownsInFlight = !this.inFlightMessages.has(candidate.id)
-      if (ownsInFlight) this.inFlightMessages.add(candidate.id)
+      const attempt = this.dispatchOnce(root, candidate, signal)
+      if (ownsInFlight) this.inFlightMessages.set(candidate.id, attempt)
       try {
-        if (!await this.dispatchOnce(root, candidate, signal)) return false
+        if (!await attempt) return false
       } finally {
         if (ownsInFlight) this.inFlightMessages.delete(candidate.id)
       }
