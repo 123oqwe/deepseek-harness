@@ -463,6 +463,38 @@
           "observedAtUtc": "2026-10-04T22:13:39Z",
           "outcome": "passed",
           "verifiedBy": "second independent narrow run of the file on the same SHA: 12 of 12 passed (a later candidate; nothing under packages/workflow differs from the failing SHA)"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/38037105743",
+          "candidateSha": "09a98f720421e78b0b4a479ad47f98ac9fae1304",
+          "observedAtUtc": "2026-10-10T09:50:10.480Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact; recorded by generate-ledger.mjs at the moment of absorption",
+          "absorbedByCell": "P1-03.U.3"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/38037105743",
+          "candidateSha": "09a98f720421e78b0b4a479ad47f98ac9fae1304",
+          "observedAtUtc": "2026-10-10T09:50:10.920Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact; recorded by generate-ledger.mjs at the moment of absorption",
+          "absorbedByCell": "P0-01.F.9"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/38037105743",
+          "candidateSha": "09a98f720421e78b0b4a479ad47f98ac9fae1304",
+          "observedAtUtc": "2026-10-10T09:50:11.400Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact; recorded by generate-ledger.mjs at the moment of absorption",
+          "absorbedByCell": "P0-01.F.10"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/38037105743",
+          "candidateSha": "09a98f720421e78b0b4a479ad47f98ac9fae1304",
+          "observedAtUtc": "2026-10-10T09:50:11.881Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact; recorded by generate-ledger.mjs at the moment of absorption",
+          "absorbedByCell": "P0-01.F.5"
         }
       ],
       "unrelatedNote": "Same-SHA divergence (§21.8): one failure in the merged-tree full gate and two independent passes on that same candidate, bfe6d5d022, plus two more passes on 2be33deda1, whose differences from it are three test-only commits outside packages/workflow. The case is a workflow-worker-thread unit test that boots no profile. It passed in 28r2 (37187203588), CENSUS-4 (37218426287) and the F3 probe (37226284341).",

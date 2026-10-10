@@ -3315,15 +3315,18 @@
         },
         {
           "stage": "U",
-          "title": "A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 门禁3:profile 目录装了、锁里没有的插件 → 启动被拒,该插件不加载(must[2];出厂今天不验锁 → RED)"
+          "title": "A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 门禁3:profile 目录装了、锁里没有的插件 → 启动被拒,该插件不加载(must[2];出厂今天不验锁 → RED)",
+          "supplementSeq": 3
         },
         {
           "stage": "U",
-          "title": "A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 门禁4:锁写好之后 manifest 改了(digest 不匹配)的插件 → 启动被拒,该插件不加载(must[2];出厂今天不验 digest → RED)"
+          "title": "A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 门禁4:锁写好之后 manifest 改了(digest 不匹配)的插件 → 启动被拒,该插件不加载(must[2];出厂今天不验 digest → RED)",
+          "supplementSeq": 3
         },
         {
           "stage": "U",
-          "title": "A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 门禁5:安装记录的 integrity 与锁里不同 → 启动被拒,该插件不加载(acceptance[0] 按 lock 验证本地 cache;出厂今天不验 integrity → RED)"
+          "title": "A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 门禁5:安装记录的 integrity 与锁里不同 → 启动被拒,该插件不加载(acceptance[0] 按 lock 验证本地 cache;出厂今天不验 integrity → RED)",
+          "supplementSeq": 3
         }
       ],
       "note": "acceptance[0]: 'an offline cold start can verify the local cache against the lock.' Satisfied structurally rather than by an offline test harness: every input to admitBoot is already-resolved data -- the lock's facts and the installed facts -- with no registry handle, URL, or process handle anywhere in the parameter list. There is therefore no network path to omit when the network is gone, so the offline call and the online call are THE SAME call and cannot diverge. The F-stage boundary covers the other half: a cache missing a locked plugin is refused rather than silently booting short. A real runProfile boot of a profile directory refuses a plugin the lock does not approve, one whose manifest digest changed and one whose installed integrity differs from the lock (P1-03 U.3 gates 3–5, the A-550 composition), with controls that boot and run a locked plugin."

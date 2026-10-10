@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-10-10T08:08:14.433Z",
-  "inputDigest": "b68e7dd8512efbe5906998cb652b21dea9aea2aceab9c4e3c707b4605616ba62",
+  "lastUpdatedUtc": "2026-10-10T09:50:21.599Z",
+  "inputDigest": "c4ffe8bcfdd8d47e5392d2d9e43381783ba2b984131bb27a4d1916545ca17052",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -162,13 +162,26 @@
           "capturedAtUtc": "2026-10-04T02:22:31.919Z"
         },
         "F.5": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/37158956685",
-            "absentCommitments": 1
+          "status": "GREEN",
+          "candidateSha": "09a98f720421e78b0b4a479ad47f98ac9fae1304",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/38037105743",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-38037105743/first100-vitest-report-09a98f720421e78b0b4a479ad47f98ac9fae1304/vitest-report.json",
+          "observationSha256": "97bb04b0497fbd683994921cadd4d8fd0d4836890cec7bc2fd1c830ec976e163",
+          "expectCasesMatched": [
+            "P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names it even without import.meta.main (red first for B-688) guard: the throwaway checkout drifts from its captured baseline on pnpm-lock.yaml, so verify has drift to find",
+            "P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names it even without import.meta.main (red first for B-688) the dsh bin prints its version when imported with argv[1] naming it",
+            "P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names it even without import.meta.main (red first for B-688) baseline-fingerprint verify detects the drift and exits non-zero when imported with argv[1] naming it"
+          ],
+          "absorbedFlakes": [
+            "P4-09 acceptance[3]: an in-process child's tokens come off its tree debits only its running children's sessions, not another session's events (B-714)"
+          ],
+          "exitRecord": {
+            "exitCode": 1,
+            "unhandledErrors": 0,
+            "runId": "38037105743",
+            "sha256": "97bb04b0497fbd683994921cadd4d8fd0d4836890cec7bc2fd1c830ec976e163"
           },
-          "revokedReason": "[472] superseded by [505] (A-577's baseline half verifies a throwaway checkout with fingerprint drift, since B-712's context head policy no longer counts another commit as drift); the supplement is re-recorded from the full gate of the tree that carries [505]."
+          "capturedAtUtc": "2026-10-10T09:50:11.850Z"
         },
         "F.6": {
           "status": "GREEN",
@@ -220,36 +233,83 @@
             "sha256": "ae219a89a8980f24007d4ae08b4447bc2dc1e1ce3e9f5ba658e9ae5c089c24d7"
           },
           "capturedAtUtc": "2026-10-04T03:47:28.458Z"
+        },
+        "F.9": {
+          "status": "GREEN",
+          "candidateSha": "09a98f720421e78b0b4a479ad47f98ac9fae1304",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/38037105743",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-38037105743/first100-vitest-report-09a98f720421e78b0b4a479ad47f98ac9fae1304/vitest-report.json",
+          "observationSha256": "97bb04b0497fbd683994921cadd4d8fd0d4836890cec7bc2fd1c830ec976e163",
+          "expectCasesMatched": [
+            "P0-01 must[2] (A-607, B-712 red first): a commit that touches no fingerprinted surface leaves baseline:verify passing a non-fingerprint commit verifies clean (today it reports gitSha drift and exits nonzero — RED)",
+            "P0-01 must[2] (A-607, B-712 red first): a commit that touches no fingerprinted surface leaves baseline:verify passing a commit that changes a fingerprinted surface still verifies dirty and names the field (green control, before and after B-712)"
+          ],
+          "absorbedFlakes": [
+            "P4-09 acceptance[3]: an in-process child's tokens come off its tree debits only its running children's sessions, not another session's events (B-714)"
+          ],
+          "exitRecord": {
+            "exitCode": 1,
+            "unhandledErrors": 0,
+            "runId": "38037105743",
+            "sha256": "97bb04b0497fbd683994921cadd4d8fd0d4836890cec7bc2fd1c830ec976e163"
+          },
+          "capturedAtUtc": "2026-10-10T09:50:10.875Z"
+        },
+        "F.10": {
+          "status": "GREEN",
+          "candidateSha": "09a98f720421e78b0b4a479ad47f98ac9fae1304",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/38037105743",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-38037105743/first100-vitest-report-09a98f720421e78b0b4a479ad47f98ac9fae1304/vitest-report.json",
+          "observationSha256": "97bb04b0497fbd683994921cadd4d8fd0d4836890cec7bc2fd1c830ec976e163",
+          "expectCasesMatched": [
+            "P0-01 1-1: the exact-SHA workflow gates the committed baseline (must[2]) a job verifies the committed .dsh/baseline.json with no same-job capture ahead of it",
+            "P0-01 1-1: the exact-SHA workflow gates the committed baseline (must[2]) control: a same-run `baseline:capture && baseline:verify` step exists (the capture-first flaw being gated)"
+          ],
+          "absorbedFlakes": [
+            "P4-09 acceptance[3]: an in-process child's tokens come off its tree debits only its running children's sessions, not another session's events (B-714)"
+          ],
+          "exitRecord": {
+            "exitCode": 1,
+            "unhandledErrors": 0,
+            "runId": "38037105743",
+            "sha256": "97bb04b0497fbd683994921cadd4d8fd0d4836890cec7bc2fd1c830ec976e163"
+          },
+          "capturedAtUtc": "2026-10-10T09:50:11.366Z"
         }
       },
       "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "NOT_RUN",
+      "status": "ACCEPTED",
       "acceptedEvidence": {
-        "acceptedAtUtc": "2026-09-01T05:50:41.009Z",
+        "acceptedAtUtc": "2026-10-10T09:50:17.835Z",
         "cells": {
           "C": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33449096357",
-            "candidateSha": "8d5f94d6c25fe01319079ea6ae6fbdad11ed64dd"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
+            "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2"
           },
           "P": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33469268880",
-            "candidateSha": "23c8b0fb2e43e68ca43a3de60e7ad26dcb20815f"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
+            "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2"
           },
           "U": {
             "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33463612783",
             "candidateSha": "b0ac88f5732a2ae3303c829027048eec68b4d572"
           },
           "F": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33455153044",
-            "candidateSha": "926b72a2febad5002841aa2bb1f6dd6b9a55f977"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36321096282",
+            "candidateSha": "278c53cfa17244af2c9cbc1d9b9d22f08cefaea2"
           }
         },
         "coverageClosure": {
           "valid": true,
           "missingIndices": [],
           "unverifiedCitations": []
+        },
+        "delegateSignoff": {
+          "delegateSession": "first100-delegate-52",
+          "signedAtUtc": "2026-10-10T09:50:12.718Z",
+          "userConfirmationRef": null
         }
       }
     },
@@ -2648,32 +2708,55 @@
             "P1-03 Fault — an offline cold start refuses a locked package that is not installed (acceptance[0]) acceptance[0]: the SAME lock with every package present is admitted, so the refusal is caused by the absence"
           ],
           "capturedAtUtc": "2026-09-07T03:42:47.909Z"
+        },
+        "U.3": {
+          "status": "GREEN",
+          "candidateSha": "09a98f720421e78b0b4a479ad47f98ac9fae1304",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/38037105743",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-38037105743/first100-vitest-report-09a98f720421e78b0b4a479ad47f98ac9fae1304/vitest-report.json",
+          "observationSha256": "97bb04b0497fbd683994921cadd4d8fd0d4836890cec7bc2fd1c830ec976e163",
+          "expectCasesMatched": [
+            "A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 对照1:锁里记了已装插件的 profile 正常启动并跑该插件;安装自带 bundle 无锁项也不拦(must[2] 正向 + C17 2′)",
+            "A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 对照2:锁里还记了一个普通依赖,profile 照常启动并跑该插件(must[2] 正向)",
+            "A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 门禁3:profile 目录装了、锁里没有的插件 → 启动被拒,该插件不加载(must[2];出厂今天不验锁 → RED)",
+            "A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 门禁4:锁写好之后 manifest 改了(digest 不匹配)的插件 → 启动被拒,该插件不加载(must[2];出厂今天不验 digest → RED)",
+            "A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 门禁5:安装记录的 integrity 与锁里不同 → 启动被拒,该插件不加载(acceptance[0] 按 lock 验证本地 cache;出厂今天不验 integrity → RED)",
+            "A-550 P1-03 生产 boot 锁门:经真实 runProfile 的组合层黑盒观测 门禁6:没有锁、装了插件的 profile 按出厂 bundle 声明的策略(取最严)处置;今天静默加载 → RED,政策无关"
+          ],
+          "absorbedFlakes": [
+            "P4-09 acceptance[3]: an in-process child's tokens come off its tree debits only its running children's sessions, not another session's events (B-714)"
+          ],
+          "exitRecord": {
+            "exitCode": 1,
+            "unhandledErrors": 0,
+            "runId": "38037105743",
+            "sha256": "97bb04b0497fbd683994921cadd4d8fd0d4836890cec7bc2fd1c830ec976e163"
+          },
+          "capturedAtUtc": "2026-10-10T09:50:10.449Z"
         }
       },
       "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
-      "independentVerdict": "PENDING",
-      "openFindings": [
-        "BLOCKED-247: must[2] lock gate is not wired into production boot AND no bundle declares unlockedProfilePolicy (field never landed) — must[2] doubly unimplemented, delegate-verified (addendum 316). Remediation P1-03.U2 split out pending the per-bundle policy value (user decision, addendum 317)."
-      ],
-      "status": "BLOCKED_ON_ACCEPTANCE",
+      "independentVerdict": "APPROVED",
+      "openFindings": null,
+      "status": "ACCEPTED",
       "acceptedEvidence": {
-        "acceptedAtUtc": "2026-09-07T04:11:57.609Z",
+        "acceptedAtUtc": "2026-10-10T09:50:21.581Z",
         "cells": {
           "C": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34079177586",
-            "candidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+            "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385"
           },
           "P": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34079177586",
-            "candidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+            "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385"
           },
           "U": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34079177586",
-            "candidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+            "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385"
           },
           "F": {
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34079177586",
-            "candidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2"
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+            "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385"
           }
         },
         "coverageClosure": {
@@ -2682,11 +2765,18 @@
           "unverifiedCitations": []
         },
         "delegateSignoff": {
-          "delegateSession": "guanjieqiao-92",
-          "signedAtUtc": "2026-09-07T04:10:55.511Z",
+          "delegateSession": "first100-delegate-52",
+          "signedAtUtc": "2026-10-10T09:50:13.175Z",
           "userConfirmationRef": null
         }
-      }
+      },
+      "closedFindings": [
+        {
+          "finding": "BLOCKED-247: must[2] lock gate is not wired into production boot AND no bundle declares unlockedProfilePolicy (field never landed) — must[2] doubly unimplemented, delegate-verified (addendum 316). Remediation P1-03.U2 split out pending the per-bundle policy value (user decision, addendum 317).",
+          "reason": "Both nouns are closed on the signing tree. (1) The lock gate is wired into the production boot: composeProfile calls enforceProfileLock at apps/cli/src/profile-boot.ts:691 (and the reload at :1352), observed through runProfile by the A-550 composition, frozen as P1-03 U.3, 6/6 in the 29a full gate 38037105743; M-A550-1′ (cff5015eed, run 38022709814) turns gates 3–6 red. (2) A bundle declares the policy: dsh-base declares unlockedProfilePolicy refuse (packages/bundle/base/package.json:44), resolved strictest-wins with no default (:1511), observed by U.3 gate 6.",
+          "closedAtUtc": "2026-10-10T09:50:12.101Z"
+        }
+      ]
     },
     "P1-04": {
       "id": "P1-04",
