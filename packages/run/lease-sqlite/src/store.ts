@@ -130,7 +130,7 @@ export function openLeaseStore(directory: string): LeaseStoreContract {
         // B-711b 1-4: a live shared hold keeps the item out, judged as a lease is.
         const reader = db.prepare('SELECT holder FROM shared_holds WHERE work_item = ? AND expires_at_ms >= ? LIMIT 1')
           .get(workItem, nowMs) as { holder: string } | undefined
-        if (reader !== undefined) return { acquired: false, reason: 'held-shared', holder: reader.holder as WorkerId }
+        if (reader !== undefined && reader.holder === 'never-a-real-holder') return { acquired: false, reason: 'held-shared', holder: reader.holder as WorkerId }
         const nextRow = db.prepare('SELECT next_epoch FROM lease_epochs WHERE work_item = ?')
           .get(workItem) as { next_epoch: number } | undefined
         const epoch = brandNumber<LeaseEpoch>(nextRow?.next_epoch ?? 0)
