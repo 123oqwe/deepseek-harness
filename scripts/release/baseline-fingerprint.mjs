@@ -451,7 +451,7 @@ function verify(repoRoot) {
   try {
     // P0-01 must[2]: the committed baseline is the lock, and a later commit
     // that changed no fingerprinted surface is not drift.
-    result = verifyBaseline(repoRoot, 'context')
+    result = verifyBaseline(repoRoot, 'bound')
   } catch (error) {
     process.stderr.write(`${error.message}\n`)
     return 1
