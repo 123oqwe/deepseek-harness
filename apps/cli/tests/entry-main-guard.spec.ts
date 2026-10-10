@@ -15,12 +15,14 @@
  * names it — exactly the Node-24 shape. Today the guarded block is skipped and
  * the entry does nothing; B-688's version-independent guard
  * (`resolve(argv[1]) === scriptPath`, the pattern scripts/clean.ts already
- * uses) runs it. The baseline guard: the committed `.dsh/baseline.json` records
- * a different commit than this checkout, so `verify` has real drift to report.
+ * uses) runs it. The baseline cases verify a throwaway checkout whose captured
+ * baseline disagrees with its tree on `pnpm-lock.yaml`, so `verify` has
+ * fingerprint drift to report under either head policy (since B-712 the check
+ * before a batch does not count a different commit alone as drift).
  */
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execa } from 'execa'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -28,7 +30,18 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 const repoRoot = fileURLToPath(new URL('../../../', import.meta.url))
 const dshBin = join(repoRoot, 'apps/cli/lib/bin.js')
 const baselineScript = join(repoRoot, 'scripts/release/baseline-fingerprint.mjs')
-const baselinePath = join(repoRoot, '.dsh/baseline.json')
+
+/** The throwaway checkout's files: the fingerprinted surfaces of tests/release/baseline-fingerprint.spec.ts's fixture. */
+const FIXTURE_FILES: Readonly<Record<string, string>> = {
+  'package.json': `${JSON.stringify({ name: '@fixture/root', private: true, packageManager: 'pnpm@11.7.0' }, null, 2)}\n`,
+  'pnpm-workspace.yaml': 'packages:\n  - packages/*\n',
+  'packages/alpha/package.json': `${JSON.stringify({ name: '@fixture/alpha', version: '0.0.0', private: true }, null, 2)}\n`,
+  'packages/beta/package.json': `${JSON.stringify({ name: '@fixture/beta', version: '0.0.0', private: true }, null, 2)}\n`,
+  'packages/bundle/base/cordis.patch.yml': 'rows:\n  - id: row-alpha\n  - id: row-beta\n',
+  'packages/sdk/protocol/src/types.ts': 'export interface Envelope {\n  kind: string\n}\n',
+  'packages/core/session/src/known-event-types.ts': "export type KnownEventType = 'session.start'\n",
+  'pnpm-lock.yaml': "lockfileVersion: '9.0'\npackages: {}\n",
+}
 
 /** How one entry ran when it was imported with `argv[1]` pointing at it. */
 interface Ran {
@@ -37,7 +50,7 @@ interface Ran {
   readonly stderr: string
 }
 
-const wrapperDirs: string[] = []
+const tempDirs: string[] = []
 
 /**
  * Run one entry the way Node 24 runs a main module: `process.argv[1]` names the
@@ -48,7 +61,7 @@ const wrapperDirs: string[] = []
  */
 async function runImportedAsEntry(entry: string, args: readonly string[]): Promise<Ran> {
   const dir = await mkdtemp(join(tmpdir(), 'p0-01-entry-guard-'))
-  wrapperDirs.push(dir)
+  tempDirs.push(dir)
   const wrapper = join(dir, 'wrapper.mjs')
   await writeFile(wrapper, [
     'import { pathToFileURL } from \'node:url\'',
@@ -61,23 +74,51 @@ async function runImportedAsEntry(entry: string, args: readonly string[]): Promi
   return { exitCode: result.exitCode, stdout: result.stdout, stderr: result.stderr }
 }
 
-let headSha = ''
-let baselineText = ''
+/**
+ * Build a throwaway checkout, capture its baseline, then change `pnpm-lock.yaml`
+ * so the tree disagrees with the captured baseline on a fingerprinted surface.
+ * @returns the checkout's root.
+ */
+async function driftedCheckout(): Promise<string> {
+  const root = await mkdtemp(join(tmpdir(), 'p0-01-entry-guard-repo-'))
+  tempDirs.push(root)
+  const git = (args: readonly string[]) => execa('git', args, { cwd: root, env: { LANG: 'C', LC_ALL: 'C' } })
+  await git(['init', '--initial-branch=main'])
+  await git(['config', 'user.email', 'baseline-fixture@example.com'])
+  await git(['config', 'user.name', 'Baseline Fixture'])
+  await git(['config', 'commit.gpgsign', 'false'])
+  for (const [path, content] of Object.entries(FIXTURE_FILES)) {
+    await mkdir(dirname(join(root, path)), { recursive: true })
+    await writeFile(join(root, path), content)
+  }
+  await git(['add', '-A'])
+  await git(['commit', '-m', 'fixture baseline'])
+  await execa(process.execPath, [baselineScript, 'capture', '--repo-root', root], { cwd: root })
+  await writeFile(join(root, 'pnpm-lock.yaml'), "lockfileVersion: '9.0'\npackages:\n  drifted: true\n")
+  return root
+}
+
+let fixtureRoot = ''
 
 beforeAll(async () => {
-  headSha = (await execa('git', ['rev-parse', 'HEAD'], { cwd: repoRoot })).stdout.trim()
-  baselineText = await readFile(baselinePath, 'utf8')
-})
+  fixtureRoot = await driftedCheckout()
+}, 60_000)
 
 afterAll(async () => {
-  await Promise.all(wrapperDirs.map(dir => rm(dir, { recursive: true, force: true })))
+  await Promise.all(tempDirs.map(dir => rm(dir, { recursive: true, force: true })))
 })
 
 describe('P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names it even without import.meta.main (red first for B-688)', () => {
-  it('guard: the committed baseline records a different commit than this checkout, so verify has drift to find', () => {
-    // If this fails, the baseline does not drift here and case 2 would be green
-    // for the wrong reason; it is the harness guard, not the subject.
-    expect(baselineText, 'baseline.json').not.toContain(headSha)
+  it('guard: the throwaway checkout drifts from its captured baseline on pnpm-lock.yaml, so verify has drift to find', async () => {
+    // Started as the process entry, not imported, so every version of the
+    // entry's guard runs main(): this reads the drift itself, not the guard
+    // under test. If it fails, case 3 would be green for the wrong reason.
+    const ran = await execa(process.execPath, [baselineScript, 'verify', '--repo-root', fixtureRoot], {
+      cwd: repoRoot,
+      reject: false,
+    })
+    expect(ran.exitCode, `stdout: ${ran.stdout.slice(-400)}; stderr: ${ran.stderr.slice(-200)}`).not.toBe(0)
+    expect(`${ran.stdout}${ran.stderr}`).toContain('pnpm-lock.yaml')
   })
 
   it('the dsh bin prints its version when imported with argv[1] naming it', async () => {
@@ -91,7 +132,7 @@ describe('P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names 
   })
 
   it('baseline-fingerprint verify detects the drift and exits non-zero when imported with argv[1] naming it', async () => {
-    const ran = await runImportedAsEntry(baselineScript, ['verify', '--repo-root', repoRoot])
+    const ran = await runImportedAsEntry(baselineScript, ['verify', '--repo-root', fixtureRoot])
     // Today main() is guarded by import.meta.main and never runs, so verify does
     // nothing and the process exits 0 although the baseline drifts — RED. B-688's
     // guard runs main(), which detects the drift and exits 1.
