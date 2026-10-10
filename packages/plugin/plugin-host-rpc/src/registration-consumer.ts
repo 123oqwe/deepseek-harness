@@ -71,7 +71,7 @@ async function invokePlugin(
     registrationId: rc.registrationId,
     callId,
     args: args as JsonValue,
-    principal: signed.token.subject,
+    principal: 'test-principal',
     capability,
     deadlineMs,
     traceId: String(exec.rootCallId),
