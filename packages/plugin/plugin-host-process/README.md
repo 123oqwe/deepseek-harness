@@ -40,3 +40,13 @@ identity add nothing to either.
 - **One tools channel.** `child-runtime` exposes only a `tools` forwarding stub;
   a plugin that calls any other service from its context is outside this slice's
   contract. Events and UI surfaces are later P1-06 slices.
+- **Crash recovery is revoke-and-restartable, not auto-restart (P1-06 m3).** When
+  the plugin child exits — orderly, crash, or kill — the host revokes all of that
+  session's registrations: `handle.done.finally(disposeHost)` runs the
+  `attachPluginRpcHost` session disposer, which fires every proxy tool's disposer
+  and removes them from `ctx.tools`, so a dead plugin leaves no zombie tool.
+  Restart is a CAPABILITY, not an automatic behavior: a fresh host is started by
+  invoking `spawnPluginHost` again, which re-registers the plugin's tools. There
+  is deliberately NO automatic crash→respawn loop — auto-respawning an untrusted,
+  crashing plugin is a crash-loop / resource-exhaustion risk that would require a
+  bounded retry/backoff policy, which is deferred.
