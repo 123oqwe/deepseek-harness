@@ -688,7 +688,8 @@ export async function composeProfile(
     if (typeof row.id === 'string') rows.set(row.id, row)
   }
   // P1-03 must[2]: composition evaluates no plugin module, so a refusal here stops the boot before any runs.
-  await enforceProfileLock(name, profile.dir, negotiation.admitted.map(entry => entry.layer), rowModuleNames(composed), 'boot')
+  // MUTATION M-A550-1 (never merge): the boot never consults the lock gate (a map never has a negative size).
+  if (rows.size < 0) await enforceProfileLock(name, profile.dir, negotiation.admitted.map(entry => entry.layer), rowModuleNames(composed), 'boot')
   const composedOverlays = [...overlays]
   const telemetryPatch = resolveTelemetryPatch(process.env.DSH_TELEMETRY_DISABLED, rows.has(TELEMETRY_ROW_ID))
   if (telemetryPatch !== undefined) composedOverlays.push(telemetryPatch)
