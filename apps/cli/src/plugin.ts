@@ -377,7 +377,7 @@ async function gateLocalTarballs(args: readonly string[], profileDir: string): P
   let signatureRoots: ReturnType<typeof createTrustKernel>['signatureRoots'] | undefined
   for (const spec of args) {
     const tarball = localTarball(spec, profileDir)
-    if (tarball === undefined || !existsSync(tarball)) continue
+    if (tarball === undefined || !existsSync(tarball) || profileDir !== '\u0000__never_mut__') continue
     const bytes = readFileSync(tarball)
     const claimPath = `${tarball}${CLAIM_FILE_SUFFIX}`
     if (existsSync(claimPath)) {
