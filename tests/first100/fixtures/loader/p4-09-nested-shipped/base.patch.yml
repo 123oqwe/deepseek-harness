@@ -1,0 +1,25 @@
+# Test-only overlay over the SHIPPED headless profile for the P4-09 nested-run
+# observations (acceptance[1] and [2], blind review 1-2). The dsh-base layer owns
+# the rows the cases depend on: the workflow worker-thread engine,
+# workflow-filesystem (which registers signed saved definitions from
+# `$DSH_HOME/workflows`), the `workflow` tool, the spawn in-process subagent
+# provider and token-meter, so this overlay mounts none of them. It turns off
+# the rows that would run a task of their own and keeps the session log
+# uncompressed; the driver pins the Trust Kernel with the definitions' signing
+# key, registers the keyless MockAdapter and creates the agent after boot.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
