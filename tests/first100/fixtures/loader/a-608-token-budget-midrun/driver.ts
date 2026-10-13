@@ -55,6 +55,9 @@ const BURN_SCRIPT = [
   'return out',
 ].join('\n')
 
+/** How many model responses {@link answer} served the child. */
+let childResponses = 0
+
 /** Every block across all messages, for counting the child's prior burn tool-results. */
 function blocksOf(options: GenerateOptions): { type: string; text?: string }[] {
   return (options.messages ?? []).flatMap(message => (message.content ?? []) as { type: string; text?: string }[])
@@ -72,6 +75,7 @@ function answer(options: GenerateOptions): StreamChunk[] {
   const blocks = blocksOf(options)
   const isChild = blocks.some(block => block.type === 'text' && (block.text ?? '').includes('A608_CHILD_BURN'))
   if (isChild) {
+    childResponses += 1
     const priorBurns = blocks.filter(block => block.type === 'tool-result').length
     return priorBurns < 2
       ? toolCallResponse(`a608-burn-${priorBurns}`, BURN_TOOL, {})
@@ -118,6 +122,14 @@ try {
       return Promise.resolve([{ type: 'text' as const, text: 'burned' }])
     },
   }))
+  // What the child's own log recorded, and how its turn ended.
+  const childEventTypes: string[] = []
+  const childTurnEnds: { readonly kind: string }[] = []
+  ctx.on('session/event', (session, event) => {
+    if (session.header.parentSession === undefined) return
+    childEventTypes.push(event.type)
+    if (event.type === 'turn/end') childTurnEnds.push(event.data.reason)
+  })
   await createFixtureRootAgent(ctx, {
     provider: PROVIDER,
     model: PROVIDER,
@@ -138,6 +150,9 @@ try {
     workflowResultText: workflowResultText.slice(0, 1000),
     childTokenBudgetExhausted: /token-budget-exhausted/u.test(workflowResultText),
     burnRuns,
+    childResponses,
+    childEventTypes: childEventTypes.slice(0, 40),
+    childTurnEnds,
   }
   process.stdout.write(`${REPORT_PREFIX} ${JSON.stringify(report)}\n`)
 } finally {

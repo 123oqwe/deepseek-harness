@@ -42,4 +42,10 @@ export interface TokenBudgetReport {
   readonly childTokenBudgetExhausted: boolean
   /** How many times the burn tool body ran across the child's run (on disk). 2 today (both steps run); 1 after a mid-run abort. */
   readonly burnRuns: number
+  /** How many model responses the scripted model served the child. */
+  readonly childResponses: number
+  /** The event types the child's session recorded, in order (first 40); context for a failure message. */
+  readonly childEventTypes: readonly string[]
+  /** The `turn/end` reasons the child's session recorded, as logged. */
+  readonly childTurnEnds: readonly { readonly kind: string }[]
 }
