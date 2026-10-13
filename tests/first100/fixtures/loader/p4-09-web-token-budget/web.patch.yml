@@ -1,0 +1,44 @@
+# Test-only overlay over the SHIPPED `web` profile (dsh-base + dsh-web-app) for
+# the P4-09 Web token-budget case (blind review U-2). It disables only the host
+# rows that bind a port, serve assets, export telemetry or wait for those, the
+# set A-602 (P4-09.web-preset-workflow-signing) disables for its Web boot.
+# The `standard` preset, its delegation group and its workflow engine are the
+# shipped ones; the engine keeps its shipped default tree allowance. The driver
+# provides the in-process `connection` registries and `cmdline`, pins the Trust
+# Kernel, registers the keyless MockAdapter and composes the agent after boot.
+- id: webserver
+  disabled: true
+
+- id: web-runtime
+  disabled: true
+
+- id: session-telemetry-otel
+  disabled: true
+
+- id: modules
+  disabled: true
+
+- id: connection
+  disabled: true
+
+- id: session-log-download
+  disabled: true
+
+- id: open-in-app
+  disabled: true
+
+- id: client-hmr
+  disabled: true
+
+- id: directory-picker
+  disabled: true
+
+- id: agent-presets
+  config:
+    default: standard
+    includeUserRoot: false
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
