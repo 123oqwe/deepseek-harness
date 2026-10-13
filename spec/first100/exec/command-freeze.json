@@ -23728,6 +23728,288 @@
         "failureSummary": "Read from each round's own narrow report; every round carried build. M-688-1″ run 38035717205: 2 passed, 1 failed in apps/cli/tests/entry-main-guard.spec.ts: «P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names it even without import.meta.main (red first for B-688) the dsh bin prints its version when imported with argv[1] naming it». M-688-2″ run 38035957344: 2 passed, 1 failed in apps/cli/tests/entry-main-guard.spec.ts: «P0-01 / BLOCKED-351: a shipped entry does its work when argv[1] names it even without import.meta.main (red first for B-688) baseline-fingerprint verify detects the drift and exits non-zero when imported with argv[1] naming it»."
       },
       "note": "P0-01 F-stage supplement 5: BLOCKED-351 condition 1 on the shipped entries. The dsh bin and baseline-fingerprint verify do their work when argv[1] names them, also where import.meta.main is not true (Node 24.0 leaves it undefined). The baseline cases verify a throwaway checkout with fingerprint drift; the guard reads that drift with verify started as the process entry. Lane A's A-577, red first for B-688; fixture replaced after B-712."
+    },
+    {
+      "epic": "P1-10",
+      "stage": "U",
+      "supplements": {
+        "epic": "P1-10",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "vitest.e2e.config.ts",
+        "tests/first100/fixtures/P1-10.plugin-upgrade-healthcheck-rollback.composition.e2e.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-10 (A-596, B-711a red first): a health-check-failed upgrade rolls back, and a later dsh plugin run keeps the data and does not report unrecoverable after the rerun, the version-1 data is intact and the run did not report the plugin unrecoverable",
+        "P1-10 1-6 (A-605, green evidence): an upgrade that fails at validate leaves the approved-permission store byte-unchanged the approved-permission store is byte-unchanged, and the failed upgrade wrote nothing under its directory"
+      ],
+      "files": [
+        "tests/first100/fixtures/P1-10.plugin-upgrade-healthcheck-rollback.composition.e2e.ts",
+        "apps/cli/src/bin.ts",
+        "apps/cli/src/plugin.ts",
+        "apps/cli/src/plugin-migration.ts",
+        "packages/plugin/plugin-migrations/src/transaction.ts",
+        "packages/storage/storage-json/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-10-13T19:27:51.000Z",
+      "dryRunProof": {
+        "treeSha": "0f047d428880c7c36ab428ab34447a6ae0a347af",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "2 rounds, never merged: M-711-1‴ `01b639dec72b33454955ab9971b9042d60c9ed06` (parent `0639449d70`) changes packages/plugin/plugin-migrations/src/transaction.ts so the record still names the consumed rollback target after a failed health check; M-a605-1‴ `4833814327e915c23313112356a3d5d3babc318d` (parent `0639449d70`) changes apps/cli/src/plugin-migration.ts so rollbackCode removes the sibling capability-tokens/ directory (a sensitivity probe: the isolation is structural). A-416: each round's changed files and this entry's files are byte-identical at the round's parent and at the freeze tree's base `2b41b968a2`, checked when this entry was written.",
+        "failureSummary": "Read from each round's own narrow report under the e2e config; every round carried build. M-711-1‴ run 38453887941: 1 passed, 1 failed in tests/first100/fixtures/P1-10.plugin-upgrade-healthcheck-rollback.composition.e2e.ts: «P1-10 (A-596, B-711a red first): a health-check-failed upgrade rolls back, and a later dsh plugin run keeps the data and does not report unrecoverable after the rerun, the version-1 data is intact and the run did not report the plugin unrecoverable». M-a605-1‴ run 38454438533: 1 passed, 1 failed in tests/first100/fixtures/P1-10.plugin-upgrade-healthcheck-rollback.composition.e2e.ts: «P1-10 1-6 (A-605, green evidence): an upgrade that fails at validate leaves the approved-permission store byte-unchanged the approved-permission store is byte-unchanged, and the failed upgrade wrote nothing under its directory»."
+      },
+      "note": "P1-10 U-stage supplement 2 (rework signing batch): blind review 1-1 and 1-6 on the shipped `dsh plugin` path. An upgrade whose validate corrupts the migrated copy fails its health check and rolls back, and a later run keeps the version-1 data and does not report the plugin unrecoverable (A-596, red first for B-711 1-1; recipe 89a734ac75). The same failed upgrade leaves the approved-permission store `$DSH_HOME/capability-tokens/` byte-unchanged and writes nothing under it (A-605, acceptance[2]); that isolation is structural (the upgrade writes under storages/ and the profile's package.json and lock), so its mutation is a sensitivity probe, not a realistic defect."
+    },
+    {
+      "epic": "P1-10",
+      "stage": "U",
+      "supplements": {
+        "epic": "P1-10",
+        "stage": "U"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "vitest.e2e.config.ts",
+        "tests/first100/fixtures/P1-10.plugin-upgrade-no-rerun.composition.e2e.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-10 (A-604, B-711a red first): upgrading data already at an intermediate version runs only the remaining migration step, not an already-applied one the v2->v3 upgrade runs only step 2-3 and does not re-run the already-applied step 1-2"
+      ],
+      "files": [
+        "tests/first100/fixtures/P1-10.plugin-upgrade-no-rerun.composition.e2e.ts",
+        "apps/cli/src/bin.ts",
+        "apps/cli/src/plugin-migration.ts"
+      ],
+      "frozenAtUtc": "2026-10-13T19:27:51.000Z",
+      "dryRunProof": {
+        "treeSha": "0f047d428880c7c36ab428ab34447a6ae0a347af",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One round, never merged: M-711-2′ `6b5a028abfa58dc41b85525cb6f169d2ffd7ac49` (parent `9f06a87ee3`) changes apps/cli/src/plugin-migration.ts so every declared migration step runs from any stamped version. A-416: each round's changed files and this entry's files are byte-identical at the round's parent and at the freeze tree's base `2b41b968a2`, checked when this entry was written.",
+        "failureSummary": "Read from each round's own narrow report under the e2e config; every round carried build. M-711-2′ run 38028079769: 0 passed, 1 failed in tests/first100/fixtures/P1-10.plugin-upgrade-no-rerun.composition.e2e.ts: «P1-10 (A-604, B-711a red first): upgrading data already at an intermediate version runs only the remaining migration step, not an already-applied one the v2->v3 upgrade runs only step 2-3 and does not re-run the already-applied step 1-2»."
+      },
+      "note": "P1-10 U-stage supplement 3 (rework signing batch): blind review 1-2 on the shipped `dsh plugin` path. Data already at an intermediate version upgrades through only the remaining step (A-604, red first for B-711 1-2, ab6c9bc1ac)."
+    },
+    {
+      "epic": "P1-10",
+      "stage": "U",
+      "supplements": {
+        "epic": "P1-10",
+        "stage": "U"
+      },
+      "supplementSeq": 4,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "vitest.e2e.config.ts",
+        "tests/first100/fixtures/P1-10.plugin-downgrade-revert.composition.e2e.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-10 1-3 (A-609 ①, green evidence): a refused downgrade reverts the install to the version before it the downgrade is refused and the profile lockfile reverts to the pre-downgrade (v2) bytes"
+      ],
+      "files": [
+        "tests/first100/fixtures/P1-10.plugin-downgrade-revert.composition.e2e.ts",
+        "apps/cli/src/bin.ts",
+        "apps/cli/src/plugin.ts",
+        "apps/cli/src/plugin-migration.ts"
+      ],
+      "frozenAtUtc": "2026-10-13T19:27:51.000Z",
+      "dryRunProof": {
+        "treeSha": "0f047d428880c7c36ab428ab34447a6ae0a347af",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One round, never merged: M-711-3″ `370828d846492f225e4ede0cdb7c7836fc2a8c8f` (parent `89a734ac75`) changes apps/cli/src/plugin.ts so the data on disk never refuses an install. A-416: each round's changed files and this entry's files are byte-identical at the round's parent and at the freeze tree's base `2b41b968a2`, checked when this entry was written.",
+        "failureSummary": "Read from each round's own narrow report under the e2e config; every round carried build. M-711-3″ run 38447296490: 0 passed, 1 failed in tests/first100/fixtures/P1-10.plugin-downgrade-revert.composition.e2e.ts: «P1-10 1-3 (A-609 ①, green evidence): a refused downgrade reverts the install to the version before it the downgrade is refused and the profile lockfile reverts to the pre-downgrade (v2) bytes»."
+      },
+      "note": "P1-10 U-stage supplement 4 (rework signing batch): blind review 1-3 on the shipped `dsh plugin` path. A downgrade whose data is newer than the build is refused and the profile lockfile reverts to the pre-downgrade bytes (A-609 ①, green evidence for B-711b 1-3, f3c412389f; the refusal wording follows B-711b's message, fixture 2fc3cba119)."
+    },
+    {
+      "epic": "P1-10",
+      "stage": "U",
+      "supplements": {
+        "epic": "P1-10",
+        "stage": "U"
+      },
+      "supplementSeq": 5,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "vitest.e2e.config.ts",
+        "tests/first100/fixtures/P1-10.plugin-migration-approval.composition.e2e.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-10 1-5 (A-609 ③, green evidence): an irreversible upgrade is refused until confirmed, then proceeds with the named digest without --confirm the upgrade is refused and exported (migration body never runs); with --confirm <digest> it runs"
+      ],
+      "files": [
+        "tests/first100/fixtures/P1-10.plugin-migration-approval.composition.e2e.ts",
+        "apps/cli/src/bin.ts",
+        "apps/cli/src/plugin-migration.ts",
+        "packages/plugin/plugin-migrations/src/index.ts",
+        "packages/plugin/plugin-migrations/src/transaction.ts"
+      ],
+      "frozenAtUtc": "2026-10-13T19:27:51.000Z",
+      "dryRunProof": {
+        "treeSha": "0f047d428880c7c36ab428ab34447a6ae0a347af",
+        "testsDiscovered": 1
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One round, never merged: M-711-5″ `038363cf6a3afdcd38dfdcbfab3de4180356397b` (parent `89a734ac75`) changes packages/plugin/plugin-migrations/src/index.ts so an irreversible path is admitted without a confirmation. A-416: each round's changed files and this entry's files are byte-identical at the round's parent and at the freeze tree's base `2b41b968a2`, checked when this entry was written.",
+        "failureSummary": "Read from each round's own narrow report under the e2e config; every round carried build. M-711-5″ run 38447879096: 0 passed, 1 failed in tests/first100/fixtures/P1-10.plugin-migration-approval.composition.e2e.ts: «P1-10 1-5 (A-609 ③, green evidence): an irreversible upgrade is refused until confirmed, then proceeds with the named digest without --confirm the upgrade is refused and exported (migration body never runs); with --confirm <digest> it runs»."
+      },
+      "note": "P1-10 U-stage supplement 5 (rework signing batch): must[2] on the shipped `dsh plugin` path. An irreversible upgrade is refused and its data exported until the operator confirms the path digest, then proceeds (A-609 ③; the digest is read as `sha256-<hex>` from the refusal, fixture 2fc3cba119)."
+    },
+    {
+      "epic": "P4-09",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-09",
+        "stage": "U"
+      },
+      "supplementSeq": 10,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-worker-thread/tests/nested-workflow-cancel-inflight-start.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-09 acceptance[1] (B-709 red first): a nested workflow whose start is in flight at cancel is cancelled, not published the in-flight nested run is cancelled before its body runs — no marker (RED today: the workflow() path misses it)",
+        "P4-09 acceptance[1] (B-709 red first): a nested workflow whose start is in flight at cancel is cancelled, not published control: with no cancel, the same gated nested run is published and runs its body — the marker appears"
+      ],
+      "files": [
+        "packages/workflow/workflow-worker-thread/tests/nested-workflow-cancel-inflight-start.spec.ts",
+        "packages/workflow/workflow-worker-thread/src/host.ts",
+        "packages/workflow/workflow-worker-thread/src/index.ts",
+        "packages/core/agent-loop/tests/mock-adapter.ts"
+      ],
+      "frozenAtUtc": "2026-10-13T19:27:51.000Z",
+      "dryRunProof": {
+        "treeSha": "0f047d428880c7c36ab428ab34447a6ae0a347af",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One round, never merged: M-709-2″ `de7b1236c184f060740406f584aafe0dac74e440` (parent `0639449d70`) changes packages/workflow/workflow-worker-thread/src/host.ts so nest() no longer checks the parent once the nested run has started. A-416: each round's changed files and this entry's files are byte-identical at the round's parent and at the freeze tree's base `2b41b968a2`, checked when this entry was written.",
+        "failureSummary": "Read from each round's own narrow report; every round carried build. M-709-2″ run 38452911850: 1 passed, 1 failed in packages/workflow/workflow-worker-thread/tests/nested-workflow-cancel-inflight-start.spec.ts: «P4-09 acceptance[1] (B-709 red first): a nested workflow whose start is in flight at cancel is cancelled, not published the in-flight nested run is cancelled before its body runs — no marker (RED today: the workflow() path misses it)»."
+      },
+      "note": "P4-09 U-stage supplement 10 (rework signing batch): blind review 1-1, acceptance[1] on the workflow() path. A nested workflow whose start is in flight when its parent is cancelled is cancelled before its body runs, with a control where no cancel lets it run (B-709 red first 500589a00d; fix b0ebc230fb)."
+    },
+    {
+      "epic": "P4-09",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-09",
+        "stage": "U"
+      },
+      "supplementSeq": 11,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "vitest.e2e.config.ts",
+        "tests/first100/fixtures/P4-09.token-budget-midrun.composition.e2e.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-09 acceptance[3] (A-608): a running nested child that overspends the tree token budget is aborted mid-run with token-budget-exhausted guard: the workflow tool was dispatched and the child was served a response",
+        "P4-09 acceptance[3] (A-608): a running nested child that overspends the tree token budget is aborted mid-run with token-budget-exhausted at most one response overspends: the child, whose first response already exceeds the allowance, is served no second",
+        "P4-09 acceptance[3] (A-608): a running nested child that overspends the tree token budget is aborted mid-run with token-budget-exhausted the child is aborted rather than completed, and the workflow result the model reads names token-budget-exhausted"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-09.token-budget-midrun.composition.e2e.ts",
+        "tests/first100/fixtures/loader/a-608-token-budget-midrun/driver.ts",
+        "tests/first100/fixtures/loader/a-608-token-budget-midrun/shared.ts",
+        "tests/first100/fixtures/loader/a-608-token-budget-midrun/base.patch.yml",
+        "packages/workflow/workflow-worker-thread/src/host.ts",
+        "packages/workflow/workflow-worker-thread/src/runtime.ts",
+        "packages/workflow/tool-workflow/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-10-13T19:27:51.000Z",
+      "dryRunProof": {
+        "treeSha": "0f047d428880c7c36ab428ab34447a6ae0a347af",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One round, never merged: M-714-1″ `3db5b9b88771943e4a09e7f9e882fceb5739cc63` (parent `2d4152300c`) changes packages/workflow/workflow-worker-thread/src/host.ts so meterChildren returns early once a child exists, so a running child is no longer metered. A-416: each round's changed files and this entry's files are byte-identical at the round's parent and at the freeze tree's base `2b41b968a2`, checked when this entry was written.",
+        "failureSummary": "Read from each round's own narrow report under the e2e config; every round carried build. M-714-1″ run 38444640334: 1 passed, 2 failed in tests/first100/fixtures/P4-09.token-budget-midrun.composition.e2e.ts: «P4-09 acceptance[3] (A-608): a running nested child that overspends the tree token budget is aborted mid-run with token-budget-exhausted at most one response overspends: the child, whose first response already exceeds the allowance, is served no second», «P4-09 acceptance[3] (A-608): a running nested child that overspends the tree token budget is aborted mid-run with token-budget-exhausted the child is aborted rather than completed, and the workflow result the model reads names token-budget-exhausted»."
+      },
+      "note": "P4-09 U-stage supplement 11 (rework signing batch): blind review 1-2, acceptance[3] on the shipped composition. A running nested child whose first response already exceeds the tree's token budget is served at most that response and is aborted rather than completed, and the workflow result the model reads names token-budget-exhausted (A-608 loosened, 3555da7cae; the reason reaches the result through BLOCKED-366's result half, 4829da186c). The child's own turn/end cause is not asserted here: it is BLOCKED-366's open half (delegate ruling, rework-wave-readings-20261013.md)."
+    },
+    {
+      "epic": "P4-09",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-09",
+        "stage": "U"
+      },
+      "supplementSeq": 12,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "vitest.e2e.config.ts",
+        "tests/first100/fixtures/P4-09.workflow-tool-visibility.composition.e2e.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-09 (A-611, B-729 red first): the model is shown the workflow nested-run interface and the registered signed definitions guard: the workflow tool was offered and the nested interface works when a script uses it",
+        "P4-09 (A-611, B-729 red first): the model is shown the workflow nested-run interface and the registered signed definitions the workflow tool description documents workflow(nameOrRef, args) and the request lists the signed definition name + digest (today neither — RED)"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-09.workflow-tool-visibility.composition.e2e.ts",
+        "tests/first100/fixtures/loader/a-611-workflow-tool-visibility/driver.ts",
+        "tests/first100/fixtures/loader/a-611-workflow-tool-visibility/shared.ts",
+        "tests/first100/fixtures/loader/a-611-workflow-tool-visibility/base.patch.yml",
+        "packages/workflow/tool-workflow/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-10-13T19:27:51.000Z",
+      "dryRunProof": {
+        "treeSha": "0f047d428880c7c36ab428ab34447a6ae0a347af",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One round, never merged: M-729-2″ `2df7d870e8ad6dd56e8c89898fa8ed4a4016a113` (parent `0639449d70`) changes packages/workflow/tool-workflow/src/index.ts so the workflow tool's description drops the nesting interface. A-416: each round's changed files and this entry's files are byte-identical at the round's parent and at the freeze tree's base `2b41b968a2`, checked when this entry was written.",
+        "failureSummary": "Read from each round's own narrow report under the e2e config; every round carried build. M-729-2″ run 38453468638: 1 passed, 1 failed in tests/first100/fixtures/P4-09.workflow-tool-visibility.composition.e2e.ts: «P4-09 (A-611, B-729 red first): the model is shown the workflow nested-run interface and the registered signed definitions the workflow tool description documents workflow(nameOrRef, args) and the request lists the signed definition name + digest (today neither — RED)»."
+      },
+      "note": "P4-09 U-stage supplement 12 (rework signing batch): blind review 1-2 on the shipped composition. The model is shown the workflow nested-run interface and the registered signed definitions (A-611, red first for B-729, 7e31abf9de)."
     }
   ]
 }
