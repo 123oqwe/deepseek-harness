@@ -1,0 +1,16 @@
+# Test-only overlay over the SHIPPED headless profile for lane B's P3-12 must[2]
+# red first (the isolated decode). The dsh-base layer owns the attachment rows the
+# case depends on (attachment-local and attachment-security), so this overlay
+# mounts none of them; it only turns off the rows that would run a task of their
+# own. The driver pins the Trust Kernel and admits the images after boot.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
