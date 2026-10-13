@@ -6,7 +6,7 @@
       "epic": "P0-03",
       "stage": "U",
       "frozenAtUtc": "2026-09-01T22:10:00Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P0-03 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain tests/architecture/capability-seams.spec.ts, tests/architecture/check-layer-deps.spec.ts, tests/architecture/layer-deps.spec.ts, tests/architecture/risk-domain-tags.spec.ts and this row is removed."
     },
     {
@@ -14,7 +14,7 @@
       "epic": "P0-05",
       "stage": "P",
       "frozenAtUtc": "2026-09-01T22:20:00Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P0-05 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/migration/feature-gates/tests/gates.provider.spec.ts, packages/migration/feature-gates/tests/gates.spec.ts and this row is removed."
     },
     {
@@ -22,7 +22,7 @@
       "epic": "P0-07",
       "stage": "P",
       "frozenAtUtc": "2026-09-01T22:30:00Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P0-07 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain tests/release/evidence-package.spec.ts and this row is removed."
     },
     {
@@ -30,7 +30,7 @@
       "epic": "P0-07",
       "stage": "U",
       "frozenAtUtc": "2026-09-01T22:55:00Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P0-07 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain tests/first100/fixtures/P0-07.composition.spec.ts and this row is removed."
     },
     {
@@ -38,7 +38,7 @@
       "epic": "P0-03",
       "stage": "F",
       "frozenAtUtc": "2026-09-01T23:35:00Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P0-03 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain tests/architecture/check-layer-deps.spec.ts, tests/architecture/layer-deps.spec.ts, tests/architecture/risk-domain-tags.spec.ts and this row is removed."
     },
     {
@@ -46,7 +46,7 @@
       "epic": "P0-05",
       "stage": "F",
       "frozenAtUtc": "2026-09-01T23:50:00Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P0-05 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/migration/feature-gates/tests/gates.provider.spec.ts and this row is removed."
     },
     {
@@ -54,7 +54,7 @@
       "epic": "P2-01",
       "stage": "C",
       "frozenAtUtc": "2026-09-11T23:55:00Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P2-01 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/identity/principal/tests/runtime-policy.spec.ts and this row is removed."
     },
     {
@@ -62,7 +62,7 @@
       "epic": "P2-01",
       "stage": "P",
       "frozenAtUtc": "2026-09-03T00:30:00Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P2-01 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/identity/principal/tests/identity.spec.ts and this row is removed."
     },
     {
@@ -70,7 +70,7 @@
       "epic": "P2-01",
       "stage": "U",
       "frozenAtUtc": "2026-09-03T04:45:00Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P2-01 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/identity/principal/tests/identity.spec.ts, packages/core/agent-loop/tests/runtime-context.spec.ts, packages/core/agent-loop/tests/agent.spec.ts and this row is removed."
     },
     {
@@ -78,7 +78,7 @@
       "epic": "P2-01",
       "stage": "F",
       "frozenAtUtc": "2026-09-03T05:15:00Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P2-01 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/core/agent-loop/tests/runtime-context.spec.ts, packages/core/agent-loop/tests/agent.spec.ts and this row is removed."
     },
     {
@@ -86,7 +86,7 @@
       "epic": "P2-01",
       "stage": "F",
       "frozenAtUtc": "2026-09-03T11:35:00Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P2-01 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/sdk/protocol/tests/transport.spec.ts, packages/sdk/protocol/tests/version-negotiation.spec.ts and this row is removed."
     },
     {
@@ -94,7 +94,7 @@
       "epic": "P4-07",
       "stage": "P",
       "frozenAtUtc": "2026-09-05T22:10:00.000Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P4-07 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/run/lease/tests/store.spec.ts and this row is removed."
     },
     {
@@ -102,7 +102,7 @@
       "epic": "P5-11",
       "stage": "P",
       "frozenAtUtc": "2026-09-06T15:40:00.000Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P5-11 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/collaboration/taskboard/tests/store.spec.ts and this row is removed."
     },
     {
@@ -110,7 +110,7 @@
       "epic": "P4-08",
       "stage": "U",
       "frozenAtUtc": "2026-09-08T14:45:00.000Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P4-08 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/workflow/workflow-worker-thread/tests/journal-resume.spec.ts and this row is removed."
     },
     {
@@ -118,7 +118,7 @@
       "epic": "P2-04",
       "stage": "C",
       "frozenAtUtc": "2026-09-08T16:10:00.000Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P2-04 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/policy/risk-taxonomy/tests/side-effect-class.spec.ts and this row is removed."
     },
     {
@@ -126,7 +126,7 @@
       "epic": "P2-04",
       "stage": "P",
       "frozenAtUtc": "2026-09-08T21:40:00.000Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P2-04 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/policy/risk-taxonomy/tests/side-effect-class.spec.ts, packages/interaction/permission-presets/tests/invariant.spec.ts, packages/interaction/permission-presets/tests/permission-presets.spec.ts, packages/interaction/permission-presets/tests/projection.spec.ts, packages/interaction/permission-presets/tests/risk-gate.spec.ts and this row is removed."
     },
     {
@@ -134,7 +134,7 @@
       "epic": "P4-07",
       "stage": "U",
       "frozenAtUtc": "2026-09-09T01:20:00.000Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P4-07 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/run/lease/tests/fenced-dispatch.spec.ts and this row is removed."
     },
     {
@@ -142,7 +142,7 @@
       "epic": "P2-04",
       "stage": "F",
       "frozenAtUtc": "2026-09-09T04:30:00.000Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P2-04 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/policy/risk-taxonomy/tests/side-effect-class.spec.ts and this row is removed."
     },
     {
@@ -150,7 +150,7 @@
       "epic": "P4-11",
       "stage": "C",
       "frozenAtUtc": "2026-09-08T14:45:00.000Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P4-11 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/reliability/retry/tests/attribution.spec.ts, packages/reliability/retry/tests/fault-matrix.spec.ts and this row is removed."
     },
     {
@@ -158,7 +158,7 @@
       "epic": "P2-04",
       "stage": "U",
       "frozenAtUtc": "2026-09-09T06:30:00Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P2-04 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/interaction/permission-presets/tests/invariant.spec.ts, packages/interaction/permission-presets/tests/permission-presets.spec.ts, packages/interaction/permission-presets/tests/projection.spec.ts, packages/policy/risk-taxonomy/tests/classify.spec.ts, packages/policy/risk-taxonomy/tests/side-effect-class.spec.ts and this row is removed."
     },
     {
@@ -166,7 +166,7 @@
       "epic": "P4-11",
       "stage": "U",
       "frozenAtUtc": "2026-09-10T11:05:00.000Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P4-11 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/llm/llm-retry/tests/run-budget.spec.ts, packages/llm/llm/tests/circuit-breaker.spec.ts, packages/reliability/retry/tests/attribution.spec.ts and this row is removed."
     },
     {
@@ -174,7 +174,7 @@
       "epic": "P4-11",
       "stage": "F",
       "frozenAtUtc": "2026-09-10T12:30:00.000Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P4-11 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/reliability/retry/tests/fault-matrix.spec.ts, packages/llm/llm/tests/circuit-breaker.spec.ts, packages/llm/llm-retry/tests/run-budget.spec.ts and this row is removed."
     },
     {
@@ -182,7 +182,7 @@
       "epic": "P4-02",
       "stage": "C",
       "frozenAtUtc": "2026-09-11T01:09:13.000Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P4-02 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/run/run/tests/ended-run.spec.ts, packages/run/run/tests/fenced-dispatch.spec.ts, packages/run/run/tests/plugin.spec.ts, packages/run/run/tests/refusal-log.spec.ts, packages/run/run/tests/restart.spec.ts, packages/run/run/tests/run-end-state.spec.ts, packages/run/run/tests/run-service.spec.ts, packages/run/run/tests/run-span.spec.ts, packages/run/run/tests/stop-gate-dispatch.spec.ts, packages/run/run/tests/stop-gate.spec.ts, packages/run/run/tests/takeover.spec.ts, packages/run/run/tests/task-profile.spec.ts and this row is removed."
     },
     {
@@ -190,7 +190,7 @@
       "epic": "P4-02",
       "stage": "C",
       "frozenAtUtc": "2026-09-11T05:14:56Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P4-02 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/run/run/tests/ended-run.spec.ts, packages/run/run/tests/fenced-dispatch.spec.ts, packages/run/run/tests/plugin.spec.ts, packages/run/run/tests/refusal-log.spec.ts, packages/run/run/tests/restart.spec.ts, packages/run/run/tests/run-end-state.spec.ts, packages/run/run/tests/run-service.spec.ts, packages/run/run/tests/run-span.spec.ts, packages/run/run/tests/state-machine.spec.ts, packages/run/run/tests/stop-gate-dispatch.spec.ts, packages/run/run/tests/stop-gate.spec.ts, packages/run/run/tests/takeover.spec.ts, packages/run/run/tests/task-profile.spec.ts and this row is removed."
     },
     {
@@ -198,7 +198,7 @@
       "epic": "P4-02",
       "stage": "U",
       "frozenAtUtc": "2026-09-11T05:14:56Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P4-02 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/run/run/tests/ended-run.spec.ts, packages/run/run/tests/fenced-dispatch.spec.ts, packages/run/run/tests/plugin.spec.ts, packages/run/run/tests/refusal-log.spec.ts, packages/run/run/tests/restart.spec.ts, packages/run/run/tests/run-end-state.spec.ts, packages/run/run/tests/run-service.spec.ts, packages/run/run/tests/run-span.spec.ts, packages/run/run/tests/state-machine.spec.ts, packages/run/run/tests/stop-gate-dispatch.spec.ts, packages/run/run/tests/stop-gate.spec.ts, packages/run/run/tests/takeover.spec.ts and this row is removed."
     },
     {
@@ -206,7 +206,7 @@
       "epic": "P0-05",
       "stage": "C",
       "frozenAtUtc": "2026-09-11T15:00:06Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P0-05 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/migration/feature-gates/tests/gates.spec.ts and this row is removed."
     },
     {
@@ -214,7 +214,7 @@
       "epic": "P0-06",
       "stage": "C",
       "frozenAtUtc": "2026-09-11T15:00:06Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P0-06 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/schema/schema-registry/tests/migration.spec.ts and this row is removed."
     },
     {
@@ -222,7 +222,7 @@
       "epic": "P8-01",
       "stage": "C",
       "frozenAtUtc": "2026-09-11T15:00:06Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P8-01 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/sdk/protocol/tests/transport.spec.ts, packages/sdk/protocol/tests/types.spec.ts and this row is removed."
     },
     {
@@ -230,7 +230,7 @@
       "epic": "P2-04",
       "stage": "C",
       "frozenAtUtc": "2026-09-15T08:16:36.185Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P2-04 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/policy/risk-taxonomy/tests/side-effect-class.spec.ts and this row is removed."
     },
     {
@@ -238,7 +238,7 @@
       "epic": "P4-01",
       "stage": "U",
       "frozenAtUtc": "2026-09-24T18:48:15Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P4-01 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/run/run/tests/ended-run.spec.ts, packages/run/run/tests/fenced-dispatch.spec.ts, packages/run/run/tests/plugin.spec.ts, packages/run/run/tests/refusal-log.spec.ts, packages/run/run/tests/run-end-state.spec.ts, packages/run/run/tests/run-service.spec.ts, packages/run/run/tests/run-span.spec.ts, packages/run/run/tests/state-machine.spec.ts, packages/run/run/tests/stop-gate-dispatch.spec.ts, packages/run/run/tests/stop-gate.spec.ts, packages/run/run/tests/takeover.spec.ts, packages/run/run/tests/task-profile.spec.ts and this row is removed."
     },
     {
@@ -246,7 +246,7 @@
       "epic": "P4-11",
       "stage": "P",
       "frozenAtUtc": "2026-09-26T04:37:04Z",
-      "expiresOn": "2026-10-12",
+      "expiresOn": "2026-12-31",
       "reason": "P4-11 is ACCEPTED, so its freeze is not superseded now; accepted-cases-check reads its frozen titles on every push. At the epic's next re-signoff or supersession its files gain packages/llm/llm/tests/adapter-failure.spec.ts, packages/llm/llm/tests/retry-policy.spec.ts and this row is removed."
     }
   ]
