@@ -7971,7 +7971,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'WorkflowResult',
-    declaration: 'export interface WorkflowResult {\n    value: unknown;\n    stopReason: WorkflowStopReason;\n    error?: string;\n    waitingFor?: {\n        readonly approvalId: string;\n    };\n    agentsStarted: number;\n}',
+    declaration: 'export interface WorkflowResult {\n    value: unknown;\n    stopReason: WorkflowStopReason;\n    error?: string;\n    waitingFor?: {\n        readonly approvalId: string;\n    };\n    agentsStarted: number;\n    abortedChildReasons?: readonly string[];\n}',
   },
   {
     name: 'WorkflowResultInfo',
