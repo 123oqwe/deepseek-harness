@@ -5110,9 +5110,79 @@
         {
           "stage": "F",
           "title": "P1-10 Fault — recovery runs BEFORE anything is installed fault boundary 14 a recovery that succeeds reports the plugin and lets the command continue"
+        },
+        {
+          "stage": "F",
+          "title": "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version covers every phase the transaction declares",
+          "supplementSeq": 1
+        },
+        {
+          "stage": "F",
+          "title": "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at freeze leaves the old version whole and usable",
+          "supplementSeq": 1
+        },
+        {
+          "stage": "F",
+          "title": "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at snapshot is killed there and recovery leaves one whole (old) version",
+          "supplementSeq": 1
+        },
+        {
+          "stage": "F",
+          "title": "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at quarantine leaves the old version whole and usable",
+          "supplementSeq": 1
+        },
+        {
+          "stage": "F",
+          "title": "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at validate leaves the old version whole and usable",
+          "supplementSeq": 1
+        },
+        {
+          "stage": "F",
+          "title": "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at switch (after switch-in, before the health check) is killed there and recovery leaves one whole (old) version",
+          "supplementSeq": 1
+        },
+        {
+          "stage": "F",
+          "title": "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at health-check once the upgrade is recorded as achieved is killed there and recovery leaves one whole (new) version",
+          "supplementSeq": 1
+        },
+        {
+          "stage": "F",
+          "title": "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version control: a crash at switch with the plugin and its unit named alike leaves the old version whole and usable",
+          "supplementSeq": 1
+        },
+        {
+          "stage": "F",
+          "title": "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version control: an upgrade that is not killed leaves version 2 code and version 2 data, readable",
+          "supplementSeq": 2
+        },
+        {
+          "stage": "F",
+          "title": "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version killed once the new code is installed and before the transaction starts, the rerun leaves code and data at one version",
+          "supplementSeq": 2
+        },
+        {
+          "stage": "F",
+          "title": "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version killed in the plugin migrate step, the rerun leaves code and data at one version",
+          "supplementSeq": 2
+        },
+        {
+          "stage": "F",
+          "title": "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version killed in the plugin validate step, the rerun leaves code and data at one version",
+          "supplementSeq": 2
+        },
+        {
+          "stage": "F",
+          "title": "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version killed once the switch is recorded and before the health check is, the rerun leaves code and data at one version",
+          "supplementSeq": 2
+        },
+        {
+          "stage": "F",
+          "title": "P1-10 acceptance[0] on the CLI path: after a killed dsh plugin upgrade and a rerun, code and data are at one version killed once the upgrade is recorded as achieved, the rerun leaves code and data at one version",
+          "supplementSeq": 2
         }
       ],
-      "note": "acceptance[0]: 'inject a crash at every migration step; after restart either the old version is fully usable or the new one is, with no mixed state.' The no-mixed-state half is evidenced structurally rather than by a crash: the transaction migrates a COPY and the live unit is untouched until `switchIn`, so a fault before the switch leaves the old version whole (boundaries 11 and 12 assert the live unit is unchanged; 15 asserts a materialized copy is discarded rather than stranded when a LATER primitive fails), and a fault after it rolls back (health-check) or refuses to switch (validate). NOT PROVEN, and stated because the clause literally asks for it: NO case kills a process mid-phase and restarts. The restart half is simulated — boundaries 13 and 14 seed an `INTERRUPTED` record by hand (`homeWithRecord('notes-plugin', INTERRUPTED)`) and drive `recoverInterruptedUpgrades` over it, which exercises the recovery path a restart would reach but not the crash that produces the record. A real crash campaign is validation[0]'s `N-step migration fault campaign` and is not discharged here."
+      "note": "acceptance[0]: 'inject a crash at every migration step; after restart either the old version is fully usable or the new one is, with no mixed state.' The no-mixed-state half is evidenced structurally rather than by a crash: the transaction migrates a COPY and the live unit is untouched until `switchIn`, so a fault before the switch leaves the old version whole (boundaries 11 and 12 assert the live unit is unchanged; 15 asserts a materialized copy is discarded rather than stranded when a LATER primitive fails), and a fault after it rolls back (health-check) or refuses to switch (validate). NOT PROVEN, and stated because the clause literally asks for it: NO case kills a process mid-phase and restarts. The restart half is simulated — boundaries 13 and 14 seed an `INTERRUPTED` record by hand (`homeWithRecord('notes-plugin', INTERRUPTED)`) and drive `recoverInterruptedUpgrades` over it, which exercises the recovery path a restart would reach but not the crash that produces the record. A real crash campaign is validation[0]'s `N-step migration fault campaign` and is not discharged here. Since BLOCKED-302 [0]: F.1 (plugin-migration-crash.spec.ts; A-606 since blind review 1-7) crashes the process at each of the transaction's phases and restarts into recovery; for snapshot, switch and health-check it asserts the child was SIGKILLed at that phase and that recovery leaves one whole version, the old one before the switch is confirmed and the new one after. F.2 (plugin-migration-cli-crash.spec.ts) kills a real `dsh plugin upgrade` at each step and asserts code and data at one version after the rerun."
     },
     {
       "epic": "P1-10",
@@ -5133,24 +5203,41 @@
         {
           "stage": "U",
           "title": "P1-10 must[2]: an irreversible path is refused without the operator's confirmation refuses a confirmation that names another path"
+        },
+        {
+          "stage": "U",
+          "title": "P1-10 acceptance[1]: the shipped upgrade flow reconciles the recorded upgrade against the medium (red first for B-667) (i) continue path: a completed record whose recorded schema version disagrees with the medium is refused, not skipped",
+          "supplementSeq": 1
+        },
+        {
+          "stage": "U",
+          "title": "P1-10 acceptance[1]: the shipped upgrade flow reconciles the recorded upgrade against the medium (red first for B-667) (ii) after a migration: a post-migration medium whose version disagrees with the record just written is refused",
+          "supplementSeq": 1
+        },
+        {
+          "stage": "U",
+          "title": "P1-10 acceptance[1]: the shipped upgrade flow reconciles the recorded upgrade against the medium (red first for B-667) (iii) after a migration: a post-migration medium whose DATA digest disagrees with the record just written, at the same version, is refused and the data is rolled back",
+          "supplementSeq": 1
+        },
+        {
+          "stage": "U",
+          "title": "P1-10 acceptance[1]: the shipped upgrade flow reconciles the recorded upgrade against the medium (red first for B-667) control: a consistent record whose PACKAGE version differs from its SCHEMA version is not flagged",
+          "supplementSeq": 1
         }
       ],
-      "note": "acceptance[1]: 'the data digest and the schema version can be reconciled.' Both halves are pinned and they are separate facts: the VERSION is stamped on the migrated copy, and the DIGEST identifies the conversion path so a confirmation names one exact migration rather than any migration of that plugin. The last two cases are what make the digest reconcilable rather than merely recorded — the freeze refusal names the digest an operator must pass back, and a confirmation naming ANOTHER path is refused, so the digest is checked on the way in and not only written on the way out."
+      "note": "acceptance[1]: 'the data digest and the schema version can be reconciled.' Both halves are pinned and they are separate facts: the VERSION is stamped on the migrated copy, and the DIGEST identifies the conversion path so a confirmation names one exact migration rather than any migration of that plugin. The last two cases are what make the digest reconcilable rather than merely recorded — the freeze refusal names the digest an operator must pass back, and a confirmation naming ANOTHER path is refused, so the digest is checked on the way in and not only written on the way out. Since BLOCKED-302 [1]: U.1 (plugin-migration-reconcile.spec.ts, red first for B-667) runs the shipped upgrade flow's reconciliation of the recorded upgrade against the medium, refusing a recorded digest or version the medium contradicts, with a consistent-record control."
     },
     {
       "epic": "P1-10",
       "acceptanceIndex": 2,
       "coveredBy": [
         {
-          "stage": "P",
-          "title": "P1-10 acceptance[2]: a failed upgrade does not change approved permissions leaves the permission state byte-identical across a FAILED upgrade"
-        },
-        {
-          "stage": "P",
-          "title": "P1-10 acceptance[2]: a failed upgrade does not change approved permissions the seeded home is NOT empty, so \"nothing changed\" is not vacuous"
+          "stage": "U",
+          "title": "P1-10 1-6 (A-605, green evidence): an upgrade that fails at validate leaves the approved-permission store byte-unchanged the approved-permission store is byte-unchanged, and the failed upgrade wrote nothing under its directory",
+          "supplementSeq": 2
         }
       ],
-      "note": "acceptance[2]: 'a failed upgrade does not change already-approved permissions.' Asserted as a digest of the whole permission home taken before the upgrade and compared after it fails at health-check — a tree digest rather than a field check, so a permission changed anywhere under the home reddens it. The second case is the non-vacuity control and is why the first is worth anything: it asserts the seeded home has more than one entry and does not digest-equal a freshly created empty directory, so 'byte-identical' cannot be satisfied by there being nothing to change. That pairing is the shape a `toEqual([])` assertion needs whenever emptiness would also pass."
+      "note": "acceptance[2]: 'a failed upgrade does not change already-approved permissions.' The approved-permission store is P2-02's capability-token store, `$DSH_HOME/capability-tokens/capability-tokens.json`; boot-time admission grants are recomputed on every boot and persist nothing. A-605 (P1-10 U.2) runs a `dsh plugin` upgrade through the shipped CLI that fails at validate and asserts the store byte-unchanged and nothing written under its directory. The guarantee is structural: the upgrade writes under storages/ and the profile's package.json and lock, siblings of capability-tokens/, so its sensitivity round (M-a605-1‴) is a probe that makes the rollback reach into the store, not a realistic defect. The former P-stage pair (transaction.spec.ts) digested a temporary home that runUpgrade never received (BLOCKED-302 [2], blind review 1-6) and is no longer cited."
     },
     {
       "epic": "P2-05",
