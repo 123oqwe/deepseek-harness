@@ -15,6 +15,11 @@
  * allowance and the second start is refused `token-budget-exhausted`; when it
  * cannot read token-meter's `tokenUsage` projection, it warns once, meters
  * nothing, and both children run.
+ *
+ * Before the turn, the driver grants the run's temporary workspace read trust on
+ * the host user's authority. On the Web app, the first step otherwise asks the
+ * host user through a connected client whether to read the workspace's own
+ * instruction files, and this run has no client.
  * @module tests/first100/fixtures/loader/p4-09-web-token-budget/driver
  */
 
@@ -32,6 +37,7 @@ import { SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-tools'
 import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import type {} from '@deepseek-ai/dsh-workflow'
+import type {} from '@deepseek-ai/dsh-workspace-trust'
 import { MockAdapter, textResponse, toolCallResponse } from '../../../../../packages/core/agent-loop/tests/mock-adapter.ts'
 import { bootProductionProfile } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/production-profile.ts'
 import { CHILD_INPUT_TOKENS, CHILD_SENTINEL, REPORT_PREFIX, WORKFLOW_TOOL, type WebTokenBudgetReport } from './shared.ts'
@@ -142,6 +148,16 @@ try {
     setup: agentCtx => ctx.agentPresets.mount(agentCtx, 'standard').then(() => { presetComposed = true }),
   })
   const workflowToolOffered = ctx.tools.schemas(handle.agent).some(schema => schema.name === WORKFLOW_TOOL)
+  // agent-instructions asks the host user before reading an untrusted
+  // workspace's instruction files, and the Web app answers through a connected
+  // client; with none, the first step waited until the run was killed (run
+  // 38551219547). The grant is the one an approved ask writes.
+  if (identity !== undefined) {
+    const trust = ctx.get('workspaceTrust')
+    if (trust === undefined) throw new Error('p4-09-web-token-budget driver: the web profile mounted no workspaceTrust')
+    const granted = await trust.grantTrust(process.cwd(), 'trusted-read', identity.principal)
+    if (!granted.upgraded) throw new Error(`p4-09-web-token-budget driver: read trust was refused (${granted.reason})`)
+  }
   await runFixtureTurn(ctx, { task: 'P4-09 U-2: run the two-child workflow.' })
   const texts = resultTextsFor(handle.agent.session.snapshotEvents(), WF_CALL_ID)
   const report: WebTokenBudgetReport = {
