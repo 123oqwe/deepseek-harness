@@ -45,10 +45,41 @@ export interface ToolOutcome {
   readonly resultText: string
 }
 
+/**
+ * What the root session and the scripted model saw during the [2] ① turn. It tells a
+ * `workflow` call that was never made from a call that never settled into a
+ * result, and from a result the driver did not read.
+ */
+export interface FailDefaultProbe {
+  /** `tool/call` events in the root session with this case's call id. */
+  readonly toolCalls: number
+  /** `tool/result` events whose tool-result block carries this case's call id. */
+  readonly toolResults: readonly {
+    readonly isError: boolean
+    /** The block's content part types, in order. */
+    readonly partTypes: readonly string[]
+    /** The failure identity the event recorded, as JSON, when it recorded one. */
+    readonly error?: string
+  }[]
+  /** How this case's outer workflow run ended (`workflow/end`), or `none` when no end was observed. */
+  readonly outerEnd: string
+  /** Every model request during the turn, in order. */
+  readonly requests: readonly {
+    /** The role of the request's last message. */
+    readonly lastRole: string
+    /** That message's source, as JSON. */
+    readonly lastSource: string
+    /** The start of that message's text. */
+    readonly lastText: string
+    /** What the scripted model answered: `tool-call <name>`, or the text it returned. */
+    readonly answered: string
+  }[]
+}
+
 /** What one driver run observed. */
 export interface NestedShippedReport {
   /** [2] ①: no strategy declared. */
-  readonly failDefault: ToolOutcome
+  readonly failDefault: ToolOutcome & { readonly probe: FailDefaultProbe }
   /** [2] ②: `onFailure: 'continue-parent'` declared on the call. */
   readonly continueParent: ToolOutcome & {
     /** The `workflow/log` lines the parent run emitted; continue-parent still records the child's failure. */

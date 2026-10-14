@@ -17,6 +17,9 @@
  *
  * The gate only delays the engine's own `startNested`; the started run is the
  * engine's. Every wait is bounded, so a case that would hang reports instead.
+ * The [2] ① turn also reports a probe ({@link FailDefaultProbe}): the root
+ * session's call and result events for its call id, how its outer run ended,
+ * and each model request's last message with the scripted answer.
  * @module tests/first100/fixtures/loader/p4-09-nested-shipped/driver
  */
 
@@ -38,7 +41,7 @@ import { createFixtureRootAgent } from '../../../../../packages/test-support/loa
 import { bootProductionProfile } from '../../../../../packages/test-support/loader-smoke/tests/fixtures/production-profile.ts'
 import {
   BOOM_MESSAGE, BOOM_NAME, INFLIGHT_CHILD_PROMPT, INFLIGHT_NAME, INFLIGHT_VALUE, LIVE_CHILD_PROMPT, LIVE_NAME,
-  PARENT_CONTINUED, REPORT_PREFIX, WORKFLOW_TOOL, type NestedShippedReport, type ToolOutcome,
+  PARENT_CONTINUED, REPORT_PREFIX, WORKFLOW_TOOL, type FailDefaultProbe, type NestedShippedReport, type ToolOutcome,
 } from './shared.ts'
 
 const PROVIDER = 'p409s3-mock'
@@ -140,6 +143,30 @@ function answer(options: GenerateOptions): StreamChunk[] {
   })
 }
 
+/** While `requests` is set, the scripted model records each request into it (the [2] ① probe). */
+const recording: { requests: FailDefaultProbe['requests'][number][] | undefined } = { requests: undefined }
+
+/**
+ * {@link answer}, recording the request's last message and the answer while the probe collects.
+ * @param options - the generate request.
+ * @returns what {@link answer} returns.
+ */
+function answerAndRecord(options: GenerateOptions): StreamChunk[] {
+  const chunks = answer(options)
+  const { requests } = recording
+  if (requests !== undefined) {
+    const last = options.messages.at(-1)
+    const blocks = chunks.flatMap(chunk => chunk.type === 'block-end' ? [chunk.block] : [])
+    requests.push({
+      lastRole: last?.role ?? 'none',
+      lastSource: JSON.stringify(last?.source ?? null).slice(0, 160),
+      lastText: textsIn(last?.content ?? []).join('').slice(0, 160),
+      answered: blocks.map(block => block.type === 'tool-call' ? `tool-call ${block.name}` : block.type === 'text' ? block.text : block.type).join(' | '),
+    })
+  }
+  return chunks
+}
+
 /**
  * Resolve to `promise`'s value, or to `fallback` once `ms` passed, without holding the process open.
  * @param promise - what to wait for.
@@ -180,7 +207,7 @@ const ctx: Context = await bootProductionProfile({
 })
 
 try {
-  ctx.llm.registerAdapter([PROVIDER], new MockAdapter(Array.from({ length: 80 }, () => answer)))
+  ctx.llm.registerAdapter([PROVIDER], new MockAdapter(Array.from({ length: 80 }, () => answerAndRecord)))
 
   // What the engine reported, in order, by run meta name.
   const ends: { readonly name: string; readonly stopReason: string }[] = []
@@ -259,7 +286,33 @@ try {
     while (endOf(name, from) === 'none' && Date.now() < deadline) await new Promise((resolve) => { setTimeout(resolve, 50) })
   }
 
-  const failDefault = await runCase('fail-default')
+  const requests: FailDefaultProbe['requests'][number][] = []
+  recording.requests = requests
+  const failed = await runCase('fail-default')
+  recording.requests = undefined
+  // The probe reads the root session as the turn left it: whether the call was
+  // logged, whether it has a result, and how the outer run ended.
+  const failId = callIdOf('fail-default')
+  const failEvents = root.session.snapshotEvents()
+  const failDefault = {
+    ...failed,
+    probe: {
+      toolCalls: failEvents.filter(event => event.type === 'tool/call' && String(event.data.callId) === failId).length,
+      toolResults: failEvents.flatMap((event) => {
+        if (event.type !== 'tool/result') return []
+        const { error } = event.data
+        return event.data.message.content.flatMap(block => block.type === 'tool-result' && String(block.toolCallId) === failId
+          ? [{
+              isError: block.isError === true,
+              partTypes: block.content.map(part => part.type),
+              ...error === undefined ? {} : { error: JSON.stringify(error) },
+            }]
+          : [])
+      }),
+      outerEnd: endOf(outerName('fail-default'), 0),
+      requests,
+    },
+  }
 
   const logsFrom = logs.length
   const continued = await runCase('continue-parent')
