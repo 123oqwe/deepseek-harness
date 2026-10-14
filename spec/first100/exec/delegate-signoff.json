@@ -1002,6 +1002,14 @@
       "delegateSession": "first100-delegate-52",
       "signedAtUtc": "2026-10-14T08:07:47.391Z",
       "reason": "- **P1-10 读数**:全量门 38499978035 @ `8fe933e298`(冻结笔，叠在 lane A 366-regen 与 T4 上):P1-10 的 12 个 live 冻结条目共 154 条标题全过;12 格全绿(C/P/U/F 与 F.1、F.2、U.1–U.5、P.1),格记在 `af42d0e510`。\n- **BLOCKED-302 三条**:\n  - acceptance[0]:F.1 [513](A-606,取代 [416],盲审 1-7)在事务每个阶段崩溃后重启进恢复;snapshot、switch、health-check 三处断言子进程确实在该阶段被 SIGKILL,恢复后只剩一个完整版本。M-a606-1′(`9d5625d2e1`,run 38499289583)只红 switch 与 control。F.2 在每一步杀真实的 `dsh plugin upgrade`。\n  - acceptance[1]:U.1(B-667 先红)对账记录与介质，介质反驳的 digest 或版本被拒，配一致记录的对照。\n  - acceptance[2]:U.2 [506] A-605 经出厂 CLI 跑一次在 validate 失败的升级，断言 capability-token 存储逐字节不变、目录下无写入;M-a605-1‴(`4833814327`,run 38454438533)让回滚伸进存储即红。\n- **盲审冻结与变异**:U.2 M-711-1‴(run 38453887941);U.3 M-711-2′(run 38028079769);U.4 M-711-3″(run 38447296490);U.5 M-711-5″(run 38447879096);P.1 [514] lease-sqlite B-711b 1-4 块 5 条(must[1]),M-a609²-1(`db93dbb0d7`,run 38028992042)4 红，按 A-416 转读。\n- **Known Limitation**:内存 lease provider 的持有不跨进程;出厂 bundle 挂的是 lease-sqlite。\n- **4.4a–d 与 accepted-cases-check**:由 delegate 在推送前于本树核;不过则前向撤签。\n- 本签字由 lane B 按 delegate first100-delegate-52 于 2026-10-14 的指令记录。"
+    },
+    {
+      "epic": "P4-09",
+      "rowDigestSha256": "f3ffbdf803c0c507674bf854500973711c1f80b064a0d9b6efd737004f83355c",
+      "conclusion": "PASS",
+      "delegateSession": "first100-delegate-52",
+      "signedAtUtc": "2026-10-14T14:15:11.952Z",
+      "reason": "- **P4-09 读数**:全量门 38565736674 @ `93e0400441`(U.13 冻结笔):P4-09 的 16 个 live 冻结条目共 108 条标题全过;U.10–U.13 四格从这次门记。\n- **BLOCKED-312 四条**:\n  - acceptance[2]:U.8 [481](B-698)在真实引擎上声明子失败策略，两支都观测;U.13 在出厂 headless 组合上经 workflow 工具观测两支。M-698-1′(16fbefb293,run 38545616249)只红 continue-parent。\n  - acceptance[3]:U.8 ③④ 拒超出总 agents 与总 token;U.11 [511](A-608)在出厂组合上中止超支的子 agent。Web 应用上盲审 U-2 在同门 2/2,只记录、不冻结(option a):Web 组合的计量观测为绿，但没有冻结保护;要冻需要一次 host.ts 变异，等用户定。\n  - acceptance[1]:U.8 ⑤、U.10 [510](B-709),U.13 在出厂组合上观测在途与在跑两种取消;M-709-2‴(507ebed402,run 38546079021)与 M-a581-1′(56f1ed93a2,run 38546504638)各只红自己那条。\n  - acceptance[0]:coverage 引 saved-workflows.spec.ts:119;U.9 [482] 在出厂 profile 上观测已存 workflow 只在受信 key 签过才运行。\n- **4.4a–d(delegate 自核)**:workflow 工具在 packages/workflow/tool-workflow/src/index.ts:403 起 run,:413-414 把 abort 接到 run.cancel;嵌套调用的 onFailure 在 packages/workflow/workflow-worker-thread/src/host.ts:1013、:1016 生效;base 与 web-app 两个 bundle 都挂引擎。\n- 本签字由 lane B 按 delegate first100-delegate-52 于 2026-10-14 的指令记录;accepted-cases 检查与推送前的门由 delegate 跑。"
     }
   ]
 }

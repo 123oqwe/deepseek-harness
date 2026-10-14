@@ -3765,9 +3765,14 @@
         {
           "stage": "F",
           "title": "fault boundary 18 acceptance[0]: a hostile body registers and resolves without executing"
+        },
+        {
+          "stage": "U",
+          "title": "P4-09 acceptance[0]: a shipped profile runs a saved workflow only when it is signed by an admitted key (red first, paired with B-698) loads the signed definition and refuses the tampered, unsigned, unanchored, and badly-signed ones with their reasons",
+          "supplementSeq": 9
         }
       ],
-      "note": "acceptance[0]: 'saving and loading never executes unverified code.' Demonstrated rather than asserted: the cases register and resolve a definition whose body is `process.exit(1); throw new Error(\"executed\")`. If any path evaluated a body, the test process would die or the case would throw. The property is structural underneath -- `body` is typed `string` and every function that touches it either hashes it or pattern-matches it, so there is no evaluator to reach. declaresNestedCall is deliberately textual for the same reason; parsing would mean building the evaluator this clause forbids, and over-reporting is the safe direction since a false positive refuses a registration a human then inspects."
+      "note": "acceptance[0]: 'saving and loading never executes unverified code.' Demonstrated rather than asserted: the cases register and resolve a definition whose body is `process.exit(1); throw new Error(\"executed\")`. If any path evaluated a body, the test process would die or the case would throw. The property is structural underneath -- `body` is typed `string` and every function that touches it either hashes it or pattern-matches it, so there is no evaluator to reach. declaresNestedCall is deliberately textual for the same reason; parsing would mean building the evaluator this clause forbids, and over-reporting is the safe direction since a false positive refuses a registration a human then inspects. Since BLOCKED-312 [0]: the load half was evidenced by packages/workflow/workflow-filesystem/tests/saved-workflows.spec.ts:119 on the published package; U.9 (P4-09.saved-workflow-signing.composition.e2e.ts) observes a shipped profile load a saved workflow and run it only when an admitted key signed it."
     },
     {
       "epic": "P4-09",
@@ -3775,11 +3780,41 @@
       "coveredBy": [
         {
           "stage": "U",
-          "supplementSeq": 2,
-          "title": "P4-09 must[3]: a script nests another definition CANCELS the nested run when the parent is cancelled (acceptance[1])"
+          "title": "P4-09 [1]: cancelling the parent cancels its nested run and tears down the agent the nested run started ([235] successor) ⑤ a cancelled parent cancels its never-ending nested run — the nested run settles cancelled and the agent it started is ended, not stranded",
+          "supplementSeq": 8
+        },
+        {
+          "stage": "U",
+          "title": "P4-09 [1]: cancelling the parent cancels its nested run and tears down the agent the nested run started ([235] successor) ⑤ control: a nested run that ends on its own is observed completed through the same attached handle",
+          "supplementSeq": 8
+        },
+        {
+          "stage": "U",
+          "title": "P4-09 acceptance[1] (B-709 red first): a nested workflow whose start is in flight at cancel is cancelled, not published the in-flight nested run is cancelled before its body runs — no marker (RED today: the workflow() path misses it)",
+          "supplementSeq": 10
+        },
+        {
+          "stage": "U",
+          "title": "P4-09 acceptance[1] (B-709 red first): a nested workflow whose start is in flight at cancel is cancelled, not published control: with no cancel, the same gated nested run is published and runs its body — the marker appears",
+          "supplementSeq": 10
+        },
+        {
+          "stage": "U",
+          "title": "P4-09 on the shipped composition: nested-run cancellation and the declared failure strategy acceptance[1] control: a nested start held in flight and released with no cancel runs its body and returns its value",
+          "supplementSeq": 13
+        },
+        {
+          "stage": "U",
+          "title": "P4-09 on the shipped composition: nested-run cancellation and the declared failure strategy acceptance[1]: when the agent is cancelled while a nested start is in flight, the parent ends cancelled and the nested body never starts its agent",
+          "supplementSeq": 13
+        },
+        {
+          "stage": "U",
+          "title": "P4-09 on the shipped composition: nested-run cancellation and the declared failure strategy acceptance[1]: when the agent is cancelled while a nested run is live, the nested run settles cancelled and the agent it started is ended, not stranded",
+          "supplementSeq": 13
         }
       ],
-      "note": "acceptance[1]: 'a parent's cancellation propagates.' COVERED since U.2. The prior note recorded this as NOT COVERED and was right when written: nothing started a nested run, so `cancelPropagationForNested` decided a propagation that never happened. U.2 starts a real nested run through the engine and cancels its parent, so the case observes the propagation rather than the decision. Re-checked at §12.48-A: `cancelPropagationForNested` has one cross-package production caller, `workflow-worker-thread/src/host.ts`, on the path a cancel takes to every nested run the parent holds."
+      "note": "acceptance[1]: 'a parent's cancellation propagates.' U.8 ⑤ cancels a parent and observes its never-ending nested run cancelled and the agent the nested run started torn down, with a control that ends on its own; U.10 (B-709) observes a nested run whose start is in flight at the parent's cancel cancelled before its body runs, with a control where no cancel lets it run. U.13 observes both on the SHIPPED headless composition (blind review 1-2, acceptance standard S3): the agent cancelled while a nested start is in flight ends cancelled and the nested body never starts its agent; cancelled while a nested run is live, the nested run settles cancelled and its agent ends; the control runs. The previously cited U.2 case asserted only the parent's stopReason and observed no child stopped (BLOCKED-312 [1]); it is no longer cited."
     },
     {
       "epic": "P4-09",
@@ -3787,14 +3822,26 @@
       "coveredBy": [
         {
           "stage": "U",
-          "title": "fails the parent when the policy says so"
+          "title": "P4-09 [2]: a nested run's failure strategy is declarable (red first for B-698) ① control: a failing nested run with NO declared strategy fails the parent, naming the child",
+          "supplementSeq": 8
         },
         {
           "stage": "U",
-          "title": "continues the parent but still RECORDS the failure"
+          "title": "P4-09 [2]: a nested run's failure strategy is declarable (red first for B-698) ② continue-parent: a failing nested run the parent declared continue-parent for lets the parent complete",
+          "supplementSeq": 8
+        },
+        {
+          "stage": "U",
+          "title": "P4-09 on the shipped composition: nested-run cancellation and the declared failure strategy acceptance[2] ①: a nested run that fails with no declared strategy fails the parent, and the result the model reads names the child",
+          "supplementSeq": 13
+        },
+        {
+          "stage": "U",
+          "title": "P4-09 on the shipped composition: nested-run cancellation and the declared failure strategy acceptance[2] ②: with continue-parent declared on the call, the parent completes, and the child's failure is still recorded",
+          "supplementSeq": 13
         }
       ],
-      "note": "acceptance[2]: 'a child failure is handled by the declared policy.' Both branches are covered, and the second carries the substance: `continue-parent` still RECORDS the failure. A policy that let a parent ignore a failed child would make that child's work indistinguishable from work that never ran, and a parent reporting success while a declared child failed silently is exactly what this clause exists to prevent. This entry covers the DECISION, not its application to a real child failure.\n\n**Status qualified 2026-09-06.** (It read 'for the same reason as acceptance[1]' until 2026-09-11; acceptance[1] has been COVERED since U.2, so the cross-reference no longer held and the limit is stated here directly.) Both branches of the declared policy are pinned at the DECISION level — the two cited cases call `applyChildFailure` directly (`workflow-worker-thread/tests/nested-budget.spec.ts:86`, `:90`) — and **no case makes a real nested child fail**. The reason recorded here until 2026-09-11 was 'because no child runs', and that has stopped being true: U.2 runs a nested definition through the real engine and hands its value back to the parent script, and U.5 runs an agent INSIDE a nested run and settles. Children do run; what no case does is make one FAIL and observe the declared policy applying to it. The correction matters because the reason, not the conclusion, is what a later reader uses to decide whether the limitation still holds — and the old reason would have been falsified by work that did not touch this clause at all. This entry covers the DECISION; it is not evidence that a parent handled a failing nested child."
+      "note": "acceptance[2]: 'a child failure is handled by the declared policy.' U.8 (B-698) declares a nested run's failure strategy: with none declared a failing nested run fails the parent and names the child (①), and with continue-parent the parent continues while the failure is still recorded (②), both on the real engine. U.13 observes both branches on the SHIPPED headless composition through the `workflow` tool (blind review 1-2, acceptance standard S3). The previously cited cases set failurePolicy where no shipped definition or request could (BLOCKED-312 [2]); they are no longer cited."
     },
     {
       "epic": "P4-09",
@@ -3827,9 +3874,34 @@
         {
           "stage": "F",
           "title": "fault boundary 12 recursion is detected anywhere on the ancestor chain, not only at the parent"
+        },
+        {
+          "stage": "U",
+          "title": "P4-09 [3]: a tree's total agent and token budgets are enforced (red first for B-698) ③ maxTotalAgents N: the N+1th agent across the tree is refused agent-budget-exhausted, though no single run passes its own cap",
+          "supplementSeq": 8
+        },
+        {
+          "stage": "U",
+          "title": "P4-09 [3]: a tree's total agent and token budgets are enforced (red first for B-698) ④ maxNestedTokens T: a start after the tree's token usage passes T is refused token-budget-exhausted",
+          "supplementSeq": 8
+        },
+        {
+          "stage": "U",
+          "title": "P4-09 acceptance[3] (A-608): a running nested child that overspends the tree token budget is aborted mid-run with token-budget-exhausted guard: the workflow tool was dispatched and the child was served a response",
+          "supplementSeq": 11
+        },
+        {
+          "stage": "U",
+          "title": "P4-09 acceptance[3] (A-608): a running nested child that overspends the tree token budget is aborted mid-run with token-budget-exhausted at most one response overspends: the child, whose first response already exceeds the allowance, is served no second",
+          "supplementSeq": 11
+        },
+        {
+          "stage": "U",
+          "title": "P4-09 acceptance[3] (A-608): a running nested child that overspends the tree token budget is aborted mid-run with token-budget-exhausted the child is aborted rather than completed, and the workflow result the model reads names token-budget-exhausted",
+          "supplementSeq": 11
         }
       ],
-      "note": "acceptance[3]: 'recursion depth, total agents and total budget are bounded.' Each ceiling is pinned from BOTH sides -- admitted one step below, refused at it -- because a limit tested only from the refusing side is satisfied by a check that refuses everything. The decay is what makes the totals hold: a child receives what remains minus the call that started it, so a tree cannot have every run believe it holds the full allowance. Recursion is refused structurally and anywhere on the chain, not merely caught by depth, so an operator learns 'this definition calls itself' rather than 'this got too deep'.\n\nmust[3] IS NOT CLAIMED AS COVERED, per the delegate's ruling. The clause is about the RUNTIME behaviour of nested workflows, and `runtime.ts` installs no `workflow()` global, so a script cannot start one and nothing can violate the clause today. The vacuum is held by a mutation-proved tripwire in the U stage rather than by prose: it fails the day a nesting hook appears, forcing whoever adds it to face must[3] then. These entries cover the DECISIONS a future wiring will consult; they do not cover a running worker enforcing them. [2026-09-19 lane B, BLOCKED-100/150 closure: the sentence above saying `runtime.ts` installs no `workflow()` global is STALE. It is installed — `packages/workflow/workflow-worker-thread/src/runtime.ts:116` binds `workflow` into the script globals beside `agent`, `parallel` and `pipeline`, and the nesting it starts is carried through its lifecycle (`host.ts:326-327` cancels nested runs with their parent; `:756`/`:758` await a nested result and apply its failure policy). So 'nothing can violate the clause today' no longer holds, and must[3] is now a live question rather than a vacuum. What this addendum does NOT do is claim must[3] is covered: nothing here cites a case observing a running worker enforce a nested budget, and whether the U-stage tripwire this note describes fired when the hook appeared was not measured. The original text is left as written: it records what this file claimed while the hook was absent.]"
+      "note": "acceptance[3]: 'recursion depth, total agents and total budget are bounded.' Each ceiling is pinned from BOTH sides -- admitted one step below, refused at it -- because a limit tested only from the refusing side is satisfied by a check that refuses everything. The decay is what makes the totals hold: a child receives what remains minus the call that started it, so a tree cannot have every run believe it holds the full allowance. Recursion is refused structurally and anywhere on the chain, not merely caught by depth, so an operator learns 'this definition calls itself' rather than 'this got too deep'.\n\nmust[3] IS NOT CLAIMED AS COVERED, per the delegate's ruling. The clause is about the RUNTIME behaviour of nested workflows, and `runtime.ts` installs no `workflow()` global, so a script cannot start one and nothing can violate the clause today. The vacuum is held by a mutation-proved tripwire in the U stage rather than by prose: it fails the day a nesting hook appears, forcing whoever adds it to face must[3] then. These entries cover the DECISIONS a future wiring will consult; they do not cover a running worker enforcing them. [2026-09-19 lane B, BLOCKED-100/150 closure: the sentence above saying `runtime.ts` installs no `workflow()` global is STALE. It is installed — `packages/workflow/workflow-worker-thread/src/runtime.ts:116` binds `workflow` into the script globals beside `agent`, `parallel` and `pipeline`, and the nesting it starts is carried through its lifecycle (`host.ts:326-327` cancels nested runs with their parent; `:756`/`:758` await a nested result and apply its failure policy). So 'nothing can violate the clause today' no longer holds, and must[3] is now a live question rather than a vacuum. What this addendum does NOT do is claim must[3] is covered: nothing here cites a case observing a running worker enforce a nested budget, and whether the U-stage tripwire this note describes fired when the hook appeared was not measured. The original text is left as written: it records what this file claimed while the hook was absent.] Since BLOCKED-312 [3]: U.8 ③ refuses the N+1th agent across the tree agent-budget-exhausted and ④ refuses a start after the tree's token usage passes the total token-budget-exhausted (B-698); U.11 (A-608 on the shipped composition) serves a running child whose first response already exceeds the tree's token budget at most that response and aborts it, and the workflow result the model reads names token-budget-exhausted. On the Web app (blind review U-2), where the standard preset runs the engine in its own delegation group, P4-09.web-preset-token-budget.composition.e2e.ts passed 2/2 in the full gate 38565736674 at `93e0400441`: the first child's usage spends the tree allowance and the second start is refused token-budget-exhausted and never served. That observation is recorded here and not frozen (delegate ruling, option a): it closes the blind review's gap, and acceptance[3]'s frozen evidence stays U.8 ③ ④ and U.11 with their mutation rounds. The Web app's metering is therefore observed green but NOT protected by the frozen set: a later regression specific to the Web composition's metering would not be caught by any frozen case. Freezing it needs a mutation in which the preset engine cannot read the usage it meters (a change to packages/workflow/workflow-worker-thread/src/host.ts), which waits on the user's decision."
     },
     {
       "epic": "P5-11",
