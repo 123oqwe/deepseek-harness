@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-10-10T09:50:21.599Z",
-  "inputDigest": "c4ffe8bcfdd8d47e5392d2d9e43381783ba2b984131bb27a4d1916545ca17052",
+  "lastUpdatedUtc": "2026-10-14T02:10:35.323Z",
+  "inputDigest": "7fd7781ff37a304d991248d604a08b3cc46302e699282958a54a861a6d874f89",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -3647,22 +3647,13 @@
       },
       "supplements": {
         "F.1": {
-          "status": "GREEN",
-          "candidateSha": "7de79a1658bc4baff424522f433a02221fa462fb",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36264470501",
-          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-36264470501/first100-vitest-report-7de79a1658bc4baff424522f433a02221fa462fb/vitest-report.json",
-          "observationSha256": "57d97d2bab55b5f4e9c88414e96976efa572c2b52e08835de8e8523f7ad36357",
-          "expectCasesMatched": [
-            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version covers every phase the transaction declares",
-            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at freeze leaves the old version whole and usable",
-            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at snapshot leaves the old version whole and usable",
-            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at quarantine leaves the old version whole and usable",
-            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at validate leaves the old version whole and usable",
-            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at switch, before the health check confirmed the new data, leaves the old version whole and usable",
-            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at health-check, once the upgrade is recorded as achieved, leaves the new version whole and usable",
-            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version control: a crash at switch with the plugin and its unit named alike leaves the old version whole and usable"
-          ],
-          "capturedAtUtc": "2026-09-26T19:54:59.001Z"
+          "status": "NOT_RUN",
+          "revokedFrom": {
+            "candidateSha": "7de79a1658bc4baff424522f433a02221fa462fb",
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36264470501",
+            "absentCommitments": 1
+          },
+          "revokedReason": "F.1 [416] is superseded by A-606 (blind review 1-7); the observation does not carry the new entry, so the cell is re-recorded from the full gate of this tree."
         },
         "F.2": {
           "status": "GREEN",
@@ -3710,7 +3701,7 @@
       "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "BLOCKED_ON_ACCEPTANCE",
+      "status": "NOT_RUN",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-12T00:13:37.347Z",
         "cells": {

@@ -1959,14 +1959,14 @@
       "kind": "source",
       "stages": [
         "F",
-        "F.1",
         "F.2",
         "U",
         "U.1",
         "U.2",
         "U.3",
         "U.4",
-        "U.5"
+        "U.5",
+        "F.1"
       ],
       "reason": "The production caller the transaction exists for, plus the bridge from P1-01's manifest to this epic's vocabulary. `dsh plugin add`/`update` is the only place that knows (plugin, from, to), and it is where the upgrade lease has to span both halves of the move -- the package manager and the data. The registry named the decision package, which by construction has no caller."
     },
@@ -2075,13 +2075,39 @@
     },
     {
       "epic": "P1-10",
+      "path": "packages/run/lease-sqlite/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "P.1"
+      ],
+      "reason": "The lease store plugin takes its configured `sharedHolds` when mounted and gives them back when unmounted (:114-142, B-711b 1-4). The base bundle configures `dsh-plugin-upgrade` (packages/bundle/base/cordis.patch.yml:628), which is how every shipped host holds the upgrade item shared."
+    },
+    {
+      "epic": "P1-10",
+      "path": "packages/run/lease-sqlite/src/store.ts",
+      "kind": "source",
+      "stages": [
+        "P.1"
+      ],
+      "reason": "Blind review 1-4, must[1]: the durable lease store keeps shared holds in the database and refuses an exclusive acquire `held-shared` while one is live (:133, B-711b 1-4, ea507eafbe). A running host's shared hold of `dsh-plugin-upgrade` is what keeps the upgrade's exclusive acquire out, so the freeze of a plugin's data holds against running sessions."
+    },
+    {
+      "epic": "P1-10",
+      "path": "packages/run/lease-sqlite/tests/lease-sqlite.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P.1"
+      ]
+    },
+    {
+      "epic": "P1-10",
       "path": "packages/storage/storage-json/src/index.ts",
       "kind": "source",
       "stages": [
-        "F.1",
         "F.2",
         "U",
-        "U.2"
+        "U.2",
+        "F.1"
       ],
       "reason": "The JSON backend's migration facet: snapshot as a copy beside the unit, switch as a rename with the replaced document kept as the rollback target, plus `stampedVersion`, `digestUnit`, `readSnapshot` and `exportUnit`. It reads and writes the SAME document `kv.open` parses, through `format.ts`'s own `serialize` -- an earlier version invented `{ version, records }`, which this backend never writes, and every case over it passed because each seeded the invention."
     },
@@ -2115,8 +2141,8 @@
       "path": "packages/storage/storage/src/index.ts",
       "kind": "source",
       "stages": [
-        "F.1",
-        "F.2"
+        "F.2",
+        "F.1"
       ],
       "reason": "The storage hub F.1's and F.2's cases mount over the JSON backend to read the plugin's unit after recovery, so the version they report as whole is read through this code."
     },

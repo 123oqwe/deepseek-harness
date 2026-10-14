@@ -19429,7 +19429,8 @@
         "mutationDescription": "M-624-1, run 36242335119 at mutation commit 4347579348: reverts B-624 so recovery rolls back the unit named after the plugin (drops the `record.unit ?? record.plugin` read at packages/plugin/plugin-migrations/src/transaction.ts:293, putting the plugin name back).",
         "failureSummary": "Exactly 1 of 8 reddened, and it is the frozen switch-crash case: 'a crash at switch, before the health check confirmed the new data, leaves the old version whole and usable' — AssertionError: expected 'new' to be 'old' at expectWhole (apps/cli/tests/plugin-migration-crash.spec.ts:224:35), with v1 reporting `unit 'notes': stored version 2 != expected 1`. The other 7 (including the alike-named control) stayed green, so the mutation discriminates rather than breaking the file wholesale."
       },
-      "note": "P1-10 F-stage supplement 1: acceptance[0]'s data half. A crash at every phase of a data upgrade, then a restart into recovery, leaves one whole version (BLOCKED-341; red first A-446, 13616aa09e on the candidate; fix B-624, 5552e3f53b). Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T17:44:02Z) from lane A's A-533 draft (artifacts/laneA/a-533-freeze-drafts.md, sha256 2dbd6f5a…). expectCases are the full names in the full run 36254411017 at d25574ecbc, where each passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the child the spec spawns (fixtures/plugin-migration-crash-child.ts) and the storage hub the spec reads the data through. The observing tree is pinned at refs/dsh/freeze/P1-10.F.1/2026-09-26T17-57-41.000Z -> d25574ecbc9bc4c2ea67e6988e2000981aadd069, whose tree is dryRunProof.treeSha."
+      "note": "P1-10 F-stage supplement 1: acceptance[0]'s data half. A crash at every phase of a data upgrade, then a restart into recovery, leaves one whole version (BLOCKED-341; red first A-446, 13616aa09e on the candidate; fix B-624, 5552e3f53b). Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T17:44:02Z) from lane A's A-533 draft (artifacts/laneA/a-533-freeze-drafts.md, sha256 2dbd6f5a…). expectCases are the full names in the full run 36254411017 at d25574ecbc, where each passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the child the spec spawns (fixtures/plugin-migration-crash-child.ts) and the storage hub the spec reads the data through. The observing tree is pinned at refs/dsh/freeze/P1-10.F.1/2026-09-26T17-57-41.000Z -> d25574ecbc9bc4c2ea67e6988e2000981aadd069, whose tree is dryRunProof.treeSha.",
+      "supersededBy": "2026-10-14T02:10:25.000Z"
     },
     {
       "epic": "P1-10",
@@ -24010,6 +24011,94 @@
         "failureSummary": "Read from each round's own narrow report under the e2e config; every round carried build. M-729-2″ run 38453468638: 1 passed, 1 failed in tests/first100/fixtures/P4-09.workflow-tool-visibility.composition.e2e.ts: «P4-09 (A-611, B-729 red first): the model is shown the workflow nested-run interface and the registered signed definitions the workflow tool description documents workflow(nameOrRef, args) and the request lists the signed definition name + digest (today neither — RED)»."
       },
       "note": "P4-09 U-stage supplement 12 (rework signing batch): blind review 1-2 on the shipped composition. The model is shown the workflow nested-run interface and the registered signed definitions (A-611, red first for B-729, 7e31abf9de)."
+    },
+    {
+      "epic": "P1-10",
+      "stage": "F",
+      "supplements": {
+        "epic": "P1-10",
+        "stage": "F"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/cli/tests/plugin-migration-crash.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version covers every phase the transaction declares",
+        "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at freeze leaves the old version whole and usable",
+        "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at snapshot is killed there and recovery leaves one whole (old) version",
+        "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at quarantine leaves the old version whole and usable",
+        "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at validate leaves the old version whole and usable",
+        "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at switch (after switch-in, before the health check) is killed there and recovery leaves one whole (old) version",
+        "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at health-check once the upgrade is recorded as achieved is killed there and recovery leaves one whole (new) version",
+        "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version control: a crash at switch with the plugin and its unit named alike leaves the old version whole and usable"
+      ],
+      "files": [
+        "apps/cli/tests/plugin-migration-crash.spec.ts",
+        "apps/cli/tests/fixtures/plugin-migration-crash-child.ts",
+        "apps/cli/src/plugin-migration.ts",
+        "packages/plugin/plugin-migrations/src/transaction.ts",
+        "packages/storage/storage/src/index.ts",
+        "packages/storage/storage-json/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-10-14T02:10:25.000Z",
+      "supersedes": "2026-09-26T17:57:41.000Z",
+      "supersessionReason": "Blind review 1-7 (blind-P1-10-7e35c3d9dd): the frozen switch case could turn green without the process being killed at that phase. A-606 (05654f1821, lane A, written blind from a678562a under the delegate's OQ1–OQ3 ruling) asserts for snapshot, switch and health-check that the child was SIGKILLed at that phase (expectKilledAt) and that recovery leaves one whole version (expectOneVersion); freeze, quarantine, validate and the control keep expectWhole. Approved by the delegate (first100-delegate-52, rework-sign-batch-decision-20261013.md).",
+      "dryRunProof": {
+        "treeSha": "824a67610816c6e933433d7f81504f3b876ca941",
+        "testsDiscovered": 8
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One round, never merged: M-a606-1′ `9d5625d2e18ee00339bb8df606b07f1f4627801b` (parent `efc8dd7806`, f653ab2ec1 re-hung with the same patch-id) changes packages/plugin/plugin-migrations/src/transaction.ts so recoverUpgrade does not roll a switch-phase crash back to the previous version. A-416: the changed file and this entry's files are byte-identical at the round's parent and at the freeze tree's base `fee7bab078`, checked when this entry was written.",
+        "failureSummary": "Read from the round's own narrow report; it carried build. M-a606-1′ run 38499289583: 6 passed, 2 failed in apps/cli/tests/plugin-migration-crash.spec.ts: «P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at switch (after switch-in, before the health check) is killed there and recovery leaves one whole (old) version», «P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version control: a crash at switch with the plugin and its unit named alike leaves the old version whole and usable». The control is a switch crash too, so it reddens with the switch case; the other phases stay green."
+      },
+      "note": "P1-10 F-stage supplement 1: acceptance[0]'s data half. A crash at every phase of a data upgrade, then a restart into recovery, leaves one whole version (BLOCKED-341; red first A-446, 13616aa09e on the candidate; fix B-624, 5552e3f53b). Frozen by the delegate's ruling (first100-delegate-1a, gate3 2026-09-26T17:44:02Z) from lane A's A-533 draft (artifacts/laneA/a-533-freeze-drafts.md, sha256 2dbd6f5a…). expectCases are the full names in the full run 36254411017 at d25574ecbc, where each passed once; the entry is frozen after that run, so its cell is observed by the next full run. files add the child the spec spawns (fixtures/plugin-migration-crash-child.ts) and the storage hub the spec reads the data through. The observing tree is pinned at refs/dsh/freeze/P1-10.F.1/2026-09-26T17-57-41.000Z -> d25574ecbc9bc4c2ea67e6988e2000981aadd069, whose tree is dryRunProof.treeSha. Superseded for blind review 1-7 by A-606: each killed phase asserts the SIGKILL landed there, and recovery leaves one whole version."
+    },
+    {
+      "epic": "P1-10",
+      "stage": "P",
+      "supplements": {
+        "epic": "P1-10",
+        "stage": "P"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/lease-sqlite/tests/lease-sqlite.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "B-711b 1-4: shared holds live in the database, so another handle and another process see them keeps another handle's exclusive acquire out while a shared hold is live, and the other way round",
+        "B-711b 1-4: shared holds live in the database, so another handle and another process see them lets the exclusive acquire in once the holder gives its hold back, and refuses holds while unavailable",
+        "B-711b 1-4: shared holds live in the database, so another handle and another process see them holds its configured items shared while mounted, and gives them back when unloaded",
+        "B-711b 1-4: shared holds live in the database, so another handle and another process see them refuses to mount while an exclusive holder has a configured item",
+        "B-711b 1-4: shared holds live in the database, so another handle and another process see them takes its holds again before they lapse, and logs when one can no longer be taken"
+      ],
+      "files": [
+        "packages/run/lease-sqlite/tests/lease-sqlite.spec.ts",
+        "packages/run/lease-sqlite/src/index.ts",
+        "packages/run/lease-sqlite/src/store.ts"
+      ],
+      "frozenAtUtc": "2026-10-14T02:10:25.000Z",
+      "dryRunProof": {
+        "treeSha": "824a67610816c6e933433d7f81504f3b876ca941",
+        "testsDiscovered": 5
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One round, never merged: M-a609²-1 `db93dbb0d7e9e832a0c21ea6b281dc17ecfcfe04` (parent `9f06a87ee3`) changes packages/run/lease-sqlite/src/store.ts so an exclusive acquire no longer refuses while a shared hold is live (store.ts held-shared refusal neutralised). A-416: the changed file and this entry's files are byte-identical at the round's parent and at the freeze tree's base `fee7bab078`, checked when this entry was written.",
+        "failureSummary": "Read from the round's own narrow report; it carried build. M-a609²-1 run 38028992042: 1 passed, 4 failed of this entry's titles in packages/run/lease-sqlite/tests/lease-sqlite.spec.ts: «B-711b 1-4: shared holds live in the database, so another handle and another process see them keeps another handle's exclusive acquire out while a shared hold is live, and the other way round», «B-711b 1-4: shared holds live in the database, so another handle and another process see them lets the exclusive acquire in once the holder gives its hold back, and refuses holds while unavailable», «B-711b 1-4: shared holds live in the database, so another handle and another process see them holds its configured items shared while mounted, and gives them back when unloaded», «B-711b 1-4: shared holds live in the database, so another handle and another process see them takes its holds again before they lapse, and logs when one can no longer be taken». The mount refusal under a live exclusive holder checks the reverse direction and stays green."
+      },
+      "note": "P1-10 P-stage supplement 1: blind review 1-4, must[1] (a migration freezes the plugin's data against running sessions). Running hosts hold `dsh-plugin-upgrade` shared in the durable lease store, so the upgrade's exclusive acquire is refused held-shared while any host runs (B-711b 1-4, ea507eafbe). The shipped mount is the base bundle's lease-sqlite `sharedHolds: ['dsh-plugin-upgrade']` (packages/bundle/base/cordis.patch.yml:628), and the CLI upgrade takes the item exclusively (apps/cli/src/plugin-migration.ts:67, :228-234). expectCases are the five titles of the B-711b 1-4 block; the file's P4-07 cases are not this entry's. Delegate ruling a609-2-p1-10-1-4-shared-lease-ruling.md: no new witness file, this block is the evidence. Known Limitation: the in-memory lease provider's holds do not cross processes; the shipped bundles mount lease-sqlite."
     }
   ]
 }
