@@ -131,7 +131,10 @@ function answer(options: GenerateOptions): StreamChunk[] {
   }
   const last = options.messages.at(-1)
   if (last?.role !== 'user' || last.content.some(block => block.type === 'tool-result')) return textResponse('done')
-  const task = textsIn(last.content).join('')
+  // A session's first step carries plugin messages after the task (the saved-workflow
+  // catalog, run 38543385280), so the task is the newest user text naming a case.
+  const task = options.messages.flatMap(message => message.role === 'user' ? textsIn(message.content) : [])
+    .findLast(text => CASES.some(candidate => text.includes(`[${candidate}]`))) ?? ''
   const name = CASES.find(candidate => task.includes(`[${candidate}]`))
   if (name === undefined) return textResponse('no case')
   return toolCallResponse(callIdOf(name), WORKFLOW_TOOL, {
