@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-10-14T08:07:51.791Z",
-  "inputDigest": "f60d25b2f911466af61751c7e152d315d4abe1326a546fdf576419ee8f37dcbb",
+  "lastUpdatedUtc": "2026-10-14T14:14:18.578Z",
+  "inputDigest": "f516eb9b5f6bc16180f1e0c098b3210bc2eb09da75a06182fb3d80833f1d8ab1",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -9245,6 +9245,83 @@
             "sha256": "af24fbceb73ee2ce248dc64bf7d56a2925b79ca587bb1a20b2abc75442fb5f06"
           },
           "capturedAtUtc": "2026-10-03T20:56:53.738Z"
+        },
+        "U.10": {
+          "status": "GREEN",
+          "candidateSha": "93e0400441e53a3baef836ff363c91ae7178c9ab",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/38565736674",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-38565736674/first100-vitest-report-93e0400441e53a3baef836ff363c91ae7178c9ab/vitest-report.json",
+          "observationSha256": "048b0df6d1cf49318c4822cd0499cb34d2252e53aa4f7c88ed76124f1ca5e4da",
+          "expectCasesMatched": [
+            "P4-09 acceptance[1] (B-709 red first): a nested workflow whose start is in flight at cancel is cancelled, not published the in-flight nested run is cancelled before its body runs — no marker (RED today: the workflow() path misses it)",
+            "P4-09 acceptance[1] (B-709 red first): a nested workflow whose start is in flight at cancel is cancelled, not published control: with no cancel, the same gated nested run is published and runs its body — the marker appears"
+          ],
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "38565736674",
+            "sha256": "048b0df6d1cf49318c4822cd0499cb34d2252e53aa4f7c88ed76124f1ca5e4da"
+          },
+          "capturedAtUtc": "2026-10-14T14:14:17.834Z"
+        },
+        "U.11": {
+          "status": "GREEN",
+          "candidateSha": "93e0400441e53a3baef836ff363c91ae7178c9ab",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/38565736674",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-38565736674/first100-vitest-report-93e0400441e53a3baef836ff363c91ae7178c9ab/vitest-e2e-workflow.json",
+          "observationSha256": "bccfbc7365599b3627ad407f1b3bf9b45bcfc885a7c51a411ed38e236e0570f8",
+          "expectCasesMatched": [
+            "P4-09 acceptance[3] (A-608): a running nested child that overspends the tree token budget is aborted mid-run with token-budget-exhausted guard: the workflow tool was dispatched and the child was served a response",
+            "P4-09 acceptance[3] (A-608): a running nested child that overspends the tree token budget is aborted mid-run with token-budget-exhausted at most one response overspends: the child, whose first response already exceeds the allowance, is served no second",
+            "P4-09 acceptance[3] (A-608): a running nested child that overspends the tree token budget is aborted mid-run with token-budget-exhausted the child is aborted rather than completed, and the workflow result the model reads names token-budget-exhausted"
+          ],
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "38565736674",
+            "sha256": "bccfbc7365599b3627ad407f1b3bf9b45bcfc885a7c51a411ed38e236e0570f8"
+          },
+          "capturedAtUtc": "2026-10-14T14:14:18.084Z"
+        },
+        "U.12": {
+          "status": "GREEN",
+          "candidateSha": "93e0400441e53a3baef836ff363c91ae7178c9ab",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/38565736674",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-38565736674/first100-vitest-report-93e0400441e53a3baef836ff363c91ae7178c9ab/vitest-e2e-workflow.json",
+          "observationSha256": "bccfbc7365599b3627ad407f1b3bf9b45bcfc885a7c51a411ed38e236e0570f8",
+          "expectCasesMatched": [
+            "P4-09 (A-611, B-729 red first): the model is shown the workflow nested-run interface and the registered signed definitions guard: the workflow tool was offered and the nested interface works when a script uses it",
+            "P4-09 (A-611, B-729 red first): the model is shown the workflow nested-run interface and the registered signed definitions the workflow tool description documents workflow(nameOrRef, args) and the request lists the signed definition name + digest (today neither — RED)"
+          ],
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "38565736674",
+            "sha256": "bccfbc7365599b3627ad407f1b3bf9b45bcfc885a7c51a411ed38e236e0570f8"
+          },
+          "capturedAtUtc": "2026-10-14T14:14:18.322Z"
+        },
+        "U.13": {
+          "status": "GREEN",
+          "candidateSha": "93e0400441e53a3baef836ff363c91ae7178c9ab",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/38565736674",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-38565736674/first100-vitest-report-93e0400441e53a3baef836ff363c91ae7178c9ab/vitest-e2e-workflow.json",
+          "observationSha256": "bccfbc7365599b3627ad407f1b3bf9b45bcfc885a7c51a411ed38e236e0570f8",
+          "expectCasesMatched": [
+            "P4-09 on the shipped composition: nested-run cancellation and the declared failure strategy guard: each workflow call ran, the gate held the engine's nested start, and the live nested run and its agent started",
+            "P4-09 on the shipped composition: nested-run cancellation and the declared failure strategy acceptance[2] ①: a nested run that fails with no declared strategy fails the parent, and the result the model reads names the child",
+            "P4-09 on the shipped composition: nested-run cancellation and the declared failure strategy acceptance[2] ②: with continue-parent declared on the call, the parent completes, and the child's failure is still recorded",
+            "P4-09 on the shipped composition: nested-run cancellation and the declared failure strategy acceptance[1] control: a nested start held in flight and released with no cancel runs its body and returns its value",
+            "P4-09 on the shipped composition: nested-run cancellation and the declared failure strategy acceptance[1]: when the agent is cancelled while a nested start is in flight, the parent ends cancelled and the nested body never starts its agent",
+            "P4-09 on the shipped composition: nested-run cancellation and the declared failure strategy acceptance[1]: when the agent is cancelled while a nested run is live, the nested run settles cancelled and the agent it started is ended, not stranded"
+          ],
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "38565736674",
+            "sha256": "bccfbc7365599b3627ad407f1b3bf9b45bcfc885a7c51a411ed38e236e0570f8"
+          },
+          "capturedAtUtc": "2026-10-14T14:14:18.555Z"
         }
       },
       "candidateSha": "5b41cb717350500afe8aeff54c98c6ac21f124b7",
