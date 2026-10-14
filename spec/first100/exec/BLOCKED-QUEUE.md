@@ -7814,7 +7814,7 @@ The scan was exhaustive and found no seventh face. That is the scan's claim, rec
 
 ### BLOCKED-279 — P1-10's crash-mid-phase half is simulated; no case kills a process
 
-**Status:** OPEN (2026-09-19). Owner lane B, scheduled after P2-12. The fixture it needs spawns a real child process and kills it with SIGKILL, so it can only be observed in this program's CI: **it is not runnable on the executor machine**, and a green for it will come from a run, never from a local claim.
+**Status:** CLOSED 2026-10-14 (closure note at the end of this entry); opened 2026-09-19. Owner lane B, scheduled after P2-12. The fixture it needs spawns a real child process and kills it with SIGKILL, so it can only be observed in this program's CI: **it is not runnable on the executor machine**, and a green for it will come from a run, never from a local claim.
 
 **What the clause asks for and what the cases do.** P1-10 `acceptance[0]` asks that a crash mid-phase, followed by a restart, leave the old or the new state and never a mix. The no-mixed-state half genuinely holds by construction — a migration works on a copy and the live unit is untouched until `switchIn`, which fault boundaries 11, 12 and 15 assert. The RESTART half is seeded by hand: `apps/cli/tests/plugin-migration-fault-matrix.spec.ts` builds an `INTERRUPTED` record at `:115`, plants it with `homeWithRecord('notes-plugin', INTERRUPTED)` at `:147`, and drives `recoverInterruptedUpgrades` (`apps/cli/src/plugin-migration.ts:522`) over it. That exercises the path a restart would reach; it does not produce the record by crashing.
 
@@ -7823,6 +7823,12 @@ The scan was exhaustive and found no seventh face. That is the scan's claim, rec
 **Closing condition.** A fixture that spawns a real child process running a migration, kills it with SIGKILL at each of several named phase boundaries, restarts, and observes the old-or-new outcome for real — `validation[0]`'s own words.
 
 **What this does NOT claim.** Not that P1-10 must be withdrawn: the structural half is real and provable without a kill. Only the literal crash-and-restart half is unproven, and the coverage note recorded it rather than leaving it implicit.
+
+**Closure note (2026-10-14, delegate first100-delegate-52).** Closed after P1-10's signing commit `e6318436b6` (ruling: artifacts/delegate/blocked-279-closure-ruling-20261014.md); A-606, the evidence that closed BLOCKED-302 [0], is the fixture the closing condition asks for:
+- **A real child process runs the migration.** `apps/cli/tests/plugin-migration-crash.spec.ts:163` starts `apps/cli/tests/fixtures/plugin-migration-crash-child.ts` with `execa(process.execPath, ['--import', 'tsx/esm', child, …])`, and the child runs the shipped transaction's `runUpgrade` (`:19`, `:55`).
+- **SIGKILL at named phase boundaries.** The child's `onPhase` kills its own process with `process.kill(process.pid, 'SIGKILL')` when the running phase is the named one (`:76-78`: no unwinding, no `finally`, no rollback). The spec asserts `childSignal === 'SIGKILL'` (`:222`, `:240`) and names snapshot, switch and health-check (`:265`, `:271`, `:275`).
+- **A real restart.** The restart waits for the dead child's upgrade lease (30 s in the product) to lapse (`:43`, `:143`) and recovers, and each case asserts one whole version, the old one before the switch is confirmed and the new one after.
+- **Frozen and observed.** P1-10 F.1 [513] (8 titles, superseding [416]) passed in the full gate 38499978035 at `8fe933e298`. M-a606-1′ (`9d5625d2e1`, run 38499289583) stops recovery rolling a switch-phase crash back and reddens the switch case and its control only (§S9).
 
 ### BLOCKED-280 — P2-06's redaction policy and its audit query tool are both unproven
 
