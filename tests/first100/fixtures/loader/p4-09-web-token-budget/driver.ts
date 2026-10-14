@@ -15,6 +15,11 @@
  * allowance and the second start is refused `token-budget-exhausted`; when it
  * cannot read token-meter's `tokenUsage` projection, it warns once, meters
  * nothing, and both children run.
+ *
+ * Progress lines go to stderr (`P4-09-WEB-TOKBUD-PHASE`): boot, the preset mount
+ * and whether its saved-workflow loader settled, every session event and model
+ * request, and the turn's end. runLoaderSmoke puts the whole stderr in its
+ * timeout error, so a run that hangs shows where.
  * @module tests/first100/fixtures/loader/p4-09-web-token-budget/driver
  */
 
@@ -52,6 +57,39 @@ const SCRIPT = [
 
 /** Model requests served to each child, by label. */
 const served = { first: 0, second: 0 }
+
+/** When the driver started; each progress line carries the time since. */
+const startedAt = Date.now()
+
+/**
+ * Write one progress line to stderr. runLoaderSmoke puts the driver's whole
+ * stderr in its timeout error, so a run that hangs shows the last line it reached.
+ * @param what - the step reached.
+ */
+function phase(what: string): void {
+  process.stderr.write(`${REPORT_PREFIX}-PHASE +${String(Date.now() - startedAt)}ms ${what}\n`)
+}
+
+/**
+ * Resolve to `promise`'s value, or to `fallback` once `ms` passed, without holding the process open.
+ * @param promise - what to wait for.
+ * @param ms - the bound.
+ * @param fallback - the value when the bound passes first.
+ * @returns the first of the two.
+ */
+function within<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([promise, new Promise<T>((resolve) => { setTimeout(() => { resolve(fallback) }, ms).unref() })])
+}
+
+/**
+ * The `settled` promise of a saved-workflow loader, when `loader` carries one.
+ * @param loader - what the agent's context resolved for `savedWorkflows`.
+ * @returns the promise, or `undefined` when there is no loader or it has none.
+ */
+function settledOf(loader: unknown): Promise<unknown> | undefined {
+  if (typeof loader !== 'object' || loader === null || !('settled' in loader)) return undefined
+  return loader.settled instanceof Promise ? loader.settled : undefined
+}
 
 /**
  * The text of every text block in `blocks`.
@@ -98,6 +136,20 @@ function answer(options: GenerateOptions): StreamChunk[] {
   })
 }
 
+/**
+ * {@link answer}, writing each request and the scripted answer as a progress line.
+ * @param options - the generate request.
+ * @returns what {@link answer} returns.
+ */
+function answerAndLog(options: GenerateOptions): StreamChunk[] {
+  const chunks = answer(options)
+  const answered = chunks.flatMap(chunk => chunk.type === 'block-end' ? [chunk.block] : [])
+    .map(block => block.type === 'tool-call' ? `tool-call ${block.name}` : block.type === 'text' ? block.text : block.type)
+    .join(' | ')
+  phase(`model request purpose=${options.purpose ?? '-'} messages=${String(options.messages.length)} answered=${answered}`)
+  return chunks
+}
+
 /** The tool result texts the log recorded for `callId`, in order. */
 function resultTextsFor(events: readonly SessionEvent[], callId: string): string[] {
   return events.flatMap(event => event.type !== 'tool/result' ? [] : event.data.message.content.flatMap(block =>
@@ -112,6 +164,7 @@ if (configPath === undefined) throw new Error('p4-09-web-token-budget driver req
 // Settings, storages and sessions stay under the run's temporary directory.
 process.env.DSH_HOME = join(process.cwd(), '.dsh')
 
+phase('driver started; boot start')
 const ctx: Context = await bootProductionProfile({
   binName: 'p4-09-web-token-budget',
   profile: 'web',
@@ -124,13 +177,23 @@ const ctx: Context = await bootProductionProfile({
     provideCmdline(prepared, { args: [], exit: () => {} })
   },
 })
+phase('booted')
 
 try {
-  ctx.llm.registerAdapter([PROVIDER], new MockAdapter(Array.from({ length: 40 }, () => answer)))
+  ctx.llm.registerAdapter([PROVIDER], new MockAdapter(Array.from({ length: 40 }, () => answerAndLog)))
+  // Every session event, tagged by session, so a run that hangs shows the last event it reached.
+  const sessionTags = new Map<string, string>()
+  ctx.on('session/event', (session, event) => {
+    const id = String(session.id)
+    const tag = sessionTags.get(id) ?? `s${String(sessionTags.size)}`
+    sessionTags.set(id, tag)
+    phase(`event ${tag} ${event.type}`)
+  })
   const identity = (ctx.get(HOST_USER_IDENTITY_KEY) as HostUserIdentityFactory | undefined)?.(
     `run-${randomUUID()}` as Parameters<HostUserIdentityFactory>[0],
   )
   let presetComposed = false
+  phase('agent create start')
   const handle = await ctx.agents.create({
     sessionId: SessionId(`p409u2-${randomUUID()}`),
     meta: { cwd: process.cwd() },
@@ -139,10 +202,22 @@ try {
       model: PROVIDER,
       ...identity === undefined ? {} : { identity },
     },
-    setup: agentCtx => ctx.agentPresets.mount(agentCtx, 'standard').then(() => { presetComposed = true }),
+    setup: async (agentCtx) => {
+      phase('preset mount start')
+      await ctx.agentPresets.mount(agentCtx, 'standard')
+      presetComposed = true
+      // The workflow tool's pre-step waits for the saved-workflow loader to settle.
+      const settled = settledOf(agentCtx.get('savedWorkflows', false))
+      const state = settled === undefined
+        ? 'absent from the agent context'
+        : await within(settled.then(() => 'settled', () => 'rejected'), 5_000, 'pending after 5s')
+      phase(`preset mounted; savedWorkflows ${state}`)
+    },
   })
   const workflowToolOffered = ctx.tools.schemas(handle.agent).some(schema => schema.name === WORKFLOW_TOOL)
+  phase(`agent created; workflow tool offered=${String(workflowToolOffered)}; turn start`)
   await runFixtureTurn(ctx, { task: 'P4-09 U-2: run the two-child workflow.' })
+  phase('turn idle')
   const texts = resultTextsFor(handle.agent.session.snapshotEvents(), WF_CALL_ID)
   const report: WebTokenBudgetReport = {
     presetComposed,
@@ -154,6 +229,9 @@ try {
     secondServed: served.second,
   }
   process.stdout.write(`${REPORT_PREFIX} ${JSON.stringify(report)}\n`)
+  phase('report written')
 } finally {
+  phase('dispose start')
   await ctx.fiber.dispose()
+  phase('disposed')
 }
