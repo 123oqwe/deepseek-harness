@@ -717,6 +717,7 @@ interface ToolOutputMap {
       reason: string;
       detail: string;
     };
+    abortedChildReasons?: string[];
   };
   write: {
     path: string;

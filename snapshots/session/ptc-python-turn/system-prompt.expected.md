@@ -551,6 +551,7 @@ class WorkflowOutput(TypedDict):
     agentsStarted: int
     result: Any
     resumeRefused: NotRequired[WorkflowOutputResumeRefused]
+    abortedChildReasons: NotRequired[list[str]]
 
 class WriteArgs(TypedDict):
     # Path to write, resolved by the filesystem backend.
