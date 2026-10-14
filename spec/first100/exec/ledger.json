@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-10-14T02:10:35.323Z",
-  "inputDigest": "7fd7781ff37a304d991248d604a08b3cc46302e699282958a54a861a6d874f89",
+  "lastUpdatedUtc": "2026-10-14T08:05:03.290Z",
+  "inputDigest": "46f9d4174e893192211061d555b29231b7acd20c86219082ee0d2b350edaa04e",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -3647,13 +3647,28 @@
       },
       "supplements": {
         "F.1": {
-          "status": "NOT_RUN",
-          "revokedFrom": {
-            "candidateSha": "7de79a1658bc4baff424522f433a02221fa462fb",
-            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/36264470501",
-            "absentCommitments": 1
+          "status": "GREEN",
+          "candidateSha": "8fe933e298454451e2ef106774a1092becf080da",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/38499978035",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-38499978035/first100-vitest-report-8fe933e298454451e2ef106774a1092becf080da/vitest-report.json",
+          "observationSha256": "087ff2f963f74025cf713ce63a8440da9be1d4c8ce400136e98cb1bbd24b28a7",
+          "expectCasesMatched": [
+            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version covers every phase the transaction declares",
+            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at freeze leaves the old version whole and usable",
+            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at snapshot is killed there and recovery leaves one whole (old) version",
+            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at quarantine leaves the old version whole and usable",
+            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at validate leaves the old version whole and usable",
+            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at switch (after switch-in, before the health check) is killed there and recovery leaves one whole (old) version",
+            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version a crash at health-check once the upgrade is recorded as achieved is killed there and recovery leaves one whole (new) version",
+            "P1-10 acceptance[0]: a crash at any phase of a data upgrade, then a restart into recovery, leaves one whole version control: a crash at switch with the plugin and its unit named alike leaves the old version whole and usable"
+          ],
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "38499978035",
+            "sha256": "087ff2f963f74025cf713ce63a8440da9be1d4c8ce400136e98cb1bbd24b28a7"
           },
-          "revokedReason": "F.1 [416] is superseded by A-606 (blind review 1-7); the observation does not carry the new entry, so the cell is re-recorded from the full gate of this tree."
+          "capturedAtUtc": "2026-10-14T08:05:02.905Z"
         },
         "F.2": {
           "status": "GREEN",
@@ -3696,6 +3711,96 @@
             "sha256": "aee79ccf312f3a71c6032278bf29a90aa91d744a1712c11634b0f5423379e21c"
           },
           "capturedAtUtc": "2026-10-03T20:56:50.282Z"
+        },
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "8fe933e298454451e2ef106774a1092becf080da",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/38499978035",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-38499978035/first100-vitest-report-8fe933e298454451e2ef106774a1092becf080da/vitest-e2e-workflow.json",
+          "observationSha256": "1a225415838c954c6f592958b931c58ca9eb0df0c432918fa4a18a139aea2867",
+          "expectCasesMatched": [
+            "P1-10 (A-596, B-711a red first): a health-check-failed upgrade rolls back, and a later dsh plugin run keeps the data and does not report unrecoverable after the rerun, the version-1 data is intact and the run did not report the plugin unrecoverable",
+            "P1-10 1-6 (A-605, green evidence): an upgrade that fails at validate leaves the approved-permission store byte-unchanged the approved-permission store is byte-unchanged, and the failed upgrade wrote nothing under its directory"
+          ],
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "38499978035",
+            "sha256": "1a225415838c954c6f592958b931c58ca9eb0df0c432918fa4a18a139aea2867"
+          },
+          "capturedAtUtc": "2026-10-14T08:05:01.724Z"
+        },
+        "U.3": {
+          "status": "GREEN",
+          "candidateSha": "8fe933e298454451e2ef106774a1092becf080da",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/38499978035",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-38499978035/first100-vitest-report-8fe933e298454451e2ef106774a1092becf080da/vitest-e2e-workflow.json",
+          "observationSha256": "1a225415838c954c6f592958b931c58ca9eb0df0c432918fa4a18a139aea2867",
+          "expectCasesMatched": [
+            "P1-10 (A-604, B-711a red first): upgrading data already at an intermediate version runs only the remaining migration step, not an already-applied one the v2->v3 upgrade runs only step 2-3 and does not re-run the already-applied step 1-2"
+          ],
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "38499978035",
+            "sha256": "1a225415838c954c6f592958b931c58ca9eb0df0c432918fa4a18a139aea2867"
+          },
+          "capturedAtUtc": "2026-10-14T08:05:02.010Z"
+        },
+        "U.4": {
+          "status": "GREEN",
+          "candidateSha": "8fe933e298454451e2ef106774a1092becf080da",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/38499978035",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-38499978035/first100-vitest-report-8fe933e298454451e2ef106774a1092becf080da/vitest-e2e-workflow.json",
+          "observationSha256": "1a225415838c954c6f592958b931c58ca9eb0df0c432918fa4a18a139aea2867",
+          "expectCasesMatched": [
+            "P1-10 1-3 (A-609 ①, green evidence): a refused downgrade reverts the install to the version before it the downgrade is refused and the profile lockfile reverts to the pre-downgrade (v2) bytes"
+          ],
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "38499978035",
+            "sha256": "1a225415838c954c6f592958b931c58ca9eb0df0c432918fa4a18a139aea2867"
+          },
+          "capturedAtUtc": "2026-10-14T08:05:02.310Z"
+        },
+        "U.5": {
+          "status": "GREEN",
+          "candidateSha": "8fe933e298454451e2ef106774a1092becf080da",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/38499978035",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-38499978035/first100-vitest-report-8fe933e298454451e2ef106774a1092becf080da/vitest-e2e-workflow.json",
+          "observationSha256": "1a225415838c954c6f592958b931c58ca9eb0df0c432918fa4a18a139aea2867",
+          "expectCasesMatched": [
+            "P1-10 1-5 (A-609 ③, green evidence): an irreversible upgrade is refused until confirmed, then proceeds with the named digest without --confirm the upgrade is refused and exported (migration body never runs); with --confirm <digest> it runs"
+          ],
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "38499978035",
+            "sha256": "1a225415838c954c6f592958b931c58ca9eb0df0c432918fa4a18a139aea2867"
+          },
+          "capturedAtUtc": "2026-10-14T08:05:02.544Z"
+        },
+        "P.1": {
+          "status": "GREEN",
+          "candidateSha": "8fe933e298454451e2ef106774a1092becf080da",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/38499978035",
+          "observationReportPath": "/Users/guanjieqiao/first100-delegate/artifacts/gate-38499978035/first100-vitest-report-8fe933e298454451e2ef106774a1092becf080da/vitest-report.json",
+          "observationSha256": "087ff2f963f74025cf713ce63a8440da9be1d4c8ce400136e98cb1bbd24b28a7",
+          "expectCasesMatched": [
+            "B-711b 1-4: shared holds live in the database, so another handle and another process see them keeps another handle's exclusive acquire out while a shared hold is live, and the other way round",
+            "B-711b 1-4: shared holds live in the database, so another handle and another process see them lets the exclusive acquire in once the holder gives its hold back, and refuses holds while unavailable",
+            "B-711b 1-4: shared holds live in the database, so another handle and another process see them holds its configured items shared while mounted, and gives them back when unloaded",
+            "B-711b 1-4: shared holds live in the database, so another handle and another process see them refuses to mount while an exclusive holder has a configured item",
+            "B-711b 1-4: shared holds live in the database, so another handle and another process see them takes its holds again before they lapse, and logs when one can no longer be taken"
+          ],
+          "exitRecord": {
+            "exitCode": 0,
+            "unhandledErrors": 0,
+            "runId": "38499978035",
+            "sha256": "087ff2f963f74025cf713ce63a8440da9be1d4c8ce400136e98cb1bbd24b28a7"
+          },
+          "capturedAtUtc": "2026-10-14T08:05:03.276Z"
         }
       },
       "candidateSha": "aa7dbb02db91841ae50e638706c346fed862cd4d",
