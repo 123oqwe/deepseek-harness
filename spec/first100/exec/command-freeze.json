@@ -24099,6 +24099,53 @@
         "failureSummary": "Read from the round's own narrow report; it carried build. M-a609²-1 run 38028992042: 1 passed, 4 failed of this entry's titles in packages/run/lease-sqlite/tests/lease-sqlite.spec.ts: «B-711b 1-4: shared holds live in the database, so another handle and another process see them keeps another handle's exclusive acquire out while a shared hold is live, and the other way round», «B-711b 1-4: shared holds live in the database, so another handle and another process see them lets the exclusive acquire in once the holder gives its hold back, and refuses holds while unavailable», «B-711b 1-4: shared holds live in the database, so another handle and another process see them holds its configured items shared while mounted, and gives them back when unloaded», «B-711b 1-4: shared holds live in the database, so another handle and another process see them takes its holds again before they lapse, and logs when one can no longer be taken». The mount refusal under a live exclusive holder checks the reverse direction and stays green."
       },
       "note": "P1-10 P-stage supplement 1: blind review 1-4, must[1] (a migration freezes the plugin's data against running sessions). Running hosts hold `dsh-plugin-upgrade` shared in the durable lease store, so the upgrade's exclusive acquire is refused held-shared while any host runs (B-711b 1-4, ea507eafbe). The shipped mount is the base bundle's lease-sqlite `sharedHolds: ['dsh-plugin-upgrade']` (packages/bundle/base/cordis.patch.yml:628), and the CLI upgrade takes the item exclusively (apps/cli/src/plugin-migration.ts:67, :228-234). expectCases are the five titles of the B-711b 1-4 block; the file's P4-07 cases are not this entry's. Delegate ruling a609-2-p1-10-1-4-shared-lease-ruling.md: no new witness file, this block is the evidence. Known Limitation: the in-memory lease provider's holds do not cross processes; the shipped bundles mount lease-sqlite."
+    },
+    {
+      "epic": "P4-09",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-09",
+        "stage": "U"
+      },
+      "supplementSeq": 13,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "vitest.e2e.config.ts",
+        "tests/first100/fixtures/P4-09.nested-cancel-and-failure.composition.e2e.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-09 on the shipped composition: nested-run cancellation and the declared failure strategy guard: each workflow call ran, the gate held the engine's nested start, and the live nested run and its agent started",
+        "P4-09 on the shipped composition: nested-run cancellation and the declared failure strategy acceptance[2] ①: a nested run that fails with no declared strategy fails the parent, and the result the model reads names the child",
+        "P4-09 on the shipped composition: nested-run cancellation and the declared failure strategy acceptance[2] ②: with continue-parent declared on the call, the parent completes, and the child's failure is still recorded",
+        "P4-09 on the shipped composition: nested-run cancellation and the declared failure strategy acceptance[1] control: a nested start held in flight and released with no cancel runs its body and returns its value",
+        "P4-09 on the shipped composition: nested-run cancellation and the declared failure strategy acceptance[1]: when the agent is cancelled while a nested start is in flight, the parent ends cancelled and the nested body never starts its agent",
+        "P4-09 on the shipped composition: nested-run cancellation and the declared failure strategy acceptance[1]: when the agent is cancelled while a nested run is live, the nested run settles cancelled and the agent it started is ended, not stranded"
+      ],
+      "files": [
+        "tests/first100/fixtures/P4-09.nested-cancel-and-failure.composition.e2e.ts",
+        "tests/first100/fixtures/loader/p4-09-nested-shipped/driver.ts",
+        "tests/first100/fixtures/loader/p4-09-nested-shipped/shared.ts",
+        "tests/first100/fixtures/loader/p4-09-nested-shipped/base.patch.yml",
+        "packages/workflow/workflow-worker-thread/src/host.ts",
+        "packages/workflow/workflow-worker-thread/src/index.ts",
+        "packages/workflow/tool-workflow/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-10-14T12:37:44.000Z",
+      "dryRunProof": {
+        "treeSha": "2f10e8217f9449963f503bd89afa538b7dc13319",
+        "testsDiscovered": 6
+      },
+      "sensitivityProof": {
+        "mutationDescription": "3 rounds, never merged: M-698-1′ `16fbefb293d9d3a2d3bf108bba9b0396aea20e4f` (parent `a7398d819d`) changes packages/workflow/workflow-worker-thread/src/index.ts so the engine starts every nested run under fail-parent, whatever the call declared; M-709-2‴ `507ebed4029c3e7b8e94e4873697785ddb7c0376` (parent `a7398d819d`) changes packages/workflow/workflow-worker-thread/src/host.ts so nest() no longer checks the parent once the nested run has started; M-a581-1′ `56f1ed93a2f618f02662c4370919e687094c764a` (parent `a7398d819d`) changes packages/workflow/workflow-worker-thread/src/host.ts so a nested run's cancellation no longer follows its parent's. A-416: each round's changed files and this entry's files are byte-identical at the round's parent and at the freeze tree's base `52238bafe7`, checked when this entry was written.",
+        "failureSummary": "Read from each round's own narrow report under the e2e config; every round carried build. M-698-1′ run 38545616249: 5 passed, 1 failed in tests/first100/fixtures/P4-09.nested-cancel-and-failure.composition.e2e.ts: «P4-09 on the shipped composition: nested-run cancellation and the declared failure strategy acceptance[2] ②: with continue-parent declared on the call, the parent completes, and the child's failure is still recorded». M-709-2‴ run 38546079021: 5 passed, 1 failed in tests/first100/fixtures/P4-09.nested-cancel-and-failure.composition.e2e.ts: «P4-09 on the shipped composition: nested-run cancellation and the declared failure strategy acceptance[1]: when the agent is cancelled while a nested start is in flight, the parent ends cancelled and the nested body never starts its agent». M-a581-1′ run 38546504638: 5 passed, 1 failed in tests/first100/fixtures/P4-09.nested-cancel-and-failure.composition.e2e.ts: «P4-09 on the shipped composition: nested-run cancellation and the declared failure strategy acceptance[1]: when the agent is cancelled while a nested run is live, the nested run settles cancelled and the agent it started is ended, not stranded»."
+      },
+      "note": "P4-09 U-stage supplement 13: blind review 1-2 (BLOCKED-312 [1] and [2] under acceptance standard S3) observed on the SHIPPED headless composition, booted in process with three signed saved definitions. acceptance[1]: when the agent is cancelled while a nested start is held in flight, the parent ends cancelled and the nested body never starts its agent; when it is cancelled while a nested run and its agent are live, the nested run settles cancelled and its agent ends; the control releases the held start with no cancel and the nested run returns its value. acceptance[2]: with no strategy declared, a failing nested run fails the parent and the result the model reads names the child and its error (①); with continue-parent declared on the call, the parent completes and the child's failure is still logged (②). The driver's scripted model takes each task from the newest case-naming user text, because a session's first step carries tool-workflow's saved-workflow catalog after the task (probe run 38543385280, fix a7398d819d). dryRunProof is the full gate 38553636855 at 52238bafe7; each mutation round was re-hung on a7398d819d and read from its own narrow run."
     }
   ]
 }

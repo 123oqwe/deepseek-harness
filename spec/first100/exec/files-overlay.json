@@ -5672,7 +5672,8 @@
       "stages": [
         "U.7",
         "U.11",
-        "U.12"
+        "U.12",
+        "U.13"
       ],
       "reason": "The model-facing consumer of must[2]. The clause is about a run a TURN starts and a later turn collects, and the only thing a turn can call is the tool: `startDetached` and `attach` existed on the seam with no product path reaching either, so the clause's consumer half had not arrived. `detached`/`attach` are added here, and `script`/`meta` stop being schema-required because an attach call carries neither. The registry named the engine packages, not the tool that fronts them."
     },
@@ -5813,7 +5814,8 @@
         "U.5",
         "U.8",
         "U.10",
-        "U.11"
+        "U.11",
+        "U.13"
       ],
       "reason": "HOT ZONE. From `git show d3a23a5e2c -- packages/workflow/workflow-worker-thread/src/host.ts`: `WorkerRun` gains `onNestedStart`/`nest`, a `nestedRuns` set, and a `NestingPort` constructor argument; `cancel()` gains the `cancelPropagationForNested` block. Shared with P4-07 (the lease) and P4-08 (the journal), whose code in this file is untouched by the diff — the nesting additions sit beside them and change neither."
     },
@@ -5828,7 +5830,8 @@
         "U.8",
         "U.3",
         "U.7",
-        "U.10"
+        "U.10",
+        "U.13"
       ],
       "reason": "§12.48-A. The engine held its registered definitions in a bare `Map`, so `admitRegistration`, `isSelfRecursive` and the whole `DefinitionRegistry` had zero production callers and the digest a caller supplied was stored without ever being recomputed. The registry now holds them, which is where must[0]'s version pinning and acceptance[0]'s real meaning acquire their consumer. The registry's U-stage list named `runtime.ts`/`session.ts`, not this file."
     },
@@ -5949,6 +5952,38 @@
       "kind": "test",
       "stages": [
         "U.12"
+      ]
+    },
+    {
+      "epic": "P4-09",
+      "path": "tests/first100/fixtures/loader/p4-09-nested-shipped/base.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U.13"
+      ]
+    },
+    {
+      "epic": "P4-09",
+      "path": "tests/first100/fixtures/loader/p4-09-nested-shipped/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U.13"
+      ]
+    },
+    {
+      "epic": "P4-09",
+      "path": "tests/first100/fixtures/loader/p4-09-nested-shipped/shared.ts",
+      "kind": "test",
+      "stages": [
+        "U.13"
+      ]
+    },
+    {
+      "epic": "P4-09",
+      "path": "tests/first100/fixtures/P4-09.nested-cancel-and-failure.composition.e2e.ts",
+      "kind": "test",
+      "stages": [
+        "U.13"
       ]
     },
     {
