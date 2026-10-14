@@ -677,7 +677,9 @@ jobs:
         # The other tests/first100/fixtures files are frozen *.e2e.ts entries
         # (P1-10.U.2-U.5, P4-09.U.11-U.12): verify-frozen-titles-in-tree reads
         # only this run's reports, so every frozen *.e2e.ts entry is listed
-        # here. apps/cli/tests/plugin-provenance-patch-mounted.e2e.ts
+        # here. P4-09.nested-cancel-and-failure (acceptance[1] and [2]) is
+        # listed so the full gate observes it for P4-09's signing.
+        # apps/cli/tests/plugin-provenance-patch-mounted.e2e.ts
         # launches the source CLI over profiles whose patch layer mounts plugins
         # by path (A-590, A-590b, P1-02 must[4]); the default config excludes
         # *.e2e.ts, so it runs here.
@@ -702,6 +704,7 @@ jobs:
             tests/first100/fixtures/P1-10.plugin-migration-approval.composition.e2e.ts \
             tests/first100/fixtures/P4-09.token-budget-midrun.composition.e2e.ts \
             tests/first100/fixtures/P4-09.workflow-tool-visibility.composition.e2e.ts \
+            tests/first100/fixtures/P4-09.nested-cancel-and-failure.composition.e2e.ts \
             apps/cli/tests/plugin-provenance-patch-mounted.e2e.ts \
             --reporter=json --outputFile=.artifacts/first100/observations/vitest-e2e-workflow.json --reporter=./scripts/first100/unhandled-errors-reporter.ts --reporter=default
           code=$?
