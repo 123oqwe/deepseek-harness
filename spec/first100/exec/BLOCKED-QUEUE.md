@@ -10692,6 +10692,40 @@ The repository already records the problem and a version-independent guard: `scr
 - **Condition 4 (probe on the fix).** `node_version_probe` at `440c7337f0` (the entry code is byte-identical on `09a98f7204`), run 38031178103: on Node v24.0.0, `typeof import.meta.main` is `undefined`, and `verify` against a baseline altered on purpose reports the drift and exits 1; Node v22.19.0 (`boolean`) does the same. Before the fix it printed nothing and exited 0 (run 36402168106); on the fix's probe commit 54f5bf8125 it already reported the drift (run 36405707456).
 - **Not covered.** A `dsh` started through its symlinked bin link on a Node without `import.meta.main` (above). Which later Node 24 releases carry `import.meta.main`: only v22.19.0 and v24.0.0 were probed.
 
+### BLOCKED-352 — on the native dispatch path a refused reservation is still settled, so a replayed call that already took effect ends its turn in an error (product defect, closed)
+
+**Status:** CLOSED 2026-10-17 (closure note at the end of this entry); opened 2026-10-03. Owner lane B (fix, B-706), lane A (red first, A-586). Found by lane B's read-only analysis for B-704 (P0-08 fault-lane reproducibility). Ruled by the delegate (first100-delegate-1a). Registered in this file on 2026-10-17 by lane B for delegate first100-delegate-bc; the delegate's draft of 2026-10-03 (`artifacts/delegate/blocked-352-draft.md`) never landed here.
+
+**What was read (at `fd263d8fec`; "read" means read, not run).**
+- `packages/core/agent-loop/src/tool-calls.ts:372` publishes `records[index]` before `:373` calls `reserveExternalEffect`.
+- When the reservation is refused, `:374-378` swaps the slot for `refusedReservationResult` (an `isError` result; `packages/core/tools/src/external-effect.ts:1202-1220`) but keeps the record.
+- `commitReady` (`:232`) settles every committed slot that carries a record. `confirmExternalEffect` (`external-effect.ts:1169-1185`) then calls `markAmbiguous` with the current agent's epoch, and the ledger's `move` (`packages/action/action-ledger/src/store.ts:249`) throws "is held by epoch 0, not 1". The turn ends in an error.
+- The code's own comment (`tool-calls.ts:369-371`) says settlement is for reserved calls only, because "markAmbiguous on an unreserved key throws instead of settling". A refused reservation is equally unreserved and is not excluded.
+- The code-mode path does exclude it: `ptc.ts:810-813` clears the reservation before it settles.
+
+**How it shows on the shipped product.** In the P0-08 fault lane, a process killed mid-call is resumed. The resume replays the last world-changing call under its original call id. That call had already taken effect before the kill, so its entry is confirmed in epoch 0. `decideReservation` (`action-ledger/src/index.ts:49` on) answers duplicate, and the model is told the effect was "already confirmed … not performed again". Then the settlement throws, and the resumed turn ends in an error. A same-epoch replay throws as well, with "is confirmed; only a prepared or sent entry can move to ambiguous".
+
+**What this does NOT claim.** P4-12's clauses still hold:
+- `acceptance[0]`: no duplicate external effect. The fault-lane readings record 0 keys applied more than once.
+- `must[5]`: the stale epoch is refused. The fence refused correctly; the defect is the write that follows.
+- `must[4]`: reserve before execute holds.
+
+P4-12 is not withdrawn. The defect is a turn failing after a correct refusal, not a clause failing.
+
+**Closing condition.**
+1. A red case on the native path: a replayed call whose entry is already confirmed returns the "already confirmed" result, and its turn does not end in an error. The case covers the cross-epoch replay after a resume and the same-epoch replay.
+2. An in-place fix on the native path that does what the code-mode path does: a refused reservation leaves no record to settle.
+3. A mutation that keeps the record on refusal turns the case red.
+4. Observed on a full run at a candidate.
+
+**Closure note (2026-10-17, recorded by lane B for delegate first100-delegate-bc; the readings were taken and matched under delegate first100-delegate-52).** All four conditions hold.
+1. **Red first (A-586).** `packages/core/agent-loop/tests/ledger-replay-settlement.spec.ts` (`6910396d05`, with the harness fixes `14500e00f0`, `05d2701653`, `cb3dba99e3`). Run 37112910844 at `1125042cb9`: both cases red at `errors === []`; the same-epoch case threw "is confirmed; only a prepared or sent entry …", the cross-epoch case threw "is held by epoch 0, not 1".
+2. **Fix (B-706, `cc66ecfbe6`, an ancestor of `4287de139e`).** The record is published only once the reservation is held, as the code-mode path does; on `4287de139e`, `tool-calls.ts:381` reserves and `:393` publishes the record. The narrow run 37113956521 at `a89943b341` (the same patch) passed 137/137, both A-586 cases included.
+3. **§S9.** M-352-1 (`b90d99e8fb`, hung on batch 28's code tip `aa7dbb02db`) publishes the record before the reservation again. Run 37159012088 turned exactly three cases red, as predicted: A-586's two and P0-08's "the two runs report the identical trials, session-log projection and failure positions" (gate3 2026-10-04T02:03:42Z).
+4. **Full run.** Full gate 38565736674 at `93e0400441`, an ancestor of `4287de139e`, concluded success: both A-586 cases and both P0-08 fault-reproducibility cases passed. Batch 28's earlier full run 37158956685 at `aa7dbb02db` concluded failure, in the main job's steps «First-100 registry gate set», «Publication and package hygiene» and «Recorded-session snapshots»; its main vitest suite had 0 failed.
+
+**What this closure does not establish.** A-586 is not frozen as any epic's case; only the full gate's main suite runs it.
+
 ### BLOCKED-353 — P1-07 must[2] does not hold when the workspace contains $DSH_HOME: the model can grant a directory trust without the host user; P1-07 is withdrawn (security defect, S10)
 
 **Status:** OPEN (2026-10-03). Fix B-715 (lane B, `4f9df894ba`); red first A-597 ④ v4 (lane A, `ec87a9c926`). Ruled by the delegate (first100-delegate-52).
@@ -10926,3 +10960,60 @@ The repository already records the problem and a version-independent guard: `scr
 - **The fix is in the tree.** `68607b7d73` is an ancestor. `redelegateIfNeeded` walks every delegated ancestor's filter before a name grows (`packages/policy/capability-token-file/src/index.ts:406`).
 - **Observed** in the push gate 38018369564 at S5′ `9f06a87ee3`: D8's control `tests/first100/fixtures/P2-07.d8-no-escalation.composition.spec.ts` 2/2 (the push-gate condition this entry names) and `packages/policy/capability-token-file/tests/adopt.spec.ts` 7/7.
 - **§S9.** The chain recorded above stands: D8 control v4 red on `4844d9919b` (run 37247802304), green on the fix (`68607b7d73`, run 37248110263), red on M-363-1 (`ae27850b5e`, run 37248395176).
+
+### BLOCKED-364 — under `enforce`, a guard plugin whose manifest drifts from what it registers is quarantined, so the user's deny hook disappears instead of the boot failing closed (security, latent, open)
+
+**Status:** OPEN (opened 2026-10-05). Closing condition 1 ruled 2026-10-17 (fail closed). No owner and no red first yet. Raised by the delegate (first100-delegate-52) in its default-enforce analysis of 2026-10-04 and opened in its ruled batch of 2026-10-05 ("fail closed, or warn when the manifest drifts"). Registered in this file on 2026-10-17 by lane B for delegate first100-delegate-bc.
+
+**What was read (not run), at `4287de139e`.**
+- `applyPostMountPluginEnforcement` (`apps/cli/src/profile-boot.ts:1176`) judges every live Loader entry against its manifest after boot. An entry judged `'quarantined'` (an undeclared registration or an ungranted wildcard, `packages/plugin/plugin-manifest/src/index.ts:192`) gets one stderr line (`profile-boot.ts:1193`) and its fiber disposed (`:1207`). The boot continues.
+- A guard plugin, such as a user-configured hook that denies or blocks a tool call before it runs, is judged like any other entry. In the delegate's analysis (not re-read here), quarantining it disposes the whole hook bridge, and every deny rule it carried goes with it. The protection the user configured is gone, and the only signals are that stderr line and the admission log record. The boot fails open, not closed.
+- The gate defaults to `'shadow'` for every profile (`profile-boot.ts:886`). Shadow disposes nothing, so today the path is latent. The delegate's analysis found that every shipped guard declares its registrations in full.
+
+**Why it matters.** Once the gate's default becomes `'enforce'` (P1-01 must[3]), any drift in a guard's manifest removes a deny policy without the user deciding anything.
+
+**Closing conditions.**
+1. Outcome, ruled by the delegate (first100-delegate-bc) on 2026-10-17: **fail closed.** Under `'enforce'`, when an entry that registers a hook able to deny or block a tool call is judged `'quarantined'`, the boot refuses to start and names the plugin and the undeclared registration. Other quarantined entries keep today's behaviour. Why: a deny rule exists for runs nobody is watching (`dsh -p`, the SDK, ACP); a warning, however visible in the TUI, lets those runs go on without the rule. Failing closed costs a refused boot that names its cause, and no shipped profile runs under `'enforce'` today.
+2. A red case on a shipped composition under `'enforce'`: a guard whose manifest omits one of its registrations, and a tool call its rule denies. Today the call is not denied.
+3. An in-place fix, and a mutation that removes it turns the case red.
+4. Observed on a full run at a candidate.
+
+**What this does NOT claim.** That any shipped guard drifts today, or that any shipped profile runs under `'enforce'`. Nothing was run for this entry.
+
+### BLOCKED-365 — a plugin migration that returns a non-object table is written per character, and the upgrade reports success over the corrupted data (product defect, closed)
+
+**Status:** CLOSED 2026-10-17 (closure note at the end of this entry); opened 2026-10-10. Owner lane A (fix), lane B (red first). Recorded by the delegate (first100-delegate-52). Registered in this file on 2026-10-17 by lane B for delegate first100-delegate-bc.
+
+**What was read.** At `9f06a87ee3`, storage-json's `writeDocument` (`packages/storage/storage-json/src/index.ts:280-293` there) passed every table a migration returned through `new Map(Object.entries(records))`. A string table `"abc"` was written as `{0:'a',1:'b',2:'c'}`. The read path (`format.ts`) refuses a non-object table, but the write path did not. A `dsh plugin add` upgrade whose migration returned a string table reported success and marked the data version 2, and the version-1 code then failed to read it ("stored version 2 != expected 1").
+
+**Ruling.** `writeDocument` refuses a table that is not a plain object, so the upgrade fails in its migrate phase and rolls back. The case is a defect fix, not a clause case of an epic, and is not frozen; it closes on its §S9 evidence (ruling of 2026-10-13, `artifacts/delegate/rework-wave-readings-20261013.md:47`).
+
+**Closure note (2026-10-17, recorded by lane B for delegate first100-delegate-bc; the readings were taken and matched under delegate first100-delegate-52).**
+- **Red first** (lane B, `tests/first100/fixtures/BLOCKED-365.migration-nonobject-table.composition.e2e.ts`, `b41839d35e` on `9f06a87ee3`): run 38443472028. N1, the string table, is red; N2, the valid-table control, is green.
+- **Fix** (lane A, `5bf2921aa09`, an ancestor of `4287de139e`): on `4287de139e`, `packages/storage/storage-json/src/index.ts:287-295` throws `malformed-medium` for a table that is not an object. The fix with the red first (`4257a04a72`): run 38444047689, 2/2.
+- **§S9**: the mutation `46481503e1` removes the shape check. Run 38444617785: N1 red, N2 green.
+- **On a later tree**: the stage-1 sign-batch tree `2b41b968a2`, an ancestor of `4287de139e`: run 38452911951, both cases green.
+
+**What this closure does not establish.** The spec is in the tree at `4287de139e`, but it is not in the full gate's e2e file list (`.github/workflows/first100-exact-sha.yml`), so no full gate has run it.
+
+### BLOCKED-366 — a child aborted for spending the tree's token budget leaves no reason the model can read, and its own log records the turn end as a parent cancellation (product defect, open; the result half is fixed)
+
+**Status:** OPEN (opened 2026-10-10). The result half is fixed (`9b135f1178a`); the child-log half is open, with its fix A-613 (lane A). Red first by lane B (`454f8a9e13`). Ruled by the delegate (first100-delegate-52), option (A). Registered in this file on 2026-10-17 by lane B for delegate first100-delegate-bc.
+
+**The clause.** P4-09 acceptance[3], as ruled under (A): a child that overspends is aborted mid-run, the reason `token-budget-exhausted` reaches a channel the model reads, and it is recorded in the child's log.
+
+**What was observed.** The red first (`tests/first100/fixtures/BLOCKED-366.budget-abort-reason.composition.e2e.ts`, on the shipped headless composition), run 38443472091 at `454f8a9e13` (parent `09a98f7204`):
+- The guard is green: the workflow ran, the child received a response, and its turn ended without completing.
+- The result case is red: the model read `workflow "a608-burn" completed (1 agent)`.
+- The child-log case is red: the child's `turn/end` is `{ kind: 'aborted', reason: { kind: 'parent' } }`.
+
+**The result half (fixed).** `9b135f1178a`, an ancestor of `4287de139e`, carries the reason from the host's abort signal to the workflow result. On `4287de139e`, `packages/workflow/workflow-worker-thread/src/host.ts:699` attaches the reason to the settling child, and `packages/workflow/tool-workflow/src/index.ts:226-227` renders "Aborted N child agents: …" into the result the model reads.
+- The fix with the red first (`ea8c5bfce8`), run 38443981197: the guard and the result case are green; the child-log case is still red, `{ kind: 'parent' }`.
+- The mutation `609142bdf2`, run 38444575801: the result case is red.
+- P4-09 was signed on this half (BLOCKED-312, `4287de139e`). P4-09's case does not assert the child-log turn-end reason, so P4-09's acceptance does not establish that half (`artifacts/delegate/rework-wave-readings-20261013.md:39-40`).
+
+**Closing conditions.**
+1. A-613: the child's own session log records the turn's end reason as `token-budget-exhausted`. The change is in place, changes none of the red first's assertions, and `agent()` still returns `null`.
+2. The red first moves onto the new base with an unchanged patch-id, and all three of its cases are green there. It is not in the tree at `4287de139e` today.
+3. A mutation of the child-log fix turns only the child-log case red.
+4. Observed at the candidate that carries the fix and the spec: a narrow run of the spec there (the spec is not in the full gate's e2e file list), and that candidate's full gate green.
