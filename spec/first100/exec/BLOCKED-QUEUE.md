@@ -761,7 +761,9 @@ P8-01 was signed off and accepted under this ruling: the shared titles are a rep
 - **When:** 2026-09-02. `guanjieqiao-92` identified, and the Supervisor independently confirmed by reading `scripts/first100/generate-specs.ts:1601-1604` directly: `renderClauseCoverageReport` unconditionally throws `clause-coverage: YAML issues N != registry epics M` unless the vendored v1.0 manifest YAML's issue count exactly equals `registry.epics.length`. That YAML is a byte-pinned source (per BLOCKED-035's registry-immutability gate) with exactly 100 issues — P3-13 as a 101st registry epic has, by definition, no v1.0 YAML clause at all (it is a `BASE-ALIGN-v2 new-gap`, not a `CANONICAL_EXTRACTION_FROM_PINNED_SOURCES` item per the P3-13 approval's own honesty requirement, `decisions-approved.md` §C8). A second, related break: `registry.groupCounts` (currently `P3: 12`, total `100`) is a declared value that must stay in sync with the real epic count, and other code may validate it — not yet audited for other consumers.
 - **Why this can't be guessed past:** three tempting-but-forbidden shortcuts all violate standing invariants — editing the pinned v1.0 YAML (violates "vendored/pinned sources are byte-fixed, never edited to fit"), fabricating a synthetic v1.0 clause for P3-13 (would be a genuine forgery of provenance, exactly what §C8's honesty requirement exists to prevent), or disabling/weakening the 1:1 check globally (would silently reopen the exact drift-detection gap BLOCKED-035 just closed for every OTHER epic).
 - **Required fix direction (delegate's own binding principle, not optional):** add a per-epic `provenance` field to the registry schema; `renderClauseCoverageReport`'s 1:1 count check and per-epic YAML-presence check must exempt exactly those epics whose `provenance` is tagged `BASE-ALIGN-v2 new-gap` (matched by reading the field, never by a hardcoded epic-id allowlist) — the exemption's existence and its reasoning must appear in the check's own failure/success messaging, not be silent. This also has a second-order consequence NOT yet resolved: BLOCKED-035's own registry-immutability gate (`extract-registry.mjs --check`) re-derives `registry.json` from exactly 3 pinned docs and does not know about `base-align-v2/` inputs at all — adding P3-13 will make that gate see real drift the moment the epic lands, unless BLOCKED-035's own flagged "open design prerequisite" is solved in the same pass (extend the extractor's source set to treat `base-align-v2/`-sourced epics as a second, honestly-provenanced layer, not silently bypass the gate).
-- **Status:** OPEN — must be designed and implemented BEFORE `tests/first100/registry.json` gains its 101st epic; not yet started.
+- **Status:** CLOSED 2026-10-17 (closure note at the end of this entry); was OPEN — must be designed and implemented BEFORE `tests/first100/registry.json` gains its 101st epic; not yet started.
+
+**Closure note (2026-10-17, §16.8 clearing; ruled by delegate first100-delegate-52 on the signing tree `4250e319b4`, recorded by lane B for delegate first100-delegate-bc).** Read on the signing tree `4250e319b4`, an ancestor of `4287de139e`. P3-13 is the registry's 101st epic and `generate-specs` handles it through the provenance-field exemption this entry required: clause coverage counts canonical epics only (`scripts/first100/generate-specs.ts:1678`, `:1926-1952`). The pinned v1.0 YAML is unedited, no clause was fabricated and no check was disabled; `generate-specs --check` exits 0 on that tree.
 
 ### BLOCKED-036 — role-boundary reset: the delegate (`guanjieqiao-92`) never executes anything directly (no commits/push/`--accept`/local test runs); all execution is Supervisor-run; permission-classifier escalation for `git push fork`/`--accept` must be sought DIRECTLY from the user, never via delegate relay — gated by a new mechanical delegate-sign-off predicate (iv) on `--accept`, built and bidirectionally verified before any permission ask (Supervisor-initiated escalation to the user, awaiting direct confirmation)
 
@@ -5305,7 +5307,7 @@ The same eight, by the same names, fail in the lane-B tree. Base and tip agree c
 
 ### BLOCKED-206 — `acceptance-coverage.schema.json` was never executed, and the file had already drifted away from it
 
-**Status:** FIXED 2026-09-11, owner lane B, lands in lane B's next candidate. Opened and closed in one slice because the fix is mechanical and the drift it found was already real.
+**Status:** CLOSED 2026-10-17 (closure note at the end of this entry); fixed 2026-09-11, owner lane B, lands in lane B's next candidate. Opened and closed in one slice because the fix is mechanical and the drift it found was already real.
 
 `spec/first100/exec/acceptance-coverage.schema.json` declares `additionalProperties: false` on an entry and a closed `C|P|U|F` enum on a citation's `stage`. Nothing executed it. A repository-wide search for the schema's filename returns two files: the schema itself, and `delegate-signoff.json` — which references it in prose, not in code. No script compiled it, and `generate-ledger.mjs`'s `checkCoverageClosure` reads the document's fields directly without validating its shape.
 
@@ -5330,9 +5332,11 @@ The field arrived in `2c9ddf323c` (2026-09-05, BLOCKED-100's filing). The prose 
 
 **A correction to lane B's own earlier report.** This finding was first reported with the claim that `ajv` was not installed. It is — `package.json` carries `"ajv": "^8.20.0"`. The probe was `node -e "require.resolve('ajv')"` in an ESM-only repository, which fails for the module system rather than for the dependency. A failed probe was reported as a measurement; the delegate caught it. The fix above depends on `ajv` being present, so the error would have blocked the obvious repair.
 
+**Closure note (2026-10-17, §16.8 clearing; ruled by delegate first100-delegate-52 on the signing tree `4250e319b4`, recorded by lane B for delegate first100-delegate-bc).** Read on the signing tree `4250e319b4`, an ancestor of `4287de139e`. `f2fdc42e15` executes the acceptance-coverage schema and `3293fb7c31` re-checks coverage closure for every ACCEPTED row on each `generate-ledger --check`, which exits 0 there.
+
 ### BLOCKED-207 — `@deepseek-ai/dsh-headless` publishes two entry points and not the chunk they both import
 
-**Status:** FIXED 2026-09-11, owner lane B. User-visible, not merely a self-consistency debt — the measurement below was taken first, because the delegate's ruling made the severity conditional on it.
+**Status:** CLOSED 2026-10-17 (closure note at the end of this entry); fixed 2026-09-11, owner lane B. User-visible, not merely a self-consistency debt — the measurement below was taken first, because the delegate's ruling made the severity conditional on it.
 
 **It is published.** `private` is absent, `publishConfig` is `{"access": "public"}`, and the dsh release family's own pattern — `packages/!(experimental)/*/package.json` in `scripts/release/families.ts` — selects `packages/bundle/headless`. So this package is packed by `release:pack --family dsh` and published with the family.
 
@@ -5383,9 +5387,11 @@ So the missing `lib/stream-json-*.js` can only fail an importer of headless's en
 
 **Only this package produces a shared chunk today, re-measured 2026-09-11.** Of its five siblings under `packages/bundle/`, four emit `lib/index.js` alone and ONE — `web-app` — emits `lib/index.js` and `lib/startup.js` with no chunk beside them. (An earlier revision of this entry said two siblings ship `startup.js`; that was wrong, counting headless itself among its own siblings.) So a second entry point does not by itself produce a chunk — `web-app` has two and hoists nothing — and what produced one here is shared code between the two entries. A sibling that later grows shared code inherits this defect, and the glob is the shape that survives it.
 
+**Closure note (2026-10-17, §16.8 clearing; ruled by delegate first100-delegate-52 on the signing tree `4250e319b4`, recorded by lane B for delegate first100-delegate-bc).** Read on the signing tree `4250e319b4`, an ancestor of `4287de139e`. The chunk both headless entry points import is published (`26f9c7189e`, `7536cecce2`), and the constraints derivation stays in step with it (`204c514a9e`, `b4bdd06fe9`).
+
 ### BLOCKED-208 — eighteen first-100 packages entered the preset closure without entering the Python SDK runtime's dependencies
 
-**Status:** FIXED 2026-09-11, owner lane B.
+**Status:** CLOSED 2026-10-17 (closure note at the end of this entry); fixed 2026-09-11, owner lane B.
 
 `verify-runtime-closure` requires every plugin a shipped agent preset references, and every required workspace peer in its dependency graph, to appear in `python/sdk-runtime/package.json`'s `dependencies`. With automatic peer installation disabled, an omission surfaces only when Cordis loads the packaged plugin inside the built executable — which is to say, at a user's runtime rather than in any check.
 
@@ -5400,6 +5406,8 @@ So the missing `lib/stream-json-*.js` can only fail an importer of headless's en
 - **`publint` IS wired** into `ci-primary`, `ci-consumers` and `ci-artifacts` — but `ci.yml` triggers only on `pull_request`, and this program works on a fork branch where it does not run. The same gap is already recorded against the web corpus in the exact-SHA workflow's own comment ("`ci.yml` does not run on the fork branch").
 
 So the answer to "three red gates and CI green" is neither "it ran and was allowed to fail" nor a single cause: two of the three run nowhere in CI, and the third runs only in a workflow this program's branch never triggers. Same shape as BLOCKED-204's `*.e2e.ts` corpus — a gate that exists, passes locally in nobody's loop, and is invisible to every signal the program consumes.
+
+**Closure note (2026-10-17, §16.8 clearing; ruled by delegate first100-delegate-52 on the signing tree `4250e319b4`, recorded by lane B for delegate first100-delegate-bc).** Read on the signing tree `4250e319b4`, an ancestor of `4287de139e`. The Python SDK runtime dependency graph includes the eighteen first-100 packages (`2882ca4d3c`; `5e14d78af7`).
 
 ### BLOCKED-210 — fifteen hygiene gates ran in no workflow this program consumes
 
@@ -5538,7 +5546,7 @@ acceptance[1] reads *"human answer 只送到指定等待点"* — an answer reac
 
 ### BLOCKED-216 — the capability-seam allowlist's `removalDate` is checked as a string and never against the clock
 
-**Status:** FIXED 2026-09-11, owner lane B. P0-03 is NOT withdrawn — its acceptance[1] was satisfied to the letter throughout, and today's allowlist is healthy.
+**Status:** CLOSED 2026-10-17 (closure note at the end of this entry); fixed 2026-09-11, owner lane B. P0-03 is NOT withdrawn — its acceptance[1] was satisfied to the letter throughout, and today's allowlist is healthy.
 
 **Closed.** `validateAllowlistEntry` now takes an optional `today` (defaulting to the real local clock) and refuses an entry whose `removalDate` is **strictly before** it. Four cases, not the two this entry asked for, because two of them are controls and the boundary needed its own:
 
@@ -5574,6 +5582,8 @@ acceptance[0]'s "the existing repo passes under a controlled allowlist" is there
 **One obligation already written in this program has NO enforcer, recorded here rather than left implicit.** `acceptance-coverage.json`'s P0-06 acceptance[2] note says the first epic landing a real non-identity migration inherits that clause and owes the bidirectional-or-irreversible test. Nothing detects that transfer: no gate reads the note, and no check notices when `evolveSchema` gains its first production caller. It is prose addressed to a future reader, and is marked as such here so the marking is not mistaken for a mechanism.
 
 ---
+
+**Closure note (2026-10-17, §16.8 clearing; ruled by delegate first100-delegate-52 on the signing tree `4250e319b4`, recorded by lane B for delegate first100-delegate-bc).** Read on the signing tree `4250e319b4`, an ancestor of `4287de139e`. The capability-seam allowlist's `removalDate` is checked against the clock (`3e63d2bb9a`).
 
 ### BLOCKED-217 — P0-02: five prose blocks in the kernel described a residual the same file had already closed
 
@@ -5625,7 +5635,7 @@ That inverts the usual worry about stale prose. The ordinary risk is prose that 
 
 ### BLOCKED-218 — a verifier ended the process at import, taking `vitest list` and two unrelated gates with it
 
-**Status:** FIXED 2026-09-11, owner lane A.
+**Status:** CLOSED 2026-10-17 (closure note at the end of this entry); fixed 2026-09-11, owner lane A.
 
 `scripts/first100/verify-adapt-dispositions.mjs` called `main()` at module scope, and `main()` ends in `process.exit(1)` when an epic leaves a disposition undisclosed. Its own spec imports the module for `standardDispositionGaps`, and `pnpm exec vitest list --json` loads every test file to collect names. So one epic's data problem ended the whole collection, and `verify-frozen-titles-in-tree` asks `vitest list` for every producible title.
 
@@ -5638,6 +5648,8 @@ That inverts the usual worry about stale prose. The ordinary risk is prose that 
 **The trigger was data, and it is not in lane A's tree.** The delegate's overlay revoked P2-01's sign-off, returning it to `BLOCKED_ON_ACCEPTANCE`, which made its three `accepted-unadopted` deviation reasons illegal — that reason is reserved for an ACCEPTED row. Lane A's local 27-gate run was green at `6262ab3c72` because P2-01 is still ACCEPTED there. The reasons now state the measurements they always rested on, which is legal under either status.
 
 **The general shape:** a script that is both a CLI and an importable module must not perform its effect at import. Any gate that collects test names by loading every file inherits every module's import-time behaviour, so one script's exit becomes every unrelated gate's failure.
+
+**Closure note (2026-10-17, §16.8 clearing; ruled by delegate first100-delegate-52 on the signing tree `4250e319b4`, recorded by lane B for delegate first100-delegate-bc).** Read on the signing tree `4250e319b4`, an ancestor of `4287de139e`. A verifier no longer ends the process when imported (`220fbab764`).
 
 ### BLOCKED-219 — a throwing pre-step listener loses the user's message, and the only record of why is a reason nobody reads
 
@@ -5675,7 +5687,7 @@ The event order is byte-identical to the `memory-context` failure, so the mechan
 
 ### BLOCKED-214 — P1-07's trust boundary shipped OFF on every profile, and can only ship ON where the question can be answered
 
-**Status:** FIXED 2026-09-11 under ruling (A'), owner lane A. Opened by the delegate after lane A's five-profile measurement.
+**Status:** CLOSED 2026-10-17 (closure note at the end of this entry); fixed 2026-09-11 under ruling (A'), owner lane A. Opened by the delegate after lane A's five-profile measurement.
 
 `workspace-trust-local` is the only provider of the `workspaceTrust` seam. It was `disabled: true` in `dsh-base` and re-enabled by **no** published bundle, so P1-07's boundary was off for every user. The user ruled the factory default should be ON with a first-time authorization prompt.
 
@@ -5723,6 +5735,8 @@ A later full replay (`--maxWorkers=2`) produced four timeouts of the same shape,
 **The `/private` spelling is NOT a problem on the product's trust path, and belongs here rather than in [BLOCKED-223](#blocked-223).** `stateFor` realpaths the cwd it observes and `canonicalGrants` realpaths each configured grant, so both sides reach the same canonical string and a configured grant matches. Measured while proving a `grants` configuration works end to end: the grant is hit on first binding and no approval is ever asked. The one-directional alias defect 223 fixes exists only in the snapshot NORMALIZATION path; nothing about it reaches the boundary this epic ships.
 
 **A process reading from the same stretch, recorded because the rule it produced outlives it.** Lane A stopped its own gate run with `pkill -f "vitest"` — a machine-wide pattern match — which also killed lane B's in-progress whole-repository `vitest list` census; lane B measured the kill as `signal: SIGTERM` six seconds after the pkill, and re-ran it. Neither tree was at fault. The rule taken from it: stop only processes this session started, by task id or a captured PID, never by pattern.
+
+**Closure note (2026-10-17, §16.8 clearing; ruled by delegate first100-delegate-52 on the signing tree `4250e319b4`, recorded by lane B for delegate first100-delegate-bc).** Read on the signing tree `4250e319b4`, an ancestor of `4287de139e`; closed together with its second half below. P1-07's own lock is BLOCKED-353, which this closure does not touch.
 
 ### BLOCKED-220 — a headless run ends at `whenIdle()`, which does not follow an in-flight background job, so that job's result can never reach the model
 
@@ -5883,7 +5897,7 @@ Requested before any 甲 code. 丁 landed first and its read points are the same
 
 ### BLOCKED-222 — a background job's completion notice was delivered or suppressed by a race, and the corpus recorded one side of it
 
-**Status:** FIXED 2026-09-11 scenario-side under the delegate's ruling (乙2), owner lane A. This is candidate 3′'s single red.
+**Status:** CLOSED 2026-10-17 (closure note at the end of this entry); fixed 2026-09-11 scenario-side under the delegate's ruling (乙2), owner lane A. This is candidate 3′'s single red.
 
 **Three samples of the same race, two of them at the same SHA.**
 
@@ -5930,9 +5944,11 @@ The observer package is a public release member, because `scripts/check-workspac
 
 **The product problem behind the race is separate and is not fixed here.** See BLOCKED-220: a headless run ends at `whenIdle()`, which does not follow an in-flight background job. This entry pins a fixture; it leaves the product's own loss window open.
 
+**Closure note (2026-10-17, §16.8 clearing; ruled by delegate first100-delegate-52 on the signing tree `4250e319b4`, recorded by lane B for delegate first100-delegate-bc).** Read on the signing tree `4250e319b4`, an ancestor of `4287de139e`. The background-job notice is pinned with a settlement observer instead of a time margin (`c3aa96fa81`).
+
 ### BLOCKED-221 — a reservation at the holder's own generation was granted, so must[2] held only when a second, uncovered race went the right way
 
-**Status:** FIXED 2026-09-11 under the delegate's ruling (honest version of (b)), owner lane B. Branch `lane-b-221`, candidate 3''.
+**Status:** CLOSED 2026-10-17 (closure note at the end of this entry); fixed 2026-09-11 under the delegate's ruling (honest version of (b)), owner lane B. Branch `lane-b-221`, candidate 3''.
 
 `decideReservation` (`packages/action/action-ledger/src/index.ts`) returned `reserved` for EVERY request whose epoch was `>= existing.epoch` against a `prepared` entry. At a strictly higher epoch that is correct and required — the fence proves the previous holder is out (must[3]). At the SAME epoch the holder is a live peer, and granting it is exactly the two-holder state must[2] forbids: "two workers cannot both hold one reservation".
 
@@ -5974,9 +5990,11 @@ The observer package is a public release member, because `scripts/check-workspac
 
 **Adjacent finding, NOT self-numbered — for the delegate to allocate.** P4-12's acceptance[0] campaign ("commits each effect exactly once across 10,000 random crashes") barely crashes. Its LCG is `random = (random * 1_103_515_245 + 12_345) % 2_147_483_648` in double arithmetic: from the second iteration the product exceeds 2^53, the low bits are lost, and `random % 4` is almost always 0. Measured over the campaign's own 10,000 iterations: `none` 9956, `after-reserve` 43, `after-send` 1, `after-receipt` **0**. Nearly every key is `confirmed` within the first 250 attempts, so the few later crash points land on already-settled entries and return `duplicate` before crashing. The case passes under this fix for that reason, not because the campaign exercised it. Fixing the generator is entangled with this entry — a campaign that really crashed after a reservation would need each attempt to present a new generation, which `attempt` now accepts — so it should be ruled on rather than folded in silently.
 
+**Closure note (2026-10-17, §16.8 clearing; ruled by delegate first100-delegate-52 on the signing tree `4250e319b4`, recorded by lane B for delegate first100-delegate-bc).** Read on the signing tree `4250e319b4`, an ancestor of `4287de139e`. A reservation by a peer at the holder's own generation is refused (`feab6cac24`); the generation comparison is still in `packages/action/action-ledger/src/index.ts` on that tree (read, §21.3). P4-12 is ACCEPTED.
+
 ### BLOCKED-225 — P4-12's crash campaign almost never crashed, because its generator lost the low bits of every multiply
 
-**Status:** FIXED 2026-09-12 under the delegate's ruling, owner lane B. Branch `lane-b-225`, on top of 221's `5e0c4502f9`. **Goes into P4-12's re-signing material:** this is the epic's direct acceptance[0] evidence, and it was passing because it did not crash.
+**Status:** CLOSED 2026-10-17 (closure note at the end of this entry); fixed 2026-09-12 under the delegate's ruling, owner lane B. Branch `lane-b-225`, on top of 221's `5e0c4502f9`. **Goes into P4-12's re-signing material:** this is the epic's direct acceptance[0] evidence, and it was passing because it did not crash.
 
 `attempt` was driven by `random = (random * 1_103_515_245 + 12_345) % 2_147_483_648`, evaluated in double arithmetic. From the SECOND iteration the product passes 2^53, so the low bits are gone and the modulus yields multiples of large powers of two. Over the campaign's own 10,000 iterations the drawn crash points were:
 
@@ -5999,9 +6017,11 @@ The observer package is a public release member, because `scripts/check-workspac
 
 **Timing, since the 120 s timeout was ruled not to move.** The file now runs two 10,000-attempt campaigns and took 37.8 s wall on a host at load average ~36. Earlier, on a quiet host, the single campaign took 9 s; under the same load it timed out twice in ten runs at 120 s, which is the environment reading recorded in BLOCKED-221 rather than a property of the suite. The cloud step is the gate.
 
+**Closure note (2026-10-17, §16.8 clearing; ruled by delegate first100-delegate-52 on the signing tree `4250e319b4`, recorded by lane B for delegate first100-delegate-bc).** Read on the signing tree `4250e319b4`, an ancestor of `4287de139e`. The crash campaign crashes and asserts that it does (`2f3d3f4bab`).
+
 ### BLOCKED-229 — a durable Run-store write that fails with nobody to tell
 
-**Status:** FIXED 2026-09-12, owner lane A. Found by CI 34679720296, where 21000 cases passed and the step still exited 1: Vitest caught one Unhandled Rejection, `ENOENT rename '/tmp/dsh-settlement-bus-4DxJOK/runs.json.43306.tmp' -> '.../runs.json'`, from `packages/subagent/subagent/tests/settlement-outbox.spec.ts`. Neither file changed in the candidate — a latent race in the baseline that CI's timing exposed.
+**Status:** CLOSED 2026-10-17 (closure note at the end of this entry); fixed 2026-09-12, owner lane A. Found by CI 34679720296, where 21000 cases passed and the step still exited 1: Vitest caught one Unhandled Rejection, `ENOENT rename '/tmp/dsh-settlement-bus-4DxJOK/runs.json.43306.tmp' -> '.../runs.json'`, from `packages/subagent/subagent/tests/settlement-outbox.spec.ts`. Neither file changed in the candidate — a latent race in the baseline that CI's timing exposed.
 
 **Four code facts, read before anything was changed.**
 
@@ -6043,6 +6063,8 @@ Production has the same shape as the abandoned test Context whenever a host ends
 **Readings.** Removing the reporting reddens the new case (1 failed, 11 passed). `run` + `subagent` 887 passed; `settlement-outbox` ×10 all green with zero unhandled; the full P4-06/P4-07 frozen scope 181 passed; gate set 23 PASS / 2 HELD / 1 OOM, with `verify-persistence-catalog` green because a Cordis event leaves the persistence catalog and both SDK projections untouched.
 
 **One thing the case does NOT assert, deliberately.** The mutation's second half — that removing the reporting brings the unhandled rejection back — is not observable on this host: the mutated run produces zero `Unhandled`/`ENOENT` lines. The case therefore asserts the event's presence, not the absence of a rejection that cannot be detected here. Pinning "no unhandled rejection" needs the cloud full-suite run that caught it in the first place.
+
+**Closure note (2026-10-17, §16.8 clearing; ruled by delegate first100-delegate-52 on the signing tree `4250e319b4`, recorded by lane B for delegate first100-delegate-bc).** Read on the signing tree `4250e319b4`, an ancestor of `4287de139e`. A failed durable Run-store write is announced instead of rejecting into nobody (`71fa221959`): the event `run/store-write-failed` is declared at `packages/run/run/src/index.ts:652` (its JSDoc names this entry at `:647`) and emitted from `track()` at `:804` for a write no caller awaits. Read on that tree (§21.3).
 
 ### BLOCKED-230 — a mounted plugin's fiber disposer does not run under a condition that is not root-versus-child
 
@@ -6093,7 +6115,7 @@ Ten abandon Contexts whose factory mounts **nothing durable**, so there is no wr
 
 ### BLOCKED-214 second half — the unattended side of P1-07's ruling: a persistent trust record
 
-**Status:** FIXED 2026-09-12, owner lane A. Ruled by the user (gq-92); (A′) delivered the answerable profiles, this delivers the rest.
+**Status:** CLOSED 2026-10-17 (closure note at the end of this entry); fixed 2026-09-12, owner lane A. Ruled by the user (gq-92); (A′) delivered the answerable profiles, this delivers the rest.
 
 (A′) enabled the boundary on `acp-app` and `web-app` because those are the only profiles carrying an `approval/request` answerer. `headless`, `sdk-app` and `sdk-minimal` were left disabled with the measured reason: `approval.request()` settles `'unavailable'` where nothing answers, so an enabled row there would refuse every project permanently with no in-session way to grant. The user ruled the missing half is a **persistent trust record**.
 
@@ -6122,9 +6144,11 @@ Ten abandon Contexts whose factory mounts **nothing durable**, so there is no wr
 
 **Frozen as P1-07.U supplement #2**, four cases on the factory `headless` profile, with two mutations: disabling the bundle row reds all four (the fixture enables nothing itself), and making `stateFor` return a stored state without reconciling identity reds EXACTLY the swap case — the delegate's requested "keyed by path rather than identity must redden".
 
+**Closure note (2026-10-17, §16.8 clearing; ruled by delegate first100-delegate-52 on the signing tree `4250e319b4`, recorded by lane B for delegate first100-delegate-bc).** Read on the signing tree `4250e319b4`, an ancestor of `4287de139e`. The persistent workspace trust record is in place (`ec65bc1a25`; `packages/workspace/command-workspace-trust/src/launch-grant.ts:3`, `:40`, `:100`: the record is persisted before the grant resolves and outlives the process); `09b32aefdf` classifies the two types it added to the trust seam. Read on that tree (§21.3).
+
 ### BLOCKED-223 — the fixture write-back silently tokenizes nothing, because refresh hands it a header it has already tokenized
 
-**Status:** FIXED 2026-09-12, owner lane A. Found while auditing the session-lane corpus refresh, where `skill-load` gained one raw `/var/folders/.../dsh-log-snap-<id>/...` path (0 such paths before the refresh, 1 after).
+**Status:** CLOSED 2026-10-17 (closure note at the end of this entry); fixed 2026-09-12, owner lane A. Found while auditing the session-lane corpus refresh, where `skill-load` gained one raw `/var/folders/.../dsh-log-snap-<id>/...` path (0 such paths before the refresh, 1 after).
 
 **The cause is a three-step chain, and every step succeeds.**
 
@@ -6148,6 +6172,8 @@ Ten abandon Contexts whose factory mounts **nothing durable**, so there is no wr
 
 **Readings.** `skill-load` re-refreshed on the fix: raw `/var/folders` occurrences 1 → 0, the leaked line now reads `Base directory for this skill: {{cwd}}/.dsh/skills/editing-cordis-compositions`. A tree-wide scan finds no other fixture carrying a raw temp path. Package tests 283 passed / 1 skipped; acp 15/15 and sdk 16/16 replay green; headless 82 passed with two reds that predate this work — `agent-instructions` (the WIP refresh cut its `request/header` count from 2 to 1 while the manifest still declares `changes: 1`, which the pending trust-grant fix owns) and `persistent-pwsh-tool-turn` (the load-sensitive timeout recorded under BLOCKED-214).
 
+**Closure note (2026-10-17, §16.8 clearing; ruled by delegate first100-delegate-52 on the signing tree `4250e319b4`, recorded by lane B for delegate first100-delegate-bc).** Read on the signing tree `4250e319b4`, an ancestor of `4287de139e`. The fixture write-back takes the run cwd from the caller (`7d15430f4c`).
+
 ### BLOCKED-224 — WITHDRAWN: the comparison was never sensitive to the flush boundary
 
 **Withdrawn — the premise was wrong.** Lane A read `headless.snapshot.ts:917`'s whole-string `toBe`, saw that normalization touches packed rows only to zero `time0` and `dt`, and concluded the comparison was line-by-line and therefore sensitive to where a persistence flush split a packed chunk run. That missed the last step of the very pipeline both sides run through: `repackSessionSnapshot` (`packages/test-support/session-snapshot/src/normalize.ts:488`), called from `normalizeSessionSnapshots` (`:543`) for expected and actual alike, whose first documented line is that it repacks so flush boundaries do not affect committed snapshots. Measured afterwards on the three affected files: the split and merged versions normalize to byte-identical text in all three, with a reverse control confirming a real text change (`ZZ-CONTROL`) still differs — the first attempt at that control did not match and was silently vacuous, which is why it was rerun with the tamper verified. The delegate assigned the number on lane A's reading without checking the pipeline. The number is void.
@@ -6162,7 +6188,7 @@ Opened for `session-query-spill`'s verification step, which greps a hardcoded ab
 
 ### BLOCKED-226 — the in-tree gate read one freeze entry per cell, so a supplement hid its own base entry's orphans
 
-**Status:** FIXED 2026-09-12 under the delegate's ruling, owner lane B. Branch `lane-b-225`.
+**Status:** CLOSED 2026-10-17 (closure note at the end of this entry); fixed 2026-09-12 under the delegate's ruling, owner lane B. Branch `lane-b-225`.
 
 `verify-frozen-titles-in-tree` built its live set as `live.set(\`${entry.epic}.${entry.stage}\`, entry)`, so every later entry for a cell overwrote the earlier one and only the last survived the check. A cell carrying a base entry AND a supplement therefore had the base entry's titles read by nothing.
 
@@ -6194,10 +6220,11 @@ The old gate found three of those five. The two it could not see are the two on 
 
 **The census was interrupted once by something outside this tree, and the cause is recorded because the gate cannot tell it apart.** The first full collection died at 05:27:58Z with `signal: SIGTERM`, `status: null` and no stdout — lane A ran `pkill -f "vitest"` at 05:27:52Z to stop its own gate set, and a pattern kill reaches every `vitest` on the host. That is the failure this gate's own error text warns about: a killed collection and a genuine load error report the same "Command failed", so the signal and the timing are what separate them. Re-run, and lane A now stops only its own processes.
 
+**Closure note (2026-10-17, §16.8 clearing; ruled by delegate first100-delegate-52 on the signing tree `4250e319b4`, recorded by lane B for delegate first100-delegate-bc).** Read on the signing tree `4250e319b4`, an ancestor of `4287de139e`. The in-tree gate reads every live freeze entry, not one per cell (`556641f04c`); `verify-freeze-in-candidate-tree` exits 0 there.
 
 ### BLOCKED-231 — a verification step bound to a per-scenario spill root breaks when that scenario runs twice
 
-**Status:** FIXED 2026-09-12, owner lane A. Found by lane B: `session-query-spill` red on a full-suite run and green alone, failing as `grep: <path1>\n<path2>: No such file`.
+**Status:** CLOSED 2026-10-17 (closure note at the end of this entry); fixed 2026-09-12, owner lane A. Found by lane B: `session-query-spill` red on a full-suite run and green alone, failing as `grep: <path1>\n<path2>: No such file`.
 
 **The spill root is per SCENARIO, not per run.** `snapshots/../harness.ts:214-222` derives it as `/tmp/dsh-acp-snap-<sha256(scenario).slice(0,9)>`, so every run of one scenario shares a directory. A verification step that does `f=$(find <root> -name '…' -type f)` captures every match into one variable, and with two matches `wc -c < "$f"` dies with `integer expression expected` — the shape lane B measured. This was introduced by [BLOCKED-202](#blocked-202)'s own fix, which is why it is numbered rather than folded in.
 
@@ -6209,9 +6236,11 @@ The old gate found three of those five. The two it could not see are the two on 
 
 **Lane B's original measurement, kept because it is the evidence this entry rests on.** Reported from `lane-b-p3-01` at `b4b57ff461`: one `test:snapshot` run failed the scenario, while the same tree passed it alone (1 passed | 117 skipped) and passed it on a second full-suite run. Not a content diff and not that branch's code — which is what pointed at a shared root rather than at the fixture. Lane B reported it and did not touch the scenario; the fix and this entry are lane A's.
 
+**Closure note (2026-10-17, §16.8 clearing; ruled by delegate first100-delegate-52 on the signing tree `4250e319b4`, recorded by lane B for delegate first100-delegate-bc).** Read on the signing tree `4250e319b4`, an ancestor of `4287de139e`. The spill check survives a second run of the same scenario (`61db043c38`).
+
 ### BLOCKED-228 — the host identity could mint only one tenant while a consumer required any
 
-**Status:** FIXED 2026-09-12, owner lane A. Raised from P2-01's re-sign material, where the open question was whether the hardcoded tenant was a defect or a single-tenant design. Measured: a defect, and a latent one.
+**Status:** CLOSED 2026-10-17 (closure note at the end of this entry); fixed 2026-09-12, owner lane A. Raised from P2-01's re-sign material, where the open question was whether the hardcoded tenant was a defect or a single-tenant design. Measured: a defect, and a latent one.
 
 **The contract was asymmetric.** `@deepseek-ai/dsh-memory-context` takes `tenantId` as a REQUIRED, unconstrained config field (`packages/context/memory-context/src/index.ts:54`) and throws when an attached principal names a different tenant (`:83`). So a deployment enabling that row must name a tenant — while `hostUserIdentity` could mint only `'local'`: `HostUserIdOptions` carried `env` and `randomUUID` and nothing else, and the tenant was a module constant. A design that meant "single tenant" would not offer the consumer a required, unconstrained tenant field.
 
@@ -6224,6 +6253,8 @@ The old gate found three of those five. The two it could not see are the two on 
 **Mutation.** Ignoring the option and minting the constant again reddens three cases — both producer tenant cases and the end-to-end positive — and leaves the reverse control green, which is what shows the control cannot by itself detect the fix.
 
 **Readings.** 113 passed across `host-user-id`, `memory-context` and `principal`; lint 0 on both changed packages; `verify-export-jsdoc` 0; `constraints` 0; the three full-suite-only gates green.
+
+**Closure note (2026-10-17, §16.8 clearing; ruled by delegate first100-delegate-52 on the signing tree `4250e319b4`, recorded by lane B for delegate first100-delegate-bc).** Read on the signing tree `4250e319b4`, an ancestor of `4287de139e`. The host identity can name its tenant (`c70769aa89`; `packages/identity/host-user-id/src/index.ts:56` declares `tenantId`, `:153` reads it). Read on that tree (§21.3).
 
 ### BLOCKED-232 — P4-02's read side: three clauses whose subject nothing in production reads
 
@@ -7400,7 +7431,7 @@ A provider swap at the `execution-world` registry today changes which provider's
 
 ### BLOCKED-263 — a gate step can exit 1 with zero failing cases, and the flake registry cannot record that shape
 
-**Status:** OPEN (2026-09-19). Not a sign-off dispute and not attached to any epic: it is a property of the observation mechanism. A run reddened this way carries no failing case, so the ledger's flake path — which compares a run's FAILING-TEST SET against the registry — has nothing to compare, and the registry's own schema cannot hold an entry for it.
+**Status:** CLOSED 2026-10-17 (closure note at the end of this entry); was OPEN (2026-09-19). Not a sign-off dispute and not attached to any epic: it is a property of the observation mechanism. A run reddened this way carries no failing case, so the ledger's flake path — which compares a run's FAILING-TEST SET against the registry — has nothing to compare, and the registry's own schema cannot hold an entry for it.
 
 **What happened, re-measured on `artifacts/gate-35420619568/log-failed.txt` at lane B's tip.** Step #13 of run 35420619568 ended `Process completed with exit code 1` (`:7467`) while its own summary reported `Tests 26686 passed | 1 expected fail | 75 skipped (26762)` (`:7461`) and `Errors 1 error` (`:7462`). The log contains **zero** `FAIL ` lines. What reddened it was `⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯` / `Vitest caught 1 unhandled error during the test run` (`:7438`, `:7440`): a `ReferenceError: window is not defined` (`:7444`) thrown from `Timeout._onTimeout` inside `@tanstack/virtual-core@3.17.7/dist/esm/utils.js:65:50` (`:7455`), which vitest attributes to `packages/client/ui-trajectory/tests/table.client.spec.tsx` (`:7457`). That file's own cases had already PASSED in the same run — `✓ thread-safe packages/client/ui-trajectory/tests/table.client.spec.tsx (36 tests) 769ms` (`:5142`) — so the timer fired after the environment it captured was torn down.
 
@@ -7414,6 +7445,8 @@ A provider swap at the `execution-world` registry today changes which provider's
 - Nothing here says the run's other 26686 passing cases are invalid. It says the mechanism that would normally absorb a known-flaky failure has no way to name this one.
 
 **Disposition (delegate).** On recurrence: re-dispatch the same SHA and accumulate occurrences in this entry. At two occurrences, rule on whether the schema should be extended to hold a run-level unhandled error. Raising it upstream is an outward-facing action and belongs to the user.
+
+**Closure note (2026-10-17, §16.8 clearing; ruled by delegate first100-delegate-52 on the signing tree `4250e319b4`, recorded by lane B for delegate first100-delegate-bc).** Read on the signing tree `4250e319b4`, an ancestor of `4287de139e`; closed by the delegate's §16.8 ruling. An exit record now carries the count of unhandled errors, and `recordedExitRefusal` (`scripts/first100/generate-ledger.mjs:548-564`, BLOCKED-326) refuses to green a cell from any report with an unhandled error (`:561`), with no `--exit-override` (`:552`); only exit 1 with zero unhandled errors whose every failure is a registered flake is absorbed (`:562`). So a run reddened this way is never greened: not absorbing it is the design. A registry shape for an unhandled-error flake is a separate feature, not this defect, and is not opened here.
 
 ### BLOCKED-264 — P4-05 was accepted while its acceptance lock was live, and the clause the lock names still has no subject
 
