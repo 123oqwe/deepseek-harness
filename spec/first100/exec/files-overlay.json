@@ -5811,11 +5811,11 @@
       "kind": "source",
       "stages": [
         "U.2",
-        "U.5",
         "U.8",
         "U.10",
         "U.11",
-        "U.13"
+        "U.13",
+        "U.5"
       ],
       "reason": "HOT ZONE. From `git show d3a23a5e2c -- packages/workflow/workflow-worker-thread/src/host.ts`: `WorkerRun` gains `onNestedStart`/`nest`, a `nestedRuns` set, and a `NestingPort` constructor argument; `cancel()` gains the `cancelPropagationForNested` block. Shared with P4-07 (the lease) and P4-08 (the journal), whose code in this file is untouched by the diff — the nesting additions sit beside them and change neither."
     },
@@ -5825,13 +5825,13 @@
       "kind": "source",
       "stages": [
         "U.2",
-        "U.5",
         "U.6",
         "U.8",
         "U.3",
         "U.7",
         "U.10",
-        "U.13"
+        "U.13",
+        "U.5"
       ],
       "reason": "§12.48-A. The engine held its registered definitions in a bare `Map`, so `admitRegistration`, `isSelfRecursive` and the whole `DefinitionRegistry` had zero production callers and the digest a caller supplied was stored without ever being recomputed. The registry now holds them, which is where must[0]'s version pinning and acceptance[0]'s real meaning acquire their consumer. The registry's U-stage list named `runtime.ts`/`session.ts`, not this file."
     },
@@ -5884,9 +5884,9 @@
       "kind": "test",
       "stages": [
         "U.2",
-        "U.5",
         "U.6",
-        "U.3"
+        "U.3",
+        "U.5"
       ]
     },
     {
