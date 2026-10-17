@@ -407,7 +407,7 @@ describe('P4-09 must[3]: a nested run\'s children inherit its DECAYED capability
     await run.dispose()
   }, 30_000)
 
-  it('is NOT cancelled when the launching run is, while a nested sibling IS', async () => {
+  it('is NOT cancelled when the launching run is', async () => {
     // The negative control that makes "detached" more than a word. Cancellation
     // reaches `nestedRuns`, and a detached run is deliberately not a member:
     // the launcher is who started it, and the Run service is who owns it.
